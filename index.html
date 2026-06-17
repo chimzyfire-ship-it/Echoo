@@ -28,9 +28,7 @@
         min-height: 100vh;
         margin: 0;
         color: var(--ink);
-        background:
-          radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.06), transparent 45rem),
-          #020306;
+        background: #020306;
         overflow-x: hidden;
       }
 
@@ -42,7 +40,7 @@
         background-image: url("assets/background.png");
         background-size: cover;
         background-position: center top;
-        opacity: 0.15;
+        opacity: 0.5;
       }
 
       body::after {
@@ -51,7 +49,7 @@
         z-index: -2;
         content: "";
         background:
-          linear-gradient(180deg, rgba(2, 3, 6, 0.2), #020306 90%);
+          linear-gradient(180deg, rgba(2, 3, 6, 0.15) 0%, rgba(2, 3, 6, 0.55) 60%, rgba(2, 3, 6, 0.8) 100%);
         pointer-events: none;
       }
 
@@ -264,7 +262,6 @@
         filter: blur(10px);
         animation: dramatic-reveal 1.2s cubic-bezier(0.25, 1.4, 0.5, 1) forwards;
         transform-origin: top left;
-        will-change: transform, opacity, filter;
       }
 
       .dramatic-line:nth-child(1) .dramatic-word { animation-delay: 0.1s; }
@@ -450,17 +447,24 @@
         align-items: center;
         justify-content: center;
         justify-self: center;
-        transform: translate(1.5vw, -18px) scale(0.92);
+        transform: translate(1.5vw, -38px) scale(1);
         opacity: 0;
         filter: blur(10px);
-        transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1s ease, filter 1s ease;
+        animation: logo-entrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
         z-index: 5;
         cursor: pointer;
+        transition: transform 0.4s ease;
       }
 
-      /* Entrance class applied via JS */
+      @keyframes logo-entrance {
+        to {
+          opacity: 1;
+          filter: blur(0);
+        }
+      }
+
+      /* Entrance class applied via JS (enhances if JS loads) */
       .hero-graphic-container.ready {
-        transform: translate(1.5vw, -38px) scale(1);
         opacity: 1;
         filter: blur(0);
       }
@@ -471,7 +475,6 @@
         align-items: center;
         justify-content: center;
         animation: realistic-float 6s ease-in-out infinite alternate;
-        will-change: transform;
       }
 
       /* Clean, smooth organic up-and-down float (highly optimized) */
@@ -898,13 +901,12 @@
       }
 
       .works-step-card {
-        background: rgba(13, 18, 30, 0.6);
+        background: rgba(13, 18, 30, 0.7);
         border: 1px solid rgba(255,255,255,0.06);
         border-radius: 12px;
         padding: 24px;
         text-align: center;
         position: relative;
-        backdrop-filter: blur(12px);
       }
 
       .step-card-num {
@@ -941,8 +943,7 @@
         border-top: 1px solid rgba(255,255,255,0.08);
         padding: 60px clamp(22px, 4vw, 72px) 30px;
         margin-inline: calc(-1 * clamp(22px, 4vw, 72px));
-        background: rgba(4, 6, 12, 0.94);
-        backdrop-filter: blur(20px);
+        background: rgba(4, 6, 12, 0.96);
         position: relative;
         z-index: 5;
       }
@@ -1180,9 +1181,8 @@
         padding: 29px 38px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
-        background: rgba(13, 18, 30, 0.78);
+        background: rgba(13, 18, 30, 0.88);
         box-shadow: 0 18px 46px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-        backdrop-filter: blur(18px);
       }
 
       .trust-item {
@@ -1478,14 +1478,25 @@
         /* Float Mobile Brand Signature */
         .hero-graphic-container {
           order: -1;
-          transform: translateY(20px) scale(0.92) !important;
-          opacity: 0;
-          filter: blur(8px);
+          transform: translateY(0px) scale(1);
           margin-bottom: 24px;
+          animation: logo-entrance-mobile 1s ease 0.1s forwards;
+        }
+
+        @keyframes logo-entrance-mobile {
+          from {
+            opacity: 0;
+            filter: blur(8px);
+            transform: translateY(20px) scale(0.92);
+          }
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0px) scale(1);
+          }
         }
 
         .hero-graphic-container.ready {
-          transform: translateY(0px) scale(1) !important;
           opacity: 1;
           filter: blur(0);
         }
@@ -1644,12 +1655,10 @@
       .date-wizard-card {
         width: 100%;
         max-width: 960px;
-        background: rgba(8, 10, 16, 0.65);
+        background: rgba(8, 10, 16, 0.85);
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 20px;
         padding: 16px 24px;
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
