@@ -51,26 +51,26 @@
         transition: background 1s ease-in-out;
         pointer-events: none;
         background:
-          radial-gradient(circle at 10% 30%, rgba(255, 21, 151, 0.08), transparent 30rem),
-          radial-gradient(circle at 90% 70%, rgba(20, 168, 255, 0.08), transparent 30rem);
+          radial-gradient(circle at 10% 30%, rgba(42, 26, 74, 0.2), transparent 40rem),
+          radial-gradient(circle at 90% 70%, rgba(20, 45, 90, 0.15), transparent 40rem);
       }
 
       .bg-glow.music {
         background:
-          radial-gradient(circle at 10% 30%, rgba(255, 21, 151, 0.08), transparent 30rem),
-          radial-gradient(circle at 90% 70%, rgba(20, 168, 255, 0.08), transparent 30rem);
+          radial-gradient(circle at 10% 30%, rgba(42, 26, 74, 0.2), transparent 40rem),
+          radial-gradient(circle at 90% 70%, rgba(20, 45, 90, 0.15), transparent 40rem);
       }
 
       .bg-glow.movies {
         background:
-          radial-gradient(circle at 10% 30%, rgba(122, 66, 255, 0.08), transparent 30rem),
-          radial-gradient(circle at 90% 70%, rgba(20, 168, 255, 0.08), transparent 30rem);
+          radial-gradient(circle at 10% 30%, rgba(30, 28, 58, 0.2), transparent 40rem),
+          radial-gradient(circle at 90% 70%, rgba(21, 43, 69, 0.15), transparent 40rem);
       }
 
       .bg-glow.dates {
         background:
-          radial-gradient(circle at 10% 30%, rgba(255, 209, 107, 0.08), transparent 30rem),
-          radial-gradient(circle at 90% 70%, rgba(255, 21, 151, 0.08), transparent 30rem);
+          radial-gradient(circle at 10% 30%, rgba(61, 48, 29, 0.15), transparent 40rem),
+          radial-gradient(circle at 90% 70%, rgba(42, 26, 74, 0.1), transparent 40rem);
       }
 
       .page {
@@ -159,7 +159,7 @@
       }
 
       nav a:hover {
-        color: var(--pink);
+        color: var(--gold);
       }
 
       .back-home-btn {
@@ -242,7 +242,7 @@
 
       .event-card:hover {
         transform: translateY(-6px);
-        border-color: var(--active-theme-color, var(--pink));
+        border-color: rgba(255, 255, 255, 0.25);
         box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
       }
 
@@ -288,7 +288,7 @@
         align-items: center;
         font-weight: 700;
         text-transform: uppercase;
-        color: var(--active-theme-color, var(--pink));
+        color: var(--active-theme-color, var(--gold));
       }
 
       .event-card h3 {
@@ -454,10 +454,10 @@
         position: absolute;
         width: 12px;
         height: 12px;
-        background: var(--pink);
+        background: var(--gold);
         border-radius: 50%;
         border: 2px solid white;
-        box-shadow: 0 0 12px var(--pink);
+        box-shadow: 0 0 12px var(--gold);
         transform: translate(-50%, -50%);
         cursor: pointer;
         animation: map-glow 2s infinite alternate;
@@ -465,7 +465,7 @@
 
       @keyframes map-glow {
         0% { transform: translate(-50%, -50%) scale(1); }
-        100% { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 16px var(--pink); }
+        100% { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 16px rgba(255, 209, 107, 0.6); }
       }
 
       /* Dynamic Options Panel (Atmosphere Settings) */
@@ -641,7 +641,7 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        color: var(--active-theme-color, var(--pink));
+        color: var(--active-theme-color, var(--gold));
         font-weight: 700;
       }
 
@@ -798,7 +798,8 @@
         width: 46px;
         height: 46px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--pink), var(--violet));
+        background: var(--gold);
+        color: black;
         display: grid;
         place-items: center;
         font-weight: 700;
@@ -807,8 +808,8 @@
       .talent-btn {
         padding: 6px 12px;
         border-radius: 6px;
-        border: 1px solid var(--pink);
-        color: var(--pink);
+        border: 1px solid var(--gold);
+        color: var(--gold);
         background: transparent;
         font-size: 11px;
         font-weight: 700;
@@ -817,8 +818,8 @@
       }
 
       .talent-btn:hover {
-        background: var(--pink);
-        color: white;
+        background: var(--gold);
+        color: black;
       }
 
       /* Mobile Navigation Bar (Bottom Sticky) */
@@ -860,13 +861,13 @@
 
       .mobile-nav-item:hover,
       .mobile-nav-item.active {
-        color: var(--pink);
+        color: var(--gold);
       }
 
       .mobile-nav-item.active svg {
         transform: translateY(-2px);
         opacity: 1;
-        stroke: var(--pink);
+        stroke: var(--gold);
       }
 
       /* Active Filters Bar styles */
@@ -933,7 +934,7 @@
         margin-left: auto;
         background: transparent;
         border: 0;
-        color: var(--pink);
+        color: var(--gold);
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
@@ -1101,9 +1102,9 @@
             <div class="atmosphere-row">
               <span>Interactive Wave Scheme</span>
               <div class="color-options">
-                <div class="color-dot active" style="background: var(--pink)" data-theme="music" title="Cyber Pulse"></div>
-                <div class="color-dot" style="background: var(--violet)" data-theme="movies" title="Cinema Lounge"></div>
-                <div class="color-dot" style="background: var(--gold)" data-theme="dates" title="Golden Hour"></div>
+                <div class="color-dot active" style="background: #a78bfa" data-theme="music" title="Lavender Pulse"></div>
+                <div class="color-dot" style="background: #818cf8" data-theme="movies" title="Indigo Lounge"></div>
+                <div class="color-dot" style="background: #ffd16b" data-theme="dates" title="Golden Hour"></div>
               </div>
             </div>
             <div class="atmosphere-row">
@@ -1183,9 +1184,9 @@
       });
 
       const colorSchemes = {
-        music: { primary: '#ff1597', secondary: '#14a8ff', glowClass: 'music' },
-        movies: { primary: '#7a42ff', secondary: '#14a8ff', glowClass: 'movies' },
-        dates: { primary: '#ffd16b', secondary: '#ff1597', glowClass: 'dates' }
+        music: { primary: 'rgba(167, 139, 250, 0.3)', secondary: 'rgba(147, 197, 253, 0.2)', textAccent: '#a78bfa', glowClass: 'music' },
+        movies: { primary: 'rgba(129, 140, 248, 0.3)', secondary: 'rgba(147, 197, 253, 0.2)', textAccent: '#818cf8', glowClass: 'movies' },
+        dates: { primary: 'rgba(255, 209, 107, 0.3)', secondary: 'rgba(167, 139, 250, 0.2)', textAccent: '#ffd16b', glowClass: 'dates' }
       };
 
       class WaveParticle {
@@ -1268,9 +1269,9 @@
         
         bgGlow.className = 'bg-glow ' + colorSchemes[theme].glowClass;
         
-        // Dynamic border adjustments on cards
-        const primaryColor = colorSchemes[theme].primary;
-        document.documentElement.style.setProperty('--active-theme-color', primaryColor);
+        // Dynamic color adjustments on cards & active titles
+        const textAccentColor = colorSchemes[theme].textAccent;
+        document.documentElement.style.setProperty('--active-theme-color', textAccentColor);
       }
 
       colorDots.forEach(dot => {
@@ -1466,7 +1467,7 @@
           const card = document.createElement('div');
           card.className = 'event-card';
           card.setAttribute('data-evt-id', evt.id);
-          card.style.setProperty('--active-theme-color', colorSchemes[evt.category].primary);
+          card.style.setProperty('--active-theme-color', colorSchemes[evt.category].textAccent);
 
           if (currentView === 'grid') {
             card.innerHTML = `
@@ -1476,7 +1477,7 @@
               <div class="card-details">
                 <div>
                   <div class="card-meta-row" style="margin-bottom: 4px; font-size: 10px;">
-                    <span>${evt.category === 'music' ? '🎵 Gigs' : evt.category === 'movies' ? '🎬 Cinema' : '🍷 Date'} &bull; ${evt.date.split('•')[0]}</span>
+                    <span>${evt.category === 'music' ? 'Gigs' : evt.category === 'movies' ? 'Cinema' : 'Date'} &bull; ${evt.date.split('•')[0]}</span>
                   </div>
                   <h3>${evt.title}</h3>
                   <p class="card-loc" style="font-size: 11px;">
@@ -1498,7 +1499,7 @@
               <div class="card-details">
                 <div>
                   <div class="card-meta-row" style="margin-bottom: 4px; font-size: 10px;">
-                    <span>${evt.category === 'music' ? '🎵 Gigs' : evt.category === 'movies' ? '🎬 Cinema' : '🍷 Date'} &bull; ${evt.date.split('•')[0]}</span>
+                    <span>${evt.category === 'music' ? 'Gigs' : evt.category === 'movies' ? 'Cinema' : 'Date'} &bull; ${evt.date.split('•')[0]}</span>
                   </div>
                   <h3>${evt.title}</h3>
                   <p class="card-loc" style="font-size: 12px;">
@@ -1510,7 +1511,7 @@
                   <div class="card-tags" style="margin-top: 0;">
                     ${evt.tags.slice(0, 2).map(tag => `<span class="card-tag">${tag}</span>`).join('')}
                   </div>
-                  <span style="font-size: 12px; font-weight: 700; color: var(--active-theme-color, var(--pink));">Details &rarr;</span>
+                  <span style="font-size: 12px; font-weight: 700; color: var(--active-theme-color, var(--gold));">Details &rarr;</span>
                 </div>
               </div>
             `;
@@ -1560,10 +1561,10 @@
         if (activeVibe) {
           hasFilters = true;
           const vibeText = {
-            'dates': '🍷 Romantic',
-            'activities': '🎮 Active',
-            'food_drink': '☕ Casual',
-            'music': '🔊 Wild'
+            'dates': 'Romantic',
+            'activities': 'Active',
+            'food_drink': 'Casual',
+            'music': 'Wild'
           }[activeVibe] || activeVibe;
           
           const pill = document.createElement('div');
@@ -1589,9 +1590,9 @@
         if (activeDate) {
           hasFilters = true;
           const dateText = {
-            'tonight': '🕒 Tonight',
-            'weekend': '📅 This Weekend',
-            'next_week': '📅 Next Week'
+            'tonight': 'Tonight',
+            'weekend': 'This Weekend',
+            'next_week': 'Next Week'
           }[activeDate] || activeDate;
 
           const pill = document.createElement('div');
@@ -1651,18 +1652,18 @@
         const evt = mockEvents.find(e => e.id === evtId);
         if (!evt) return;
         
-        document.documentElement.style.setProperty('--active-theme-color', colorSchemes[evt.category].primary);
+        document.documentElement.style.setProperty('--active-theme-color', colorSchemes[evt.category].textAccent);
 
         // Populate detail card contents
         drawerContent.innerHTML = `
           <div class="detail-header" style="background-image: url('${evt.banner}')"></div>
           <div class="detail-meta-pill">
-            <span>${evt.category === 'music' ? '🎵 Music' : evt.category === 'movies' ? '🎬 Cinema' : '🍷 Date Spot'}</span>
+            <span>${evt.category === 'music' ? 'Music' : evt.category === 'movies' ? 'Cinema' : 'Date Spot'}</span>
           </div>
           <h2 class="detail-title">${evt.title}</h2>
           <div class="detail-subtitle">
-            <span>📅 ${evt.date}</span>
-            <span>📍 ${evt.location}</span>
+            <span>Date: ${evt.date}</span>
+            <span>Location: ${evt.location}</span>
           </div>
 
           <p style="font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.85); margin-bottom: 24px;">${evt.desc}</p>
@@ -1704,7 +1705,9 @@
             <div class="hotel-list">
               ${evt.hotels.map(hotel => `
                 <div class="hotel-card">
-                  <div class="hotel-img-placeholder">🏨</div>
+                  <div class="hotel-img-placeholder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6;"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="16"></line><line x1="15" y1="22" x2="15" y2="16"></line><line x1="9" y1="16" x2="15" y2="16"></line><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path></svg>
+                  </div>
                   <div class="hotel-info">
                     <div>
                       <h4>${hotel.name}</h4>
@@ -1791,7 +1794,7 @@
             document.getElementById('submit-talent-offer-btn').addEventListener('click', () => {
               drawerContent.innerHTML = `
                 <div style="text-align: center; padding: 40px 0;">
-                  <h2 style="color: var(--pink)">Offer Dispatched!</h2>
+                  <h2 style="color: var(--gold)">Offer Dispatched!</h2>
                   <p>${evt.hiredArtist.name} has been notified and has 48 hours to accept. Funds are only checked upon acceptance.</p>
                   <button class="checkout-btn" onclick="document.getElementById('drawer-close-btn').click()">Done</button>
                 </div>
