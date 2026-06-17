@@ -29,9 +29,8 @@
         margin: 0;
         color: var(--ink);
         background:
-          radial-gradient(circle at 72% 24%, rgba(255, 28, 144, 0.28), transparent 26rem),
-          radial-gradient(circle at 82% 55%, rgba(0, 183, 255, 0.18), transparent 30rem),
-          #02040b;
+          radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.06), transparent 45rem),
+          #020306;
         overflow-x: hidden;
       }
 
@@ -43,7 +42,7 @@
         background-image: url("assets/background.png");
         background-size: cover;
         background-position: center top;
-        opacity: 0.36;
+        opacity: 0.15;
       }
 
       body::after {
@@ -52,8 +51,7 @@
         z-index: -2;
         content: "";
         background:
-          linear-gradient(180deg, rgba(2, 4, 11, 0.04), #02040b 82%),
-          radial-gradient(ellipse at 46% 59%, rgba(242, 0, 255, 0.25), transparent 18rem);
+          linear-gradient(180deg, rgba(2, 3, 6, 0.2), #020306 90%);
         pointer-events: none;
       }
 
@@ -351,6 +349,110 @@
 
       .cta:hover svg {
         transform: translateX(5px);
+      }
+
+      /* AI Prompt Box styles */
+      .ai-prompt-container {
+        max-width: 680px;
+        margin-top: 18px;
+        margin-bottom: 32px;
+      }
+
+      .ai-prompt-box {
+        display: flex;
+        align-items: center;
+        background: rgba(8, 10, 16, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 5px 6px 5px 20px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      .ai-prompt-box:focus-within {
+        border-color: rgba(255, 21, 151, 0.4);
+        box-shadow: 0 20px 50px rgba(255, 21, 151, 0.08), 0 0 0 1px rgba(255, 21, 151, 0.15);
+      }
+
+      .ai-prompt-sparkle {
+        color: var(--pink);
+        font-size: 16px;
+        margin-right: 12px;
+        animation: rotateSparkle 4s linear infinite;
+        flex-shrink: 0;
+      }
+
+      @keyframes rotateSparkle {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .ai-prompt-box input {
+        flex: 1;
+        background: transparent;
+        border: 0;
+        color: var(--ink);
+        font-size: 14px;
+        outline: none;
+        padding: 10px 0;
+      }
+
+      .ai-prompt-box input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .ai-discover-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, var(--pink), var(--violet));
+        border: 0;
+        border-radius: 12px;
+        color: white;
+        padding: 10px 18px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 16px rgba(255, 21, 151, 0.2);
+        flex-shrink: 0;
+      }
+
+      .ai-discover-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(255, 21, 151, 0.35);
+      }
+
+      .ai-prompt-suggestions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+
+      .suggestion-tag {
+        font-size: 11px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 99px;
+        padding: 5px 12px;
+        cursor: pointer;
+        transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+      }
+
+      .suggestion-tag:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: white;
+      }
+
+      .feature-minimal-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
       }
 
       /* Hero Logo Container & Animations */
@@ -1938,12 +2040,23 @@
               <span class="dramatic-line"><span class="dramatic-word gradient-line">Everything Events.</span></span>
             </h1>
             <p class="lead">Find and book the best DJs, artists, venues, photographers, planners and more. All in one place.</p>
-            <a class="cta" href="events.html" id="cta-button">
-              Get Into Live Music
-              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </a>
+            <!-- AI Prompt Search Box -->
+            <div class="ai-prompt-container">
+              <div class="ai-prompt-box">
+                <span class="ai-prompt-sparkle">✦</span>
+                <input type="text" id="ai-discover-input" placeholder="What are you looking for today? (e.g. cozy jazz rooftop, active comedy club, techno warehouse...)" autocomplete="off">
+                <button id="ai-discover-submit" class="ai-discover-btn">
+                  <span>Ask AI</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+              <div class="ai-prompt-suggestions">
+                <span class="suggestion-tag" data-query="Techno warehouse gigs under $50">🔊 Techno Gigs</span>
+                <span class="suggestion-tag" data-query="Romantic jazz rooftop date this weekend">🍷 Romantic Date</span>
+                <span class="suggestion-tag" data-query="IMAX sci-fi cinema premieres tonight">🎬 Movies</span>
+                <span class="suggestion-tag" data-query="Outdoor food festival family activities">🍔 Food Fest</span>
+              </div>
+            </div>
           </div>
           
           <!-- Hero Logo Container featuring Floating Signature phrase -->
@@ -2138,92 +2251,29 @@
           </div>
         </section>
 
-        <!-- New Scroll Section 2: Curated Date Guides -->
-        <section class="scroll-section" aria-label="Date night planner guides">
-          <div class="section-header">
-            <h2>Curated Date Night Itineraries</h2>
-            <a href="events.html?filter=dates" class="section-link">Explore date spots &rarr;</a>
-          </div>
-          <div class="date-guides-grid">
-            <div class="date-guide-card" onclick="window.location.href='events.html?filter=dates'">
-              <div class="guide-vibe-badge">ROMANTIC &bull; COZY</div>
-              <h3>The Sunset Jazz Date</h3>
-              <div class="guide-steps">
-                <div class="guide-step">
-                  <span class="step-num">1</span>
-                  <div>
-                    <h4>Horizon Rooftop Dining</h4>
-                    <p>Sunset cocktails &amp; dinner</p>
-                  </div>
-                </div>
-                <div class="guide-step">
-                  <span class="step-num">2</span>
-                  <div>
-                    <h4>The Foundry Jazz Trio</h4>
-                    <p>Live music performance</p>
-                  </div>
-                </div>
-                <div class="guide-step">
-                  <span class="step-num">3</span>
-                  <div>
-                    <h4>Grand Horizon Hotel</h4>
-                    <p>Boutique overnight stay</p>
-                  </div>
-                </div>
-              </div>
-              <div class="guide-footer">
-                <span>Estimated: $240/pair</span>
-                <span style="color: var(--gold); font-weight: 700;">View Package &rarr;</span>
-              </div>
-            </div>
-
-            <div class="date-guide-card" onclick="window.location.href='events.html?filter=dates'">
-              <div class="guide-vibe-badge" style="border-color: var(--blue); color: var(--blue)">ACTIVE &bull; CASUAL</div>
-              <h3>The IMAX &amp; Cocktails Night</h3>
-              <div class="guide-steps">
-                <div class="guide-step">
-                  <span class="step-num" style="background: var(--blue)">1</span>
-                  <div>
-                    <h4>IMAX Theatre Central</h4>
-                    <p>Villeneuve Sci-Fi screening</p>
-                  </div>
-                </div>
-                <div class="guide-step">
-                  <span class="step-num" style="background: var(--blue)">2</span>
-                  <div>
-                    <h4>Neon Lounge Club</h4>
-                    <p>Late night drinks &amp; arcade</p>
-                  </div>
-                </div>
-                <div class="guide-step">
-                  <span class="step-num" style="background: var(--blue)">3</span>
-                  <div>
-                    <h4>Waterfront Suites</h4>
-                    <p>Luxury dockside rooms</p>
-                  </div>
-                </div>
-              </div>
-              <div class="guide-footer">
-                <span>Estimated: $110/pair</span>
-                <span style="color: var(--gold); font-weight: 700;">View Package &rarr;</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- New Scroll Section 3: How Echoo Works (Interactive Tabs) -->
-        <section class="scroll-section" aria-label="How it works">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <h2>How Echoo Works</h2>
-            <p style="color: var(--muted); font-size: 15px; max-width: 500px; margin: 8px auto 0;">Connecting creative talent, local event-goers, and boutique hotel bookings in one platform.</p>
-            <div class="works-toggle-container">
-              <button class="works-toggle-btn active" id="btn-toggle-attendee">For Event Goers</button>
-              <button class="works-toggle-btn" id="btn-toggle-provider">For Talent &amp; Hotels</button>
-            </div>
+        <!-- New Streamlined Feature Section -->
+        <section class="scroll-section" aria-label="AI Platform Features" style="margin-top: 48px; margin-bottom: 24px;">
+          <div style="text-align: center; margin-bottom: 36px;">
+            <h2>AI-Powered Discovery</h2>
+            <p style="color: var(--muted); font-size: 15px; max-width: 540px; margin: 8px auto 0;">Echoo matches location coordinates, personal interests, and real-time social dynamics to build your ultimate plan.</p>
           </div>
           
-          <div class="works-steps-grid" id="works-steps-container">
-            <!-- Dynamic Steps Injected here by JS -->
+          <div class="features-minimal-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            <div class="feature-minimal-card" style="background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.04); padding: 28px; border-radius: 16px; transition: transform 0.3s, border-color 0.3s;">
+              <div style="font-size: 24px; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(255, 21, 151, 0.3));">✦</div>
+              <h3 style="margin: 0 0 10px; font-weight: 800; font-size: 17px; color: white;">AI Personalization</h3>
+              <p style="color: var(--muted); font-size: 13px; margin: 0; line-height: 1.55;">Personalized feeds and weekend suggestions generated by analyzing your profile interests, likes, and ratings.</p>
+            </div>
+            <div class="feature-minimal-card" style="background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.04); padding: 28px; border-radius: 16px; transition: transform 0.3s, border-color 0.3s;">
+              <div style="font-size: 24px; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(122, 66, 255, 0.3));">💬</div>
+              <h3 style="margin: 0 0 10px; font-weight: 800; font-size: 17px; color: white;">Social Planning</h3>
+              <p style="color: var(--muted); font-size: 13px; margin: 0; line-height: 1.55;">Follow friends, coordinate group outings, share real-time itineraries, and chat directly in event rooms.</p>
+            </div>
+            <div class="feature-minimal-card" style="background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.04); padding: 28px; border-radius: 16px; transition: transform 0.3s, border-color 0.3s;">
+              <div style="font-size: 24px; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(20, 168, 255, 0.3));">🎫</div>
+              <h3 style="margin: 0 0 10px; font-weight: 800; font-size: 17px; color: white;">Seamless Checkout</h3>
+              <p style="color: var(--muted); font-size: 13px; margin: 0; line-height: 1.55;">Book tickets, request talent direct hires, and secure boutique lodging near the venue with full escrow holds.</p>
+            </div>
           </div>
         </section>
 
@@ -2471,78 +2521,40 @@
 
         startSlideShow();
 
-        // How it Works Tab Toggle
-        const toggleAttendeeBtn = document.getElementById('btn-toggle-attendee');
-        const toggleProviderBtn = document.getElementById('btn-toggle-provider');
-        const stepsContainer = document.getElementById('works-steps-container');
+        // AI Prompt search input submission & tags click triggers
+        const aiInput = document.getElementById('ai-discover-input');
+        const aiSubmit = document.getElementById('ai-discover-submit');
+        const suggestionTags = document.querySelectorAll('.suggestion-tag');
 
-        const stepData = {
-          attendee: [
-            {
-              step: "1",
-              title: "Discover Local Vibes",
-              desc: "Filter through verified nightlife, music concerts, local movies, and dining hotspots near you."
-            },
-            {
-              step: "2",
-              title: "Secure Escrow Booking",
-              desc: "Buy entry tickets or request vendor hire. Funds are safely held in escrow until the event completes successfully."
-            },
-            {
-              step: "3",
-              title: "Travel & Date Planner",
-              desc: "Build a date night itinerary, add nearby hotels at partner rates, and scan your QR code at the door."
-            }
-          ],
-          provider: [
-            {
-              step: "1",
-              title: "List Your Services",
-              desc: "Setup your talent profile (DJs, bands, planners) or link your boutique hotel rooms and movie showtimes."
-            },
-            {
-              step: "2",
-              title: "Receive Client Offers",
-              desc: "Get gig inquiries and room reservations directly on your calendar with pre-authorized client budgets."
-            },
-            {
-              step: "3",
-              title: "Guaranteed Payouts",
-              desc: "Complete the event, and funds are automatically released to your Stripe balance within 24 hours."
-            }
-          ]
-        };
+        function handleAiSearch(query) {
+          if (!query || !query.trim()) return;
+          aiSubmit.disabled = true;
+          aiSubmit.innerHTML = '<span>Thinking...</span>';
+          setTimeout(() => {
+            window.location.href = `app.html?query=${encodeURIComponent(query.trim())}&ai=true`;
+          }, 850);
+        }
 
-        function renderWorksSteps(role) {
-          stepsContainer.innerHTML = '';
-          stepData[role].forEach(data => {
-            const stepCard = document.createElement('div');
-            stepCard.className = 'works-step-card';
-            stepCard.innerHTML = `
-              <div class="step-card-num">${data.step}</div>
-              <h3>${data.title}</h3>
-              <p>${data.desc}</p>
-            `;
-            stepsContainer.appendChild(stepCard);
+        if (aiSubmit && aiInput) {
+          aiSubmit.addEventListener('click', () => {
+            handleAiSearch(aiInput.value);
+          });
+          aiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              handleAiSearch(aiInput.value);
+            }
           });
         }
 
-        if (toggleAttendeeBtn && toggleProviderBtn && stepsContainer) {
-          toggleAttendeeBtn.addEventListener('click', () => {
-            toggleAttendeeBtn.classList.add('active');
-            toggleProviderBtn.classList.remove('active');
-            renderWorksSteps('attendee');
+        suggestionTags.forEach(tag => {
+          tag.addEventListener('click', () => {
+            const query = tag.getAttribute('data-query');
+            if (aiInput) {
+              aiInput.value = query;
+            }
+            handleAiSearch(query);
           });
-
-          toggleProviderBtn.addEventListener('click', () => {
-            toggleProviderBtn.classList.add('active');
-            toggleAttendeeBtn.classList.remove('active');
-            renderWorksSteps('provider');
-          });
-
-          // Initial render
-          renderWorksSteps('attendee');
-        }
+        });
 
         // Newsletter form submission
         const newsletterForm = document.getElementById('newsletter-form');
