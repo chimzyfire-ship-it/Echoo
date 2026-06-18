@@ -1,420 +1,301 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>echoo — Authenticate</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>echoo sign in</title>
     <style>
       :root {
         color-scheme: dark;
-        --ink: #fffaf2;
-        --muted: rgba(255, 255, 255, 0.65);
-        --edge: rgba(255, 255, 255, 0.08);
-        --gold: #ffd16b;
-        --bg-glass: rgba(10, 14, 26, 0.45);
-        --bg-solid: #020306;
+        --bg: #080907;
+        --panel: #11130f;
+        --panel-2: #191b15;
+        --ink: #f5f1e8;
+        --muted: #a8a397;
+        --dim: #706c62;
+        --line: rgba(245, 241, 232, 0.13);
+        --line-strong: rgba(245, 241, 232, 0.28);
+        --signal: #d8ff5f;
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
+      * { box-sizing: border-box; }
       body {
-        font-family: 'Inter', sans-serif;
+        margin: 0;
+        min-height: 100svh;
         color: var(--ink);
-        background-color: var(--bg-solid);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+        background:
+          linear-gradient(90deg, rgba(245,241,232,0.035) 1px, transparent 1px) 0 0 / 34px 34px,
+          radial-gradient(circle at 80% 0%, rgba(216,255,95,0.12), transparent 26rem),
+          var(--bg);
+        display: grid;
+        place-items: center;
+        padding: 16px;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      button, input { font: inherit; }
+
+      .auth-shell {
+        width: min(460px, 100%);
+      }
+
+      .back {
+        display: inline-flex;
         align-items: center;
-        overflow-x: hidden;
-        position: relative;
-        padding: 24px;
-      }
-
-      /* Obsidian background image overlay */
-      body::before {
-        position: fixed;
-        inset: 0;
-        z-index: -3;
-        content: "";
-        background-image: url("assets/background.png");
-        background-size: cover;
-        background-position: center top;
-        opacity: 0.12;
-      }
-
-      body::after {
-        position: fixed;
-        inset: 0;
-        z-index: -2;
-        content: "";
-        background: linear-gradient(180deg, rgba(2, 3, 6, 0.2), #020306 90%);
-        pointer-events: none;
-      }
-
-      .back-link {
-        position: absolute;
-        top: clamp(24px, 4vw, 48px);
-        left: clamp(24px, 4vw, 48px);
+        gap: 10px;
+        margin-bottom: 14px;
         color: var(--muted);
-        text-decoration: none;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 850;
+      }
+
+      .back::before {
+        content: "";
+        width: 24px;
+        height: 1px;
+        background: currentColor;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: rgba(17, 19, 15, 0.92);
+        box-shadow: var(--shadow);
+      }
+
+      .auth-head {
+        padding: 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
         display: flex;
         align-items: center;
-        gap: 6px;
-        transition: color 0.2s;
+        justify-content: space-between;
+        margin-bottom: 38px;
       }
 
-      .back-link:hover {
-        color: white;
-      }
-
-      .auth-container {
-        width: 100%;
-        max-width: 440px;
-        background: var(--bg-glass);
-        border: 1px solid var(--edge);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-        z-index: 10;
-        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-      }
-
-      .brand-header {
-        text-align: center;
-        margin-bottom: 32px;
-      }
-
-      .brand-bug {
+      .brand img {
         width: 44px;
         height: 44px;
         object-fit: contain;
-        filter: drop-shadow(0 0 12px rgba(255, 209, 107, 0.2));
-        margin-bottom: 12px;
+        filter: saturate(0.72);
       }
 
-      .brand-header h1 {
-        font-size: 26px;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        margin-bottom: 6px;
-      }
-
-      .brand-header p {
-        font-size: 13px;
-        color: var(--muted);
-      }
-
-      .auth-tabs {
-        display: grid;
+      .mode {
+        display: inline-grid;
         grid-template-columns: 1fr 1fr;
-        background: rgba(0, 0, 0, 0.25);
-        border-radius: 10px;
-        padding: 4px;
-        margin-bottom: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.03);
+        gap: 3px;
+        padding: 3px;
+        border: 1px solid var(--line);
+        background: rgba(8, 9, 7, 0.76);
       }
 
-      .auth-tab {
+      .mode button {
+        min-height: 36px;
+        border: 0;
+        padding: 0 12px;
+        color: var(--muted);
         background: transparent;
-        border: 0;
-        color: var(--muted);
-        padding: 8px;
-        font-size: 13px;
-        font-weight: 700;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .auth-tab.active {
-        background: rgba(255, 255, 255, 0.08);
-        color: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      .auth-form {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .form-group label {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--muted);
-      }
-
-      .input-text {
-        height: 44px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(0, 0, 0, 0.25);
-        color: white;
-        padding: 0 14px;
-        font-size: 14px;
-        outline: none;
-        transition: all 0.2s;
-      }
-
-      .input-text:focus {
-        border-color: rgba(255, 255, 255, 0.3);
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
-      }
-
-      .form-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .mode button.active {
+        color: #10110e;
+        background: var(--ink);
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 320px;
+        font-size: clamp(42px, 13vw, 64px);
+        line-height: 0.9;
+        letter-spacing: -0.075em;
+      }
+
+      .sub {
+        margin: 12px 0 0;
         color: var(--muted);
-        margin-top: 4px;
+        line-height: 1.45;
+        font-weight: 650;
       }
 
-      .form-meta label {
+      form {
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      label {
+        color: var(--dim);
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      input {
+        width: 100%;
+        min-height: 58px;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        outline: 0;
+        background: rgba(8, 9, 7, 0.78);
+        color: var(--ink);
+        padding: 0 15px;
+        font-size: 16px;
+        font-weight: 750;
+        transition: border-color 160ms ease, background 160ms ease;
+      }
+
+      input:focus {
+        border-color: var(--signal);
+        background: rgba(8, 9, 7, 0.95);
+      }
+
+      .meta {
         display: flex;
         align-items: center;
-        gap: 6px;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .submit,
+      .provider {
+        min-height: 58px;
+        border: 1px solid var(--line);
+        border-radius: 0;
         cursor: pointer;
+        font-weight: 950;
+        letter-spacing: -0.03em;
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
       }
 
-      .form-meta a {
-        color: inherit;
-        text-decoration: none;
-        transition: color 0.2s;
+      .submit {
+        background: var(--signal);
+        color: #10110e;
+        font-size: 18px;
       }
 
-      .form-meta a:hover {
-        color: white;
+      .submit:hover,
+      .provider:hover {
+        transform: translateY(-2px);
+        border-color: var(--line-strong);
       }
 
-      .btn-submit {
-        height: 44px;
-        border-radius: 8px;
-        background: white;
-        color: black;
-        border: 0;
-        font-weight: 700;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.2s;
-        margin-top: 8px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .btn-submit:hover {
-        background: #e2e8f0;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
-      }
-
-      .social-separator {
+      .divider {
         display: flex;
         align-items: center;
         gap: 12px;
-        margin: 20px 0;
-        color: var(--muted);
+        color: var(--dim);
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 950;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
       }
 
-      .social-separator::before,
-      .social-separator::after {
+      .divider::before,
+      .divider::after {
         content: "";
         flex: 1;
         height: 1px;
-        background: var(--edge);
+        background: var(--line);
       }
 
-      .social-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+      .provider {
+        background: rgba(245, 241, 232, 0.035);
+        color: var(--ink);
       }
 
-      .social-btn {
-        height: 42px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.03);
-        color: white;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        transition: all 0.2s;
-      }
-
-      .social-btn:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.2);
-      }
-
-      .social-btn svg {
-        flex-shrink: 0;
-      }
-
-      /* Toggle state animation */
-      .signup-only {
-        display: none;
-      }
-
-      .signup-active .signup-only {
-        display: flex;
-      }
-
-      .signup-active .signin-only {
-        display: none;
-      }
+      .signup-only { display: none; }
+      .signup .signup-only { display: grid; }
     </style>
   </head>
   <body>
-    <!-- Back to home -->
-    <a href="index.html" class="back-link">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      Back to Home
-    </a>
-
-    <div class="auth-container" id="auth-panel">
-      <div class="brand-header">
-        <img class="brand-bug" src="assets/echoo-bug.png" alt="Echoo Logo">
-        <h1 id="auth-title">Welcome back</h1>
-        <p id="auth-desc">Enter your credentials to unlock custom recommendation filters.</p>
-      </div>
-
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-signin">Sign In</button>
-        <button class="auth-tab" id="tab-signup">Sign Up</button>
-      </div>
-
-      <form class="auth-form" id="auth-form-el" onsubmit="handleAuthSubmit(event)">
-        <!-- Name field (Sign Up Only) -->
-        <div class="form-group signup-only">
-          <label for="input-name">Full Name</label>
-          <input type="text" id="input-name" class="input-text" placeholder="John Doe">
+    <main class="auth-shell">
+      <a class="back" href="index.html">Back home</a>
+      <section class="panel" id="panel">
+        <div class="auth-head">
+          <div class="brand">
+            <img src="assets/echoo-bug.png" alt="">
+            <div class="mode" aria-label="Authentication mode">
+              <button class="active" id="signin-tab" type="button">Sign in</button>
+              <button id="signup-tab" type="button">Join</button>
+            </div>
+          </div>
+          <h1 id="title">Come in quietly.</h1>
+          <p class="sub" id="copy">No backend yet, so this door opens immediately. Credentials are optional for now.</p>
         </div>
 
-        <div class="form-group">
-          <label for="input-email">Email Address</label>
-          <input type="email" id="input-email" class="input-text" placeholder="name@example.com" required>
-        </div>
-
-        <div class="form-group">
-          <label for="input-password">Password</label>
-          <input type="password" id="input-password" class="input-text" placeholder="••••••••" required>
-        </div>
-
-        <!-- Meta fields (Sign In Only) -->
-        <div class="form-meta signin-only">
-          <label>
-            <input type="checkbox" style="accent-color: var(--gold)"> Remember me
-          </label>
-          <a href="#" onclick="alert('Password reset link dispatched!')">Forgot Password?</a>
-        </div>
-
-        <button type="submit" class="btn-submit" id="btn-submit-text">
-          <span>Continue</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
-      </form>
-
-      <div class="social-separator">or continue with</div>
-
-      <div class="social-grid">
-        <button class="social-btn" onclick="handleSocialAuth('Google')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
-          Google
-        </button>
-        <button class="social-btn" onclick="handleSocialAuth('Apple')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Apple
-        </button>
-        <button class="social-btn" onclick="handleSocialAuth('Facebook')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-          Facebook
-        </button>
-      </div>
-    </div>
+        <form id="auth-form">
+          <div class="field signup-only">
+            <label for="name">Name</label>
+            <input id="name" autocomplete="name" placeholder="Your name">
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" autocomplete="email" placeholder="name@example.com">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="Anything, or nothing">
+          </div>
+          <div class="meta">
+            <span>Session preview</span>
+            <a href="#">Need help?</a>
+          </div>
+          <button class="submit" type="submit" id="submit-label">Enter echoo</button>
+          <div class="divider">or</div>
+          <button class="provider" type="button" data-provider="Google">Continue with Google</button>
+          <button class="provider" type="button" data-provider="Apple">Continue with Apple</button>
+        </form>
+      </section>
+    </main>
 
     <script>
-      const tabSignIn = document.getElementById('tab-signin');
-      const tabSignUp = document.getElementById('tab-signup');
-      const authPanel = document.getElementById('auth-panel');
-      const authTitle = document.getElementById('auth-title');
-      const authDesc = document.getElementById('auth-desc');
-      const btnSubmitText = document.getElementById('btn-submit-text').querySelector('span');
-      const nameInput = document.getElementById('input-name');
+      const panel = document.getElementById("panel");
+      const title = document.getElementById("title");
+      const copy = document.getElementById("copy");
+      const signIn = document.getElementById("signin-tab");
+      const signUp = document.getElementById("signup-tab");
+      const submitLabel = document.getElementById("submit-label");
 
-      let isSignUp = false;
-
-      tabSignIn.addEventListener('click', () => {
-        isSignUp = false;
-        tabSignIn.classList.add('active');
-        tabSignUp.classList.remove('active');
-        authPanel.classList.remove('signup-active');
-        authTitle.textContent = "Welcome back";
-        authDesc.textContent = "Enter your credentials to unlock custom recommendation filters.";
-        btnSubmitText.textContent = "Continue";
-        nameInput.removeAttribute('required');
-      });
-
-      tabSignUp.addEventListener('click', () => {
-        isSignUp = true;
-        tabSignUp.classList.add('active');
-        tabSignIn.classList.remove('active');
-        authPanel.classList.add('signup-active');
-        authTitle.textContent = "Create an account";
-        authDesc.textContent = "Start discovering local events, coordinates, and planning with friends.";
-        btnSubmitText.textContent = "Start Onboarding";
-        nameInput.setAttribute('required', 'true');
-      });
-
-      function handleAuthSubmit(e) {
-        e.preventDefault();
-        const email = document.getElementById('input-email').value;
-        const name = isSignUp ? document.getElementById('input-name').value : "John Doe";
-        
-        // Pass info to dashboard app.html
-        const encodedName = encodeURIComponent(name);
-        const encodedEmail = encodeURIComponent(email);
-        
-        // Redirect to onboarding page or main screen
-        if (isSignUp) {
-          window.location.href = `app.html?onboard=true&name=${encodedName}&email=${encodedEmail}`;
-        } else {
-          window.location.href = `app.html?onboard=false&name=${encodedName}&email=${encodedEmail}`;
-        }
+      function setMode(mode) {
+        const joining = mode === "signup";
+        panel.classList.toggle("signup", joining);
+        signIn.classList.toggle("active", !joining);
+        signUp.classList.toggle("active", joining);
+        title.textContent = joining ? "Make it yours." : "Come in quietly.";
+        copy.textContent = joining ? "Create the shape of your nights. We will keep it simple until the backend arrives." : "No backend yet, so this door opens immediately. Credentials are optional for now.";
+        submitLabel.textContent = joining ? "Create preview account" : "Enter echoo";
       }
 
-      function handleSocialAuth(provider) {
-        // Mock success redirecting to onboarding
-        window.location.href = `app.html?onboard=true&name=${provider}%20User`;
+      function finish(provider) {
+        const name = document.getElementById("name").value.trim() || provider || "Preview User";
+        const email = document.getElementById("email").value.trim();
+        window.location.href = `app.html?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
       }
+
+      signIn.addEventListener("click", () => setMode("signin"));
+      signUp.addEventListener("click", () => setMode("signup"));
+      document.getElementById("auth-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        finish("");
+      });
+      document.querySelectorAll("[data-provider]").forEach((button) => {
+        button.addEventListener("click", () => finish(`${button.dataset.provider} User`));
+      });
     </script>
   </body>
 </html>

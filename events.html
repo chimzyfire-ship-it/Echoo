@@ -3,1865 +3,399 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Find Events — Echoo</title>
+    <title>echoo explore</title>
     <style>
       :root {
         color-scheme: dark;
-        --ink: #fffaf2;
-        --muted: rgba(255, 255, 255, 0.72);
-        --soft: rgba(255, 255, 255, 0.05);
-        --panel: rgba(6, 8, 16, 0.65);
-        --edge: rgba(255, 255, 255, 0.05);
-        --pink: #ff1597;
-        --violet: #7a42ff;
-        --blue: #14a8ff;
-        --gold: #ffd16b;
-        --bg-glass: rgba(2, 3, 6, 0.85);
+        --bg: #080907;
+        --panel: #11130f;
+        --panel-2: #191b15;
+        --ink: #f5f1e8;
+        --muted: #a8a397;
+        --dim: #706c62;
+        --line: rgba(245, 241, 232, 0.13);
+        --line-strong: rgba(245, 241, 232, 0.28);
+        --signal: #d8ff5f;
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
-      * {
-        box-sizing: border-box;
-      }
-
+      * { box-sizing: border-box; }
       body {
-        min-height: 100vh;
         margin: 0;
-        color: var(--ink);
-        background: #020306;
-        overflow-x: hidden;
-      }
-
-      /* Animated Interactive Wave Background Canvas */
-      #bg-canvas {
-        position: fixed;
-        inset: 0;
-        z-index: -2;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        background: radial-gradient(circle at 50% 50%, rgba(2, 3, 6, 0.1), #020306 95%);
-      }
-
-      /* Background radial glow that coordinates with active theme */
-      .bg-glow {
-        position: fixed;
-        inset: 0;
-        z-index: -3;
-        transition: background 1s ease-in-out;
-        pointer-events: none;
-        background:
-          radial-gradient(circle at 10% 30%, rgba(42, 26, 74, 0.2), transparent 40rem),
-          radial-gradient(circle at 90% 70%, rgba(20, 45, 90, 0.15), transparent 40rem);
-      }
-
-      .bg-glow.music {
-        background:
-          radial-gradient(circle at 10% 30%, rgba(42, 26, 74, 0.2), transparent 40rem),
-          radial-gradient(circle at 90% 70%, rgba(20, 45, 90, 0.15), transparent 40rem);
-      }
-
-      .bg-glow.movies {
-        background:
-          radial-gradient(circle at 10% 30%, rgba(30, 28, 58, 0.2), transparent 40rem),
-          radial-gradient(circle at 90% 70%, rgba(21, 43, 69, 0.15), transparent 40rem);
-      }
-
-      .bg-glow.dates {
-        background:
-          radial-gradient(circle at 10% 30%, rgba(61, 48, 29, 0.15), transparent 40rem),
-          radial-gradient(circle at 90% 70%, rgba(42, 26, 74, 0.1), transparent 40rem);
-      }
-
-      .page {
-        position: relative;
         min-height: 100vh;
-        padding: 0 clamp(22px, 4vw, 72px) 80px;
+        color: var(--ink);
+        background:
+          linear-gradient(90deg, rgba(245,241,232,0.035) 1px, transparent 1px) 0 0 / 34px 34px,
+          radial-gradient(circle at 78% 4%, rgba(216,255,95,0.1), transparent 25rem),
+          var(--bg);
       }
 
-      /* Sticky Header */
-      header {
+      a { color: inherit; text-decoration: none; }
+      button, input { font: inherit; }
+
+      .topbar {
         position: sticky;
         top: 0;
-        z-index: 100;
-        display: grid;
-        grid-template-columns: auto 1fr auto;
+        z-index: 20;
+        display: flex;
         align-items: center;
-        gap: 26px;
-        background: var(--bg-glass);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 16px clamp(22px, 4vw, 72px);
-        margin: 0 calc(-1 * clamp(22px, 4vw, 72px)) 24px;
-        transition: background-color 0.3s;
-      }
-
-      header.scrolled {
-        background: rgba(2, 4, 11, 0.9);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(8, 9, 7, 0.82);
+        backdrop-filter: blur(18px);
       }
 
       .brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: white;
-        text-decoration: none;
-      }
-
-      .brand-bug {
-        width: 44px;
-        height: 44px;
-        object-fit: contain;
-        filter: drop-shadow(0 0 14px rgba(255, 0, 198, 0.3));
-      }
-
-      .brand-name {
-        font-size: 26px;
-        font-weight: 800;
-      }
-
-      .search-box-header {
-        max-width: 420px;
-        width: 100%;
-        justify-self: center;
-        display: flex;
-        align-items: center;
-        height: 42px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(15, 19, 30, 0.6);
-        padding: 0 16px;
-        gap: 10px;
-        color: var(--muted);
-        cursor: pointer;
-        font-size: 13px;
-        transition: border-color 0.3s;
-      }
-
-      .search-box-header:hover {
-        border-color: rgba(255, 255, 255, 0.18);
-        background: rgba(15, 19, 30, 0.85);
-      }
-
-      nav {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-        font-size: 14px;
-      }
-
-      nav a {
-        color: white;
-        text-decoration: none;
-        transition: color 0.3s;
-      }
-
-      nav a:hover {
-        color: var(--gold);
-      }
-
-      .back-home-btn {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        font-weight: 700;
-        font-size: 13px;
-        color: var(--muted);
-        text-decoration: none;
-        transition: color 0.3s;
-      }
-
-      .back-home-btn:hover {
-        color: white;
-      }
-
-      /* Control Filter Chips Bar */
-      .filters-container {
-        display: flex;
         gap: 10px;
+        font-weight: 950;
+        font-size: 26px;
+        letter-spacing: -0.05em;
+      }
+
+      .brand img { width: 36px; height: 36px; object-fit: contain; }
+
+      .topbar a:last-child {
+        min-height: 42px;
+        padding: 0 15px;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-weight: 850;
+      }
+
+      .shell {
+        width: min(1160px, 100%);
+        margin: 0 auto;
+        padding: 18px 18px 106px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 16px;
+        padding: 22px 0;
+      }
+
+      .kicker {
+        color: var(--signal);
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(48px, 14vw, 94px);
+        line-height: 0.86;
+        letter-spacing: -0.075em;
+      }
+
+      .search {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid var(--line);
+        background: rgba(17, 19, 15, 0.88);
+      }
+
+      input {
+        min-width: 0;
+        min-height: 54px;
+        border: 0;
+        outline: 0;
+        color: var(--ink);
+        background: transparent;
+        padding: 0 8px;
+        font-weight: 750;
+      }
+
+      .primary,
+      .filter {
+        min-height: 54px;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        cursor: pointer;
+        font-weight: 950;
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      }
+
+      .primary {
+        border-color: transparent;
+        color: #10110e;
+        background: var(--signal);
+        padding: 0 18px;
+      }
+
+      .filter {
+        flex: 0 0 auto;
+        padding: 0 15px;
+        color: var(--muted);
+        background: rgba(245, 241, 232, 0.04);
+      }
+
+      .filter.active {
+        color: #10110e;
+        background: var(--ink);
+      }
+
+      .primary:hover,
+      .filter:hover {
+        transform: translateY(-2px);
+        border-color: var(--line-strong);
+      }
+
+      .filters {
+        display: flex;
+        gap: 8px;
         overflow-x: auto;
         scrollbar-width: none;
+        padding-bottom: 4px;
       }
 
-      .filters-container::-webkit-scrollbar {
-        display: none;
-      }
+      .filters::-webkit-scrollbar { display: none; }
 
-      .filter-chip {
-        padding: 8px 18px;
-        border-radius: 999px;
-        border: 1px solid var(--soft);
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--muted);
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        white-space: nowrap;
-      }
-
-      .filter-chip:hover {
-        border-color: rgba(255, 255, 255, 0.2);
-        color: white;
-      }
-
-      .filter-chip.active {
-        background: white;
-        color: black;
-        border-color: white;
-        transform: scale(1.04);
-      }
-
-      .view-toggle-btn.active {
-        background: white !important;
-        color: black !important;
-      }
-
-      /* Split View Layout */
-      .events-split-layout {
+      .content {
         display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 32px;
-        align-items: start;
+        gap: 14px;
       }
 
-      /* Base Event Card layout */
-      .event-card {
-        position: relative;
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid var(--edge);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(12, 15, 24, 0.8));
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+      .event {
+        display: grid;
+        grid-template-columns: 104px 1fr;
+        gap: 14px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        background: rgba(17, 19, 15, 0.84);
         cursor: pointer;
-        display: flex;
-        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.4s, box-shadow 0.4s;
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
       }
 
-      .event-card:hover {
-        transform: translateY(-6px);
-        border-color: rgba(255, 255, 255, 0.25);
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+      .event:hover {
+        transform: translateX(4px);
+        border-color: var(--line-strong);
+        background: rgba(25, 27, 21, 0.94);
       }
 
-      .card-media {
-        background-size: cover;
-        background-position: center;
-        position: relative;
-        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+      .event img {
+        width: 104px;
+        height: 132px;
+        object-fit: cover;
+        filter: saturate(0.58) contrast(1.08);
       }
 
-      .event-card:hover .card-media {
-        transform: scale(1.03);
-      }
-
-      .card-media::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, transparent 40%, rgba(2, 4, 11, 0.85) 100%);
-      }
-
-      .card-price-badge {
-        position: absolute;
-        padding: 5px 12px;
-        border-radius: 6px;
-        background: rgba(2, 4, 11, 0.72);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        font-weight: 700;
-        font-size: 13px;
-        color: white;
-      }
-
-      .card-details {
-        display: flex;
-        flex-grow: 1;
-        justify-content: space-between;
-      }
-
-      .card-meta-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-weight: 700;
+      .event small {
+        color: var(--signal);
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
-        color: var(--active-theme-color, var(--gold));
       }
 
-      .event-card h3 {
-        margin: 0;
-        font-weight: 800;
-        line-height: 1.3;
-      }
-
-      .event-card p.card-loc {
-        margin: 0;
-        color: var(--muted);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .card-tags {
-        display: flex;
-        gap: 6px;
-      }
-
-      .card-tag {
-        font-size: 10px;
-        padding: 3px 8px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 4px;
-        color: var(--muted);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-      }
-
-      /* Compact Grid View Layout Styles */
-      .events-grid.grid-layout {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-      }
-
-      .events-grid.grid-layout .event-card {
-        height: 240px;
-        flex-direction: column;
-      }
-
-      .events-grid.grid-layout .card-media {
-        height: 110px;
-        width: 100%;
-      }
-
-      .events-grid.grid-layout .card-price-badge {
-        top: 12px;
-        right: 12px;
-        font-size: 12px;
-      }
-
-      .events-grid.grid-layout .card-details {
-        padding: 12px;
-        flex-direction: column;
-      }
-
-      .events-grid.grid-layout .card-meta-row {
-        font-size: 10px;
-        margin-bottom: 4px;
-      }
-
-      .events-grid.grid-layout .event-card h3 {
-        font-size: 15px;
-        margin-bottom: 2px;
-      }
-
-      .events-grid.grid-layout .event-card p.card-loc {
-        font-size: 11px;
-      }
-
-      /* Dense List View Row Layout Styles */
-      .events-grid.list-layout {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .events-grid.list-layout .event-card {
-        flex-direction: row;
-        height: 105px;
-      }
-
-      .events-grid.list-layout .card-media {
-        width: 140px;
-        height: 100%;
-        flex-shrink: 0;
-      }
-
-      .events-grid.list-layout .card-price-badge {
-        top: 8px;
-        left: 8px;
-        font-size: 11px;
-        padding: 3px 8px;
-      }
-
-      .events-grid.list-layout .card-details {
-        padding: 14px 18px;
-        flex-direction: row;
-        align-items: center;
-        width: 100%;
-      }
-
-      .events-grid.list-layout .card-meta-row {
-        font-size: 10px;
-        margin-bottom: 4px;
-      }
-
-      .events-grid.list-layout .event-card h3 {
-        font-size: 16px;
-        margin-bottom: 2px;
-      }
-
-      .events-grid.list-layout .event-card p.card-loc {
-        font-size: 12px;
-      }
-
-      /* Right Column: Sticky Date & Map Dashboard */
-      .dashboard-panel {
-        position: sticky;
-        top: 96px;
-        border: 1px solid var(--edge);
-        border-radius: 18px;
-        background: var(--panel);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 24px 56px rgba(0, 0, 0, 0.4);
-        padding: 24px;
-      }
-
-      .dashboard-panel h3 {
-        margin: 0 0 14px;
-        font-size: 18px;
-        font-weight: 800;
-      }
-
-      /* Vector Map Card Mockup */
-      .mock-map-area {
-        height: 170px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: #060912;
-        position: relative;
-        overflow: hidden;
-        margin-bottom: 20px;
-      }
-
-      .mock-map-grid {
-        position: absolute;
-        inset: 0;
-        background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-        background-size: 16px 16px;
-      }
-
-      .map-vector-routes {
-        position: absolute;
-        inset: 0;
-        opacity: 0.15;
-      }
-
-      .map-pin {
-        position: absolute;
-        width: 12px;
-        height: 12px;
-        background: var(--gold);
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 0 12px var(--gold);
-        transform: translate(-50%, -50%);
-        cursor: pointer;
-        animation: map-glow 2s infinite alternate;
-      }
-
-      @keyframes map-glow {
-        0% { transform: translate(-50%, -50%) scale(1); }
-        100% { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 16px rgba(255, 209, 107, 0.6); }
-      }
-
-      /* Dynamic Options Panel (Atmosphere Settings) */
-      .atmosphere-settings {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        margin-top: 20px;
-        padding-top: 18px;
-      }
-
-      .atmosphere-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        font-size: 13px;
-        color: var(--muted);
-      }
-
-      .color-options {
-        display: flex;
-        gap: 8px;
-      }
-
-      .color-dot {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        cursor: pointer;
-        border: 2px solid transparent;
-        transition: transform 0.2s, border-color 0.2s;
-      }
-
-      .color-dot.active {
-        border-color: white;
-        transform: scale(1.15);
-      }
-
-      /* Itinerary List Planner */
-      .itinerary-box {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 10px;
-        padding: 12px;
-        min-height: 80px;
-        border: 1px dashed rgba(255, 255, 255, 0.08);
-      }
-
-      .itinerary-placeholder {
-        text-align: center;
-        font-size: 12px;
-        color: var(--muted);
-        padding: 14px 0;
-      }
-
-      .itinerary-item {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 6px;
-        padding: 8px 12px;
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .itinerary-item-close {
-        color: var(--muted);
-        cursor: pointer;
-        font-size: 14px;
-        border: 0;
-        background: transparent;
-      }
-
-      .itinerary-item-close:hover {
-        color: white;
-      }
-
-      /* Global Modal Drawer overlay */
-      .drawer-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        z-index: 500;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.4s ease;
-      }
-
-      .drawer-overlay.open {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      .drawer-card {
-        width: min(600px, 100%);
-        height: 100vh;
-        background: #070a13;
-        border-left: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 32px;
-        overflow-y: auto;
-        transform: translateX(100px);
-        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        display: flex;
-        flex-direction: column;
-      }
-
-      .drawer-overlay.open .drawer-card {
-        transform: translateX(0);
-      }
-
-      .drawer-close {
-        align-self: flex-start;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 0;
-        border-radius: 999px;
-        padding: 6px 14px;
-        color: white;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        margin-bottom: 24px;
-        transition: background-color 0.3s;
-      }
-
-      .drawer-close:hover {
-        background: rgba(255, 255, 255, 0.14);
-      }
-
-      /* Event Detail styling */
-      .detail-header {
-        position: relative;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 24px;
-        height: 200px;
-        background-size: cover;
-        background-position: center;
-      }
-
-      .detail-header::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, transparent, rgba(7, 10, 19, 0.95));
-      }
-
-      .detail-title {
-        font-size: 28px;
-        font-weight: 900;
-        line-height: 1.15;
-        margin: 0 0 10px;
-      }
-
-      .detail-subtitle {
-        color: var(--muted);
-        font-size: 14px;
-        margin-bottom: 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .detail-meta-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--active-theme-color, var(--gold));
-        font-weight: 700;
-      }
-
-      /* Booking Panel Card */
-      .booking-widget-card {
-        border: 1px solid var(--edge);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.03);
-        padding: 20px;
-        margin-bottom: 28px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-      }
-
-      .booking-price-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-      }
-
-      .booking-qty-selector {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 4px 8px;
-      }
-
-      .booking-qty-btn {
-        width: 28px;
-        height: 28px;
-        border-radius: 4px;
-        border: 0;
-        background: rgba(255, 255, 255, 0.06);
-        color: white;
-        cursor: pointer;
-        font-weight: 700;
-      }
-
-      .booking-qty-btn:hover {
-        background: rgba(255, 255, 255, 0.12);
-      }
-
-      .checkout-btn {
-        width: 100%;
-        height: 44px;
-        border-radius: 8px;
-        background: white;
-        color: black;
-        border: 0;
-        font-weight: 800;
-        font-size: 14px;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15);
-      }
-
-      .checkout-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(255, 255, 255, 0.25);
-      }
-
-      /* Hotels Section (Expedia Mock) */
-      .hotel-recommendations {
-        margin-top: 28px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding-top: 20px;
-      }
-
-      .hotel-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 12px;
-      }
-
-      .hotel-card {
-        display: flex;
-        gap: 14px;
-        padding: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 10px;
-        background: rgba(0,0,0,0.15);
-        transition: border-color 0.3s;
-      }
-
-      .hotel-card:hover {
-        border-color: rgba(255, 255, 255, 0.15);
-      }
-
-      .hotel-img-placeholder {
-        width: 70px;
-        height: 70px;
-        border-radius: 8px;
-        background: linear-gradient(135deg, var(--blue), var(--violet));
-        flex-shrink: 0;
-        display: grid;
-        place-items: center;
+      .event h2 {
+        margin: 8px 0;
         font-size: 24px;
+        line-height: 0.98;
+        letter-spacing: -0.055em;
       }
 
-      .hotel-info {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-
-      .hotel-info h4 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 700;
-      }
-
-      .hotel-rating-stars {
-        color: var(--gold);
-        font-size: 12px;
-      }
-
-      .hotel-rate-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 12px;
+      .event p {
+        margin: 0 0 12px;
         color: var(--muted);
+        font-size: 14px;
+        line-height: 1.38;
+        font-weight: 650;
       }
 
-      .hotel-rate-row span.hotel-price {
-        font-weight: 800;
-        color: white;
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
       }
 
-      /* Talent Section */
-      .talent-integration {
-        margin-top: 28px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding-top: 20px;
+      .meta span {
+        padding: 6px 9px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
       }
 
-      .talent-card {
+      .side {
         display: grid;
-        grid-template-columns: 50px 1fr auto;
-        align-items: center;
-        gap: 14px;
-        border: 1px solid rgba(255,255,255,0.06);
-        padding: 12px 16px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.02);
+        gap: 12px;
       }
 
-      .talent-avatar {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        background: var(--gold);
-        color: black;
-        display: grid;
-        place-items: center;
-        font-weight: 700;
+      .brief {
+        padding: 16px;
+        border: 1px solid var(--line);
+        background: rgba(245, 241, 232, 0.035);
       }
 
-      .talent-btn {
-        padding: 6px 12px;
-        border-radius: 6px;
-        border: 1px solid var(--gold);
-        color: var(--gold);
-        background: transparent;
-        font-size: 11px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s;
+      .brief h3 {
+        margin: 0 0 8px;
+        font-size: 25px;
+        letter-spacing: -0.055em;
       }
 
-      .talent-btn:hover {
-        background: var(--gold);
-        color: black;
+      .brief p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.42;
+        font-weight: 650;
       }
 
-      /* Mobile Navigation Bar (Bottom Sticky) */
-      .mobile-bottom-nav {
-        display: none;
+      .bottom-nav {
         position: fixed;
-        bottom: 0;
         left: 0;
         right: 0;
-        height: 64px;
-        background: rgba(8, 10, 17, 0.92);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        grid-template-columns: repeat(5, 1fr);
-        align-items: center;
-        z-index: 200;
-        padding-bottom: env(safe-area-inset-bottom);
+        bottom: 0;
+        z-index: 30;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid var(--line);
+        background: rgba(8, 9, 7, 0.88);
+        backdrop-filter: blur(18px);
       }
 
-      .mobile-nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+      .bottom-nav a {
+        display: grid;
+        place-items: center;
+        min-height: 68px;
         color: var(--muted);
-        text-decoration: none;
-        font-size: 10px;
-        font-weight: 500;
-        gap: 4px;
-        height: 100%;
-        transition: color 0.3s;
-      }
-
-      .mobile-nav-item svg {
-        opacity: 0.85;
-        transition: transform 0.3s, opacity 0.3s;
-      }
-
-      .mobile-nav-item:hover,
-      .mobile-nav-item.active {
-        color: var(--gold);
-      }
-
-      .mobile-nav-item.active svg {
-        transform: translateY(-2px);
-        opacity: 1;
-        stroke: var(--gold);
-      }
-
-      /* Active Filters Bar styles */
-      .active-filters-bar {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 10px 16px;
-        margin-bottom: 24px;
-        font-size: 13px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        animation: fadeIn 0.4s ease-out;
-        flex-wrap: wrap;
-        width: 100%;
-      }
-
-      .active-filters-label {
-        color: var(--muted);
-        font-weight: 600;
-      }
-
-      .active-filters-pills {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .filter-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 999px;
-        color: white;
-        font-weight: 500;
         font-size: 12px;
+        font-weight: 850;
       }
 
-      .filter-pill.vibe {
-        border-color: rgba(122, 66, 255, 0.5);
-        background: rgba(122, 66, 255, 0.1);
-        color: #b08dff;
-      }
+      .bottom-nav a.active { color: var(--signal); }
 
-      .filter-pill.budget {
-        border-color: rgba(255, 209, 107, 0.5);
-        background: rgba(255, 209, 107, 0.1);
-        color: #ffe19a;
-      }
-
-      .filter-pill.date {
-        border-color: rgba(20, 168, 255, 0.5);
-        background: rgba(20, 168, 255, 0.1);
-        color: #7accff;
-      }
-
-      .clear-filters-btn {
-        margin-left: auto;
-        background: transparent;
-        border: 0;
-        color: var(--gold);
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: color 0.2s, transform 0.2s;
-        padding: 4px 8px;
-      }
-
-      .clear-filters-btn:hover {
-        color: white;
-        transform: scale(1.02);
-      }
-
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-5px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      /* Mobile Layout Tweaks */
-      @media (max-width: 990px) {
-        .events-split-layout {
-          grid-template-columns: 1fr;
+      @media (min-width: 860px) {
+        .shell { padding: 34px 28px 70px; }
+        .hero {
+          grid-template-columns: 1fr 480px;
+          align-items: end;
+          padding: 54px 0 26px;
         }
-
-        .dashboard-panel {
-          position: relative;
-          top: 0;
+        .content {
+          grid-template-columns: 1fr 340px;
+          align-items: start;
         }
-      }
-
-      @media (max-width: 820px) {
-        .page {
-          padding-inline: 18px;
-          padding-bottom: 96px;
-        }
-
-        header .search-box-header,
-        header nav {
-          display: none;
-        }
-
-        header {
-          display: flex;
-          justify-content: space-between;
-          padding: 12px 18px;
-          margin: 0 -18px 18px;
-        }
-
-        .mobile-bottom-nav {
-          display: grid;
-        }
-
-        .events-grid.grid-layout {
-          grid-template-columns: 1fr;
-          gap: 16px;
-        }
-
-        .events-grid.list-layout .event-card {
-          flex-direction: column;
-          height: auto;
-        }
-
-        .events-grid.list-layout .card-media {
-          width: 100%;
-          height: 120px;
-        }
-
-        .events-grid.list-layout .card-details {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 14px;
-        }
-
-        .drawer-card {
-          width: 100%;
-          border-left: 0;
-        }
+        .event { grid-template-columns: 190px 1fr; }
+        .event img { width: 190px; height: 210px; }
+        .bottom-nav { display: none; }
       }
     </style>
   </head>
   <body>
-    <!-- Soundwave Canvas Backdrop -->
-    <canvas id="bg-canvas"></canvas>
-    <div class="bg-glow" id="active-glow"></div>
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <img src="assets/echoo-bug.png" alt="">
+        <span>echoo</span>
+      </a>
+      <a href="auth.html">Sign in</a>
+    </header>
 
-    <div class="page">
-      <!-- Header -->
-      <header aria-label="Site header" id="site-header">
-        <a class="brand" href="index.html" aria-label="Echoo home">
-          <img class="brand-bug" src="assets/echoo-bug.png" alt="" />
-          <span class="brand-name">echoo</span>
-        </a>
-
-        <div class="search-box-header" id="search-trigger">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          Search showtimes, DJs, date guides...
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <div class="kicker">explore</div>
+          <h1>Three good options beat endless choices.</h1>
         </div>
-
-        <nav aria-label="Primary navigation">
-          <a href="index.html" class="back-home-btn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            Home
-          </a>
-        </nav>
-      </header>
-
-      <!-- Category Filter Chips & Layout View Toggle Toolbar -->
-      <section class="toolbar-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
-        <div class="filters-container" style="margin-bottom: 0;">
-          <button class="filter-chip active" data-filter="all">All Features</button>
-          <button class="filter-chip" data-filter="music">Music &amp; Gigs</button>
-          <button class="filter-chip" data-filter="movies">Movies &amp; Cinema</button>
-          <button class="filter-chip" data-filter="dates">Date Hotspots</button>
-        </div>
-        
-        <!-- Grid / List Layout Toggle -->
-        <div class="view-toggle-container" style="display: flex; gap: 6px; border: 1px solid var(--soft); border-radius: 8px; padding: 3px; background: rgba(255,255,255,0.03);">
-          <button class="view-toggle-btn active" id="view-grid-btn" aria-label="Grid view" style="width: 32px; height: 32px; border-radius: 6px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; transition: all 0.2s;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          </button>
-          <button class="view-toggle-btn" id="view-list-btn" aria-label="List view" style="width: 32px; height: 32px; border-radius: 6px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; transition: all 0.2s;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-          </button>
-        </div>
+        <form class="search" id="search-form">
+          <input id="query" placeholder="Tell Echoo what you want tonight">
+          <button class="primary" type="submit">Find</button>
+        </form>
       </section>
 
-      <!-- Active Filters Bar (Hidden by default, shown when query parameters exist) -->
-      <div id="active-filters-bar" class="active-filters-bar" style="display: none;">
-        <span class="active-filters-label">Active Plan Filters:</span>
-        <div class="active-filters-pills" id="active-filters-pills"></div>
-        <button id="clear-filters-btn" class="clear-filters-btn">Clear All</button>
+      <div class="filters" id="filters">
+        <button class="filter active" data-filter="all">All</button>
+        <button class="filter" data-filter="music">Music</button>
+        <button class="filter" data-filter="dates">Dates</button>
+        <button class="filter" data-filter="movies">Films</button>
+        <button class="filter" data-filter="food">Food</button>
       </div>
 
-      <!-- Main Columns -->
-      <main class="events-split-layout">
-        
-        <!-- Left Side: Directory Grid -->
-        <section class="events-grid grid-layout" id="events-grid-container">
-          <!-- Dynamically Injected Event Cards -->
-        </section>
-
-        <!-- Right Side: Sticky Planner & Settings -->
-        <aside class="dashboard-panel">
-          <h3>Local Map Guide</h3>
-          <!-- Map Mockup -->
-          <div class="mock-map-area">
-            <div class="mock-map-grid"></div>
-            <svg class="map-vector-routes" width="100%" height="100%">
-              <path d="M20 40 Q 150 120, 280 60 T 340 140" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"></path>
-              <path d="M80 140 L 220 30 L 300 120" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" stroke-dasharray="4"></path>
-            </svg>
-            <!-- Dynamic Map Pins -->
-            <div class="map-pin" style="top: 30%; left: 36%;" title="The Foundry Nightclub"></div>
-            <div class="map-pin" style="top: 65%; left: 78%; background: var(--blue); box-shadow: 0 0 12px var(--blue);" title="IMAX Theatre Central"></div>
-            <div class="map-pin" style="top: 15%; left: 82%; background: var(--gold); box-shadow: 0 0 12px var(--gold);" title="Horizon Rooftop Dining"></div>
-          </div>
-
-          <h3>Date Night Planner</h3>
-          <div class="itinerary-box" id="itinerary-planner">
-            <div class="itinerary-placeholder" id="itinerary-empty-text">Add shows or dinners from details drawers to build a date night plan.</div>
-          </div>
-
-          <!-- Dynamic Options Panel (Atmosphere Settings) -->
-          <div class="atmosphere-settings">
-            <h3>Atmosphere Options</h3>
-            <div class="atmosphere-row">
-              <span>Interactive Wave Scheme</span>
-              <div class="color-options">
-                <div class="color-dot active" style="background: #a78bfa" data-theme="music" title="Lavender Pulse"></div>
-                <div class="color-dot" style="background: #818cf8" data-theme="movies" title="Indigo Lounge"></div>
-                <div class="color-dot" style="background: #ffd16b" data-theme="dates" title="Golden Hour"></div>
-              </div>
-            </div>
-            <div class="atmosphere-row">
-              <span>Dynamic Wave Motion</span>
-              <select id="wave-speed-select" style="background: #0d121f; color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 4px 10px; font-size: 12px; outline: none; cursor: pointer;">
-                <option value="1">Float (Smooth)</option>
-                <option value="2" selected>Moderate Wave</option>
-                <option value="4.5">High Frequency</option>
-              </select>
-            </div>
+      <section class="content" style="margin-top: 16px;">
+        <div id="events-list"></div>
+        <aside class="side">
+          <div class="brief">
+            <h3 id="brief-title">Bored mode</h3>
+            <p id="brief-copy">A tight list with one easy pick, one interesting pick, and one fallback. No wheel, no maze.</p>
+            <a class="primary" style="display:inline-flex;align-items:center;text-decoration:none;" href="app.html">Open planner</a>
           </div>
         </aside>
+      </section>
+    </main>
 
-      </main>
-    </div>
-
-    <!-- Mobile Sticky Navigation Bar -->
-    <nav class="mobile-bottom-nav" aria-label="Mobile navigation" id="mobile-nav-bar">
-      <a href="index.html" class="mobile-nav-item" data-action="home">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        <span>Home</span>
-      </a>
-      <a href="#" class="mobile-nav-item" data-action="search" id="mobile-search-trigger">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <span>Search</span>
-      </a>
-      <a href="#" class="mobile-nav-item active" data-action="events">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="4"></line><line x1="8" y1="2" x2="8" y2="4"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-        <span>Events</span>
-      </a>
-      <a href="#" class="mobile-nav-item" data-action="tickets" id="mobile-tickets-trigger">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
-        <span>Tickets</span>
-      </a>
-      <a href="#" class="mobile-nav-item" data-action="signin" id="mobile-profile-trigger">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        <span>Sign In</span>
-      </a>
+    <nav class="bottom-nav" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a class="active" href="events.html">Explore</a>
+      <a href="app.html">Plan</a>
+      <a href="auth.html">Sign in</a>
     </nav>
 
-    <!-- Slide-Out Event Detail Drawer -->
-    <div class="drawer-overlay" id="event-detail-drawer" aria-hidden="true">
-      <div class="drawer-card">
-        <button class="drawer-close" id="drawer-close-btn">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 5 5 12 12 19"></polyline></svg>
-          Back to list
-        </button>
-        <div id="drawer-content-area">
-          <!-- Dynamic Event Details loaded here -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Script: Interactive Canvas Particles + Logic -->
     <script>
-      // 1. Dynamic Particle Wave Animation (Canvas)
-      const canvas = document.getElementById('bg-canvas');
-      const ctx = canvas.getContext('2d');
-      
-      let width = (canvas.width = window.innerWidth);
-      let height = (canvas.height = window.innerHeight);
-
-      window.addEventListener('resize', () => {
-        width = (canvas.width = window.innerWidth);
-        height = (canvas.height = window.innerHeight);
-      });
-
-      // Wave physics state
-      let speedFactor = 2; // Controlled by dropdown
-      let activeTheme = 'music'; // music (pink/blue), movies (purple/blue), dates (gold/pink)
-      let mouseX = width / 2;
-      let mouseY = height / 2;
-
-      window.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-      });
-
-      const colorSchemes = {
-        music: { primary: 'rgba(167, 139, 250, 0.3)', secondary: 'rgba(147, 197, 253, 0.2)', textAccent: '#a78bfa', glowClass: 'music' },
-        movies: { primary: 'rgba(129, 140, 248, 0.3)', secondary: 'rgba(147, 197, 253, 0.2)', textAccent: '#818cf8', glowClass: 'movies' },
-        dates: { primary: 'rgba(255, 209, 107, 0.3)', secondary: 'rgba(167, 139, 250, 0.2)', textAccent: '#ffd16b', glowClass: 'dates' }
-      };
-
-      class WaveParticle {
-        constructor(x, y, index) {
-          this.x = x;
-          this.baseY = y;
-          this.y = y;
-          this.index = index;
-          this.size = Math.random() * 2 + 1.2;
-          this.angle = Math.random() * Math.PI * 2;
-        }
-
-        update() {
-          // Dynamic sound-pulse ripple effect based on mouse distance
-          const dx = mouseX - this.x;
-          const dy = mouseY - this.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const maxDist = 220;
-          let offset = 0;
-
-          if (dist < maxDist) {
-            const force = (maxDist - dist) / maxDist;
-            offset = Math.sin(this.angle * 2 + dist * 0.05) * 25 * force;
-          }
-
-          this.angle += 0.008 * speedFactor;
-          // Math sine wave generator representing "echoes"
-          this.y = this.baseY + Math.sin(this.angle + this.index * 0.06) * 14 + offset;
-        }
-
-        draw() {
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          
-          // Smooth color blend representing audio frequencies
-          const color = colorSchemes[activeTheme];
-          ctx.fillStyle = this.index % 2 === 0 ? color.primary : color.secondary;
-          ctx.fill();
-        }
-      }
-
-      const particles = [];
-      const particleSpacing = 16;
-      const waveCount = 5;
-
-      for (let w = 0; w < waveCount; w++) {
-        const baseOffset = height * 0.2 + w * (height * 0.12);
-        for (let x = 0; x < width; x += particleSpacing) {
-          particles.push(new WaveParticle(x, baseOffset, x + w * 100));
-        }
-      }
-
-      function animate() {
-        ctx.fillStyle = 'rgba(2, 4, 11, 0.06)';
-        ctx.fillRect(0, 0, width, height);
-
-        particles.forEach(p => {
-          p.update();
-          p.draw();
-        });
-
-        requestAnimationFrame(animate);
-      }
-
-      animate();
-
-      // UI Actions: Theme color dynamic toggle
-      const colorDots = document.querySelectorAll('.color-dot');
-      const bgGlow = document.getElementById('active-glow');
-
-      function setTheme(theme) {
-        activeTheme = theme;
-        colorDots.forEach(dot => {
-          if (dot.getAttribute('data-theme') === theme) {
-            dot.classList.add('active');
-          } else {
-            dot.classList.remove('active');
-          }
-        });
-        
-        bgGlow.className = 'bg-glow ' + colorSchemes[theme].glowClass;
-        
-        // Dynamic color adjustments on cards & active titles
-        const textAccentColor = colorSchemes[theme].textAccent;
-        document.documentElement.style.setProperty('--active-theme-color', textAccentColor);
-      }
-
-      colorDots.forEach(dot => {
-        dot.addEventListener('click', () => {
-          setTheme(dot.getAttribute('data-theme'));
-        });
-      });
-
-      document.getElementById('wave-speed-select').addEventListener('change', (e) => {
-        speedFactor = parseFloat(e.target.value);
-      });
-
-
-      // 2. Events Directory Mock Database
-      const mockEvents = [
-        {
-          id: 'evt-1',
-          category: 'music',
-          price: '$35.00',
-          title: 'Neon Warehouse Techno Session',
-          date: 'Fri, Jun 19 • 10:00 PM',
-          location: 'The Foundry Nightclub, Toronto',
-          banner: 'assets/news-music.png',
-          tags: ['Techno', 'Local Artist', 'Escrow Hold'],
-          hiredArtist: { name: 'DJ Alex Swift', category: 'DJ/Producer' },
-          desc: 'Get lost in a night of modular synths and raw driving techno in an industrial warehouse. Sounds curated by top-rated regional headliners.',
-          hotels: [
-            { name: 'Hotel Toronto Central', dist: '0.4 km', rate: '$180/night', rating: '★★★★★' },
-            { name: 'The Boutique Oasis Loft', dist: '0.9 km', rate: '$210/night', rating: '★★★★☆' }
-          ]
-        },
-        {
-          id: 'evt-2',
-          category: 'movies',
-          price: '$18.50',
-          title: 'IMAX Premiere: Villeneuve Sci-Fi Epic',
-          date: 'Wed, Jul 1 • 7:30 PM',
-          location: 'Cinesphere IMAX, Toronto',
-          banner: 'assets/news-movie.png',
-          tags: ['Sci-Fi', 'Director Q&A', 'Pop Culture'],
-          hiredArtist: { name: 'MC Ryan Sterling', category: 'Host/MC' },
-          desc: 'An exclusive IMAX-format showcase followed by a live video stream director Q&A regarding Villeneuve’s future cinema project.',
-          hotels: [
-            { name: 'IMAX View Boutique Inn', dist: '0.1 km', rate: '$145/night', rating: '★★★☆☆' },
-            { name: 'The Waterfront Suites', dist: '0.6 km', rate: '$250/night', rating: '★★★★★' }
-          ]
-        },
-        {
-          id: 'evt-3',
-          category: 'dates',
-          price: '$85.00',
-          title: 'Skyline Garden Jazz & Mixology Tour',
-          date: 'Sat, Jun 20 • 6:30 PM',
-          location: 'Horizon Rooftop Dining, Toronto',
-          banner: 'assets/news-date.png',
-          tags: ['Date Night', 'Live Jazz', 'Cocktails included'],
-          hiredArtist: { name: 'The Clara Green Trio', category: 'Live Jazz Band' },
-          desc: 'Treat your date to a sensory sunset tour on Toronto’s most beautiful rooftop gardens. Package covers a three-part artisanal cocktail tasting with live jazz.',
-          hotels: [
-            { name: 'Grand Horizon Luxury Hotel', dist: '0.2 km', rate: '$320/night', rating: '★★★★★' },
-            { name: 'The Vintage Boutique Inn', dist: '0.5 km', rate: '$195/night', rating: '★★★★☆' }
-          ]
-        },
-        {
-          id: 'evt-4',
-          category: 'music',
-          price: '$25.00',
-          title: 'Deep House Sunset Lounge session',
-          date: 'Sun, Jun 21 • 4:00 PM',
-          location: 'Vapor Lounge Rooftop, Toronto',
-          banner: 'assets/news-music.png',
-          tags: ['Deep House', 'Sunset View', 'Vetted DJ'],
-          hiredArtist: { name: 'DJ Alex Swift', category: 'DJ/Producer' },
-          desc: 'Mellow grooves and organic house tracks set against the warm Toronto sunset. Perfect chill vibes to wrap up the weekend.',
-          hotels: [
-            { name: 'Grand Horizon Luxury Hotel', dist: '0.3 km', rate: '$320/night', rating: '★★★★★' },
-            { name: 'Downtown Oasis Hostel', dist: '0.8 km', rate: '$95/night', rating: '★★★☆☆' }
-          ]
-        }
+      const events = [
+        { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy late food route nearby.", img: "assets/news-music.png", meta: ["Tonight", "18 min", "$28"] },
+        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/news-date.png", meta: ["Weekend", "Two stops", "$$"] },
+        { id: 3, category: "movies", title: "Late film with post-show dessert", copy: "A cinema anchor paired with a place that stays open late enough to keep talking.", img: "assets/news-movie.png", meta: ["9:40 PM", "Seats open", "$18"] },
+        { id: 4, category: "food", title: "Kitchen still open", copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.", img: "assets/news-date.png", meta: ["Open late", "12 min", "$$"] }
       ];
 
-      // View layout state toggle
-      let currentView = 'grid'; // grid or list
-      let currentFilter = 'all';
+      const list = document.getElementById("events-list");
+      const queryInput = document.getElementById("query");
+      let activeFilter = "all";
 
-      const gridBtn = document.getElementById('view-grid-btn');
-      const listBtn = document.getElementById('view-list-btn');
-      const gridContainer = document.getElementById('events-grid-container');
+      function render() {
+        const query = queryInput.value.trim().toLowerCase();
+        const filtered = events.filter((event) => {
+          const inFilter = activeFilter === "all" || event.category === activeFilter;
+          const inQuery = !query || `${event.title} ${event.copy} ${event.category}`.toLowerCase().includes(query);
+          return inFilter && inQuery;
+        });
 
-      gridBtn.addEventListener('click', () => {
-        currentView = 'grid';
-        gridBtn.classList.add('active');
-        listBtn.classList.remove('active');
-        gridContainer.className = 'events-grid grid-layout';
-        renderGrid();
+        list.innerHTML = filtered.map((event) => `
+          <article class="event" data-id="${event.id}">
+            <img src="${event.img}" alt="">
+            <div>
+              <small>${event.category}</small>
+              <h2>${event.title}</h2>
+              <p>${event.copy}</p>
+              <div class="meta">${event.meta.map((item) => `<span>${item}</span>`).join("")}</div>
+            </div>
+          </article>
+        `).join("") || `<div class="brief"><h3>No noise found</h3><p>Try a broader request. Echoo works best with plain language.</p></div>`;
+      }
+
+      document.getElementById("filters").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-filter]");
+        if (!button) return;
+        activeFilter = button.dataset.filter;
+        document.querySelectorAll("[data-filter]").forEach((item) => item.classList.toggle("active", item === button));
+        render();
       });
 
-      listBtn.addEventListener('click', () => {
-        currentView = 'list';
-        listBtn.classList.add('active');
-        gridBtn.classList.remove('active');
-        gridContainer.className = 'events-grid list-layout';
-        renderGrid();
+      document.getElementById("search-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        render();
       });
 
-      // Map vibe parameter to category
-      function mapVibeToCategory(vibe) {
-        if (vibe === 'music') return 'music';
-        if (vibe === 'activities') return 'movies';
-        if (vibe === 'food_drink') return 'dates';
-        if (vibe === 'dates') return 'dates';
-        return 'all';
-      }
-
-      // Check if event date string matches query parameter
-      function matchDate(eventDateStr, activeDateParam) {
-        if (!activeDateParam) return true;
-        const lowerDate = eventDateStr.toLowerCase();
-        if (activeDateParam === 'tonight') {
-          return lowerDate.includes('jun 19') || lowerDate.includes('fri');
-        }
-        if (activeDateParam === 'weekend') {
-          return lowerDate.includes('fri') || lowerDate.includes('sat') || lowerDate.includes('sun') || lowerDate.includes('jun 19') || lowerDate.includes('jun 20') || lowerDate.includes('jun 21');
-        }
-        if (activeDateParam === 'next_week') {
-          return lowerDate.includes('jul') || lowerDate.includes('wed') || (!lowerDate.includes('jun 19') && !lowerDate.includes('jun 20') && !lowerDate.includes('jun 21') && !lowerDate.includes('fri') && !lowerDate.includes('sat') && !lowerDate.includes('sun'));
-        }
-        return true;
-      }
-
-      // URL parameters query state
-      const urlParams = new URLSearchParams(window.location.search);
-      let activeVibe = urlParams.get('vibe') || null;
-      let activeBudget = urlParams.get('budget') || null;
-      let activeDate = urlParams.get('date') || null;
-      let urlFilter = urlParams.get('filter') || null;
-
-      // Determine initial category filter
-      let currentFilter = 'all';
-      if (urlFilter) {
-        currentFilter = urlFilter;
-      } else if (activeVibe) {
-        currentFilter = mapVibeToCategory(activeVibe);
-      }
-
-      // Draw Event Cards
-      function renderGrid() {
-        gridContainer.innerHTML = '';
-        
-        // Filter elements
-        const filtered = mockEvents.filter(evt => {
-          // 1. Filter by category (from chip selection or activeVibe)
-          const catFilter = currentFilter !== 'all' ? currentFilter : (activeVibe ? mapVibeToCategory(activeVibe) : 'all');
-          if (catFilter !== 'all' && evt.category !== catFilter) {
-            return false;
-          }
-
-          // 2. Filter by budget
-          if (activeBudget) {
-            const priceVal = parseFloat(evt.price.replace(/[^0-9.]/g, ''));
-            if (activeBudget === '1' && priceVal > 25) return false;
-            if (activeBudget === '2' && (priceVal <= 25 || priceVal > 50)) return false;
-            if (activeBudget === '3' && priceVal <= 50) return false;
-          }
-
-          // 3. Filter by date
-          if (activeDate && !matchDate(evt.date, activeDate)) {
-            return false;
-          }
-
-          return true;
-        });
-
-        // Handle empty search result state
-        if (filtered.length === 0) {
-          gridContainer.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; backdrop-filter: blur(10px);">
-              <h3 style="margin-bottom: 8px; font-weight: 800; color: rgba(255,255,255,0.8);">No events matching this combination</h3>
-              <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">Try adjusting your planner parameters or clear all filters to browse everything.</p>
-              <button id="inline-reset-btn" class="slide-cta" style="cursor: pointer; border: 0; background: white; color: black; font-weight: 700; padding: 10px 24px; border-radius: 999px;">Reset Filters</button>
-            </div>
-          `;
-          const inlineResetBtn = document.getElementById('inline-reset-btn');
-          if (inlineResetBtn) {
-            inlineResetBtn.addEventListener('click', () => {
-              document.getElementById('clear-filters-btn').click();
-            });
-          }
-          return;
-        }
-        
-        filtered.forEach(evt => {
-          const card = document.createElement('div');
-          card.className = 'event-card';
-          card.setAttribute('data-evt-id', evt.id);
-          card.style.setProperty('--active-theme-color', colorSchemes[evt.category].textAccent);
-
-          if (currentView === 'grid') {
-            card.innerHTML = `
-              <div class="card-media" style="background-image: url('${evt.banner}')">
-                <span class="card-price-badge" style="top: 12px; right: 12px; font-size: 12px;">${evt.price}</span>
-              </div>
-              <div class="card-details">
-                <div>
-                  <div class="card-meta-row" style="margin-bottom: 4px; font-size: 10px;">
-                    <span>${evt.category === 'music' ? 'Gigs' : evt.category === 'movies' ? 'Cinema' : 'Date'} &bull; ${evt.date.split('•')[0]}</span>
-                  </div>
-                  <h3>${evt.title}</h3>
-                  <p class="card-loc" style="font-size: 11px;">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
-                    ${evt.location.split(',')[0]}
-                  </p>
-                </div>
-                <div class="card-tags" style="margin-top: 6px;">
-                  ${evt.tags.slice(0, 2).map(tag => `<span class="card-tag">${tag}</span>`).join('')}
-                </div>
-              </div>
-            `;
-          } else {
-            // Horizontal row (List View)
-            card.innerHTML = `
-              <div class="card-media" style="background-image: url('${evt.banner}')">
-                <span class="card-price-badge" style="top: 8px; left: 8px; font-size: 11px; padding: 3px 8px;">${evt.price}</span>
-              </div>
-              <div class="card-details">
-                <div>
-                  <div class="card-meta-row" style="margin-bottom: 4px; font-size: 10px;">
-                    <span>${evt.category === 'music' ? 'Gigs' : evt.category === 'movies' ? 'Cinema' : 'Date'} &bull; ${evt.date.split('•')[0]}</span>
-                  </div>
-                  <h3>${evt.title}</h3>
-                  <p class="card-loc" style="font-size: 12px;">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
-                    ${evt.location}
-                  </p>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; margin-left: 20px;">
-                  <div class="card-tags" style="margin-top: 0;">
-                    ${evt.tags.slice(0, 2).map(tag => `<span class="card-tag">${tag}</span>`).join('')}
-                  </div>
-                  <span style="font-size: 12px; font-weight: 700; color: var(--active-theme-color, var(--gold));">Details &rarr;</span>
-                </div>
-              </div>
-            `;
-          }
-
-          card.addEventListener('click', () => openEventDrawer(evt.id));
-          gridContainer.appendChild(card);
-        });
-      }
-
-      // 3. Category Filter action triggers theme shift + grid refresh
-      const chips = document.querySelectorAll('.filter-chip');
-      chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-          chips.forEach(c => c.classList.remove('active'));
-          chip.classList.add('active');
-          
-          currentFilter = chip.getAttribute('data-filter');
-          
-          // Sync activeVibe with selected category
-          if (currentFilter === 'all') {
-            activeVibe = null;
-          } else {
-            activeVibe = currentFilter;
-          }
-
-          updateActiveFiltersBar();
-          renderGrid();
-
-          // Change dynamic canvas background based on filter type
-          if (currentFilter !== 'all') {
-            setTheme(currentFilter);
-          } else {
-            setTheme('music'); // fallback default
-          }
-        });
-      });
-
-      // Update the active filters bar UI
-      function updateActiveFiltersBar() {
-        const bar = document.getElementById('active-filters-bar');
-        const pillsContainer = document.getElementById('active-filters-pills');
-        pillsContainer.innerHTML = '';
-
-        let hasFilters = false;
-
-        if (activeVibe) {
-          hasFilters = true;
-          const vibeText = {
-            'dates': 'Romantic',
-            'activities': 'Active',
-            'food_drink': 'Casual',
-            'music': 'Wild'
-          }[activeVibe] || activeVibe;
-          
-          const pill = document.createElement('div');
-          pill.className = 'filter-pill vibe';
-          pill.textContent = vibeText;
-          pillsContainer.appendChild(pill);
-        }
-
-        if (activeBudget) {
-          hasFilters = true;
-          const budgetText = {
-            '1': '$ (Budget)',
-            '2': '$$ (Moderate)',
-            '3': '$$$ (Premium)'
-          }[activeBudget] || activeBudget;
-
-          const pill = document.createElement('div');
-          pill.className = 'filter-pill budget';
-          pill.textContent = budgetText;
-          pillsContainer.appendChild(pill);
-        }
-
-        if (activeDate) {
-          hasFilters = true;
-          const dateText = {
-            'tonight': 'Tonight',
-            'weekend': 'This Weekend',
-            'next_week': 'Next Week'
-          }[activeDate] || activeDate;
-
-          const pill = document.createElement('div');
-          pill.className = 'filter-pill date';
-          pill.textContent = dateText;
-          pillsContainer.appendChild(pill);
-        }
-
-        if (hasFilters) {
-          bar.style.display = 'flex';
-        } else {
-          bar.style.display = 'none';
-        }
-      }
-
-      // Wire up Clear Filters action
-      const clearBtn = document.getElementById('clear-filters-btn');
-      if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-          activeVibe = null;
-          activeBudget = null;
-          activeDate = null;
-          urlFilter = null;
-          currentFilter = 'all';
-
-          // Reset the URL using history API without reloading
-          const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-          window.history.pushState({ path: cleanUrl }, '', cleanUrl);
-
-          // Reset category chips
-          chips.forEach(c => {
-            if (c.getAttribute('data-filter') === 'all') {
-              c.classList.add('active');
-            } else {
-              c.classList.remove('active');
-            }
-          });
-
-          setTheme('music'); // default background theme glow
-          updateActiveFiltersBar();
-          renderGrid();
-        });
-      }
-
-      // 4. Detail Drawer sliding mechanism & widget injection
-      const drawer = document.getElementById('event-detail-drawer');
-      const drawerContent = document.getElementById('drawer-content-area');
-      const closeBtn = document.getElementById('drawer-close-btn');
-
-      closeBtn.addEventListener('click', () => {
-        drawer.classList.remove('open');
-        drawer.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-      });
-
-      function openEventDrawer(evtId) {
-        const evt = mockEvents.find(e => e.id === evtId);
-        if (!evt) return;
-        
-        document.documentElement.style.setProperty('--active-theme-color', colorSchemes[evt.category].textAccent);
-
-        // Populate detail card contents
-        drawerContent.innerHTML = `
-          <div class="detail-header" style="background-image: url('${evt.banner}')"></div>
-          <div class="detail-meta-pill">
-            <span>${evt.category === 'music' ? 'Music' : evt.category === 'movies' ? 'Cinema' : 'Date Spot'}</span>
-          </div>
-          <h2 class="detail-title">${evt.title}</h2>
-          <div class="detail-subtitle">
-            <span>Date: ${evt.date}</span>
-            <span>Location: ${evt.location}</span>
-          </div>
-
-          <p style="font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.85); margin-bottom: 24px;">${evt.desc}</p>
-
-          <!-- Dynamic Tickets Widget -->
-          <div class="booking-widget-card">
-            <div class="booking-price-row">
-              <div>
-                <span style="font-size: 12px; color: var(--muted); display: block; text-transform: uppercase;">Ticket Rate</span>
-                <span style="font-size: 24px; font-weight: 800;" id="tkt-rate-value">${evt.price}</span>
-              </div>
-              <div class="booking-qty-selector">
-                <button class="booking-qty-btn" id="qty-minus">-</button>
-                <span style="font-weight: 800; font-size: 16px; padding: 0 4px;" id="qty-num">1</span>
-                <button class="booking-qty-btn" id="qty-plus">+</button>
-              </div>
-            </div>
-            <button class="checkout-btn" id="buy-checkout-btn">Buy Tickets</button>
-            <button class="checkout-btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.18); color: white; margin-top: 10px; box-shadow: none;" id="add-to-planner-btn">Add to Date Plan</button>
-          </div>
-
-          <!-- Dynamic Talent profile connection -->
-          <div class="talent-integration">
-            <h3 style="font-size: 16px; font-weight: 800; margin: 0 0 12px;">Featured Entertainment</h3>
-            <div class="talent-card">
-              <div class="talent-avatar">${evt.hiredArtist.name.split(' ').map(n=>n[0]).join('')}</div>
-              <div>
-                <h4 style="margin: 0; font-size: 14px;">${evt.hiredArtist.name}</h4>
-                <p style="margin: 2px 0 0; font-size: 11px; color: var(--muted)">${evt.hiredArtist.category}</p>
-              </div>
-              <button class="talent-btn" id="book-talent-direct-btn">Book for Gig</button>
-            </div>
-          </div>
-
-          <!-- Nearby Hotels (Contextual Travel Module) -->
-          <div class="hotel-recommendations">
-            <h3 style="font-size: 16px; font-weight: 800; margin: 0 0 4px;">Where to Stay Nearby</h3>
-            <p style="margin: 0 0 12px; font-size: 12px; color: var(--muted)">Accommodations close to the venue (Expedia Partner deals)</p>
-            <div class="hotel-list">
-              ${evt.hotels.map(hotel => `
-                <div class="hotel-card">
-                  <div class="hotel-img-placeholder">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6;"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="16"></line><line x1="15" y1="22" x2="15" y2="16"></line><line x1="9" y1="16" x2="15" y2="16"></line><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path></svg>
-                  </div>
-                  <div class="hotel-info">
-                    <div>
-                      <h4>${hotel.name}</h4>
-                      <span class="hotel-rating-stars">${hotel.rating}</span>
-                    </div>
-                    <div class="hotel-rate-row">
-                      <span>Proximity: ${hotel.dist}</span>
-                      <span class="hotel-price">${hotel.rate}</span>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-
-        drawer.classList.add('open');
-        drawer.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-
-        // Add checkout actions
-        let ticketQty = 1;
-        const ticketRate = parseFloat(evt.price.replace('$', ''));
-        const qtyNum = document.getElementById('qty-num');
-        const tktRateValue = document.getElementById('tkt-rate-value');
-
-        document.getElementById('qty-plus').addEventListener('click', () => {
-          ticketQty++;
-          qtyNum.textContent = ticketQty;
-          tktRateValue.textContent = `$${(ticketRate * ticketQty).toFixed(2)}`;
-        });
-
-        document.getElementById('qty-minus').addEventListener('click', () => {
-          if (ticketQty > 1) {
-            ticketQty--;
-            qtyNum.textContent = ticketQty;
-            tktRateValue.textContent = `$${(ticketRate * ticketQty).toFixed(2)}`;
-          }
-        });
-
-        document.getElementById('buy-checkout-btn').addEventListener('click', () => {
-          document.getElementById('buy-checkout-btn').textContent = "Securing transaction escrow...";
-          document.getElementById('buy-checkout-btn').disabled = true;
-          
-          setTimeout(() => {
-            drawerContent.innerHTML = `
-              <div style="text-align: center; padding: 48px 0;">
-                <div style="background: rgba(76, 217, 100, 0.1); width: 80px; height: 80px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 24px; border: 2px solid #4cd964; color: #4cd964">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </div>
-                <h2>Booking Confirmed!</h2>
-                <p style="color: var(--muted); font-size: 14px; margin-bottom: 32px;">Funds are held in secure escrow. Your digital entry ticket has been issued.</p>
-                <div style="background: white; width: 160px; height: 160px; margin: 20px auto; display: grid; place-items: center; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5)">
-                  <div style="width: 130px; height: 130px; border: 6px double #0d121f; background-image: repeating-linear-gradient(45deg, #0d121f 0px, #0d121f 4px, transparent 4px, transparent 8px); background-size: 16px 16px;"></div>
-                </div>
-                <p style="font-family: monospace; font-size: 13px;">Ref: EC-TKT-${Math.floor(Math.random()*90000 + 10000)}</p>
-                <button class="checkout-btn" style="margin-top: 24px;" onclick="document.getElementById('drawer-close-btn').click()">Finish</button>
-              </div>
-            `;
-          }, 1500);
-        });
-
-        // Add to itinerary plan
-        document.getElementById('add-to-planner-btn').addEventListener('click', () => {
-          addToItinerary(evt.title, evtId);
-          document.getElementById('add-to-planner-btn').textContent = "Added to Itinerary ✓";
-          document.getElementById('add-to-planner-btn').style.borderColor = "#4cd964";
-          document.getElementById('add-to-planner-btn').style.color = "#4cd964";
-        });
-
-        // Book talent direct modal
-        document.getElementById('book-talent-direct-btn').addEventListener('click', () => {
-          drawerContent.innerHTML = `
-            <h2>Hire ${evt.hiredArtist.name}</h2>
-            <p>Send an direct booking offer to this artist for your private event. Echoo handles contracts and escrow holds automatically.</p>
-            <div class="mock-search-box">
-              <input type="text" class="mock-input" placeholder="Event Date">
-              <input type="text" class="mock-input" placeholder="Hours needed (e.g. 4 hrs)">
-              <input type="text" class="mock-input" placeholder="Flat Rate Offer ($)">
-              <button class="mock-btn" id="submit-talent-offer-btn">Send Booking Proposal</button>
-            </div>
-          `;
-          setTimeout(() => {
-            document.getElementById('submit-talent-offer-btn').addEventListener('click', () => {
-              drawerContent.innerHTML = `
-                <div style="text-align: center; padding: 40px 0;">
-                  <h2 style="color: var(--gold)">Offer Dispatched!</h2>
-                  <p>${evt.hiredArtist.name} has been notified and has 48 hours to accept. Funds are only checked upon acceptance.</p>
-                  <button class="checkout-btn" onclick="document.getElementById('drawer-close-btn').click()">Done</button>
-                </div>
-              `;
-            });
-          }, 50);
-        });
-      }
-
-      // 5. Itinerary Planner controller
-      const planner = document.getElementById('itinerary-planner');
-      const emptyText = document.getElementById('itinerary-empty-text');
-      const plannerItems = [];
-
-      function addToItinerary(title, id) {
-        if (plannerItems.some(item => item.id === id)) return;
-        
-        plannerItems.push({ title, id });
-        renderPlanner();
-      }
-
-      function removeFromItinerary(id) {
-        const idx = plannerItems.findIndex(item => item.id === id);
-        if (idx !== -1) {
-          plannerItems.splice(idx, 1);
-        }
-        renderPlanner();
-      }
-
-      function renderPlanner() {
-        const items = planner.querySelectorAll('.itinerary-item');
-        items.forEach(el => el.remove());
-
-        if (plannerItems.length === 0) {
-          emptyText.style.display = 'block';
-        } else {
-          emptyText.style.display = 'none';
-          plannerItems.forEach(item => {
-            const el = document.createElement('div');
-            el.className = 'itinerary-item';
-            el.innerHTML = `
-              <span>${item.title}</span>
-              <button class="itinerary-item-close" data-id="${item.id}">&times;</button>
-            `;
-            el.querySelector('.itinerary-item-close').addEventListener('click', () => {
-              removeFromItinerary(item.id);
-            });
-            planner.appendChild(el);
-          });
-        }
-      }
-
-      // Highlight the matching category chip on load
-      if (currentFilter !== 'all') {
-        const activeChip = Array.from(chips).find(c => c.getAttribute('data-filter') === currentFilter);
-        if (activeChip) {
-          chips.forEach(c => c.classList.remove('active'));
-          activeChip.classList.add('active');
-        }
-        setTheme(currentFilter);
+      const params = new URLSearchParams(window.location.search);
+      const filter = params.get("filter");
+      const query = params.get("query") || params.get("ai");
+      if (query) queryInput.value = query === "bored" ? "simple surprising tonight" : query;
+      if (filter) {
+        const button = document.querySelector(`[data-filter="${filter}"]`);
+        if (button) button.click();
       } else {
-        setTheme('music'); // default background theme glow
+        render();
       }
-
-      // Render the active filters bar UI and draw cards
-      updateActiveFiltersBar();
-      renderGrid();
     </script>
   </body>
 </html>
