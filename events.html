@@ -45,8 +45,7 @@
         gap: 12px;
         padding: 14px 18px;
         border-bottom: 1px solid var(--line);
-        background: rgba(8, 9, 7, 0.82);
-        backdrop-filter: blur(18px);
+        background: rgba(8, 9, 7, 0.94);
       }
 
       .brand {
@@ -268,8 +267,7 @@
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         border-top: 1px solid var(--line);
-        background: rgba(8, 9, 7, 0.88);
-        backdrop-filter: blur(18px);
+        background: rgba(8, 9, 7, 0.96);
       }
 
       .bottom-nav a {
@@ -350,10 +348,10 @@
 
     <script>
       const events = [
-        { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy late food route nearby.", img: "assets/optimized/news-music-768.jpg", meta: ["Tonight", "18 min", "$28"] },
-        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", meta: ["Weekend", "Two stops", "$$"] },
-        { id: 3, category: "movies", title: "Late film with post-show dessert", copy: "A cinema anchor paired with a place that stays open late enough to keep talking.", img: "assets/optimized/news-movie-768.jpg", meta: ["9:40 PM", "Seats open", "$18"] },
-        { id: 4, category: "food", title: "Kitchen still open", copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.", img: "assets/optimized/news-date-768.jpg", meta: ["Open late", "12 min", "$$"] }
+        { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy late food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Tonight", "18 min", "$28"] },
+        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Weekend", "Two stops", "$$"] },
+        { id: 3, category: "movies", title: "Late film with post-show dessert", copy: "A cinema anchor paired with a place that stays open late enough to keep talking.", img: "assets/optimized/news-movie-768.jpg", webp: "assets/optimized/news-movie-768.webp", meta: ["9:40 PM", "Seats open", "$18"] },
+        { id: 4, category: "food", title: "Kitchen still open", copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Open late", "12 min", "$$"] }
       ];
 
       const list = document.getElementById("events-list");
@@ -370,7 +368,10 @@
 
         list.innerHTML = filtered.map((event) => `
           <article class="event" data-id="${event.id}">
-            <img src="${event.img}" alt="">
+            <picture>
+              <source srcset="${event.webp}" type="image/webp">
+              <img src="${event.img}" alt="" loading="lazy" decoding="async">
+            </picture>
             <div>
               <small>${event.category}</small>
               <h2>${event.title}</h2>

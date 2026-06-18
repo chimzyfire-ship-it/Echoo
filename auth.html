@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>echoo sign in</title>
+    <title>echoo — sign in</title>
     <style>
       :root {
         color-scheme: dark;
@@ -28,7 +28,11 @@
         color: var(--ink);
         background:
           linear-gradient(180deg, rgba(8, 9, 7, 0.5), rgba(8, 9, 7, 0.94)),
-          url("assets/echoo-mobile-bg.png") center / cover no-repeat,
+          url("assets/optimized/echoo-mobile-bg-768.jpg") center / cover no-repeat,
+          var(--bg);
+        background:
+          linear-gradient(180deg, rgba(8, 9, 7, 0.5), rgba(8, 9, 7, 0.94)),
+          url("assets/optimized/echoo-mobile-bg-768.webp") center / cover no-repeat,
           var(--bg);
         display: grid;
         place-items: center;
@@ -38,6 +42,7 @@
       a { color: inherit; text-decoration: none; }
       button, input { font: inherit; }
 
+      /* ---- Auth shell ---- */
       .auth-shell {
         width: min(460px, 100%);
       }
@@ -231,12 +236,237 @@
 
       .signup-only { display: none; }
       .signup .signup-only { display: grid; }
+
+      /* ---- Fade utility ---- */
+      .fade-out {
+        opacity: 0;
+        transform: translateY(-6px);
+        pointer-events: none;
+        transition: opacity 220ms ease, transform 220ms ease;
+      }
+
+      .fade-in-up {
+        animation: fadeInUp 280ms ease both;
+      }
+
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* ---- Onboarding ---- */
+      .onboarding {
+        display: none;
+      }
+
+      .onboarding.visible {
+        display: block;
+      }
+
+      .ob-progress {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 18px;
+      }
+
+      .ob-bar {
+        flex: 1;
+        height: 3px;
+        border: 1px solid var(--line);
+        background: transparent;
+        transition: background 260ms ease, border-color 260ms ease;
+      }
+
+      .ob-bar.past {
+        background: var(--muted);
+        border-color: var(--muted);
+      }
+
+      .ob-bar.current {
+        background: var(--signal);
+        border-color: var(--signal);
+      }
+
+      .ob-panel {
+        border: 1px solid var(--line);
+        background: rgba(17, 19, 15, 0.92);
+        box-shadow: var(--shadow);
+      }
+
+      .ob-head {
+        padding: 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .ob-head h1 {
+        max-width: 360px;
+        font-size: clamp(34px, 10vw, 50px);
+      }
+
+      .ob-body {
+        padding: 22px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .ob-step {
+        display: none;
+      }
+
+      .ob-step.active {
+        display: block;
+      }
+
+      .ob-step.active .ob-step-inner {
+        animation: fadeInUp 280ms ease both;
+      }
+
+      /* Chips */
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        padding: 12px 18px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+        cursor: pointer;
+        border-radius: 0;
+        transition: border-color 160ms ease, background 160ms ease;
+        user-select: none;
+      }
+
+      .chip:hover {
+        border-color: var(--line-strong);
+      }
+
+      .chip.selected {
+        border-color: var(--signal);
+        background: rgba(231, 201, 142, 0.08);
+        color: var(--signal);
+      }
+
+      /* City pills */
+      .city-pills {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .city-pill {
+        padding: 8px 16px;
+        border: 1px solid var(--line);
+        border-radius: 100px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        cursor: pointer;
+        transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+      }
+
+      .city-pill:hover {
+        border-color: var(--line-strong);
+        color: var(--ink);
+      }
+
+      .city-pill.selected {
+        border-color: var(--signal);
+        background: rgba(231, 201, 142, 0.08);
+        color: var(--signal);
+      }
+
+      /* Tone cards */
+      .tone-cards {
+        display: grid;
+        gap: 10px;
+      }
+
+      .tone-card {
+        padding: 18px;
+        border: 1px solid var(--line);
+        background: transparent;
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 160ms ease, background 160ms ease;
+      }
+
+      .tone-card:hover {
+        border-color: var(--line-strong);
+      }
+
+      .tone-card.selected {
+        border-color: var(--signal);
+        background: rgba(231, 201, 142, 0.08);
+      }
+
+      .tone-card .tone-name {
+        display: block;
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 850;
+        letter-spacing: -0.03em;
+        margin-bottom: 5px;
+      }
+
+      .tone-card .tone-desc {
+        display: block;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.4;
+      }
+
+      .ob-continue {
+        width: 100%;
+        min-height: 58px;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        color: #151311;
+        font-size: 18px;
+        font-weight: 950;
+        letter-spacing: -0.03em;
+        cursor: pointer;
+        transition: transform 180ms ease, border-color 180ms ease;
+        margin-top: 4px;
+      }
+
+      .ob-continue:hover {
+        transform: translateY(-2px);
+        border-color: var(--line-strong);
+      }
+
+      .ob-skip {
+        width: 100%;
+        min-height: 42px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--dim);
+        font-size: 13px;
+        font-weight: 750;
+        cursor: pointer;
+        transition: color 160ms ease;
+      }
+
+      .ob-skip:hover {
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
     <main class="auth-shell">
       <a class="back" href="index.html">Back home</a>
-      <section class="panel" id="panel">
+
+      <!-- AUTH PANEL -->
+      <section class="panel" id="auth-panel">
         <div class="auth-head">
           <div class="brand">
             <span class="brand-logo" aria-hidden="true"><img src="assets/echoo-new-logo.jpg" alt=""></span>
@@ -246,7 +476,7 @@
             </div>
           </div>
           <h1 id="title">Step back into the city.</h1>
-          <p class="sub" id="copy">Try the preview instantly. You can leave the fields empty until the backend is connected.</p>
+          <p class="sub" id="copy">Your saved places, plans, and conversations are waiting.</p>
         </div>
 
         <form id="auth-form">
@@ -260,10 +490,10 @@
           </div>
           <div class="field">
             <label for="password">Password</label>
-            <input id="password" type="password" autocomplete="current-password" placeholder="Anything, or nothing">
+            <input id="password" type="password" autocomplete="current-password" placeholder="Password">
           </div>
           <div class="meta">
-            <span>Preview access</span>
+            <span>Secured by Echoo</span>
             <a href="#">Need help?</a>
           </div>
           <button class="submit" type="submit" id="submit-label">Open my city</button>
@@ -272,41 +502,270 @@
           <button class="provider" type="button" data-provider="Apple">Continue with Apple</button>
         </form>
       </section>
+
+      <!-- ONBOARDING PANEL -->
+      <section class="onboarding" id="onboarding">
+        <div class="ob-progress">
+          <div class="ob-bar current" data-step="0"></div>
+          <div class="ob-bar" data-step="1"></div>
+          <div class="ob-bar" data-step="2"></div>
+        </div>
+        <div class="ob-panel">
+          <div class="ob-head">
+            <h1 id="ob-title">What draws you out?</h1>
+            <p class="sub" id="ob-sub">Pick what sounds like your kind of night.</p>
+          </div>
+          <div class="ob-body">
+
+            <!-- Step 1: Vibes -->
+            <div class="ob-step active" data-ob-step="0">
+              <div class="ob-step-inner">
+                <div class="chips">
+                  <button type="button" class="chip" data-vibe="Live music">Live music</button>
+                  <button type="button" class="chip" data-vibe="Late-night cinema">Late-night cinema</button>
+                  <button type="button" class="chip" data-vibe="Cozy date spots">Cozy date spots</button>
+                  <button type="button" class="chip" data-vibe="Rooftop bars">Rooftop bars</button>
+                  <button type="button" class="chip" data-vibe="Art & galleries">Art &amp; galleries</button>
+                  <button type="button" class="chip" data-vibe="Street food crawls">Street food crawls</button>
+                  <button type="button" class="chip" data-vibe="Sports">Sports</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: City -->
+            <div class="ob-step" data-ob-step="1">
+              <div class="ob-step-inner">
+                <div class="field">
+                  <label for="ob-city">Your city</label>
+                  <input id="ob-city" type="text" value="Toronto" placeholder="Your city">
+                </div>
+                <div class="city-pills">
+                  <button type="button" class="city-pill selected" data-city="Toronto">Toronto</button>
+                  <button type="button" class="city-pill" data-city="Vancouver">Vancouver</button>
+                  <button type="button" class="city-pill" data-city="Montreal">Montreal</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Tone -->
+            <div class="ob-step" data-ob-step="2">
+              <div class="ob-step-inner">
+                <div class="tone-cards">
+                  <button type="button" class="tone-card selected" data-tone="direct">
+                    <span class="tone-name">Direct &amp; chill</span>
+                    <span class="tone-desc">Short answers. No fluff. Just the move.</span>
+                  </button>
+                  <button type="button" class="tone-card" data-tone="detailed">
+                    <span class="tone-name">Detailed curator</span>
+                    <span class="tone-desc">Context, alternatives, and the full picture.</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="ob-continue" id="ob-next">Next</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <script>
-      const panel = document.getElementById("panel");
-      const title = document.getElementById("title");
-      const copy = document.getElementById("copy");
-      const signIn = document.getElementById("signin-tab");
-      const signUp = document.getElementById("signup-tab");
-      const submitLabel = document.getElementById("submit-label");
+      /* ---- State ---- */
+      const state = {
+        mode: "signin",        // "signin" | "signup"
+        obStep: 0,
+        vibes: new Set(),
+        city: "Toronto",
+        tone: "direct",
+        userName: "",
+        userEmail: "",
+      };
 
+      /* ---- DOM refs ---- */
+      const authPanel   = document.getElementById("auth-panel");
+      const onboarding  = document.getElementById("onboarding");
+      const title       = document.getElementById("title");
+      const copy        = document.getElementById("copy");
+      const signInTab   = document.getElementById("signin-tab");
+      const signUpTab   = document.getElementById("signup-tab");
+      const submitLabel = document.getElementById("submit-label");
+      const obTitle     = document.getElementById("ob-title");
+      const obSub       = document.getElementById("ob-sub");
+      const obNext      = document.getElementById("ob-next");
+      const obBars      = document.querySelectorAll(".ob-bar");
+      const obSteps     = document.querySelectorAll(".ob-step");
+      const cityInput   = document.getElementById("ob-city");
+
+      /* ---- Copy maps ---- */
+      const COPY = {
+        signin: {
+          title: "Step back into the city.",
+          sub: "Your saved places, plans, and conversations are waiting.",
+          btn: "Open my city",
+        },
+        signup: {
+          title: "Make your city feel closer.",
+          sub: "Curate your taste, sync with friends, and discover plans worth saying yes to.",
+          btn: "Start exploring",
+        },
+      };
+
+      const OB_STEPS = [
+        { title: "What draws you out?",           sub: "Pick what sounds like your kind of night.", btn: "Next" },
+        { title: "Where\u2019s home base?",        sub: "We\u2019ll find what\u2019s close and worth it.",   btn: "Next" },
+        { title: "How should Echoo talk to you?",  sub: "Pick a voice for your recommendations.",   btn: "Let\u2019s go" },
+      ];
+
+      /* ---- Mode switching ---- */
       function setMode(mode) {
+        state.mode = mode;
         const joining = mode === "signup";
-        panel.classList.toggle("signup", joining);
-        signIn.classList.toggle("active", !joining);
-        signUp.classList.toggle("active", joining);
-        title.textContent = joining ? "Make your city feel closer." : "Step back into the city.";
-        copy.textContent = joining ? "Start a preview profile for the places, plans, and people you want nearby." : "Try the preview instantly. You can leave the fields empty until the backend is connected.";
-        submitLabel.textContent = joining ? "Start my preview" : "Open my city";
+        authPanel.classList.toggle("signup", joining);
+        signInTab.classList.toggle("active", !joining);
+        signUpTab.classList.toggle("active", joining);
+
+        const c = joining ? COPY.signup : COPY.signin;
+        title.textContent       = c.title;
+        copy.textContent        = c.sub;
+        submitLabel.textContent = c.btn;
       }
 
-      function finish(provider) {
-        const name = document.getElementById("name").value.trim() || provider || "Preview User";
+      signInTab.addEventListener("click", () => setMode("signin"));
+      signUpTab.addEventListener("click", () => setMode("signup"));
+
+      /* ---- Auth submit ---- */
+      function captureUser(providerName) {
+        state.userName  = document.getElementById("name").value.trim() || providerName || "";
+        state.userEmail = document.getElementById("email").value.trim();
+      }
+
+      function finishSignIn(providerName) {
+        const name  = document.getElementById("name").value.trim() || providerName || "User";
         const email = document.getElementById("email").value.trim();
         window.location.href = `app.html?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
       }
 
-      signIn.addEventListener("click", () => setMode("signin"));
-      signUp.addEventListener("click", () => setMode("signup"));
-      document.getElementById("auth-form").addEventListener("submit", (event) => {
-        event.preventDefault();
-        finish("");
+      function startOnboarding(providerName) {
+        captureUser(providerName);
+        authPanel.classList.add("fade-out");
+        setTimeout(() => {
+          authPanel.style.display = "none";
+          onboarding.classList.add("visible");
+          renderObStep(0);
+        }, 240);
+      }
+
+      document.getElementById("auth-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (state.mode === "signup") {
+          startOnboarding("");
+        } else {
+          finishSignIn("");
+        }
       });
-      document.querySelectorAll("[data-provider]").forEach((button) => {
-        button.addEventListener("click", () => finish(`${button.dataset.provider} User`));
+
+      document.querySelectorAll("[data-provider]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const prov = btn.dataset.provider + " User";
+          if (state.mode === "signup") {
+            startOnboarding(prov);
+          } else {
+            finishSignIn(prov);
+          }
+        });
       });
+
+      /* ---- Onboarding steps ---- */
+      function renderObStep(index) {
+        state.obStep = index;
+        const step = OB_STEPS[index];
+
+        obTitle.textContent = step.title;
+        obSub.textContent   = step.sub;
+        obNext.textContent  = step.btn;
+
+        obBars.forEach((bar, i) => {
+          bar.classList.remove("past", "current");
+          if (i < index)      bar.classList.add("past");
+          else if (i === index) bar.classList.add("current");
+        });
+
+        obSteps.forEach((s) => {
+          s.classList.remove("active");
+          const inner = s.querySelector(".ob-step-inner");
+          if (inner) inner.style.animation = "none";
+        });
+
+        const target = document.querySelector(`[data-ob-step="${index}"]`);
+        /* Force reflow for re-triggering animation */
+        void target.offsetWidth;
+        target.classList.add("active");
+        const inner = target.querySelector(".ob-step-inner");
+        if (inner) inner.style.animation = "";
+      }
+
+      obNext.addEventListener("click", () => {
+        if (state.obStep < 2) {
+          renderObStep(state.obStep + 1);
+        } else {
+          finishOnboarding();
+        }
+      });
+
+      /* ---- Chip selection (vibes) ---- */
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const v = chip.dataset.vibe;
+          if (state.vibes.has(v)) {
+            state.vibes.delete(v);
+            chip.classList.remove("selected");
+          } else {
+            state.vibes.add(v);
+            chip.classList.add("selected");
+          }
+        });
+      });
+
+      /* ---- City pills ---- */
+      document.querySelectorAll(".city-pill").forEach((pill) => {
+        pill.addEventListener("click", () => {
+          state.city = pill.dataset.city;
+          cityInput.value = pill.dataset.city;
+          document.querySelectorAll(".city-pill").forEach((p) => p.classList.remove("selected"));
+          pill.classList.add("selected");
+        });
+      });
+
+      cityInput.addEventListener("input", () => {
+        state.city = cityInput.value;
+        document.querySelectorAll(".city-pill").forEach((p) => {
+          p.classList.toggle("selected", p.dataset.city === cityInput.value);
+        });
+      });
+
+      /* ---- Tone selection ---- */
+      document.querySelectorAll(".tone-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          state.tone = card.dataset.tone;
+          document.querySelectorAll(".tone-card").forEach((c) => c.classList.remove("selected"));
+          card.classList.add("selected");
+        });
+      });
+
+      /* ---- Finish onboarding ---- */
+      function finishOnboarding() {
+        const name  = state.userName || "User";
+        const email = state.userEmail;
+        const vibes = [...state.vibes].join(",");
+        const city  = state.city || cityInput.value || "Toronto";
+        const tone  = state.tone || "direct";
+
+        const params = new URLSearchParams({
+          name, email, vibes, city, tone,
+        });
+
+        window.location.href = `app.html?${params.toString()}`;
+      }
     </script>
   </body>
 </html>
