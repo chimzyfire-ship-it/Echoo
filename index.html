@@ -79,21 +79,20 @@
       }
 
       .brand-mark {
-        width: 42px;
-        height: 42px;
+        width: 46px;
+        height: 46px;
         border-radius: 18px;
-        background: rgba(246, 240, 230, 0.08);
+        background: rgba(246, 240, 230, 0.06);
         overflow: hidden;
         border: 1px solid rgba(246, 240, 230, 0.12);
       }
 
       .brand-mark img {
-        width: 122px;
-        height: 88px;
-        object-fit: cover;
-        object-position: 50% 0%;
-        transform: translate(-40px, -7px);
-        filter: saturate(0.9) contrast(1.05);
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 4px;
+        filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.42));
       }
 
       .brand-name {
@@ -184,39 +183,52 @@
         display: grid;
         justify-items: center;
         text-align: center;
-        gap: 10px;
+        gap: 8px;
         margin-bottom: auto;
         padding-top: clamp(40px, 11svh, 86px);
       }
 
       .hero-logo {
-        width: min(170px, 48vw);
-        height: min(118px, 34vw);
-        overflow: hidden;
+        width: min(132px, 36vw);
+        aspect-ratio: 1;
         display: grid;
-        place-items: start center;
+        place-items: center;
+        margin-bottom: 2px;
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+        animation: logoIn 680ms ease forwards;
       }
 
       .hero-logo img {
         width: 100%;
-        height: auto;
-        filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.42));
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.48));
       }
 
-      .hero-logo span {
-        display: block;
-        width: 100%;
-        height: 76px;
-        background: url("assets/echoo-new-logo.jpg") center 8% / 148% auto no-repeat;
+      .brand-lockup {
+        display: grid;
+        justify-items: center;
+        gap: 7px;
       }
 
       h1 {
         margin: 0;
-        font-size: clamp(47px, 15vw, 72px);
-        line-height: 0.9;
-        letter-spacing: -0.075em;
+        font-size: clamp(44px, 13vw, 68px);
+        line-height: 0.88;
+        letter-spacing: -0.055em;
         text-wrap: balance;
         text-shadow: 0 18px 40px rgba(0, 0, 0, 0.52);
+      }
+
+      .support-line {
+        margin: 0;
+        color: rgba(246, 240, 230, 0.78);
+        font-size: clamp(15px, 4vw, 18px);
+        line-height: 1.25;
+        font-weight: 350;
+        letter-spacing: 0.01em;
+        text-shadow: 0 12px 24px rgba(0, 0, 0, 0.62);
       }
 
       .tagline {
@@ -517,6 +529,13 @@
         border-radius: 12px 12px 0 0;
       }
 
+      @keyframes logoIn {
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
       .sheet {
         position: fixed;
         left: 50%;
@@ -596,7 +615,7 @@
     <div class="page">
       <header class="topbar" aria-label="Echoo">
         <a class="brand" href="index.html" aria-label="Echoo home">
-          <span class="brand-mark" aria-hidden="true"><img src="assets/echoo-new-logo.jpg" alt=""></span>
+          <span class="brand-mark" aria-hidden="true"><img src="assets/echoo-ekkkkk-logo.png" alt=""></span>
           <span class="brand-name">Echoo</span>
         </a>
         <div class="top-actions">
@@ -607,8 +626,11 @@
 
       <main class="hero">
         <section class="hero-center" aria-labelledby="landing-title">
-          <div class="hero-logo" aria-hidden="true"><span></span></div>
-          <h1 id="landing-title">Discover your city, your way.</h1>
+          <div class="brand-lockup">
+            <div class="hero-logo" aria-hidden="true"><img src="assets/echoo-ekkkkk-logo.png" alt=""></div>
+            <h1 id="landing-title">Hear The City</h1>
+            <p class="support-line">Discover your city, your way.</p>
+          </div>
           <p class="tagline">Find the plans people will actually say yes to.</p>
           <span class="city-pill">Toronto today</span>
         </section>
