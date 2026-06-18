@@ -3,81 +3,103 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>echoo</title>
+    <title>Echoo</title>
     <style>
       :root {
         color-scheme: dark;
-        --bg: #080907;
-        --panel: #10120f;
-        --panel-2: #171914;
-        --ink: #f5f1e8;
-        --muted: #a8a397;
-        --dim: #706c62;
-        --line: rgba(245, 241, 232, 0.13);
-        --line-strong: rgba(245, 241, 232, 0.28);
-        --signal: #d8ff5f;
-        --clay: #c87952;
-        --blue: #91a7ff;
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+        --ink: #f6f0e6;
+        --muted: #c7bdb0;
+        --quiet: #91887f;
+        --line: rgba(246, 240, 230, 0.2);
+        --line-soft: rgba(246, 240, 230, 0.1);
+        --glass: rgba(31, 32, 31, 0.52);
+        --gold: #e7c98e;
+        --rose: #d8a2d9;
+        --violet: #a68cdb;
+        --deep: #101112;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
       * { box-sizing: border-box; }
-      html { scroll-behavior: smooth; }
+      html, body { min-height: 100%; }
       body {
         margin: 0;
-        min-height: 100vh;
         color: var(--ink);
-        background:
-          linear-gradient(90deg, rgba(245,241,232,0.035) 1px, transparent 1px) 0 0 / 34px 34px,
-          radial-gradient(circle at 78% 4%, rgba(216, 255, 95, 0.12), transparent 28rem),
-          radial-gradient(circle at 10% 36%, rgba(200, 121, 82, 0.1), transparent 26rem),
-          var(--bg);
+        background: #161819;
         overflow-x: hidden;
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        z-index: -3;
+        content: "";
+        background: url("assets/echoo-mobile-bg.png") center / cover no-repeat;
+        filter: contrast(1.04) brightness(0.76) saturate(0.88);
+        transform: scale(1.015);
+      }
+
+      body::after {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        content: "";
+        background:
+          linear-gradient(180deg, rgba(13, 14, 15, 0.56) 0%, rgba(13, 14, 15, 0.2) 30%, rgba(13, 14, 15, 0.18) 58%, rgba(13, 14, 15, 0.92) 100%),
+          radial-gradient(circle at 50% 5%, rgba(231, 201, 142, 0.16), transparent 18rem);
       }
 
       a { color: inherit; text-decoration: none; }
       button, input { font: inherit; }
       button { -webkit-tap-highlight-color: transparent; }
 
-      .shell {
-        width: min(1180px, 100%);
+      .page {
+        min-height: 100svh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        width: min(480px, 100%);
         margin: 0 auto;
-        padding: 18px 18px 104px;
+        padding: 16px 18px 84px;
       }
 
       .topbar {
-        position: sticky;
-        top: 0;
-        z-index: 20;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin: 0 -18px 18px;
-        padding: 14px 18px;
-        background: rgba(8, 9, 7, 0.78);
-        border-bottom: 1px solid var(--line);
-        backdrop-filter: blur(18px);
+        padding-top: max(2px, env(safe-area-inset-top));
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        min-width: 0;
+        min-height: 44px;
       }
 
-      .brand img {
-        width: 38px;
-        height: 38px;
-        object-fit: contain;
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 18px;
+        background: rgba(246, 240, 230, 0.08);
+        overflow: hidden;
+        border: 1px solid rgba(246, 240, 230, 0.12);
       }
 
-      .brand span {
-        font-size: 27px;
-        font-weight: 900;
-        letter-spacing: -0.04em;
+      .brand-mark img {
+        width: 122px;
+        height: 88px;
+        object-fit: cover;
+        object-position: 50% 0%;
+        transform: translate(-40px, -7px);
+        filter: saturate(0.9) contrast(1.05);
+      }
+
+      .brand-name {
+        font-size: 26px;
+        font-weight: 850;
+        letter-spacing: -0.035em;
       }
 
       .top-actions {
@@ -86,234 +108,177 @@
         gap: 8px;
       }
 
-      .icon-btn,
-      .text-btn,
-      .primary-btn,
-      .quiet-btn {
-        border: 1px solid var(--line);
+      .round-action {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        border: 1px solid rgba(246, 240, 230, 0.14);
+        border-radius: 50%;
+        background: rgba(15, 16, 17, 0.5);
         color: var(--ink);
-        background: rgba(245, 241, 232, 0.045);
+        backdrop-filter: blur(14px);
         cursor: pointer;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
       }
 
-      .icon-btn {
-        width: 43px;
-        height: 43px;
-        border-radius: 999px;
-        display: grid;
-        place-items: center;
+      .round-action:hover,
+      .round-action:focus-visible {
+        transform: translateY(-2px);
+        border-color: rgba(246, 240, 230, 0.36);
+        background: rgba(246, 240, 230, 0.08);
+        outline: 0;
       }
 
-      .icon-btn::before {
+      .round-action.search::before {
+        position: absolute;
+        inset: 12px;
         content: "";
-        width: 16px;
-        height: 16px;
         border: 2px solid currentColor;
         border-radius: 50%;
-        box-shadow: 8px 8px 0 -6px currentColor;
-        transform: rotate(-12deg);
       }
 
-      .icon-btn.profile::before {
-        width: 17px;
-        height: 17px;
-        border-radius: 10px 10px 5px 5px;
-        border-top: 2px solid currentColor;
-        box-shadow: inset 0 8px 0 -5px currentColor;
-      }
-
-      .text-btn,
-      .primary-btn,
-      .quiet-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 46px;
-        padding: 0 18px;
+      .round-action.search::after {
+        position: absolute;
+        right: 11px;
+        bottom: 11px;
+        width: 9px;
+        height: 2px;
+        content: "";
+        background: currentColor;
         border-radius: 999px;
-        font-weight: 850;
-        letter-spacing: -0.02em;
+        transform: rotate(45deg);
       }
 
-      .primary-btn {
-        background: var(--ink);
-        color: #10110e;
-        border-color: transparent;
-        box-shadow: 0 14px 40px rgba(245, 241, 232, 0.12);
+      .round-action.person::before {
+        position: absolute;
+        top: 10px;
+        left: 16px;
+        width: 9px;
+        height: 9px;
+        content: "";
+        border: 2px solid currentColor;
+        border-radius: 50%;
       }
 
-      .quiet-btn { color: var(--muted); }
-
-      .icon-btn:hover,
-      .text-btn:hover,
-      .quiet-btn:hover {
-        transform: translateY(-2px);
-        border-color: var(--line-strong);
-        background: rgba(245, 241, 232, 0.08);
-      }
-
-      .primary-btn:hover {
-        transform: translateY(-2px);
-        background: var(--signal);
-        color: #11130d;
+      .round-action.person::after {
+        position: absolute;
+        left: 12px;
+        bottom: 10px;
+        width: 18px;
+        height: 12px;
+        content: "";
+        border: 2px solid currentColor;
+        border-bottom: 0;
+        border-radius: 14px 14px 0 0;
       }
 
       .hero {
-        min-height: calc(100svh - 168px);
         display: grid;
-        align-content: center;
-        gap: 22px;
-        padding: 20px 0 32px;
+        align-content: end;
+        gap: 18px;
+        min-height: calc(100svh - 196px);
+        padding: 34px 0 12px;
       }
 
-      .hero-art {
-        position: relative;
+      .hero-center {
         display: grid;
-        place-items: center;
-        min-height: 188px;
-        border: 1px solid var(--line);
-        background:
-          linear-gradient(135deg, rgba(245,241,232,0.08), transparent 48%),
-          rgba(16, 18, 15, 0.84);
-        box-shadow: var(--shadow);
-        overflow: hidden;
-      }
-
-      .hero-art::before,
-      .hero-art::after {
-        position: absolute;
-        content: "";
-        inset: 22px;
-        border: 1px solid rgba(245, 241, 232, 0.09);
-      }
-
-      .hero-art::after {
-        inset: auto 0 34px;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--signal), transparent);
-        border: 0;
-        animation: scan 3.8s ease-in-out infinite;
-      }
-
-      .mark-stage {
-        position: relative;
-        width: min(46vw, 188px);
-        aspect-ratio: 1;
-        display: grid;
-        place-items: center;
-      }
-
-      .mark-stage img {
-        width: 82%;
-        height: 82%;
-        object-fit: contain;
-        filter: saturate(0.72) contrast(1.06);
-      }
-
-      .orbit {
-        position: absolute;
-        inset: 0;
-        border: 1px solid rgba(216, 255, 95, 0.42);
-        border-radius: 50%;
-        clip-path: polygon(0 0, 100% 0, 100% 52%, 0 38%);
-        animation: turn 9s linear infinite;
-      }
-
-      .eyebrow {
-        display: flex;
-        align-items: center;
+        justify-items: center;
+        text-align: center;
         gap: 10px;
-        width: fit-content;
-        color: var(--signal);
-        font-size: 12px;
-        font-weight: 900;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
+        margin-bottom: auto;
+        padding-top: clamp(40px, 11svh, 86px);
       }
 
-      .eyebrow::before {
-        content: "";
-        width: 38px;
-        height: 1px;
-        background: currentColor;
+      .hero-logo {
+        width: min(170px, 48vw);
+        height: min(118px, 34vw);
+        overflow: hidden;
+        display: grid;
+        place-items: start center;
+      }
+
+      .hero-logo img {
+        width: 100%;
+        height: auto;
+        filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.42));
+      }
+
+      .hero-logo span {
+        display: block;
+        width: 100%;
+        height: 76px;
+        background: url("assets/echoo-new-logo.jpg") center 8% / 148% auto no-repeat;
       }
 
       h1 {
         margin: 0;
-        max-width: 880px;
-        font-size: clamp(54px, 14vw, 112px);
-        line-height: 0.86;
+        font-size: clamp(47px, 15vw, 72px);
+        line-height: 0.9;
         letter-spacing: -0.075em;
+        text-wrap: balance;
+        text-shadow: 0 18px 40px rgba(0, 0, 0, 0.52);
       }
 
-      .hero-copy {
-        max-width: 680px;
+      .tagline {
         margin: 0;
         color: var(--muted);
-        font-size: clamp(16px, 4.5vw, 22px);
-        line-height: 1.45;
+        font-size: 16px;
+        line-height: 1.35;
         font-weight: 650;
+        text-shadow: 0 12px 24px rgba(0, 0, 0, 0.64);
       }
 
-      .command-row {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
-        margin-top: 6px;
-      }
-
-      .bored-btn {
-        position: relative;
-        min-height: 76px;
-        padding: 0 22px;
-        border: 0;
-        border-radius: 0;
-        background: var(--signal);
-        color: #0e1109;
-        font-size: clamp(22px, 7vw, 34px);
-        font-weight: 950;
-        letter-spacing: -0.06em;
-        text-align: left;
-        cursor: pointer;
-        overflow: hidden;
-        box-shadow: 0 18px 52px rgba(216, 255, 95, 0.16);
-        transition: transform 180ms ease, filter 180ms ease;
-      }
-
-      .bored-btn::after {
-        content: "GO";
-        position: absolute;
-        right: 18px;
-        top: 50%;
-        translate: 0 -50%;
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        border: 1px solid rgba(14, 17, 9, 0.32);
+      .city-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        width: fit-content;
+        min-height: 38px;
+        padding: 0 14px;
+        margin: 4px auto 0;
+        border: 1px solid rgba(246, 240, 230, 0.16);
         border-radius: 999px;
-        font-size: 12px;
-        letter-spacing: 0.08em;
+        background: rgba(16, 17, 18, 0.46);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        backdrop-filter: blur(12px);
       }
 
-      .bored-btn:hover {
-        transform: translateY(-3px) scale(1.01);
-        filter: brightness(1.02);
+      .city-pill::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold), var(--rose));
+        box-shadow: 0 0 14px rgba(231, 201, 142, 0.5);
       }
 
-      .search-rail {
+      .control-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .prompt {
         display: grid;
         grid-template-columns: 1fr auto;
         align-items: center;
         gap: 10px;
-        min-height: 62px;
-        padding: 8px 8px 8px 16px;
-        border: 1px solid var(--line);
-        background: rgba(16, 18, 15, 0.82);
+        min-height: 60px;
+        padding: 7px 8px 7px 18px;
+        border: 1px solid rgba(246, 240, 230, 0.16);
+        border-radius: 999px;
+        background: rgba(28, 29, 30, 0.68);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(18px);
       }
 
-      .search-rail input {
+      .prompt:focus-within {
+        border-color: rgba(231, 201, 142, 0.72);
+        box-shadow: 0 0 0 4px rgba(231, 201, 142, 0.12), 0 16px 48px rgba(0, 0, 0, 0.28);
+      }
+
+      .prompt input {
         width: 100%;
         min-width: 0;
         border: 0;
@@ -324,337 +289,393 @@
         font-weight: 700;
       }
 
-      .search-rail input::placeholder { color: var(--dim); }
+      .prompt input::placeholder { color: #cfc6ba; opacity: 0.92; }
 
-      .section {
-        margin-top: 26px;
-        padding-top: 24px;
-        border-top: 1px solid var(--line);
-      }
-
-      .section-head {
-        display: flex;
-        align-items: end;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 14px;
-      }
-
-      h2 {
-        margin: 0;
-        font-size: clamp(26px, 8vw, 42px);
-        line-height: 0.95;
-        letter-spacing: -0.06em;
-      }
-
-      .mini-label {
-        color: var(--dim);
-        font-size: 12px;
-        font-weight: 850;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        white-space: nowrap;
-      }
-
-      .stack {
-        display: grid;
-        gap: 10px;
-      }
-
-      .tile {
+      .send {
         position: relative;
-        display: grid;
-        grid-template-columns: 84px 1fr;
-        gap: 14px;
-        min-height: 122px;
-        padding: 12px;
-        border: 1px solid var(--line);
-        background: rgba(16, 18, 15, 0.74);
-        overflow: hidden;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        width: 46px;
+        height: 46px;
+        border: 0;
+        border-radius: 50%;
+        color: #161514;
+        background: linear-gradient(135deg, #f1d391, #d8a2d9 62%, #a992e5);
+        cursor: pointer;
+        transition: transform 180ms ease, filter 180ms ease;
       }
 
-      .tile:hover {
-        transform: translateX(4px);
-        border-color: var(--line-strong);
-        background: rgba(23, 25, 20, 0.92);
+      .send::before {
+        position: absolute;
+        top: 15px;
+        left: 13px;
+        width: 16px;
+        height: 2px;
+        content: "";
+        background: currentColor;
+        border-radius: 999px;
       }
 
-      .tile img {
-        width: 84px;
-        height: 100%;
-        object-fit: cover;
-        filter: saturate(0.55) contrast(1.08);
+      .send::after {
+        position: absolute;
+        top: 11px;
+        left: 21px;
+        width: 10px;
+        height: 10px;
+        content: "";
+        border-top: 2px solid currentColor;
+        border-right: 2px solid currentColor;
+        transform: rotate(45deg);
       }
 
-      .tile small {
-        color: var(--signal);
-        font-size: 11px;
+      .send:hover,
+      .send:focus-visible {
+        transform: translateY(-2px) scale(1.02);
+        filter: brightness(1.04);
+        outline: 0;
+      }
+
+      .main-cta,
+      .bored-cta {
+        width: 100%;
+        min-height: 58px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        cursor: pointer;
         font-weight: 900;
-        letter-spacing: 0.13em;
-        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        transition: transform 180ms ease, filter 180ms ease, border-color 180ms ease, background 180ms ease;
       }
 
-      .tile h3 {
-        margin: 8px 0 6px;
-        font-size: 20px;
+      .main-cta {
+        color: #151311;
+        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 40%, #d8a2d9 100%);
+        box-shadow: 0 16px 46px rgba(216, 162, 217, 0.18);
+        text-transform: uppercase;
+        font-size: 14px;
+      }
+
+      .bored-cta {
+        color: var(--ink);
+        background: rgba(16, 17, 18, 0.48);
+        border-color: rgba(246, 240, 230, 0.15);
+        backdrop-filter: blur(14px);
+        font-size: 15px;
+      }
+
+      .main-cta:hover,
+      .main-cta:focus-visible,
+      .bored-cta:hover,
+      .bored-cta:focus-visible {
+        transform: translateY(-2px);
+        outline: 0;
+      }
+
+      .bored-cta:hover,
+      .bored-cta:focus-visible {
+        border-color: rgba(246, 240, 230, 0.34);
+        background: rgba(246, 240, 230, 0.08);
+      }
+
+      .bottom-nav {
+        position: fixed;
+        left: 50%;
+        bottom: 0;
+        z-index: 30;
+        width: min(480px, 100%);
+        transform: translateX(-50%);
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        padding: 9px 10px calc(8px + env(safe-area-inset-bottom));
+        border-top: 1px solid rgba(246, 240, 230, 0.12);
+        background: rgba(16, 17, 18, 0.78);
+        backdrop-filter: blur(20px);
+      }
+
+      .nav-link {
+        display: grid;
+        justify-items: center;
+        gap: 5px;
+        min-height: 54px;
+        color: var(--quiet);
+        font-size: 10px;
+        font-weight: 850;
+        letter-spacing: 0.02em;
+      }
+
+      .nav-link.active { color: var(--gold); }
+
+      .glyph {
+        position: relative;
+        width: 23px;
+        height: 23px;
+        color: currentColor;
+      }
+
+      .glyph.home::before {
+        position: absolute;
+        inset: 8px 3px 2px;
+        content: "";
+        border: 2px solid currentColor;
+        border-top: 0;
+        border-radius: 2px;
+      }
+
+      .glyph.home::after {
+        position: absolute;
+        left: 4px;
+        top: 3px;
+        width: 14px;
+        height: 14px;
+        content: "";
+        border-left: 2px solid currentColor;
+        border-top: 2px solid currentColor;
+        transform: rotate(45deg);
+      }
+
+      .glyph.discover::before {
+        position: absolute;
+        inset: 3px;
+        content: "";
+        border: 2px solid currentColor;
+        border-radius: 50%;
+      }
+
+      .glyph.discover::after {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        width: 8px;
+        height: 2px;
+        content: "";
+        background: currentColor;
+        transform: rotate(-35deg);
+        transform-origin: left center;
+      }
+
+      .glyph.weekend::before {
+        position: absolute;
+        inset: 5px 3px 3px;
+        content: "";
+        border: 2px solid currentColor;
+        border-radius: 3px;
+      }
+
+      .glyph.weekend::after {
+        position: absolute;
+        left: 6px;
+        right: 6px;
+        top: 10px;
+        height: 2px;
+        content: "";
+        background: currentColor;
+        box-shadow: 0 -6px 0 -1px currentColor;
+      }
+
+      .glyph.people::before,
+      .glyph.people::after {
+        position: absolute;
+        content: "";
+        border: 2px solid currentColor;
+      }
+
+      .glyph.people::before {
+        left: 8px;
+        top: 4px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+      }
+
+      .glyph.people::after {
+        left: 3px;
+        bottom: 3px;
+        width: 17px;
+        height: 9px;
+        border-bottom: 0;
+        border-radius: 14px 14px 0 0;
+      }
+
+      .glyph.profile::before {
+        position: absolute;
+        left: 8px;
+        top: 4px;
+        width: 7px;
+        height: 7px;
+        content: "";
+        border: 2px solid currentColor;
+        border-radius: 50%;
+      }
+
+      .glyph.profile::after {
+        position: absolute;
+        left: 5px;
+        bottom: 4px;
+        width: 13px;
+        height: 8px;
+        content: "";
+        border: 2px solid currentColor;
+        border-bottom: 0;
+        border-radius: 12px 12px 0 0;
+      }
+
+      .sheet {
+        position: fixed;
+        left: 50%;
+        right: auto;
+        bottom: 92px;
+        z-index: 50;
+        width: min(440px, calc(100% - 28px));
+        transform: translate(-50%, 18px);
+        opacity: 0;
+        pointer-events: none;
+        padding: 18px;
+        border: 1px solid rgba(246, 240, 230, 0.18);
+        border-radius: 28px;
+        background: rgba(22, 23, 24, 0.86);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(22px);
+        transition: opacity 180ms ease, transform 180ms ease;
+      }
+
+      .sheet.open {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, 0);
+      }
+
+      .sheet h2 {
+        margin: 0 0 8px;
+        font-size: 27px;
         line-height: 1;
         letter-spacing: -0.045em;
       }
 
-      .tile p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.35;
-        font-weight: 650;
-      }
-
-      .filter-strip {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 4px;
-        scrollbar-width: none;
-      }
-
-      .filter-strip::-webkit-scrollbar { display: none; }
-
-      .chip {
-        flex: 0 0 auto;
-        min-height: 42px;
-        padding: 0 15px;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        display: inline-flex;
-        align-items: center;
-        color: var(--muted);
-        background: rgba(245, 241, 232, 0.035);
-        font-size: 13px;
-        font-weight: 850;
-      }
-
-      .chip:first-child {
-        color: #10110e;
-        background: var(--ink);
-      }
-
-      .drawer {
-        position: fixed;
-        inset: auto 10px 10px;
-        z-index: 50;
-        translate: 0 calc(100% + 18px);
-        padding: 18px;
-        border: 1px solid var(--line-strong);
-        background: rgba(16, 18, 15, 0.96);
-        box-shadow: var(--shadow);
-        transition: translate 240ms ease;
-      }
-
-      .drawer.open { translate: 0 0; }
-      .drawer h3 {
-        margin: 0 0 8px;
-        font-size: 28px;
-        letter-spacing: -0.06em;
-      }
-      .drawer p {
+      .sheet p {
         margin: 0 0 16px;
         color: var(--muted);
         line-height: 1.45;
         font-weight: 650;
       }
-      .drawer-actions {
+
+      .sheet-actions {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 10px;
       }
 
-      .bottom-nav {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 30;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        border-top: 1px solid var(--line);
-        background: rgba(8, 9, 7, 0.88);
-        backdrop-filter: blur(18px);
-      }
-
-      .bottom-nav a {
-        display: grid;
-        place-items: center;
-        min-height: 68px;
-        color: var(--muted);
-        font-size: 12px;
+      .sheet-actions a,
+      .sheet-actions button {
+        min-height: 48px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(246, 240, 230, 0.14);
         font-weight: 850;
+        cursor: pointer;
       }
 
-      .bottom-nav a.active { color: var(--signal); }
-
-      @keyframes scan {
-        0%, 100% { transform: translateY(-52px); opacity: 0.4; }
-        50% { transform: translateY(54px); opacity: 1; }
+      .sheet-actions a {
+        color: #151311;
+        background: linear-gradient(135deg, #e4bd78, #d8a2d9);
+        border-color: transparent;
       }
 
-      @keyframes turn { to { rotate: 360deg; } }
+      .sheet-actions button {
+        color: var(--ink);
+        background: rgba(246, 240, 230, 0.06);
+      }
 
       @media (min-width: 760px) {
-        .shell { padding-inline: 28px; }
-        .topbar { margin-inline: -28px; padding-inline: 28px; }
-        .hero {
-          grid-template-columns: 1fr 0.72fr;
-          align-items: center;
-          min-height: 650px;
-        }
-        .hero-art { order: 2; min-height: 460px; }
-        .hero-copy-wrap { order: 1; }
-        .command-row { grid-template-columns: minmax(250px, 380px) 1fr; align-items: stretch; }
-        .stack { grid-template-columns: repeat(3, 1fr); }
-        .tile { grid-template-columns: 1fr; min-height: 310px; align-content: end; }
-        .tile img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.42; }
-        .tile div { position: relative; z-index: 1; }
-        .bottom-nav { display: none; }
-        .drawer { width: min(420px, calc(100vw - 28px)); right: 14px; left: auto; }
+        body::before { background-size: min(883px, 58vw) auto; background-color: #161819; }
+        .page { width: min(560px, 100%); }
+        .bottom-nav { width: min(560px, 100%); }
       }
     </style>
   </head>
   <body>
-    <header class="topbar">
-      <a class="brand" href="index.html" aria-label="echoo home">
-        <img src="assets/echoo-bug.png" alt="">
-        <span>echoo</span>
-      </a>
-      <div class="top-actions">
-        <button class="icon-btn" id="search-trigger" aria-label="Search"></button>
-        <a class="icon-btn profile" href="auth.html" aria-label="Sign in"></a>
-      </div>
-    </header>
+    <div class="page">
+      <header class="topbar" aria-label="Echoo">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <span class="brand-mark" aria-hidden="true"><img src="assets/echoo-new-logo.jpg" alt=""></span>
+          <span class="brand-name">Echoo</span>
+        </a>
+        <div class="top-actions">
+          <button class="round-action search" id="focus-search" type="button" aria-label="Search Echoo"></button>
+          <a class="round-action person" href="auth.html" aria-label="Open your profile"></a>
+        </div>
+      </header>
 
-    <main class="shell">
-      <section class="hero">
-        <div class="hero-art" aria-hidden="true">
-          <div class="mark-stage">
-            <span class="orbit"></span>
-            <img src="assets/echoo-mark.png" alt="">
-          </div>
-        </div>
+      <main class="hero">
+        <section class="hero-center" aria-labelledby="landing-title">
+          <div class="hero-logo" aria-hidden="true"><span></span></div>
+          <h1 id="landing-title">Discover your city, your way.</h1>
+          <p class="tagline">Find the plans people will actually say yes to.</p>
+          <span class="city-pill">Toronto today</span>
+        </section>
 
-        <div class="hero-copy-wrap">
-          <div class="eyebrow">local signal</div>
-          <h1>Stop scrolling. Step into the city.</h1>
-          <p class="hero-copy">Echoo turns nearby shows, food, films, dates, and late plans into one clean decision. Less hunting. Better nights.</p>
-          <div class="command-row">
-            <button class="bored-btn" id="bored-btn">I am bored</button>
-            <form class="search-rail" id="quick-search">
-              <input id="search-input" placeholder="Ask for techno, date night, food, films..." />
-              <button class="primary-btn" type="submit">Ask</button>
-            </form>
-          </div>
-        </div>
-      </section>
+        <section class="control-stack" aria-label="Plan your day">
+          <form class="prompt" id="search-form">
+            <label for="city-search" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">What do you want to do?</label>
+            <input id="city-search" autocomplete="off" placeholder="What’s happening in Toronto today?" />
+            <button class="send" type="submit" aria-label="Search plans"></button>
+          </form>
+          <button class="main-cta" id="weekend-plan" type="button">Plan my instant weekend</button>
+          <button class="bored-cta" id="bored-plan" type="button">I’m bored. Surprise me.</button>
+        </section>
+      </main>
+    </div>
 
-      <section class="section">
-        <div class="section-head">
-          <h2>Tonight, sorted.</h2>
-          <span class="mini-label">live feed</span>
-        </div>
-        <div class="filter-strip" aria-label="Popular searches">
-          <a class="chip" href="events.html?filter=all">Near me</a>
-          <a class="chip" href="events.html?filter=music">Low-key music</a>
-          <a class="chip" href="events.html?filter=dates">Date plans</a>
-          <a class="chip" href="events.html?filter=movies">Films</a>
-          <a class="chip" href="events.html?filter=food">Food after 9</a>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head">
-          <h2>Clean paths.</h2>
-          <span class="mini-label">no wheels</span>
-        </div>
-        <div class="stack">
-          <a class="tile" href="events.html?filter=music">
-            <img src="assets/news-music.png" alt="">
-            <div>
-              <small>sound</small>
-              <h3>Rooms worth leaving for</h3>
-              <p>Small venues, DJ sets, listening bars, and live sets matched to your mood.</p>
-            </div>
-          </a>
-          <a class="tile" href="events.html?filter=dates">
-            <img src="assets/news-date.png" alt="">
-            <div>
-              <small>date</small>
-              <h3>Plans that feel intentional</h3>
-              <p>Build a route with dinner, showtime, late dessert, and a simple fallback.</p>
-            </div>
-          </a>
-          <a class="tile" href="events.html?filter=movies">
-            <img src="assets/news-movie.png" alt="">
-            <div>
-              <small>screen</small>
-              <h3>Film first, then the night</h3>
-              <p>Find screenings and pair them with nearby spots instead of starting over.</p>
-            </div>
-          </a>
-        </div>
-      </section>
-    </main>
-
-    <nav class="bottom-nav" aria-label="Primary">
-      <a class="active" href="index.html">Home</a>
-      <a href="#" id="bottom-search">Search</a>
-      <a href="events.html">Explore</a>
-      <a href="auth.html">Sign in</a>
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <a class="nav-link active" href="index.html" aria-current="page"><span class="glyph home"></span><span>Home</span></a>
+      <a class="nav-link" href="events.html"><span class="glyph discover"></span><span>Discover</span></a>
+      <a class="nav-link" href="events.html?filter=dates"><span class="glyph weekend"></span><span>Weekend</span></a>
+      <a class="nav-link" href="app.html"><span class="glyph people"></span><span>Friends</span></a>
+      <a class="nav-link" href="auth.html"><span class="glyph profile"></span><span>Profile</span></a>
     </nav>
 
-    <aside class="drawer" id="drawer" aria-hidden="true">
-      <h3 id="drawer-title">A clean night plan</h3>
-      <p id="drawer-copy">Start with one request and Echoo will shape a small, useful set of options.</p>
-      <div class="drawer-actions">
-        <a class="primary-btn" id="drawer-go" href="events.html?ai=bored">Show me options</a>
-        <button class="quiet-btn" id="drawer-close">Close</button>
+    <aside class="sheet" id="plan-sheet" aria-hidden="true" aria-live="polite">
+      <h2 id="sheet-title">Weekend mode is ready.</h2>
+      <p id="sheet-copy">We’ll start with a simple city plan: one anchor, one food stop, one easy backup if the group changes its mind.</p>
+      <div class="sheet-actions">
+        <a id="sheet-link" href="events.html?query=weekend">Show the plan</a>
+        <button id="sheet-close" type="button">Close</button>
       </div>
     </aside>
 
     <script>
-      const drawer = document.getElementById("drawer");
-      const drawerTitle = document.getElementById("drawer-title");
-      const drawerCopy = document.getElementById("drawer-copy");
-      const drawerGo = document.getElementById("drawer-go");
+      const searchInput = document.getElementById("city-search");
+      const sheet = document.getElementById("plan-sheet");
+      const sheetTitle = document.getElementById("sheet-title");
+      const sheetCopy = document.getElementById("sheet-copy");
+      const sheetLink = document.getElementById("sheet-link");
 
-      function openDrawer(title, copy, href) {
-        drawerTitle.textContent = title;
-        drawerCopy.textContent = copy;
-        drawerGo.href = href;
-        drawer.classList.add("open");
-        drawer.setAttribute("aria-hidden", "false");
+      function openSheet(title, copy, href) {
+        sheetTitle.textContent = title;
+        sheetCopy.textContent = copy;
+        sheetLink.href = href;
+        sheet.classList.add("open");
+        sheet.setAttribute("aria-hidden", "false");
       }
 
-      document.getElementById("bored-btn").addEventListener("click", () => {
-        openDrawer("Bored mode is ready", "I will skip the giant carousel and give you a tight list: one easy thing, one surprising thing, one plan with food attached.", "events.html?ai=bored");
-      });
+      document.getElementById("focus-search").addEventListener("click", () => searchInput.focus());
 
-      document.getElementById("search-trigger").addEventListener("click", () => {
-        document.getElementById("search-input").focus();
-      });
-
-      document.getElementById("bottom-search").addEventListener("click", (event) => {
+      document.getElementById("search-form").addEventListener("submit", (event) => {
         event.preventDefault();
-        document.getElementById("search-input").focus();
-      });
-
-      document.getElementById("drawer-close").addEventListener("click", () => {
-        drawer.classList.remove("open");
-        drawer.setAttribute("aria-hidden", "true");
-      });
-
-      document.getElementById("quick-search").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const query = document.getElementById("search-input").value.trim() || "surprise me";
+        const query = searchInput.value.trim() || "Toronto today";
         window.location.href = `events.html?query=${encodeURIComponent(query)}`;
+      });
+
+      document.getElementById("weekend-plan").addEventListener("click", () => {
+        openSheet("Your weekend can start now.", "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", "events.html?query=instant weekend in Toronto");
+      });
+
+      document.getElementById("bored-plan").addEventListener("click", () => {
+        openSheet("Let’s make boredom useful.", "We’ll skip the obvious list and give you three nearby ideas with different energy levels.", "events.html?query=surprise me tonight");
+      });
+
+      document.getElementById("sheet-close").addEventListener("click", () => {
+        sheet.classList.remove("open");
+        sheet.setAttribute("aria-hidden", "true");
       });
     </script>
   </body>

@@ -15,7 +15,8 @@
         --dim: #706c62;
         --line: rgba(245, 241, 232, 0.13);
         --line-strong: rgba(245, 241, 232, 0.28);
-        --signal: #d8ff5f;
+        --signal: #e7c98e;
+        --rose: #d8a2d9;
         --clay: #c87952;
         --blue: #91a7ff;
         --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
@@ -61,9 +62,12 @@
       }
 
       .brand img {
-        width: 36px;
-        height: 36px;
-        object-fit: contain;
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        object-fit: cover;
+        object-position: 50% 0%;
       }
 
       .avatar {
@@ -73,8 +77,8 @@
         border-radius: 50%;
         display: grid;
         place-items: center;
-        color: #10110e;
-        background: var(--signal);
+        color: #151311;
+        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
         font-size: 13px;
         font-weight: 950;
       }
@@ -157,7 +161,7 @@
 
       .primary {
         color: #10110e;
-        background: var(--signal);
+        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
         border-color: transparent;
       }
 
@@ -346,7 +350,7 @@
   <body>
     <header class="topbar">
       <a class="brand" href="index.html">
-        <img src="assets/echoo-bug.png" alt="">
+        <img src="assets/echoo-new-logo.jpg" alt="">
         <span>echoo</span>
       </a>
       <div class="avatar" id="avatar">PU</div>
@@ -355,14 +359,14 @@
     <main class="shell">
       <section class="welcome">
         <div>
-          <div class="kicker">signed in preview</div>
-          <h1 id="headline">Your night has a control room.</h1>
-          <p>Start with one plain sentence. Echoo turns it into nearby options, a route, and a fallback plan without forcing you through a maze.</p>
+          <div class="kicker">Tonight starts here</div>
+          <h1 id="headline">Let the city come closer.</h1>
+          <p>Tell Echoo what kind of night you want. We’ll shape a few nearby plans that feel easy to say yes to.</p>
         </div>
         <div class="ask-card">
           <form id="plan-form">
             <input id="plan-query" placeholder="I want something quiet after dinner" />
-            <button class="primary" type="submit">Build plan</button>
+            <button class="primary" type="submit">Find my night</button>
           </form>
           <button class="ghost" id="bored">I am bored</button>
         </div>
@@ -370,43 +374,43 @@
 
       <section class="grid" aria-label="Quick actions">
         <button class="module" data-action="nearby">
-          <small>01</small>
-          <strong>Nearby now</strong>
-          <p>Open places, live rooms, and low-friction ideas close to you.</p>
+          <small>Close by</small>
+          <strong>Go somewhere good</strong>
+          <p>Places and small moments near you, filtered for what is actually open.</p>
         </button>
         <button class="module" data-action="date">
-          <small>02</small>
-          <strong>Date planner</strong>
-          <p>A clean sequence with food, timing, and a graceful backup.</p>
+          <small>Together</small>
+          <strong>Make it feel planned</strong>
+          <p>Dinner, a reason to leave the table, and a backup that still feels considered.</p>
         </button>
         <button class="module" data-action="tickets">
-          <small>03</small>
-          <strong>Tickets</strong>
-          <p>Draft checkout and hold your place in the plan before backend wiring.</p>
+          <small>Booked</small>
+          <strong>Keep the spot</strong>
+          <p>Save the event, seat, or table idea so the plan does not disappear.</p>
         </button>
         <button class="module" data-action="crew">
-          <small>04</small>
-          <strong>Crew vote</strong>
-          <p>Share a short list and stop the group chat from looping forever.</p>
+          <small>Friends</small>
+          <strong>Let the group choose</strong>
+          <p>Send a short list people can answer without another endless thread.</p>
         </button>
       </section>
 
       <section class="plan">
         <div class="section-title">
-          <h2>First plan</h2>
+          <h2>Your first move</h2>
         </div>
         <div class="timeline" id="timeline">
           <div class="stop">
             <div class="time">7:10</div>
-            <div><b>Set the radius</b><span>Start within 15 minutes so the night does not become a commute.</span></div>
+            <div><b>Stay close</b><span>Start within 15 minutes so the night does not become a commute.</span></div>
           </div>
           <div class="stop">
             <div class="time">8:00</div>
-            <div><b>Pick the anchor</b><span>A screening, small show, listening room, or dinner spot becomes the center.</span></div>
+            <div><b>Choose the spark</b><span>A screening, small show, listening room, or dinner spot becomes the center.</span></div>
           </div>
           <div class="stop">
             <div class="time">10:15</div>
-            <div><b>Add the after</b><span>One nearby place for dessert, drinks, or a walk keeps the plan alive.</span></div>
+            <div><b>Leave room after</b><span>One nearby place for dessert, drinks, or a walk keeps the plan alive.</span></div>
           </div>
         </div>
       </section>
@@ -419,14 +423,14 @@
       <a href="index.html">Exit</a>
     </nav>
 
-    <div class="toast" id="toast">Plan updated.</div>
+    <div class="toast" id="toast">Your night is ready.</div>
 
     <script>
       const params = new URLSearchParams(window.location.search);
       const name = params.get("name") || "Preview User";
       const initials = name.split(" ").filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "PU";
       document.getElementById("avatar").textContent = initials;
-      document.getElementById("headline").textContent = `${name.split(" ")[0] || "Your"} night has a control room.`;
+      document.getElementById("headline").textContent = `${name.split(" ")[0] || "Your"} night can start here.`;
 
       const toast = document.getElementById("toast");
       let toastTimer;
@@ -454,8 +458,8 @@
       });
 
       document.getElementById("bored").addEventListener("click", () => {
-        writePlan("Bored mode");
-        showToast("Bored mode picked a simple plan.");
+        writePlan("Surprise me nearby");
+        showToast("Three easy ideas are ready.");
       });
 
       document.getElementById("nav-plan").addEventListener("click", (event) => {
@@ -469,7 +473,7 @@
           if (action === "nearby" || action === "date") {
             window.location.href = `events.html?filter=${action === "date" ? "dates" : "all"}`;
           } else {
-            showToast(`${button.querySelector("strong").textContent} is ready for backend wiring.`);
+            showToast(`${button.querySelector("strong").textContent} is saved for the next build.`);
           }
         });
       });
