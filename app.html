@@ -121,6 +121,86 @@
         font-weight: 650;
       }
 
+      /* ── News Bubble Slider ── */
+      .news-carousel-wrap {
+        margin: 8px 0 20px;
+        overflow: hidden;
+        position: relative;
+        width: 100%;
+      }
+
+      .news-carousel-wrap::before,
+      .news-carousel-wrap::after {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 30px;
+        z-index: 2;
+        content: "";
+        pointer-events: none;
+      }
+      .news-carousel-wrap::before {
+        left: 0;
+        background: linear-gradient(90deg, var(--bg) 0%, transparent 100%);
+      }
+      .news-carousel-wrap::after {
+        right: 0;
+        background: linear-gradient(-90deg, var(--bg) 0%, transparent 100%);
+      }
+
+      .news-slider {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        cursor: grab;
+        user-select: none;
+      }
+      .news-slider::-webkit-scrollbar {
+        display: none;
+      }
+      .news-slider:active {
+        cursor: grabbing;
+      }
+
+      .news-track {
+        display: flex;
+        gap: 10px;
+        padding: 4px 8px;
+      }
+
+      .news-bubble {
+        flex: 0 0 auto;
+        height: 34px;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        transition: border-color 180ms ease, color 180ms ease, background-color 180ms ease;
+      }
+
+      .news-bubble:hover {
+        border-color: var(--signal);
+        color: var(--ink);
+        background-color: var(--panel-2);
+      }
+
+      .news-bubble .tag {
+        color: var(--signal);
+        font-size: 11px;
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-right: 1px solid var(--line);
+        padding-right: 8px;
+      }
+
       /* ── Ask card ── */
       .ask-card {
         display: grid;
@@ -588,8 +668,16 @@
         <div>
           <div class="kicker">Powered by AI</div>
           <h1 id="headline">What are you in the mood for?</h1>
-          <p>Tell us what you're feeling. Echoo finds the places, plans the route, and connects the dots.</p>
+          <p id="subhead">Tell us what you're feeling. Echoo finds the places, plans the route, and connects the dots.</p>
         </div>
+
+        <!-- News Carousel Section -->
+        <div class="news-carousel-wrap">
+          <div class="news-slider" id="news-slider">
+            <div class="news-track" id="news-track"></div>
+          </div>
+        </div>
+
         <div class="ask-card">
           <form id="plan-form">
             <input id="plan-query" placeholder="feeling low and need a pick-me-up..." />
@@ -644,13 +732,220 @@
     </nav>
 
     <script>
-      /* ── Name / avatar ── */
+      /* Diagnostic logger for redirects */
+      window.addEventListener('beforeunload', () => {
+        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
+        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
+        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
+      });
+
+      /* ── Preferences retrieval ── */
       const params = new URLSearchParams(window.location.search);
-      const name = params.get("name") || "Preview User";
+      let name = params.get("name");
+      let city = params.get("city");
+      let vibes = params.get("vibes");
+      let budget = params.get("budget");
+      let energy = params.get("energy");
+      let tone = params.get("tone");
+
+      if (!name) {
+        const stored = localStorage.getItem("echoo_preferences");
+        if (stored) {
+          try {
+            const prefs = JSON.parse(stored);
+            name = prefs.name;
+            city = prefs.city;
+            vibes = prefs.vibes;
+            budget = prefs.budget;
+            energy = prefs.energy;
+            tone = prefs.tone;
+          } catch (e) {}
+        }
+      }
+
+      name = name || "Preview User";
+      city = city || "Toronto";
+      vibes = vibes ? vibes.split(",") : [];
+      budget = budget || "$";
+      energy = energy || "chill";
+      tone = tone || "direct";
+
+      /* ── Set up name / avatar ── */
       const initials = name.split(" ").filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "PU";
       document.getElementById("avatar").textContent = initials;
       const firstName = name.split(" ")[0] || "You";
-      document.getElementById("headline").textContent = `${firstName}, what are you in the mood for?`;
+
+      /* ── Customize Dashboard copy based on Onboarding ── */
+      const headlineEl = document.getElementById("headline");
+      const subheadEl = document.getElementById("subhead");
+      
+      let customHeadline = `${firstName}, what are you in the mood for?`;
+      let customSubhead = `Tailoring plans for your vibe in ${city}.`;
+
+      if (vibes.length > 0) {
+        const firstVibe = vibes[0].toLowerCase();
+        if (energy === "hype") {
+          customHeadline = `${firstName}, ready for a high-energy night?`;
+          customSubhead = `Finding loud spots, sports bars, or active crawls in ${city} matching "${firstVibe}".`;
+        } else if (energy === "chill") {
+          customHeadline = `${firstName}, keeping it relaxed tonight?`;
+          customSubhead = `Curating cozy lounge spots, acoustic sets, or quiet dates in ${city} matching "${firstVibe}".`;
+        } else {
+          customHeadline = `${firstName}, what sounds good in ${city}?`;
+          customSubhead = `Exploring interesting, spontaneous ideas matching "${firstVibe}" for you.`;
+        }
+      } else {
+        if (energy === "hype") {
+          customHeadline = `${firstName}, what's the move tonight?`;
+          customSubhead = `Tracking high-energy live shows, events, and late-night spots in ${city}.`;
+        } else if (energy === "chill") {
+          customHeadline = `${firstName}, looking to unwind?`;
+          customSubhead = `Finding cozy date spots, hidden bars, and quiet listening rooms in ${city}.`;
+        }
+      }
+      headlineEl.textContent = customHeadline;
+      subheadEl.textContent = customSubhead;
+
+      // Customize Grid Cards based on onboarding preferences
+      const cards = document.querySelectorAll(".grid .module");
+      if (cards.length >= 4) {
+        // Card 1: Nearby
+        const nearbyStrong = cards[0].querySelector("strong");
+        const nearbyP = cards[0].querySelector("p");
+        if (nearbyStrong && nearbyP) {
+          nearbyStrong.textContent = `Open near you in ${city}`;
+          nearbyP.textContent = `Places within walking distance. Budget comfort: ${budget}.`;
+        }
+
+        // Card 2: Date Night
+        const dateStrong = cards[1].querySelector("strong");
+        const dateP = cards[1].querySelector("p");
+        if (dateStrong && dateP) {
+          if (vibes.includes("Cozy date spots")) {
+            dateStrong.textContent = "Your Curated Date Night";
+            dateP.textContent = `Cozy date itineraries in ${city} tailored to ${energy} energy.`;
+          } else {
+            dateStrong.textContent = "Custom Date Route";
+            dateP.textContent = `Dinner, an experience, and a fallback — all matched to ${energy} vibes.`;
+          }
+        }
+
+        // Card 3: Tickets
+        const ticketsStrong = cards[2].querySelector("strong");
+        const ticketsP = cards[2].querySelector("p");
+        if (ticketsStrong && ticketsP) {
+          let ticketTopic = "live concerts";
+          if (vibes.includes("Late-night cinema")) ticketTopic = "cinema screenings";
+          else if (vibes.includes("Sports")) ticketTopic = "sports events";
+          else if (vibes.includes("Art & galleries")) ticketTopic = "gallery exhibitions";
+          
+          ticketsStrong.textContent = `Available slots in ${city}`;
+          ticketsP.textContent = `Lock in tickets for nearby ${ticketTopic} that fit your budget.`;
+        }
+
+        // Card 4: Group plan
+        const crewStrong = cards[3].querySelector("strong");
+        if (crewStrong) {
+          crewStrong.textContent = `Group invite for ${city}`;
+        }
+      }
+
+      /* ── News Bubble Slider Database ── */
+      const newsDb = {
+        "Toronto": [
+          { tag: "TIFF", text: "Midnight Madness lineups announced for September" },
+          { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only patios" },
+          { tag: "Jazz", text: "Queen West jazz club hosts unannounced late-night basement set" },
+          { tag: "Food", text: "Ossington street crawl reveals new underground vinyl ramen spot" },
+          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally tonight" },
+          { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset" }
+        ],
+        "Vancouver": [
+          { tag: "Beach", text: "Kitsilano beach bonfire permits extended for summer weekends" },
+          { tag: "Theatre", text: "Granville Island waterfront stage premieres new indie play" },
+          { tag: "Cocktails", text: "Gastown lounge rated top 50 in North America for mixology" },
+          { tag: "Ride", text: "Stanley Park night cycle ride draws record five hundred riders" },
+          { tag: "Food", text: "Richmond Night Market expands late fusion food stands" }
+        ],
+        "Montreal": [
+          { tag: "Jazz", text: "Montreal Jazz Fest reveals free outdoor street show lineup" },
+          { tag: "Bagels", text: "Mile End food crawl introduces late-night wood-fired bakery" },
+          { tag: "Art", text: "Plateau Mont-Royal street art murals expand down Saint-Laurent" },
+          { tag: "Speakeasy", text: "Old Montreal speakeasy hidden behind vintage phone booth" },
+          { tag: "Music", text: "Saint-Denis underground electronic gig sells out in record minutes" }
+        ]
+      };
+
+      const defaultNews = [
+        { tag: "Film", text: "Indie film claims top grand prize at European festival" },
+        { tag: "Concert", text: "Pop icon announces surprise stadium world tour details" },
+        { tag: "Vibe", text: "Vinyl listening bars trend globally as nightlife changes pace" },
+        { tag: "Design", text: "Brutalist aesthetics make bold return in modern venue designs" },
+        { tag: "Tech", text: "Generative AI music engine secures top slot on streaming charts" }
+      ];
+
+      // Populate news track based on city selected
+      const cityNews = newsDb[city] || defaultNews;
+      const newsTrack = document.getElementById("news-track");
+      if (newsTrack) {
+        const displayNews = [...cityNews, ...cityNews];
+        newsTrack.innerHTML = displayNews.map(item => `
+          <div class="news-bubble">
+            <span class="tag">${item.tag}</span>
+            <span>${item.text}</span>
+          </div>
+        `).join("");
+      }
+
+      // Marquee slider functionality
+      const slider = document.getElementById("news-slider");
+      let scrollSpeed = 0.45;
+      let autoScrollActive = true;
+      let interactionTimeout;
+
+      function step() {
+        if (autoScrollActive && slider) {
+          slider.scrollLeft += scrollSpeed;
+          if (slider.scrollLeft >= slider.scrollWidth / 2) {
+            slider.scrollLeft = 0;
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+      function resetAutoScroll() {
+        autoScrollActive = false;
+        clearTimeout(interactionTimeout);
+        interactionTimeout = setTimeout(() => {
+          autoScrollActive = true;
+        }, 4000);
+      }
+
+      if (slider) {
+        slider.addEventListener("mousedown", () => autoScrollActive = false);
+        slider.addEventListener("touchstart", () => autoScrollActive = false);
+        slider.addEventListener("scroll", resetAutoScroll);
+
+        let isDown = false;
+        let startX;
+        let scrollLeftVal;
+        slider.addEventListener("mousedown", (e) => {
+          isDown = true;
+          startX = e.pageX - slider.offsetLeft;
+          scrollLeftVal = slider.scrollLeft;
+        });
+        slider.addEventListener("mouseleave", () => isDown = false);
+        slider.addEventListener("mouseup", () => isDown = false);
+        slider.addEventListener("mousemove", (e) => {
+          if (!isDown) return;
+          e.preventDefault();
+          const x = e.pageX - slider.offsetLeft;
+          const walk = (x - startX) * 1.5;
+          slider.scrollLeft = scrollLeftVal - walk;
+        });
+
+        requestAnimationFrame(step);
+      }
 
       /* ── DOM refs ── */
       const overlay  = document.getElementById("chat-overlay");
@@ -756,39 +1051,88 @@
         await delay(600);
         addTyping();
 
+        /* Determine locations and copy dynamically */
+        let loc1Name = "The Listening Room";
+        let loc1Tags = `Live jazz · Kensington · Open now`;
+        let loc1Vibe = "Dimly lit, vinyl-forward, seats at the bar";
+        
+        let loc2Name = "Late Kitchen on Dundas";
+        let loc2Tags = `Comfort food · Open til 2am · ${budget}`;
+        let loc2Vibe = "Counter seats, soft playlist, no reservations needed";
+        let trackDistance = "12 min · 850m walk";
+
+        if (city === "Vancouver") {
+          loc1Name = "The Granville Lounge";
+          loc1Tags = `Vinyl sets · Gastown · Open now`;
+          loc2Name = "West Coast Bites on Davie";
+          loc2Tags = `Local eats · Open til 1am · ${budget}`;
+          trackDistance = "15 min · 1.1km walk";
+        } else if (city === "Montreal") {
+          loc1Name = "Café Saint-Denis";
+          loc1Tags = `Acoustic sets · Plateau · Open now`;
+          loc2Name = "Late Crepes on Saint-Laurent";
+          loc2Tags = `Late snacks · Open til 3am · ${budget}`;
+          trackDistance = "9 min · 650m walk";
+        }
+
+        // Adjust vibes based on energy choice
+        if (energy === "hype") {
+          loc1Vibe = "Upbeat crowd, loud speakers, standing space only";
+          loc2Vibe = "Bustling open kitchen, lively playlist, high energy";
+        } else if (energy === "chill") {
+          loc1Vibe = "Dimly lit, low volume, quiet cozy booths";
+          loc2Vibe = "Intimate counter seats, mellow playlist, relaxed spacing";
+        } else if (energy === "curious") {
+          loc1Vibe = "Secret entrance, unexpected decor, rare vinyl selection";
+          loc2Vibe = "Rotating chef specials, eclectic setup, interactive kitchen";
+        }
+
+        // AI intro copy based on tone and energy
+        let aiIntro = "i hear you. let’s start easy — there’s a spot that’s been getting a lot of love lately.";
+        let aiOutro = "two stops, low effort, good energy. want me to adjust anything?";
+
+        if (tone === "direct") {
+          aiIntro = "got it. here's a solid 2-stop route that fits.";
+          aiOutro = "fits the vibe. should I swap anything?";
+        } else {
+          // detailed
+          aiIntro = `understood. since you're looking for a ${energy} speed in ${city}, i've mapped out a seamless pair of locations. let's start with a vinyl-focused anchor.`;
+          aiOutro = `both spots align with your ${budget} budget preference and have verified seating available right now. let me know if you want to swap the order or add a third stop.`;
+        }
+
         /* 3. AI response */
         await delay(1200);
         removeTyping();
-        addBubble("ai", "i hear you. let\u2019s start easy \u2014 there\u2019s a spot that\u2019s been getting a lot of love lately.");
+        addBubble("ai", aiIntro);
 
         /* 4. Location card 1 */
         await delay(400);
         addLocationCard(
           "assets/optimized/news-music-768.jpg",
           "assets/optimized/news-music-768.webp",
-          "The Listening Room",
-          "Live jazz \u00b7 Kensington \u00b7 Open now",
-          "Dimly lit, vinyl-forward, seats at the bar",
+          loc1Name,
+          loc1Tags,
+          loc1Vibe,
           true
         );
 
         /* 5. Connecting track */
         await delay(300);
-        addTrack("12 min \u00b7 850m walk");
+        addTrack(trackDistance);
 
         /* 6. Location card 2 */
         await delay(400);
         addLocationCard(
           "assets/optimized/news-date-768.jpg",
           "assets/optimized/news-date-768.webp",
-          "Late Kitchen on Dundas",
-          "Comfort food \u00b7 Open til 2am \u00b7 $",
-          "Counter seats, soft playlist, no reservations needed"
+          loc2Name,
+          loc2Tags,
+          loc2Vibe
         );
 
         /* 7. AI follow-up */
         await delay(500);
-        addBubble("ai", "two stops, low effort, good energy. want me to adjust anything?");
+        addBubble("ai", aiOutro);
 
         /* 8. Quick action pills */
         await delay(200);

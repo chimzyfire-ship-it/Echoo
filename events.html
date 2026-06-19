@@ -158,6 +158,86 @@
         border-color: var(--line-strong);
       }
 
+      /* ── News Bubble Slider ── */
+      .news-carousel-wrap {
+        margin: 8px 0 20px;
+        overflow: hidden;
+        position: relative;
+        width: 100%;
+      }
+
+      .news-carousel-wrap::before,
+      .news-carousel-wrap::after {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 30px;
+        z-index: 2;
+        content: "";
+        pointer-events: none;
+      }
+      .news-carousel-wrap::before {
+        left: 0;
+        background: linear-gradient(90deg, var(--bg) 0%, transparent 100%);
+      }
+      .news-carousel-wrap::after {
+        right: 0;
+        background: linear-gradient(-90deg, var(--bg) 0%, transparent 100%);
+      }
+
+      .news-slider {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        cursor: grab;
+        user-select: none;
+      }
+      .news-slider::-webkit-scrollbar {
+        display: none;
+      }
+      .news-slider:active {
+        cursor: grabbing;
+      }
+
+      .news-track {
+        display: flex;
+        gap: 10px;
+        padding: 4px 8px;
+      }
+
+      .news-bubble {
+        flex: 0 0 auto;
+        height: 34px;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        transition: border-color 180ms ease, color 180ms ease, background-color 180ms ease;
+      }
+
+      .news-bubble:hover {
+        border-color: var(--signal);
+        color: var(--ink);
+        background-color: var(--panel-2);
+      }
+
+      .news-bubble .tag {
+        color: var(--signal);
+        font-size: 11px;
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-right: 1px solid var(--line);
+        padding-right: 8px;
+      }
+
       .filters {
         display: flex;
         gap: 8px;
@@ -319,6 +399,13 @@
         </form>
       </section>
 
+      <!-- News Carousel Section -->
+      <div class="news-carousel-wrap">
+        <div class="news-slider" id="news-slider">
+          <div class="news-track" id="news-track"></div>
+        </div>
+      </div>
+
       <div class="filters" id="filters">
         <button class="filter active" data-filter="all">All</button>
         <button class="filter" data-filter="music">Music</button>
@@ -347,6 +434,13 @@
     </nav>
 
     <script>
+      /* Diagnostic logger for redirects */
+      window.addEventListener('beforeunload', () => {
+        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
+        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
+        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
+      });
+
       const events = [
         { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy late food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Tonight", "18 min", "$28"] },
         { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Weekend", "Two stops", "$$"] },
@@ -404,6 +498,112 @@
         if (button) button.click();
       } else {
         render();
+      }
+
+      /* ── News Bubble Slider ── */
+      let city = params.get("city");
+      if (!city) {
+        const stored = localStorage.getItem("echoo_preferences");
+        if (stored) {
+          try {
+            city = JSON.parse(stored).city;
+          } catch(e) {}
+        }
+      }
+      city = city || "Toronto";
+
+      const newsDb = {
+        "Toronto": [
+          { tag: "TIFF", text: "Midnight Madness lineups announced for September" },
+          { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only patios" },
+          { tag: "Jazz", text: "Queen West jazz club hosts unannounced late-night basement set" },
+          { tag: "Food", text: "Ossington street crawl reveals new underground vinyl ramen spot" },
+          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally tonight" },
+          { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset" }
+        ],
+        "Vancouver": [
+          { tag: "Beach", text: "Kitsilano beach bonfire permits extended for summer weekends" },
+          { tag: "Theatre", text: "Granville Island waterfront stage premieres new indie play" },
+          { tag: "Cocktails", text: "Gastown lounge rated top 50 in North America for mixology" },
+          { tag: "Ride", text: "Stanley Park night cycle ride draws record five hundred riders" },
+          { tag: "Food", text: "Richmond Night Market expands late fusion food stands" }
+        ],
+        "Montreal": [
+          { tag: "Jazz", text: "Montreal Jazz Fest reveals free outdoor street show lineup" },
+          { tag: "Bagels", text: "Mile End food crawl introduces late-night wood-fired bakery" },
+          { tag: "Art", text: "Plateau Mont-Royal street art murals expand down Saint-Laurent" },
+          { tag: "Speakeasy", text: "Old Montreal speakeasy hidden behind vintage phone booth" },
+          { tag: "Music", text: "Saint-Denis underground electronic gig sells out in record minutes" }
+        ]
+      };
+
+      const defaultNews = [
+        { tag: "Film", text: "Indie film claims top grand prize at European festival" },
+        { tag: "Concert", text: "Pop icon announces surprise stadium world tour details" },
+        { tag: "Vibe", text: "Vinyl listening bars trend globally as nightlife changes pace" },
+        { tag: "Design", text: "Brutalist aesthetics make bold return in modern venue designs" },
+        { tag: "Tech", text: "Generative AI music engine secures top slot on streaming charts" }
+      ];
+
+      const cityNews = newsDb[city] || defaultNews;
+      const newsTrack = document.getElementById("news-track");
+      if (newsTrack) {
+        const displayNews = [...cityNews, ...cityNews];
+        newsTrack.innerHTML = displayNews.map(item => `
+          <div class="news-bubble">
+            <span class="tag">${item.tag}</span>
+            <span>${item.text}</span>
+          </div>
+        `).join("");
+      }
+
+      const slider = document.getElementById("news-slider");
+      let scrollSpeed = 0.45;
+      let autoScrollActive = true;
+      let interactionTimeout;
+
+      function step() {
+        if (autoScrollActive && slider) {
+          slider.scrollLeft += scrollSpeed;
+          if (slider.scrollLeft >= slider.scrollWidth / 2) {
+            slider.scrollLeft = 0;
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+      function resetAutoScroll() {
+        autoScrollActive = false;
+        clearTimeout(interactionTimeout);
+        interactionTimeout = setTimeout(() => {
+          autoScrollActive = true;
+        }, 4000);
+      }
+
+      if (slider) {
+        slider.addEventListener("mousedown", () => autoScrollActive = false);
+        slider.addEventListener("touchstart", () => autoScrollActive = false);
+        slider.addEventListener("scroll", resetAutoScroll);
+
+        let isDown = false;
+        let startX;
+        let scrollLeftVal;
+        slider.addEventListener("mousedown", (e) => {
+          isDown = true;
+          startX = e.pageX - slider.offsetLeft;
+          scrollLeftVal = slider.scrollLeft;
+        });
+        slider.addEventListener("mouseleave", () => isDown = false);
+        slider.addEventListener("mouseup", () => isDown = false);
+        slider.addEventListener("mousemove", (e) => {
+          if (!isDown) return;
+          e.preventDefault();
+          const x = e.pageX - slider.offsetLeft;
+          const walk = (x - startX) * 1.5;
+          slider.scrollLeft = scrollLeftVal - walk;
+        });
+
+        requestAnimationFrame(step);
       }
     </script>
   </body>

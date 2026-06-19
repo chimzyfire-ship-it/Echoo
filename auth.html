@@ -382,14 +382,14 @@
         color: var(--signal);
       }
 
-      /* Tone cards */
-      .tone-cards {
+      /* Onboarding selection cards */
+      .ob-cards {
         display: grid;
         gap: 10px;
       }
 
-      .tone-card {
-        padding: 18px;
+      .ob-card {
+        padding: 16px;
         border: 1px solid var(--line);
         background: transparent;
         cursor: pointer;
@@ -397,16 +397,16 @@
         transition: border-color 160ms ease, background 160ms ease;
       }
 
-      .tone-card:hover {
+      .ob-card:hover {
         border-color: var(--line-strong);
       }
 
-      .tone-card.selected {
+      .ob-card.selected {
         border-color: var(--signal);
         background: rgba(231, 201, 142, 0.08);
       }
 
-      .tone-card .tone-name {
+      .ob-card .ob-card-name {
         display: block;
         color: var(--ink);
         font-size: 16px;
@@ -415,7 +415,7 @@
         margin-bottom: 5px;
       }
 
-      .tone-card .tone-desc {
+      .ob-card .ob-card-desc {
         display: block;
         color: var(--muted);
         font-size: 14px;
@@ -509,6 +509,8 @@
           <div class="ob-bar current" data-step="0"></div>
           <div class="ob-bar" data-step="1"></div>
           <div class="ob-bar" data-step="2"></div>
+          <div class="ob-bar" data-step="3"></div>
+          <div class="ob-bar" data-step="4"></div>
         </div>
         <div class="ob-panel">
           <div class="ob-head">
@@ -532,8 +534,48 @@
               </div>
             </div>
 
-            <!-- Step 2: City -->
+            <!-- Step 2: Budget -->
             <div class="ob-step" data-ob-step="1">
+              <div class="ob-step-inner">
+                <div class="ob-cards">
+                  <button type="button" class="ob-card selected" data-budget="$">
+                    <span class="ob-card-name">Low-key &amp; cheap ($)</span>
+                    <span class="ob-card-desc">Casual hangs. Street bites, local pubs, free galleries.</span>
+                  </button>
+                  <button type="button" class="ob-card" data-budget="$$">
+                    <span class="ob-card-name">Mid-range &amp; curated ($$)</span>
+                    <span class="ob-card-desc">Reasonable spends. Cozy dining, coffee dates, indie shows.</span>
+                  </button>
+                  <button type="button" class="ob-card" data-budget="$$$">
+                    <span class="ob-card-name">Premium &amp; splurge ($$$)</span>
+                    <span class="ob-card-desc">High-end experiences. Speakeasies, fine dining, live theater.</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Energy Level -->
+            <div class="ob-step" data-ob-step="2">
+              <div class="ob-step-inner">
+                <div class="ob-cards">
+                  <button type="button" class="ob-card selected" data-energy="chill">
+                    <span class="ob-card-name">Chill &amp; Intimate</span>
+                    <span class="ob-card-desc">Soft music, quiet conversation, comfortable lounge seating.</span>
+                  </button>
+                  <button type="button" class="ob-card" data-energy="hype">
+                    <span class="ob-card-name">Vibrant &amp; Loud</span>
+                    <span class="ob-card-desc">Live performance, high volume, crowded spaces, games.</span>
+                  </button>
+                  <button type="button" class="ob-card" data-energy="curious">
+                    <span class="ob-card-name">Spontaneous &amp; Mixed</span>
+                    <span class="ob-card-desc">Exploratory crawls, surprise detours, a mix of quiet and loud.</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: City -->
+            <div class="ob-step" data-ob-step="3">
               <div class="ob-step-inner">
                 <div class="field">
                   <label for="ob-city">Your city</label>
@@ -547,17 +589,17 @@
               </div>
             </div>
 
-            <!-- Step 3: Tone -->
-            <div class="ob-step" data-ob-step="2">
+            <!-- Step 5: Tone -->
+            <div class="ob-step" data-ob-step="4">
               <div class="ob-step-inner">
-                <div class="tone-cards">
-                  <button type="button" class="tone-card selected" data-tone="direct">
-                    <span class="tone-name">Direct &amp; chill</span>
-                    <span class="tone-desc">Short answers. No fluff. Just the move.</span>
+                <div class="ob-cards">
+                  <button type="button" class="ob-card selected" data-tone="direct">
+                    <span class="ob-card-name">Direct &amp; chill</span>
+                    <span class="ob-card-desc">Short answers. No fluff. Just the move.</span>
                   </button>
-                  <button type="button" class="tone-card" data-tone="detailed">
-                    <span class="tone-name">Detailed curator</span>
-                    <span class="tone-desc">Context, alternatives, and the full picture.</span>
+                  <button type="button" class="ob-card" data-tone="detailed">
+                    <span class="ob-card-name">Detailed curator</span>
+                    <span class="ob-card-desc">Context, alternatives, and the full picture.</span>
                   </button>
                 </div>
               </div>
@@ -570,11 +612,20 @@
     </main>
 
     <script>
+      /* Diagnostic logger for redirects */
+      window.addEventListener('beforeunload', () => {
+        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
+        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
+        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
+      });
+
       /* ---- State ---- */
       const state = {
         mode: "signin",        // "signin" | "signup"
         obStep: 0,
         vibes: new Set(),
+        budget: "$",
+        energy: "chill",
         city: "Toronto",
         tone: "direct",
         userName: "",
@@ -612,8 +663,10 @@
 
       const OB_STEPS = [
         { title: "What draws you out?",           sub: "Pick what sounds like your kind of night.", btn: "Next" },
-        { title: "Where\u2019s home base?",        sub: "We\u2019ll find what\u2019s close and worth it.",   btn: "Next" },
-        { title: "How should Echoo talk to you?",  sub: "Pick a voice for your recommendations.",   btn: "Let\u2019s go" },
+        { title: "What's the budget vibe?",       sub: "We'll tailor suggestions to your spend comfort.", btn: "Next" },
+        { title: "What's your energy speed?",     sub: "Tell us the pace you want to keep.", btn: "Next" },
+        { title: "Where's home base?",            sub: "We'll find what's close and worth it.",   btn: "Next" },
+        { title: "How should Echoo talk to you?",  sub: "Pick a voice for your recommendations.",   btn: "Let's go" },
       ];
 
       /* ---- Mode switching ---- */
@@ -705,7 +758,7 @@
       }
 
       obNext.addEventListener("click", () => {
-        if (state.obStep < 2) {
+        if (state.obStep < 4) {
           renderObStep(state.obStep + 1);
         } else {
           finishOnboarding();
@@ -723,6 +776,24 @@
             state.vibes.add(v);
             chip.classList.add("selected");
           }
+        });
+      });
+
+      /* ---- Budget selection ---- */
+      document.querySelectorAll("[data-budget]").forEach((card) => {
+        card.addEventListener("click", () => {
+          state.budget = card.dataset.budget;
+          document.querySelectorAll("[data-budget]").forEach((c) => c.classList.remove("selected"));
+          card.classList.add("selected");
+        });
+      });
+
+      /* ---- Energy selection ---- */
+      document.querySelectorAll("[data-energy]").forEach((card) => {
+        card.addEventListener("click", () => {
+          state.energy = card.dataset.energy;
+          document.querySelectorAll("[data-energy]").forEach((c) => c.classList.remove("selected"));
+          card.classList.add("selected");
         });
       });
 
@@ -744,10 +815,10 @@
       });
 
       /* ---- Tone selection ---- */
-      document.querySelectorAll(".tone-card").forEach((card) => {
+      document.querySelectorAll("[data-tone]").forEach((card) => {
         card.addEventListener("click", () => {
           state.tone = card.dataset.tone;
-          document.querySelectorAll(".tone-card").forEach((c) => c.classList.remove("selected"));
+          document.querySelectorAll("[data-tone]").forEach((c) => c.classList.remove("selected"));
           card.classList.add("selected");
         });
       });
@@ -757,13 +828,15 @@
         const name  = state.userName || "User";
         const email = state.userEmail;
         const vibes = [...state.vibes].join(",");
+        const budget = state.budget || "$";
+        const energy = state.energy || "chill";
         const city  = state.city || cityInput.value || "Toronto";
         const tone  = state.tone || "direct";
 
-        const params = new URLSearchParams({
-          name, email, vibes, city, tone,
-        });
+        const prefs = { name, email, vibes, budget, energy, city, tone };
+        localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
 
+        const params = new URLSearchParams(prefs);
         window.location.href = `app.html?${params.toString()}`;
       }
     </script>

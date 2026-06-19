@@ -640,6 +640,13 @@
     </aside>
 
     <script>
+      /* Diagnostic logger for redirects */
+      window.addEventListener('beforeunload', () => {
+        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
+        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
+        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
+      });
+
       const searchInput = document.getElementById("city-search");
       const sheet = document.getElementById("plan-sheet");
       const sheetTitle = document.getElementById("sheet-title");
