@@ -169,36 +169,61 @@
         padding: 4px 8px;
       }
 
-      .news-bubble {
+      .news-card {
         flex: 0 0 auto;
-        height: 34px;
-        padding: 0 16px;
+        height: 60px;
+        padding: 6px 12px 6px 6px;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        border-radius: 999px;
+        gap: 10px;
+        border-radius: 4px;
         border: 1px solid var(--line);
         background: var(--panel);
-        color: var(--muted);
-        font-size: 13px;
-        font-weight: 750;
-        transition: border-color 180ms ease, color 180ms ease, background-color 180ms ease;
+        transition: border-color 180ms ease, background-color 180ms ease;
       }
 
-      .news-bubble:hover {
+      .news-card:hover {
         border-color: var(--signal);
-        color: var(--ink);
         background-color: var(--panel-2);
       }
 
-      .news-bubble .tag {
+      .news-card img {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+
+      .news-card .news-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2px;
+        text-align: left;
+      }
+
+      .news-card .tag {
         color: var(--signal);
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 950;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        border-right: 1px solid var(--line);
-        padding-right: 8px;
+      }
+
+      .news-card .headline {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 260px;
+        transition: color 180ms ease;
+      }
+
+      .news-card:hover .headline {
+        color: var(--ink);
       }
 
       /* ── Ask card ── */
@@ -850,49 +875,59 @@
         }
       }
 
-      /* ── News Bubble Slider Database ── */
-      const newsDb = {
+      /* ── News Slider Database ── */
+      const localNewsDb = {
         "Toronto": [
-          { tag: "TIFF", text: "Midnight Madness lineups announced for September" },
-          { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only patios" },
-          { tag: "Jazz", text: "Queen West jazz club hosts unannounced late-night basement set" },
-          { tag: "Food", text: "Ossington street crawl reveals new underground vinyl ramen spot" },
-          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally tonight" },
-          { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset" }
+          { tag: "TIFF", text: "Midnight Madness lineups announced for September", img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only zones", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Jazz", text: "Queen West jazz club hosts unannounced late basement set", img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Food", text: "Ossington street crawl reveals new underground ramen spot", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally tonight", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset", img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80" }
         ],
         "Vancouver": [
-          { tag: "Beach", text: "Kitsilano beach bonfire permits extended for summer weekends" },
-          { tag: "Theatre", text: "Granville Island waterfront stage premieres new indie play" },
-          { tag: "Cocktails", text: "Gastown lounge rated top 50 in North America for mixology" },
-          { tag: "Ride", text: "Stanley Park night cycle ride draws record five hundred riders" },
-          { tag: "Food", text: "Richmond Night Market expands late fusion food stands" }
+          { tag: "Beach", text: "Kitsilano beach bonfire permits extended for summer weekends", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Theatre", text: "Granville Island waterfront stage premieres new indie play", img: "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Cocktails", text: "Gastown lounge rated top 50 in North America for mixology", img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Ride", text: "Stanley Park night cycle ride draws record five hundred riders", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Food", text: "Richmond Night Market expands late fusion food stands", img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=120&q=80" }
         ],
         "Montreal": [
-          { tag: "Jazz", text: "Montreal Jazz Fest reveals free outdoor street show lineup" },
-          { tag: "Bagels", text: "Mile End food crawl introduces late-night wood-fired bakery" },
-          { tag: "Art", text: "Plateau Mont-Royal street art murals expand down Saint-Laurent" },
-          { tag: "Speakeasy", text: "Old Montreal speakeasy hidden behind vintage phone booth" },
-          { tag: "Music", text: "Saint-Denis underground electronic gig sells out in record minutes" }
+          { tag: "Jazz", text: "Montreal Jazz Fest reveals free outdoor street show lineup", img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Bagels", text: "Mile End food crawl introduces late-night wood-fired bakery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Art", text: "Plateau Mont-Royal street art murals expand down Saint-Laurent", img: "https://images.unsplash.com/photo-156121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Speakeasy", text: "Old Montreal speakeasy hidden behind vintage phone booth", img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Music", text: "Saint-Denis underground electronic gig sells out in record minutes", img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=120&q=80" }
         ]
       };
 
-      const defaultNews = [
-        { tag: "Film", text: "Indie film claims top grand prize at European festival" },
-        { tag: "Concert", text: "Pop icon announces surprise stadium world tour details" },
-        { tag: "Vibe", text: "Vinyl listening bars trend globally as nightlife changes pace" },
-        { tag: "Design", text: "Brutalist aesthetics make bold return in modern venue designs" },
-        { tag: "Tech", text: "Generative AI music engine secures top slot on streaming charts" }
+      const worldNews = [
+        { tag: "Outdoor", text: "National parks report massive surge in summer night hikers", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=120&q=80" },
+        { tag: "Gaming", text: "Indie retro arcades and console lounges trending globally", img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=120&q=80" },
+        { tag: "Coffee", text: "Slow-drip specialty coffee crawls taking over urban neighborhoods", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=120&q=80" },
+        { tag: "Concert", text: "Major outdoor music festival tours announce carbon-neutral lineups", img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=120&q=80" },
+        { tag: "Museum", text: "Historic virtual-reality exhibitions open globally at science centers", img: "https://images.unsplash.com/photo-1566121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80" }
       ];
 
-      // Populate news track based on city selected
-      const cityNews = newsDb[city] || defaultNews;
+      // Populate mixed news: alternating local and world news
+      const cityList = localNewsDb[city] || localNewsDb["Toronto"];
+      const mixedNews = [];
+      const maxLen = Math.max(cityList.length, worldNews.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (i < cityList.length) mixedNews.push(cityList[i]);
+        if (i < worldNews.length) mixedNews.push(worldNews[i]);
+      }
+
       const newsTrack = document.getElementById("news-track");
       if (newsTrack) {
-        const displayNews = [...cityNews, ...cityNews];
+        const displayNews = [...mixedNews, ...mixedNews];
         newsTrack.innerHTML = displayNews.map(item => `
-          <div class="news-bubble">
-            <span class="tag">${item.tag}</span>
-            <span>${item.text}</span>
+          <div class="news-card">
+            <img src="${item.img}" alt="" loading="lazy">
+            <div class="news-info">
+              <span class="tag">${item.tag}</span>
+              <span class="headline">${item.text}</span>
+            </div>
           </div>
         `).join("");
       }
