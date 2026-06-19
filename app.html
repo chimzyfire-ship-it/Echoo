@@ -756,6 +756,7 @@
       <a href="index.html">Exit</a>
     </nav>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -763,6 +764,11 @@
         history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
         sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
       });
+
+      const CONFIG = {
+        supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
+        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH"
+      };
 
       /* ── Preferences retrieval ── */
       const params = new URLSearchParams(window.location.search);
@@ -909,28 +915,61 @@
         { tag: "Museum", text: "Historic virtual-reality exhibitions open globally at science centers", img: "https://images.unsplash.com/photo-1566121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80" }
       ];
 
-      // Populate mixed news: alternating local and world news
-      const cityList = localNewsDb[city] || localNewsDb["Toronto"];
-      const mixedNews = [];
-      const maxLen = Math.max(cityList.length, worldNews.length);
-      for (let i = 0; i < maxLen; i++) {
-        if (i < cityList.length) mixedNews.push(cityList[i]);
-        if (i < worldNews.length) mixedNews.push(worldNews[i]);
+      async function loadNewsSlider() {
+        let displayNews = [];
+
+        if (CONFIG.supabaseUrl && CONFIG.supabaseAnonKey && window.supabase) {
+          try {
+            const supabaseClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+            const { data, error } = await supabaseClient
+              .from('news')
+              .select('*')
+              .or(`city.eq.${city},city.eq.Global`)
+              .order('published_at', { ascending: false })
+              .limit(12);
+
+            if (!error && data && data.length > 0) {
+              displayNews = data.map(item => ({
+                tag: item.tag,
+                text: item.title,
+                img: item.image_url || "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80"
+              }));
+              console.log("Echoo: Loaded real-time news from Supabase.");
+            } else if (error) {
+              console.warn("Echoo: Supabase query error, falling back to mock news:", error.message);
+            }
+          } catch (e) {
+            console.warn("Echoo: Failed to query Supabase, falling back to mock news:", e);
+          }
+        }
+
+        if (displayNews.length === 0) {
+          const cityList = localNewsDb[city] || localNewsDb["Toronto"];
+          const mixedNews = [];
+          const maxLen = Math.max(cityList.length, worldNews.length);
+          for (let i = 0; i < maxLen; i++) {
+            if (i < cityList.length) mixedNews.push(cityList[i]);
+            if (i < worldNews.length) mixedNews.push(worldNews[i]);
+          }
+          displayNews = mixedNews;
+        }
+
+        const newsTrack = document.getElementById("news-track");
+        if (newsTrack) {
+          const doubledNews = [...displayNews, ...displayNews];
+          newsTrack.innerHTML = doubledNews.map(item => `
+            <div class="news-card">
+              <img src="${item.img}" alt="" loading="lazy">
+              <div class="news-info">
+                <span class="tag">${item.tag}</span>
+                <span class="headline">${item.text}</span>
+              </div>
+            </div>
+          `).join("");
+        }
       }
 
-      const newsTrack = document.getElementById("news-track");
-      if (newsTrack) {
-        const displayNews = [...mixedNews, ...mixedNews];
-        newsTrack.innerHTML = displayNews.map(item => `
-          <div class="news-card">
-            <img src="${item.img}" alt="" loading="lazy">
-            <div class="news-info">
-              <span class="tag">${item.tag}</span>
-              <span class="headline">${item.text}</span>
-            </div>
-          </div>
-        `).join("");
-      }
+      loadNewsSlider();
 
       // Marquee slider functionality
       const slider = document.getElementById("news-slider");
