@@ -803,19 +803,27 @@
       const modalInstructions = document.getElementById("location-instructions");
       const cityPill = document.querySelector(".city-pill");
 
-      function updatePageCity(cityName) {
+      function updatePageCity(cityName, coords) {
         // Update local preferences
         let prefs = {};
         try {
           const stored = localStorage.getItem("echoo_preferences");
           if (stored) prefs = JSON.parse(stored);
         } catch(e) {}
-        window.EchooLocationPlatform.writeLocationState({
+        const locationState = {
           ...prefs,
           city: cityName,
           countryCode: "CA",
           locationSupported: true
-        });
+        };
+        if (coords) {
+          locationState.lastLat = coords.lat;
+          locationState.lastLng = coords.lng;
+          locationState.locationPrecision = "gps";
+        } else if (!locationState.locationPrecision) {
+          locationState.locationPrecision = "manual_city";
+        }
+        window.EchooLocationPlatform.writeLocationState(locationState);
 
         // Update DOM elements
         if (cityPill) cityPill.textContent = `${cityName} today`;
@@ -866,7 +874,7 @@
             }
 
             console.log(`Resolved location to closest city: ${resolved.city.name} (Distance: ${resolved.city.distanceKm.toFixed(1)} km)`);
-            updatePageCity(resolved.city.name);
+            updatePageCity(resolved.city.name, { lat, lng });
           },
           (error) => {
             console.warn("Geolocation failed or denied:", error);

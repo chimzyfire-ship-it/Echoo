@@ -530,11 +530,16 @@
 
       /* ── News Bubble Slider ── */
       let city = params.get("city");
+      let preciseLat;
+      let preciseLng;
       if (!city) {
         const stored = localStorage.getItem("echoo_preferences");
         if (stored) {
           try {
-            city = JSON.parse(stored).city;
+            const prefs = JSON.parse(stored);
+            city = prefs.city;
+            preciseLat = Number(prefs.lastLat);
+            preciseLng = Number(prefs.lastLng);
           } catch(e) {}
         }
       }
@@ -564,7 +569,11 @@
               "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
               "apikey": CONFIG.supabaseAnonKey
             },
-            body: JSON.stringify({ city, limit: 24 })
+            body: JSON.stringify(
+              Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+                ? { lat: preciseLat, lng: preciseLng, radiusMeters: 25000, limit: 24 }
+                : { city, limit: 24 }
+            )
           });
           if (!response.ok) return;
 
@@ -580,7 +589,7 @@
             webp: item.image_url || "assets/optimized/news-music-768.webp",
             meta: [
               item.city || city,
-              item.distance_meters ? `${Math.max(1, Math.round(item.distance_meters / 1000))} km` : "Canada",
+              item.distance_meters ? `${Math.max(1, Math.round(item.distance_meters / 1000))} km away` : "Canada",
               item.starts_at ? new Date(item.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Open"
             ]
           }));

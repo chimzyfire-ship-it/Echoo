@@ -979,7 +979,8 @@
 
       const CONFIG = {
         supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
-        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH"
+        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search"
       };
 
       /* ── Preferences retrieval ── */
@@ -990,6 +991,8 @@
       let budget = params.get("budget");
       let energy = params.get("energy");
       let tone = params.get("tone");
+      let preciseLat;
+      let preciseLng;
 
       if (!name) {
         const stored = localStorage.getItem("echoo_preferences");
@@ -1002,6 +1005,8 @@
             budget = prefs.budget;
             energy = prefs.energy;
             tone = prefs.tone;
+            preciseLat = Number(prefs.lastLat);
+            preciseLng = Number(prefs.lastLng);
           } catch (e) {}
         }
       }
@@ -1432,6 +1437,34 @@
         scrollChat();
       }
 
+      async function fetchPreciseNearby(limit) {
+        if (!Number.isFinite(preciseLat) || !Number.isFinite(preciseLng)) return [];
+        try {
+          const response = await fetch(CONFIG.locationSearchUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
+              "apikey": CONFIG.supabaseAnonKey
+            },
+            body: JSON.stringify({ lat: preciseLat, lng: preciseLng, radiusMeters: 25000, limit })
+          });
+          if (!response.ok) return [];
+          const payload = await response.json();
+          if (!payload.supported || !Array.isArray(payload.results)) return [];
+          return payload.results.map((item) => ({
+            name: item.title,
+            tags: `${item.category || item.entity_type || "Echoo"} · ${item.distance_meters ? Math.max(1, Math.round(item.distance_meters / 1000)) + " km away" : city}`,
+            coords: [item.latitude, item.longitude],
+            img: item.image_url || "assets/optimized/news-music-768.jpg",
+            vibe: item.description || "Verified nearby recommendation from Echoo location search."
+          }));
+        } catch (error) {
+          console.warn("Echoo: precise nearby search failed, using curated local fallback.", error);
+          return [];
+        }
+      }
+
       /* ── Open / close ── */
       function openChat(userText) {
         chatBody.innerHTML = "";
@@ -1549,12 +1582,15 @@
               prefs.city = resolvedCity;
               prefs.countryCode = "CA";
               prefs.locationSupported = true;
+              prefs.locationPrecision = "gps";
               prefs.lastLat = lat;
               prefs.lastLng = lng;
               localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
             } catch(e) {}
 
             city = resolvedCity;
+            preciseLat = lat;
+            preciseLng = lng;
             console.log(`[Echoo] GPS fix: ${lat.toFixed(4)}, ${lng.toFixed(4)} → ${resolvedCity}`);
             resolve({ granted: true, lat, lng, city: resolvedCity });
           }
@@ -1676,11 +1712,23 @@
           if (text === "2-Stop Flow") numStops = 2;
           if (text === "3-Stop Flow") numStops = 3;
 
-          const stops = pool.slice(0, numStops);
+          const liveStops = await fetchPreciseNearby(numStops);
+          const stops = liveStops.length >= numStops ? liveStops.slice(0, numStops) : pool.slice(0, numStops);
+          const usePreciseBase = Number.isFinite(preciseLat) && Number.isFinite(preciseLng);
+          const preciseStops = usePreciseBase && liveStops.length < numStops
+            ? stops.map((stop, index) => ({
+                ...stop,
+                coords: [
+                  preciseLat + (index + 1) * 0.0025,
+                  preciseLng + (index % 2 === 0 ? -0.0022 : 0.0022)
+                ],
+                tags: `${stop.tags} · near your verified location`
+              }))
+            : stops;
 
           // Render stops in chat
-          for (let i = 0; i < stops.length; i++) {
-            const stop = stops[i];
+          for (let i = 0; i < preciseStops.length; i++) {
+            const stop = preciseStops[i];
             addLocationCard(
               stop.img,
               stop.img, // fallback WebP is same URL for mock pictures
@@ -1691,17 +1739,20 @@
             );
 
             // Add dashed connecting track if not the last stop
-            if (i < stops.length - 1) {
+            if (i < preciseStops.length - 1) {
               await delay(300);
-              const minutes = (i + 1) * 6 + 4;
-              const distance = (i + 1) * 450 + 200;
+              const minutes = usePreciseBase ? (i + 1) * 5 + 3 : (i + 1) * 6 + 4;
+              const distance = usePreciseBase ? (i + 1) * 350 + 150 : (i + 1) * 450 + 200;
               addTrack(`${minutes} min · ${distance}m walk`);
             }
             await delay(400);
           }
 
           // AI intro/outro copies
-          let outroMsg = `here is your curated ${stops.length}-stop flow matching your ${energy} vibe in ${city}.`;
+          let outroMsg = `here is your curated ${preciseStops.length}-stop flow matching your ${energy} vibe in ${city}.`;
+          if (usePreciseBase) {
+            outroMsg = `here is your ${preciseStops.length}-stop flow built from your verified location, not just the city center.`;
+          }
           if (tone === "direct") {
             outroMsg = `fits the vibe. should I adjust any details?`;
           } else if (tone === "detailed") {
@@ -1712,7 +1763,7 @@
           await delay(200);
 
           // Add see route button (opens map overlay)
-          addSeeRouteButton(stops);
+          addSeeRouteButton(preciseStops);
           await delay(200);
 
           addPills(["Make it cheaper", "Show me something else", "Clear route"]);
