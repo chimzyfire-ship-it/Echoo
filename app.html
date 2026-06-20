@@ -756,41 +756,98 @@
         background-color: var(--panel-2) !important;
         color: var(--signal) !important;
       }
-      /* Location Permission Modal */
-      .perm-modal {
+      /* ── Geo Failure Backdrop ── */
+      .geo-backdrop {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.9);
-        width: calc(100% - 48px);
-        max-width: 320px;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        z-index: 19000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .geo-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* ── Geo Settings Instruction Modal ── */
+      .geo-settings-modal {
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%) scale(0.95);
+        width: calc(100% - 40px);
+        max-width: 360px;
         background: var(--panel);
         border: 1px solid var(--signal);
         border-radius: 6px;
         padding: 24px;
         z-index: 20000;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.7);
         opacity: 0;
         pointer-events: none;
-        transition: all 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       }
-      .perm-modal.active {
+      .geo-settings-modal.active {
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
         pointer-events: auto;
       }
-      .perm-modal h3 { font-size: 14px; margin-bottom: 8px; text-transform: uppercase; color: var(--signal); }
-      .perm-modal p { font-size: 12px; margin-bottom: 20px; color: var(--dim); }
-      .perm-buttons { display: flex; gap: 12px; justify-content: flex-end; }
-      .perm-btn {
-        padding: 8px 16px;
+      .geo-settings-modal h3 {
+        font-size: 14px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        color: var(--signal);
+        letter-spacing: 0.05em;
+        font-weight: 900;
+      }
+      .geo-settings-modal p {
         font-size: 12px;
+        line-height: 1.5;
+        margin-bottom: 16px;
+        color: var(--dim);
+      }
+      .geo-instructions {
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+        margin-bottom: 16px;
+      }
+      .geo-instruction-title {
+        font-size: 11px;
+        font-weight: 850;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        color: var(--ink);
+      }
+      .geo-instruction-list {
+        font-size: 11px;
+        color: var(--dim);
+        padding-left: 16px;
+        margin: 0 0 14px 0;
+      }
+      .geo-instruction-list li { margin-bottom: 5px; }
+      .geo-modal-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+      .geo-modal-btn {
+        padding: 9px 18px;
+        font-size: 11px;
         font-weight: bold;
         border: 1px solid var(--line);
         background: var(--panel-2);
         cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
-      .perm-btn.allow { border-color: var(--signal); color: var(--signal); }
+      .geo-modal-btn.primary {
+        border-color: var(--signal);
+        color: var(--signal);
+      }
+      .geo-modal-btn:hover { background: var(--panel); }
     </style>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -871,13 +928,35 @@
       <div class="map-container" id="map-container"></div>
     </div>
 
-    <!-- Simulated Location Permission Modal -->
-    <div class="perm-modal" id="perm-modal">
-      <h3>Location Permission</h3>
-      <p>Echoo needs access to your location settings to verify real-time routing and walking distances between stops on your flow.</p>
-      <div class="perm-buttons">
-        <button class="perm-btn" id="perm-cancel">Cancel</button>
-        <button class="perm-btn allow" id="perm-allow">Allow</button>
+    <!-- Location Failure Backdrop (dark blur behind modal) -->
+    <div class="geo-backdrop" id="geo-backdrop"></div>
+
+    <!-- Location Settings Instruction Modal (shown when GPS is off or denied) -->
+    <div class="geo-settings-modal" id="geo-settings-modal">
+      <h3>Enable Location Services</h3>
+      <p>Echoo tried to access your location but your device GPS is off or permission was denied. Turn it on so we can verify real walking distances on your flow.</p>
+
+      <div class="geo-instructions">
+        <div class="geo-instruction-title">iPhone (iOS) Directions:</div>
+        <ol class="geo-instruction-list">
+          <li>Open your iPhone <b>Settings</b>.</li>
+          <li>Tap <b>Privacy & Security</b> &gt; <b>Location Services</b>.</li>
+          <li>Scroll and tap your browser (e.g. <b>Safari</b> or <b>Chrome</b>).</li>
+          <li>Select <b>"While Using the App"</b> and ensure <b>Precise Location</b> is on.</li>
+        </ol>
+
+        <div class="geo-instruction-title">Android Directions:</div>
+        <ol class="geo-instruction-list">
+          <li>Open your phone <b>Settings</b>.</li>
+          <li>Tap <b>Apps</b> &gt; <b>Chrome</b> (or your browser app).</li>
+          <li>Tap <b>Permissions</b> &gt; <b>Location</b>.</li>
+          <li>Choose <b>"Allow only while using the app"</b>.</li>
+        </ol>
+      </div>
+
+      <div class="geo-modal-buttons">
+        <button class="geo-modal-btn" id="geo-skip">Skip</button>
+        <button class="geo-modal-btn primary" id="geo-retry">Try Again</button>
       </div>
     </div>
 
@@ -1160,9 +1239,10 @@
       const chatSend  = document.getElementById("chat-send");
       const mapOverlay = document.getElementById("map-overlay");
       const mapClose   = document.getElementById("map-close");
-      const permModal  = document.getElementById("perm-modal");
-      const permAllow  = document.getElementById("perm-allow");
-      const permCancel = document.getElementById("perm-cancel");
+      const geoBackdrop = document.getElementById("geo-backdrop");
+      const geoModal    = document.getElementById("geo-settings-modal");
+      const geoSkipBtn  = document.getElementById("geo-skip");
+      const geoRetryBtn = document.getElementById("geo-retry");
 
       /* ── Modular Map Wrapper ── */
       const EchooMap = {
@@ -1353,31 +1433,105 @@
         return new Promise((r) => setTimeout(r, ms));
       }
 
-      /* ── Location Permission Flow ── */
-      let currentPermissionResolver = null;
+      /* ── Real Geolocation Detection ── */
+      const SUPPORTED_CITIES = [
+        { name: "Toronto",   coords: [43.6532, -79.3832] },
+        { name: "Vancouver", coords: [49.2827, -123.1207] },
+        { name: "Montreal",  coords: [45.5017, -73.5673] }
+      ];
+
+      function haversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 +
+                  Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                  Math.sin(dLon/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      function resolveCity(lat, lng) {
+        let closest = SUPPORTED_CITIES[0].name;
+        let minDist = Infinity;
+        SUPPORTED_CITIES.forEach(c => {
+          const d = haversineDistance(lat, lng, c.coords[0], c.coords[1]);
+          if (d < minDist) { minDist = d; closest = c.name; }
+        });
+        return closest;
+      }
+
+      function showGeoFailureModal() {
+        geoBackdrop.classList.add("active");
+        geoModal.classList.add("active");
+      }
+
+      function hideGeoFailureModal() {
+        geoBackdrop.classList.remove("active");
+        geoModal.classList.remove("active");
+      }
 
       function requestLocationPermission() {
         return new Promise((resolve) => {
-          permModal.classList.add("active");
-          currentPermissionResolver = resolve;
+          if (!navigator.geolocation) {
+            console.warn("[Echoo] Geolocation API not supported.");
+            resolve({ granted: false });
+            return;
+          }
+
+          function attemptGeoFix() {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                hideGeoFailureModal();
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const resolvedCity = resolveCity(lat, lng);
+
+                try {
+                  let prefs = {};
+                  const stored = localStorage.getItem("echoo_preferences");
+                  if (stored) prefs = JSON.parse(stored);
+                  prefs.city = resolvedCity;
+                  prefs.lastLat = lat;
+                  prefs.lastLng = lng;
+                  localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
+                } catch(e) {}
+
+                city = resolvedCity;
+                console.log(`[Echoo] GPS fix: ${lat.toFixed(4)}, ${lng.toFixed(4)} → ${resolvedCity}`);
+                resolve({ granted: true, lat, lng, city: resolvedCity });
+              },
+              (error) => {
+                console.warn("[Echoo] Geolocation error:", error.code, error.message);
+                showGeoFailureModal();
+              },
+              {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+              }
+            );
+          }
+
+          const onSkip = () => {
+            cleanup();
+            hideGeoFailureModal();
+            resolve({ granted: false });
+          };
+          const onRetry = () => {
+            hideGeoFailureModal();
+            attemptGeoFix();
+          };
+          function cleanup() {
+            geoSkipBtn.removeEventListener("click", onSkip);
+            geoRetryBtn.removeEventListener("click", onRetry);
+          }
+
+          geoSkipBtn.addEventListener("click", onSkip);
+          geoRetryBtn.addEventListener("click", onRetry);
+
+          attemptGeoFix();
         });
       }
-
-      permAllow.addEventListener("click", () => {
-        permModal.classList.remove("active");
-        if (currentPermissionResolver) {
-          currentPermissionResolver(true);
-          currentPermissionResolver = null;
-        }
-      });
-
-      permCancel.addEventListener("click", () => {
-        permModal.classList.remove("active");
-        if (currentPermissionResolver) {
-          currentPermissionResolver(false);
-          currentPermissionResolver = null;
-        }
-      });
 
       /* ── Simulated conversation ── */
       function delay(ms) {
@@ -1407,19 +1561,18 @@
         if (isPlanRequest) {
           await delay(600);
           removeTyping();
-          addBubble("ai", "got it. first, I'd like to access your location to calculate real walking times between spots on your flow.");
-          
-          // Request permission
-          const allowed = await requestLocationPermission();
-          
+          addBubble("ai", "got it — verifying your location for real-time routing and walking distances.");
+
           addTyping();
-          await delay(600);
+
+          const geoResult = await requestLocationPermission();
+
           removeTyping();
-          
-          if (allowed) {
-            addBubble("ai", "location verified! how many stops on your flow tonight?");
+
+          if (geoResult.granted) {
+            addBubble("ai", `📍 location locked — ${geoResult.city}. coordinates verified. how many stops on your flow tonight?`);
           } else {
-            addBubble("ai", "no worries, we will use default city centers. how many stops on your flow tonight?");
+            addBubble("ai", `no worries — using ${city} city center as your base. how many stops on your flow tonight?`);
           }
           
           addPills(["Single Stop", "2-Stop Flow", "3-Stop Flow", "Custom Flow"]);
