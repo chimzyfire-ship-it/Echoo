@@ -1576,14 +1576,22 @@
           return;
         }
 
+        // Heuristically check if this is an itinerary / routing request
+        const textLower = userText.toLowerCase();
+        const isPlanRequest = textLower.includes("plan") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out");
+
+        // iOS Safari Fix: We MUST trigger navigator.geolocation synchronously 
+        // with the user's click event. Any 'await' before calling it will drop 
+        // the user-gesture token and Safari will silently block the request.
+        let geoPromise = null;
+        if (isPlanRequest) {
+          geoPromise = requestLocationPermission();
+        }
+
         // Add user bubble
         addBubble("user", userText);
         await delay(500);
         addTyping();
-
-        // Heuristically check if this is an itinerary / routing request
-        const textLower = userText.toLowerCase();
-        const isPlanRequest = textLower.includes("plan") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out");
 
         if (isPlanRequest) {
           await delay(600);
@@ -1592,7 +1600,7 @@
 
           addTyping();
 
-          const geoResult = await requestLocationPermission();
+          const geoResult = await geoPromise;
 
           removeTyping();
 
