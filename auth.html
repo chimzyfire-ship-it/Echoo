@@ -627,6 +627,15 @@
         sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
       });
 
+      // Check stored preference for pre-detected city
+      let preDetectedCity = "Toronto";
+      try {
+        const stored = localStorage.getItem("echoo_preferences");
+        if (stored) {
+          preDetectedCity = JSON.parse(stored).city || "Toronto";
+        }
+      } catch(e) {}
+
       /* ---- State ---- */
       const state = {
         mode: "signin",        // "signin" | "signup"
@@ -634,7 +643,7 @@
         vibes: new Set(),
         budget: "$",
         energy: "chill",
-        city: "Toronto",
+        city: preDetectedCity,
         tone: "direct",
         userName: "",
         userEmail: "",
@@ -830,6 +839,14 @@
           card.classList.add("selected");
         });
       });
+
+      // Initialize city input and pills selection based on pre-detected city
+      if (cityInput) {
+        cityInput.value = state.city;
+        document.querySelectorAll(".city-pill").forEach((p) => {
+          p.classList.toggle("selected", p.dataset.city === state.city);
+        });
+      }
 
       /* ---- Finish onboarding ---- */
       function finishOnboarding() {

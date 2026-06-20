@@ -587,6 +587,106 @@
         .page { width: min(560px, 100%); }
         .bottom-nav { width: min(560px, 100%); }
       }
+
+      /* Custom Location Permission & Settings Redirect Modal */
+      .location-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.95);
+        width: calc(100% - 40px);
+        max-width: 380px;
+        background: #0d0d0d;
+        border: 1px solid var(--signal);
+        border-radius: 6px;
+        padding: 28px;
+        z-index: 20000;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        color: var(--ink);
+      }
+      .location-modal.active {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .location-modal h2 {
+        font-size: 16px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        color: var(--signal);
+        letter-spacing: 0.05em;
+        font-weight: 900;
+      }
+      .location-modal p {
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 20px;
+        color: var(--dim);
+      }
+      .instruction-section {
+        border-top: 1px solid var(--line);
+        padding-top: 16px;
+        margin-bottom: 20px;
+      }
+      .instruction-title {
+        font-size: 12px;
+        font-weight: 850;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        color: var(--ink);
+      }
+      .instruction-list {
+        font-size: 12px;
+        color: var(--dim);
+        padding-left: 16px;
+        margin: 0 0 16px 0;
+      }
+      .instruction-list li {
+        margin-bottom: 6px;
+      }
+      .location-modal-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+      .location-modal-btn {
+        padding: 10px 20px;
+        font-size: 12px;
+        font-weight: bold;
+        border: 1px solid var(--line);
+        background: var(--panel-2);
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .location-modal-btn.primary {
+        border-color: var(--signal);
+        color: var(--signal);
+      }
+      .location-modal-btn:hover {
+        background: var(--panel);
+      }
+      /* Blurred overlay behind modal */
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        z-index: 19000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .modal-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
     </style>
   </head>
   <body>
@@ -681,6 +781,146 @@
         sheet.classList.remove("open");
         sheet.setAttribute("aria-hidden", "true");
       });
+
+      /* ── Geolocation & City Resolution ── */
+      const locationModal = document.getElementById("location-settings-modal");
+      const locationBackdrop = document.getElementById("location-backdrop");
+      const tryAgainBtn = document.getElementById("location-try-again");
+      const dismissBtn = document.getElementById("location-dismiss");
+      const cityPill = document.querySelector(".city-pill");
+
+      const SUPPORTED_CITIES = [
+        { name: "Toronto", coords: [43.6532, -79.3832] },
+        { name: "Vancouver", coords: [49.2827, -123.1207] },
+        { name: "Montreal", coords: [45.5017, -73.5673] }
+      ];
+
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Earth radius in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+      }
+
+      function updatePageCity(cityName) {
+        // Update local preferences
+        let prefs = {};
+        try {
+          const stored = localStorage.getItem("echoo_preferences");
+          if (stored) prefs = JSON.parse(stored);
+        } catch(e) {}
+        prefs.city = cityName;
+        localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
+
+        // Update DOM elements
+        if (cityPill) cityPill.textContent = `${cityName} today`;
+        if (searchInput) {
+          searchInput.placeholder = `What’s happening in ${cityName} today?`;
+        }
+
+        // Update weekend plan button click listener to use the correct city name
+        const weekendPlanBtn = document.getElementById("weekend-plan");
+        if (weekendPlanBtn) {
+          // Re-bind click event to use corrected city name
+          const oldBtn = weekendPlanBtn.cloneNode(true);
+          weekendPlanBtn.parentNode.replaceChild(oldBtn, weekendPlanBtn);
+          oldBtn.addEventListener("click", () => {
+            openSheet("Your weekend can start now.", "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=instant weekend in ${cityName}`);
+          });
+        }
+      }
+
+      function detectUserLocation() {
+        if (!navigator.geolocation) {
+          console.warn("Geolocation not supported by browser.");
+          updatePageCity("Toronto"); // Default fallback
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Success: Close modals if open
+            locationModal.classList.remove("active");
+            locationBackdrop.classList.remove("active");
+
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            // Find closest city
+            let closestCity = SUPPORTED_CITIES[0].name;
+            let minDistance = Infinity;
+
+            SUPPORTED_CITIES.forEach((cityObj) => {
+              const dist = calculateDistance(lat, lng, cityObj.coords[0], cityObj.coords[1]);
+              if (dist < minDistance) {
+                minDistance = dist;
+                closestCity = cityObj.name;
+              }
+            });
+
+            console.log(`Resolved location to closest city: ${closestCity} (Distance: ${minDistance.toFixed(1)} km)`);
+            updatePageCity(closestCity);
+          },
+          (error) => {
+            console.warn("Geolocation failed or denied:", error);
+            // If denied or prompt ignored, show custom instructions modal
+            locationModal.classList.add("active");
+            locationBackdrop.classList.add("active");
+          },
+          { timeout: 8000 }
+        );
+      }
+
+      // Try again triggers detection again
+      tryAgainBtn.addEventListener("click", () => {
+        detectUserLocation();
+      });
+
+      // Dismiss triggers default fallback (Toronto)
+      dismissBtn.addEventListener("click", () => {
+        locationModal.classList.remove("active");
+        locationBackdrop.classList.remove("active");
+        updatePageCity("Toronto");
+      });
+
+      // Run on page load immediately
+      detectUserLocation();
     </script>
+
+    <!-- Location Modal Backdrop -->
+    <div class="modal-backdrop" id="location-backdrop"></div>
+
+    <!-- Location Settings Prompt Modal -->
+    <div class="location-modal" id="location-settings-modal">
+      <h2>Location Access Required</h2>
+      <p>Echoo needs your phone's location access to find and verify curated vibe flows, showtimes, and date itineraries near you.</p>
+      
+      <div class="instruction-section">
+        <div class="instruction-title">iPhone (iOS) Directions:</div>
+        <ol class="instruction-list">
+          <li>Open your iPhone <b>Settings</b>.</li>
+          <li>Tap <b>Privacy & Security</b> &gt; <b>Location Services</b>.</li>
+          <li>Scroll and tap your browser (e.g. <b>Safari</b> or <b>Chrome</b>).</li>
+          <li>Select <b>"While Using the App"</b> and ensure <b>Precise Location</b> is on.</li>
+        </ol>
+
+        <div class="instruction-title">Android Directions:</div>
+        <ol class="instruction-list">
+          <li>Open your phone <b>Settings</b>.</li>
+          <li>Tap <b>Apps</b> &gt; <b>Chrome</b> (or your browser app).</li>
+          <li>Tap <b>Permissions</b> &gt; <b>Location</b>.</li>
+          <li>Choose <b>"Allow only while using the app"</b>.</li>
+        </ol>
+      </div>
+
+      <div class="location-modal-buttons">
+        <button class="location-modal-btn" id="location-dismiss">Skip</button>
+        <button class="location-modal-btn primary" id="location-try-again">Try Again</button>
+      </div>
+    </div>
   </body>
 </html>
