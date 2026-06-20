@@ -677,7 +677,123 @@
         .bubble, .loc-card { max-width: 520px; }
         .bubble.user { max-width: 420px; }
       }
+
+      /* Full-screen Slide-up Map Overlay */
+      .map-overlay {
+        position: fixed;
+        bottom: -100%;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0d0d0d;
+        z-index: 15000;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        border-top: 1px solid var(--signal);
+      }
+      .map-overlay.open {
+        transform: translateY(-100%);
+      }
+      .map-container {
+        width: 100%;
+        height: 100%;
+      }
+      /* Floating Close Button for Map */
+      .map-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--line);
+        background: rgba(13, 13, 13, 0.85);
+        color: var(--ink);
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 16000;
+        border-radius: 4px;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s ease;
+      }
+      .map-close:hover {
+        border-color: var(--signal);
+        color: var(--signal);
+      }
+      /* See Route on Map Chat Button Card */
+      .see-route-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 14px;
+        background: var(--panel-2);
+        border: 1px dashed var(--signal);
+        color: var(--signal);
+        font-size: 13px;
+        font-weight: bold;
+        cursor: pointer;
+        margin: 8px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        animation: bubbleIn 240ms ease both;
+        transition: all 0.2s ease;
+      }
+      .see-route-card:hover {
+        background: var(--panel);
+        border-style: solid;
+      }
+      /* Leaflet Dark Customizations */
+      .leaflet-bar { border: 1px solid var(--line) !important; }
+      .leaflet-bar a {
+        background-color: var(--panel) !important;
+        color: var(--ink) !important;
+        border-bottom: 1px solid var(--line) !important;
+      }
+      .leaflet-bar a:hover {
+        background-color: var(--panel-2) !important;
+        color: var(--signal) !important;
+      }
+      /* Location Permission Modal */
+      .perm-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: calc(100% - 48px);
+        max-width: 320px;
+        background: var(--panel);
+        border: 1px solid var(--signal);
+        border-radius: 6px;
+        padding: 24px;
+        z-index: 20000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.2s ease;
+      }
+      .perm-modal.active {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .perm-modal h3 { font-size: 14px; margin-bottom: 8px; text-transform: uppercase; color: var(--signal); }
+      .perm-modal p { font-size: 12px; margin-bottom: 20px; color: var(--dim); }
+      .perm-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+      .perm-btn {
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: bold;
+        border: 1px solid var(--line);
+        background: var(--panel-2);
+        cursor: pointer;
+      }
+      .perm-btn.allow { border-color: var(--signal); color: var(--signal); }
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   </head>
   <body>
     <header class="topbar">
@@ -746,6 +862,22 @@
       <div class="chat-input-bar">
         <input type="text" id="chat-input" placeholder="say more..." />
         <button class="chat-send" id="chat-send">Send</button>
+      </div>
+    </div>
+
+    <!-- Map slide-up overlay -->
+    <div class="map-overlay" id="map-overlay">
+      <button class="map-close" id="map-close" aria-label="Close map">&#x2715;</button>
+      <div class="map-container" id="map-container"></div>
+    </div>
+
+    <!-- Simulated Location Permission Modal -->
+    <div class="perm-modal" id="perm-modal">
+      <h3>Location Permission</h3>
+      <p>Echoo needs access to your location settings to verify real-time routing and walking distances between stops on your flow.</p>
+      <div class="perm-buttons">
+        <button class="perm-btn" id="perm-cancel">Cancel</button>
+        <button class="perm-btn allow" id="perm-allow">Allow</button>
       </div>
     </div>
 
@@ -1026,6 +1158,110 @@
       const chatBody = document.getElementById("chat-body");
       const chatInput = document.getElementById("chat-input");
       const chatSend  = document.getElementById("chat-send");
+      const mapOverlay = document.getElementById("map-overlay");
+      const mapClose   = document.getElementById("map-close");
+      const permModal  = document.getElementById("perm-modal");
+      const permAllow  = document.getElementById("perm-allow");
+      const permCancel = document.getElementById("perm-cancel");
+
+      /* ── Modular Map Wrapper ── */
+      const EchooMap = {
+        mapInstance: null,
+        init: function(elementId, center) {
+          if (this.mapInstance) {
+            this.mapInstance.remove();
+          }
+          const map = L.map(elementId, { zoomControl: true }).setView(center, 14);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap'
+          }).addTo(map);
+          this.mapInstance = map;
+          return map;
+        },
+        drawRoute: function(stops) {
+          if (!this.mapInstance) return;
+          const coords = [];
+          stops.forEach((stop, index) => {
+            coords.push(stop.coords);
+            L.circleMarker(stop.coords, {
+              color: '#E7C98E',
+              fillColor: '#000000',
+              fillOpacity: 1,
+              radius: 6,
+              weight: 2
+            }).addTo(this.mapInstance).bindPopup(`<b>Stop ${index + 1}: ${stop.name}</b>`);
+          });
+          L.polyline(coords, {
+            color: '#E7C98E',
+            weight: 3,
+            opacity: 0.8,
+            dashArray: '5, 5'
+          }).addTo(this.mapInstance);
+          this.mapInstance.fitBounds(coords, { padding: [40, 40] });
+        }
+      };
+
+      /* ── Dynamic Curation Database ── */
+      const curationDb = {
+        "Toronto": {
+          "chill": [
+            { name: "Kensington Listening Room", tags: "Jazz & Vinyl · Kensington", coords: [43.6552, -79.4022], img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=300&q=80", vibe: "Dimly lit, cozy booths, vinyl-forward audio setup." },
+            { name: "Late Kitchen on Dundas", tags: "Comfort Food · Dundas West", coords: [43.6534, -79.4050], img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80", vibe: "Quiet counter seats, soft playlists, fresh ingredients." },
+            { name: "Ossington Tea & Vinyl", tags: "Speakeasy Lounge · Ossington", coords: [43.6490, -79.4190], img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80", vibe: "Hidden tea house playing vintage soul records." }
+          ],
+          "hype": [
+            { name: "Queen West Club Basement", tags: "Techno & DJs · Queen West", coords: [43.6482, -79.4005], img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80", vibe: "Loud sound system, dark warehouse vibes, energetic crowd." },
+            { name: "Ossington Street Tacos", tags: "Late-night Tacos · Ossington", coords: [43.6495, -79.4182], img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80", vibe: "Bustling open-counter, fast service, vibrant outdoor patio." },
+            { name: "Dundas Arcade & Drinks", tags: "Gaming & Drinks · Dundas West", coords: [43.6515, -79.4120], img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80", vibe: "Retro arcade machines, loud indie rock, neon aesthetic." }
+          ]
+        },
+        "Vancouver": {
+          "chill": [
+            { name: "Gastown Cozy Bar", tags: "Speakeasy · Gastown", coords: [49.2827, -123.1207], img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80", vibe: "Hidden entrance, intimate seating, custom mixology drinks." },
+            { name: "Davie Street Delicacies", tags: "Local Bakery · West End", coords: [49.2785, -123.1325], img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80", vibe: "Acoustic lounge music, fresh late crepes, relaxed spacing." },
+            { name: "Kitsilano Sunset Pier", tags: "Beach View · Kitsilano", coords: [49.2740, -123.1530], img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80", vibe: "Beautiful twilight viewing spot, chill waves, fresh air." }
+          ],
+          "hype": [
+            { name: "Granville Live Stage", tags: "Live Music · Granville", coords: [49.2798, -123.1235], img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=300&q=80", vibe: "Live rock sets, high-energy dance floor, packed venue." },
+            { name: "Richmond Night Eats", tags: "Night Market · Richmond", coords: [49.1915, -123.1310], img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80", vibe: "Over 100 food stalls, loud background music, fast paced crowds." },
+            { name: "Yaletown Cocktail Loft", tags: "DJ Loft · Yaletown", coords: [49.2760, -123.1200], img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80", vibe: "House DJs, packed dancefloor, vibrant lighting." }
+          ]
+        },
+        "Montreal": {
+          "chill": [
+            { name: "Plateau Acoustic Café", tags: "Acoustic Room · Plateau", coords: [45.5215, -73.5825], img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=300&q=80", vibe: "Soft lighting, unplugged sets, local artists." },
+            { name: "Saint-Denis Sweet Crepes", tags: "Comfort Food · Saint-Denis", coords: [45.5180, -73.5890], img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80", vibe: "Indie background music, cozy dates, intimate seating." },
+            { name: "Mile End Vinyl Lounge", tags: "Record Listening · Mile End", coords: [45.5240, -73.5950], img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=300&q=80", vibe: "Warm analog audio system, quiet library aesthetic." }
+          ],
+          "hype": [
+            { name: "Saint-Laurent Electronic Gig", tags: "Electronic DJ · Mile End", coords: [45.5262, -73.5960], img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80", vibe: "Neon lights, heavy bass, high-tempo dancing." },
+            { name: "Late Bagels Mile End", tags: "Wood-fired Bakery · Mile End", coords: [45.5228, -73.5965], img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80", vibe: "Busy queues, lively open kitchen, hot bagels on the go." },
+            { name: "Crescent Bar & Arcade", tags: "Retro Arcade · Downtown", coords: [45.4980, -73.5760], img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80", vibe: "Classic arcade cabinets, neon wall lighting, loud pop beats." }
+          ]
+        }
+      };
+
+      function addSeeRouteButton(stops) {
+        const card = document.createElement("div");
+        card.className = "see-route-card";
+        card.innerHTML = '🗺️ See Route on Map';
+        card.addEventListener("click", () => {
+          mapOverlay.classList.add("open");
+          // Initialize map after overlay opens and has physical dimensions
+          setTimeout(() => {
+            const midIndex = Math.floor(stops.length / 2);
+            EchooMap.init("map-container", stops[midIndex].coords);
+            EchooMap.drawRoute(stops);
+          }, 450);
+        });
+        chatBody.appendChild(card);
+        scrollChat();
+      }
+
+      // Close map overlay handler
+      mapClose.addEventListener("click", () => {
+        mapOverlay.classList.remove("open");
+      });
 
       /* ── Chat helpers ── */
       function scrollChat() {
@@ -1117,100 +1353,84 @@
         return new Promise((r) => setTimeout(r, ms));
       }
 
-      async function runConversation(userText) {
-        /* 1. User bubble */
-        addBubble("user", userText);
+      /* ── Location Permission Flow ── */
+      let currentPermissionResolver = null;
 
-        /* 2. Typing */
-        await delay(600);
+      function requestLocationPermission() {
+        return new Promise((resolve) => {
+          permModal.classList.add("active");
+          currentPermissionResolver = resolve;
+        });
+      }
+
+      permAllow.addEventListener("click", () => {
+        permModal.classList.remove("active");
+        if (currentPermissionResolver) {
+          currentPermissionResolver(true);
+          currentPermissionResolver = null;
+        }
+      });
+
+      permCancel.addEventListener("click", () => {
+        permModal.classList.remove("active");
+        if (currentPermissionResolver) {
+          currentPermissionResolver(false);
+          currentPermissionResolver = null;
+        }
+      });
+
+      /* ── Simulated conversation ── */
+      function delay(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
+
+      async function runConversation(userText) {
+        // Clear chat body
+        chatBody.innerHTML = "";
+
+        // If starting fresh (opening default chat window)
+        if (!userText) {
+          addBubble("ai", `hey there! let's plan your night. i can help you compile a dynamic vibe flow, check local showtimes, or recommend food in ${city}.`);
+          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          return;
+        }
+
+        // Add user bubble
+        addBubble("user", userText);
+        await delay(500);
         addTyping();
 
-        /* Determine locations and copy dynamically */
-        let loc1Name = "The Listening Room";
-        let loc1Tags = `Live jazz · Kensington · Open now`;
-        let loc1Vibe = "Dimly lit, vinyl-forward, seats at the bar";
-        
-        let loc2Name = "Late Kitchen on Dundas";
-        let loc2Tags = `Comfort food · Open til 2am · ${budget}`;
-        let loc2Vibe = "Counter seats, soft playlist, no reservations needed";
-        let trackDistance = "12 min · 850m walk";
+        // Heuristically check if this is an itinerary / routing request
+        const textLower = userText.toLowerCase();
+        const isPlanRequest = textLower.includes("plan") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out");
 
-        if (city === "Vancouver") {
-          loc1Name = "The Granville Lounge";
-          loc1Tags = `Vinyl sets · Gastown · Open now`;
-          loc2Name = "West Coast Bites on Davie";
-          loc2Tags = `Local eats · Open til 1am · ${budget}`;
-          trackDistance = "15 min · 1.1km walk";
-        } else if (city === "Montreal") {
-          loc1Name = "Café Saint-Denis";
-          loc1Tags = `Acoustic sets · Plateau · Open now`;
-          loc2Name = "Late Crepes on Saint-Laurent";
-          loc2Tags = `Late snacks · Open til 3am · ${budget}`;
-          trackDistance = "9 min · 650m walk";
-        }
-
-        // Adjust vibes based on energy choice
-        if (energy === "hype") {
-          loc1Vibe = "Upbeat crowd, loud speakers, standing space only";
-          loc2Vibe = "Bustling open kitchen, lively playlist, high energy";
-        } else if (energy === "chill") {
-          loc1Vibe = "Dimly lit, low volume, quiet cozy booths";
-          loc2Vibe = "Intimate counter seats, mellow playlist, relaxed spacing";
-        } else if (energy === "curious") {
-          loc1Vibe = "Secret entrance, unexpected decor, rare vinyl selection";
-          loc2Vibe = "Rotating chef specials, eclectic setup, interactive kitchen";
-        }
-
-        // AI intro copy based on tone and energy
-        let aiIntro = "i hear you. let’s start easy — there’s a spot that’s been getting a lot of love lately.";
-        let aiOutro = "two stops, low effort, good energy. want me to adjust anything?";
-
-        if (tone === "direct") {
-          aiIntro = "got it. here's a solid 2-stop route that fits.";
-          aiOutro = "fits the vibe. should I swap anything?";
+        if (isPlanRequest) {
+          await delay(600);
+          removeTyping();
+          addBubble("ai", "got it. first, I'd like to access your location to calculate real walking times between spots on your flow.");
+          
+          // Request permission
+          const allowed = await requestLocationPermission();
+          
+          addTyping();
+          await delay(600);
+          removeTyping();
+          
+          if (allowed) {
+            addBubble("ai", "location verified! how many stops on your flow tonight?");
+          } else {
+            addBubble("ai", "no worries, we will use default city centers. how many stops on your flow tonight?");
+          }
+          
+          addPills(["Single Stop", "2-Stop Flow", "3-Stop Flow", "Custom Flow"]);
         } else {
-          // detailed
-          aiIntro = `understood. since you're looking for a ${energy} speed in ${city}, i've mapped out a seamless pair of locations. let's start with a vinyl-focused anchor.`;
-          aiOutro = `both spots align with your ${budget} budget preference and have verified seating available right now. let me know if you want to swap the order or add a third stop.`;
+          // General question response
+          await delay(800);
+          removeTyping();
+          addBubble("ai", `noted! let me see what aligns with your ${energy} vibe and ${budget} budget preferences in ${city}.`);
+          await delay(400);
+          addPills(["Find my night", "Recommend food", "Show movie times"]);
         }
-
-        /* 3. AI response */
-        await delay(1200);
-        removeTyping();
-        addBubble("ai", aiIntro);
-
-        /* 4. Location card 1 */
-        await delay(400);
-        addLocationCard(
-          "assets/optimized/news-music-768.jpg",
-          "assets/optimized/news-music-768.webp",
-          loc1Name,
-          loc1Tags,
-          loc1Vibe,
-          true
-        );
-
-        /* 5. Connecting track */
-        await delay(300);
-        addTrack(trackDistance);
-
-        /* 6. Location card 2 */
-        await delay(400);
-        addLocationCard(
-          "assets/optimized/news-date-768.jpg",
-          "assets/optimized/news-date-768.webp",
-          loc2Name,
-          loc2Tags,
-          loc2Vibe
-        );
-
-        /* 7. AI follow-up */
-        await delay(500);
-        addBubble("ai", aiOutro);
-
-        /* 8. Quick action pills */
-        await delay(200);
-        addPills(["Make it cheaper", "Add a third stop", "Show me something else"]);
       }
 
       /* ── Pill tap handler ── */
@@ -1220,16 +1440,126 @@
         pillBusy = true;
 
         btn.classList.add("tapped");
-        addBubble("user", btn.textContent);
+        const text = btn.textContent;
+        addBubble("user", text);
 
         await delay(400);
         addTyping();
 
-        await delay(1000);
-        removeTyping();
-        addBubble("ai", "got it \u2014 here\u2019s another angle.");
+        // Handle flows lengths
+        if (text === "Single Stop" || text === "2-Stop Flow" || text === "3-Stop Flow" || text === "Custom Flow") {
+          await delay(1000);
+          removeTyping();
+
+          if (text === "Custom Flow") {
+            addBubble("ai", "sounds good. tell me exactly what you're in the mood for (e.g. 'sports game to a bar and a restaurant') and I'll chain it.");
+            pillBusy = false;
+            return;
+          }
+
+          // Generate stops dynamically from curationDb based on profile energy/city
+          const currentEnergy = energy === "hype" ? "hype" : "chill";
+          const cityDb = curationDb[city] || curationDb["Toronto"];
+          const pool = cityDb[currentEnergy] || cityDb["chill"];
+          
+          let numStops = 1;
+          if (text === "2-Stop Flow") numStops = 2;
+          if (text === "3-Stop Flow") numStops = 3;
+
+          const stops = pool.slice(0, numStops);
+
+          // Render stops in chat
+          for (let i = 0; i < stops.length; i++) {
+            const stop = stops[i];
+            addLocationCard(
+              stop.img,
+              stop.img, // fallback WebP is same URL for mock pictures
+              stop.name,
+              `${stop.tags} · ${budget}`,
+              stop.vibe,
+              i === 0 // Mark first card as trending badge
+            );
+
+            // Add dashed connecting track if not the last stop
+            if (i < stops.length - 1) {
+              await delay(300);
+              const minutes = (i + 1) * 6 + 4;
+              const distance = (i + 1) * 450 + 200;
+              addTrack(`${minutes} min · ${distance}m walk`);
+            }
+            await delay(400);
+          }
+
+          // AI intro/outro copies
+          let outroMsg = `here is your curated ${stops.length}-stop flow matching your ${energy} vibe in ${city}.`;
+          if (tone === "direct") {
+            outroMsg = `fits the vibe. should I adjust any details?`;
+          } else if (tone === "detailed") {
+            outroMsg = `all stops fit your ${budget} budget preference and are open right now. you can see this flow on the map.`;
+          }
+
+          addBubble("ai", outroMsg);
+          await delay(200);
+
+          // Add see route button (opens map overlay)
+          addSeeRouteButton(stops);
+          await delay(200);
+
+          addPills(["Make it cheaper", "Show me something else", "Clear route"]);
+        } else if (text === "Find my night") {
+          removeTyping();
+          runConversation("find my night");
+        } else if (text === "Recommend food") {
+          await delay(1000);
+          removeTyping();
+          addBubble("ai", `here's a highly recommended spot in ${city} matching your budget:`);
+          const cityDb = curationDb[city] || curationDb["Toronto"];
+          const spot = cityDb["chill"][1]; // select dining/food stop
+          addLocationCard(spot.img, spot.img, spot.name, spot.tags, spot.vibe, true);
+          await delay(400);
+          addPills(["Find my night", "Show movie times"]);
+        } else if (text === "Show movie times") {
+          await delay(1000);
+          removeTyping();
+          addBubble("ai", `TIFF Lightbox in ${city} has screenings running tonight starting at 7:30 PM. Would you like to chain this into a flow?`);
+          await delay(400);
+          addPills(["Find my night", "Recommend food"]);
+        } else if (text === "Make it cheaper") {
+          await delay(1000);
+          removeTyping();
+          addBubble("ai", `i've adjusted the budget. here's a cheaper alternative that keeps the same vibe:`);
+          const cityDb = curationDb[city] || curationDb["Toronto"];
+          const spot = cityDb["chill"][0];
+          addLocationCard(spot.img, spot.img, spot.name, `${spot.tags} · $`, "No cover fee, cheap drinks, cozy entry", false);
+          await delay(400);
+          addPills(["Find my night", "Clear route"]);
+        } else if (text === "Clear route") {
+          await delay(600);
+          removeTyping();
+          addBubble("ai", "route cleared. what would you like to plan next?");
+          await delay(400);
+          addPills(["Find my night", "Recommend food", "Show movie times"]);
+        } else {
+          // Default pill response
+          await delay(1000);
+          removeTyping();
+          addBubble("ai", "got it. here's another angle.");
+          await delay(400);
+          addPills(["Find my night", "Recommend food", "Show movie times"]);
+        }
 
         pillBusy = false;
+      }
+
+      async function sendFollowUp(text) {
+        addBubble("user", text);
+        await delay(500);
+        addTyping();
+        await delay(1100);
+        removeTyping();
+        addBubble("ai", "noted. let me pull something that fits that a little better.");
+        await delay(400);
+        addPills(["Find my night", "Recommend food"]);
       }
 
       /* ── Chat input submit ── */
@@ -1244,15 +1574,6 @@
       chatInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") { e.preventDefault(); handleChatSend(); }
       });
-
-      async function sendFollowUp(text) {
-        addBubble("user", text);
-        await delay(500);
-        addTyping();
-        await delay(1100);
-        removeTyping();
-        addBubble("ai", "noted. let me pull something that fits that a little better.");
-      }
 
       /* ── Form / button triggers ── */
       document.getElementById("plan-form").addEventListener("submit", (e) => {
