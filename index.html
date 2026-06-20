@@ -245,6 +245,15 @@
         font-size: 13px;
         font-weight: 750;
       }
+      .location-proof {
+        display: block;
+        min-height: 18px;
+        margin-top: 8px;
+        color: rgba(246, 240, 230, 0.72);
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: 0.02em;
+      }
 
       .city-pill::before {
         content: "";
@@ -718,6 +727,7 @@
           <h1 id="landing-title">Discover your city, your way.</h1>
           <p class="tagline">Find the plans people will actually say yes to.</p>
           <span class="city-pill">Toronto today</span>
+          <span class="location-proof" id="location-proof">Detecting your location...</span>
         </section>
 
         <section class="control-stack" aria-label="Plan your day">
@@ -726,7 +736,7 @@
             <input id="city-search" autocomplete="off" placeholder="What’s happening in Toronto today?" />
             <button class="send" type="submit" aria-label="Search plans"></button>
           </form>
-          <button class="main-cta" id="weekend-plan" type="button">Plan my instant weekend</button>
+          <button class="main-cta" id="day-plan" type="button">Plan my night</button>
           <button class="bored-cta" id="bored-plan" type="button">I’m bored. Surprise me.</button>
         </section>
       </main>
@@ -735,13 +745,13 @@
     <nav class="bottom-nav" aria-label="Main navigation">
       <a class="nav-link active" href="index.html" aria-current="page"><span class="glyph home"></span><span>Home</span></a>
       <a class="nav-link" href="events.html"><span class="glyph discover"></span><span>Discover</span></a>
-      <a class="nav-link" href="events.html?filter=dates"><span class="glyph weekend"></span><span>Weekend</span></a>
+      <a class="nav-link" href="events.html?query=today"><span class="glyph weekend"></span><span>Today</span></a>
       <a class="nav-link" href="app.html"><span class="glyph people"></span><span>Friends</span></a>
       <a class="nav-link" href="auth.html"><span class="glyph profile"></span><span>Profile</span></a>
     </nav>
 
     <aside class="sheet" id="plan-sheet" aria-hidden="true" aria-live="polite">
-      <h2 id="sheet-title">Weekend mode is ready.</h2>
+      <h2 id="sheet-title">Your plan is ready.</h2>
       <p id="sheet-copy">We’ll start with a simple city plan: one anchor, one food stop, one easy backup if the group changes its mind.</p>
       <div class="sheet-actions">
         <a id="sheet-link" href="events.html?query=weekend">Show the plan</a>
@@ -794,6 +804,21 @@
       const sheetTitle = document.getElementById("sheet-title");
       const sheetCopy = document.getElementById("sheet-copy");
       const sheetLink = document.getElementById("sheet-link");
+      const locationProof = document.getElementById("location-proof");
+      const dayPlanBtn = document.getElementById("day-plan");
+
+      function currentDayLabel() {
+        return new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(new Date());
+      }
+
+      function planQuery(cityName) {
+        return `${currentDayLabel()} night plan in ${cityName}`;
+      }
+
+      function setDayPlanCopy(cityName) {
+        if (dayPlanBtn) dayPlanBtn.textContent = `Plan my ${currentDayLabel()} night`;
+        if (sheetLink) sheetLink.href = `events.html?query=${encodeURIComponent(planQuery(cityName))}`;
+      }
 
       function openSheet(title, copy, href) {
         sheetTitle.textContent = title;
@@ -811,8 +836,8 @@
         window.location.href = `events.html?query=${encodeURIComponent(query)}`;
       });
 
-      document.getElementById("weekend-plan").addEventListener("click", () => {
-        openSheet("Your weekend can start now.", "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", "events.html?query=instant weekend in Toronto");
+      dayPlanBtn.addEventListener("click", () => {
+        openSheet(`${currentDayLabel()} mode is ready.`, "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=${encodeURIComponent(planQuery("Toronto"))}`);
       });
 
       document.getElementById("bored-plan").addEventListener("click", () => {
@@ -858,20 +883,19 @@
 
         // Update DOM elements
         if (cityPill) cityPill.textContent = `${cityName} today`;
+        if (locationProof) {
+          locationProof.textContent = coords
+            ? `Precise location on · ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${coords.accuracy ? ` · ±${Math.round(coords.accuracy)}m` : ""}`
+            : `Using ${cityName} as your city base`;
+        }
         if (searchInput) {
           searchInput.placeholder = `What’s happening in ${cityName} today?`;
         }
+        setDayPlanCopy(cityName);
 
-        // Update weekend plan button click listener to use the correct city name
-        const weekendPlanBtn = document.getElementById("weekend-plan");
-        if (weekendPlanBtn) {
-          // Re-bind click event to use corrected city name
-          const oldBtn = weekendPlanBtn.cloneNode(true);
-          weekendPlanBtn.parentNode.replaceChild(oldBtn, weekendPlanBtn);
-          oldBtn.addEventListener("click", () => {
-            openSheet("Your weekend can start now.", "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=instant weekend in ${cityName}`);
-          });
-        }
+        dayPlanBtn.onclick = () => {
+          openSheet(`${currentDayLabel()} mode is ready.`, "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=${encodeURIComponent(planQuery(cityName))}`);
+        };
       }
 
       function detectUserLocation() {
@@ -905,7 +929,7 @@
             }
 
             console.log(`Resolved location to closest city: ${resolved.city.name} (Distance: ${resolved.city.distanceKm.toFixed(1)} km)`);
-            updatePageCity(resolved.city.name, { lat, lng });
+            updatePageCity(resolved.city.name, { lat, lng, accuracy: position.coords.accuracy });
           },
           (error) => {
             console.warn("Geolocation failed or denied:", error);
@@ -942,6 +966,7 @@
       });
 
       detectUserLocation();
+      setDayPlanCopy("Toronto");
     </script>
   </body>
 </html>

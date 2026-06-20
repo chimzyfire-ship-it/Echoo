@@ -470,7 +470,7 @@
 
       let events = [
         { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy late food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Tonight", "18 min", "$28"] },
-        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Weekend", "Two stops", "$$"] },
+        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Tonight", "Two stops", "$$"] },
         { id: 3, category: "movies", title: "Late film with post-show dessert", copy: "A cinema anchor paired with a place that stays open late enough to keep talking.", img: "assets/optimized/news-movie-768.jpg", webp: "assets/optimized/news-movie-768.webp", meta: ["9:40 PM", "Seats open", "$18"] },
         { id: 4, category: "food", title: "Kitchen still open", copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Open late", "12 min", "$$"] }
       ];
@@ -481,9 +481,10 @@
 
       function render() {
         const query = queryInput.value.trim().toLowerCase();
+        const planIntent = /plan|tonight|today|night|date|near|nearby|out|discover|surprise|bored|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(query);
         const filtered = events.filter((event) => {
           const inFilter = activeFilter === "all" || event.category === activeFilter;
-          const inQuery = !query || `${event.title} ${event.copy} ${event.category}`.toLowerCase().includes(query);
+          const inQuery = !query || planIntent || `${event.title} ${event.copy} ${event.category} ${event.meta.join(" ")}`.toLowerCase().includes(query);
           return inFilter && inQuery;
         });
 
@@ -500,7 +501,7 @@
               <div class="meta">${event.meta.map((item) => `<span>${item}</span>`).join("")}</div>
             </div>
           </article>
-        `).join("") || `<div class="brief"><h3>Nothing close yet</h3><p>Try a broader mood, place, or time. Plain language works best.</p></div>`;
+        `).join("") || `<div class="brief"><h3>Nothing close yet</h3><p>Try music, dates, movies, food, tonight, or near me.</p></div>`;
       }
 
       document.getElementById("filters").addEventListener("click", (event) => {
