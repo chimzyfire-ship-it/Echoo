@@ -749,6 +749,37 @@
       </div>
     </aside>
 
+    <div class="modal-backdrop" id="location-backdrop"></div>
+
+    <div class="location-modal" id="location-settings-modal">
+      <h2 id="location-modal-title">Canada launch access</h2>
+      <p id="location-modal-copy">Echoo needs your location to unlock live Canadian discovery, routing, showtimes, and local date itineraries.</p>
+      
+      <div class="instruction-section" id="location-instructions">
+        <div class="instruction-title">iPhone (iOS) Directions:</div>
+        <ol class="instruction-list">
+          <li>Open your iPhone <b>Settings</b>.</li>
+          <li>Tap <b>Privacy & Security</b> &gt; <b>Location Services</b>.</li>
+          <li>Scroll and tap your browser (e.g. <b>Safari</b> or <b>Chrome</b>).</li>
+          <li>Select <b>"While Using the App"</b> and ensure <b>Precise Location</b> is on.</li>
+        </ol>
+
+        <div class="instruction-title">Android Directions:</div>
+        <ol class="instruction-list">
+          <li>Open your phone <b>Settings</b>.</li>
+          <li>Tap <b>Apps</b> &gt; <b>Chrome</b> (or your browser app).</li>
+          <li>Tap <b>Permissions</b> &gt; <b>Location</b>.</li>
+          <li>Choose <b>"Allow only while using the app"</b>.</li>
+        </ol>
+      </div>
+
+      <div class="location-modal-buttons">
+        <button class="location-modal-btn" id="location-dismiss">Use Toronto</button>
+        <button class="location-modal-btn primary" id="location-try-again">Try Again</button>
+      </div>
+      <a class="preview-link" href="events.html?preview=1">Preview Echoo</a>
+    </div>
+
     <script src="assets/location-platform.js"></script>
     <script>
       /* Diagnostic logger for redirects */
@@ -910,41 +941,7 @@
         updatePageCity("Toronto");
       });
 
-      // Run on page load immediately
       detectUserLocation();
     </script>
-
-    <!-- Location Modal Backdrop -->
-    <div class="modal-backdrop" id="location-backdrop"></div>
-
-    <!-- Location Settings Prompt Modal -->
-    <div class="location-modal" id="location-settings-modal">
-      <h2 id="location-modal-title">Canada launch access</h2>
-      <p id="location-modal-copy">Echoo needs your location to unlock live Canadian discovery, routing, showtimes, and local date itineraries.</p>
-      
-      <div class="instruction-section" id="location-instructions">
-        <div class="instruction-title">iPhone (iOS) Directions:</div>
-        <ol class="instruction-list">
-          <li>Open your iPhone <b>Settings</b>.</li>
-          <li>Tap <b>Privacy & Security</b> &gt; <b>Location Services</b>.</li>
-          <li>Scroll and tap your browser (e.g. <b>Safari</b> or <b>Chrome</b>).</li>
-          <li>Select <b>"While Using the App"</b> and ensure <b>Precise Location</b> is on.</li>
-        </ol>
-
-        <div class="instruction-title">Android Directions:</div>
-        <ol class="instruction-list">
-          <li>Open your phone <b>Settings</b>.</li>
-          <li>Tap <b>Apps</b> &gt; <b>Chrome</b> (or your browser app).</li>
-          <li>Tap <b>Permissions</b> &gt; <b>Location</b>.</li>
-          <li>Choose <b>"Allow only while using the app"</b>.</li>
-        </ol>
-      </div>
-
-      <div class="location-modal-buttons">
-        <button class="location-modal-btn" id="location-dismiss">Use Toronto</button>
-        <button class="location-modal-btn primary" id="location-try-again">Try Again</button>
-      </div>
-      <a class="preview-link" href="events.html?preview=1">Preview Echoo</a>
-    </div>
   </body>
 </html>

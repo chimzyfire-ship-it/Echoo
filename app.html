@@ -928,38 +928,6 @@
       <div class="map-container" id="map-container"></div>
     </div>
 
-    <!-- Location Failure Backdrop (dark blur behind modal) -->
-    <div class="geo-backdrop" id="geo-backdrop"></div>
-
-    <!-- Location Settings Instruction Modal (shown when GPS is off or denied) -->
-    <div class="geo-settings-modal" id="geo-settings-modal">
-      <h3>Enable Location Services</h3>
-      <p>Echoo tried to access your location but your device GPS is off or permission was denied. Turn it on so we can verify real walking distances on your flow.</p>
-
-      <div class="geo-instructions">
-        <div class="geo-instruction-title">iPhone (iOS) Directions:</div>
-        <ol class="geo-instruction-list">
-          <li>Open your iPhone <b>Settings</b>.</li>
-          <li>Tap <b>Privacy & Security</b> &gt; <b>Location Services</b>.</li>
-          <li>Scroll and tap your browser (e.g. <b>Safari</b> or <b>Chrome</b>).</li>
-          <li>Select <b>"While Using the App"</b> and ensure <b>Precise Location</b> is on.</li>
-        </ol>
-
-        <div class="geo-instruction-title">Android Directions:</div>
-        <ol class="geo-instruction-list">
-          <li>Open your phone <b>Settings</b>.</li>
-          <li>Tap <b>Apps</b> &gt; <b>Chrome</b> (or your browser app).</li>
-          <li>Tap <b>Permissions</b> &gt; <b>Location</b>.</li>
-          <li>Choose <b>"Allow only while using the app"</b>.</li>
-        </ol>
-      </div>
-
-      <div class="geo-modal-buttons">
-        <button class="geo-modal-btn" id="geo-skip">Skip</button>
-        <button class="geo-modal-btn primary" id="geo-retry">Try Again</button>
-      </div>
-    </div>
-
     <nav class="bottom-nav" aria-label="Primary">
       <a class="active" href="app.html">Home</a>
       <a href="events.html">Explore</a>
@@ -1245,10 +1213,7 @@
       const chatSend  = document.getElementById("chat-send");
       const mapOverlay = document.getElementById("map-overlay");
       const mapClose   = document.getElementById("map-close");
-      const geoBackdrop = document.getElementById("geo-backdrop");
-      const geoModal    = document.getElementById("geo-settings-modal");
-      const geoSkipBtn  = document.getElementById("geo-skip");
-      const geoRetryBtn = document.getElementById("geo-retry");
+      
 
       /* ── Modular Map Wrapper ── */
       const EchooMap = {
@@ -1494,66 +1459,17 @@
         return resolved.city.name;
       }
 
-      function showGeoFailureModal() {
-        geoBackdrop.classList.add("active");
-        geoModal.classList.add("active");
-      }
+      function captureDeviceLocationOnAppLoad() {
+        const prefs = window.EchooLocationPlatform.readPreferences();
+        if (Number.isFinite(Number(prefs.lastLat)) && Number.isFinite(Number(prefs.lastLng)) && prefs.locationSupported !== false) {
+          preciseLat = Number(prefs.lastLat);
+          preciseLng = Number(prefs.lastLng);
+          return;
+        }
+        if (!navigator.geolocation) return;
 
-      function hideGeoFailureModal() {
-        geoBackdrop.classList.remove("active");
-        geoModal.classList.remove("active");
-      }
-
-      function requestLocationPermission() {
-        return new Promise((resolve) => {
-          if (!navigator.geolocation) {
-            console.warn("[Echoo] Geolocation API not supported.");
-            resolve({ granted: false });
-            return;
-          }
-
-          function attemptGeoFix() {
-            // Stage 1: Try high-accuracy (satellite) first.
-            // Timeout is set to 4000ms. If it times out or fails (often indoors), we fall back.
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                handleSuccess(position);
-              },
-              (error) => {
-                console.warn("[Echoo] Stage 1 (High Accuracy) failed. Code:", error.code, error.message);
-                
-                if (error.code === 1) {
-                  // PERMISSION_DENIED: User explicitly blocked or settings turned off Safari location.
-                  // Show the instruction modal immediately.
-                  showGeoFailureModal();
-                } else {
-                  // POSITION_UNAVAILABLE (2) or TIMEOUT (3): GPS satellite signal weak or indoors.
-                  // Stage 2: Fall back to low-accuracy Wi-Fi/cell tower positioning (instant indoors).
-                  console.log("[Echoo] Falling back to Stage 2 (Low Accuracy / Wi-Fi)...");
-                  navigator.geolocation.getCurrentPosition(
-                    (pos) => handleSuccess(pos),
-                    (err) => {
-                      console.warn("[Echoo] Stage 2 failed. Code:", err.code, err.message);
-                      showGeoFailureModal();
-                    },
-                    {
-                      enableHighAccuracy: false,
-                      timeout: 6000,
-                      maximumAge: 300000 // Accept a cached position up to 5 minutes old
-                    }
-                  );
-                }
-              },
-              {
-                enableHighAccuracy: true,
-                timeout: 4000,
-                maximumAge: 0 // Do not accept cached positions for high accuracy
-              }
-            );
-          }
-
-          function handleSuccess(position) {
-            hideGeoFailureModal();
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
@@ -1564,57 +1480,27 @@
                 locationSupported: false,
                 locationReason: resolved.reason
               });
-              city = "Toronto";
-              resolve({ granted: false, outsideCanada: true });
-              return;
-            }
-            const resolvedCity = resolveCity(lat, lng);
-            if (!resolvedCity) {
-              showGeoFailureModal();
-              resolve({ granted: false, outsideCanada: true });
               return;
             }
 
-            try {
-              let prefs = {};
-              const stored = localStorage.getItem("echoo_preferences");
-              if (stored) prefs = JSON.parse(stored);
-              prefs.city = resolvedCity;
-              prefs.countryCode = "CA";
-              prefs.locationSupported = true;
-              prefs.locationPrecision = "gps";
-              prefs.lastLat = lat;
-              prefs.lastLng = lng;
-              localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
-            } catch(e) {}
-
-            city = resolvedCity;
             preciseLat = lat;
             preciseLng = lng;
-            console.log(`[Echoo] GPS fix: ${lat.toFixed(4)}, ${lng.toFixed(4)} → ${resolvedCity}`);
-            resolve({ granted: true, lat, lng, city: resolvedCity });
-          }
-
-          const onSkip = () => {
-            cleanup();
-            hideGeoFailureModal();
-            resolve({ granted: false });
-          };
-          const onRetry = () => {
-            hideGeoFailureModal();
-            attemptGeoFix();
-          };
-          function cleanup() {
-            geoSkipBtn.removeEventListener("click", onSkip);
-            geoRetryBtn.removeEventListener("click", onRetry);
-          }
-
-          geoSkipBtn.addEventListener("click", onSkip);
-          geoRetryBtn.addEventListener("click", onRetry);
-
-          attemptGeoFix();
-        });
+            city = resolved.city.name;
+            window.EchooLocationPlatform.writeLocationState({
+              city,
+              countryCode: "CA",
+              locationSupported: true,
+              locationPrecision: "gps",
+              lastLat: lat,
+              lastLng: lng
+            });
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 300000 }
+        );
       }
+
+      captureDeviceLocationOnAppLoad();
 
       /* ── Simulated conversation ── */
       function delay(ms) {
@@ -1636,14 +1522,6 @@
         const textLower = userText.toLowerCase();
         const isPlanRequest = textLower.includes("plan") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out");
 
-        // iOS Safari Fix: We MUST trigger navigator.geolocation synchronously 
-        // with the user's click event. Any 'await' before calling it will drop 
-        // the user-gesture token and Safari will silently block the request.
-        let geoPromise = null;
-        if (isPlanRequest) {
-          geoPromise = requestLocationPermission();
-        }
-
         // Add user bubble
         addBubble("user", userText);
         await delay(500);
@@ -1652,20 +1530,13 @@
         if (isPlanRequest) {
           await delay(600);
           removeTyping();
-          addBubble("ai", "got it — verifying your location for real-time routing and walking distances.");
-
-          addTyping();
-
-          const geoResult = await geoPromise;
-
-          removeTyping();
-
-          if (geoResult.granted) {
-            addBubble("ai", `📍 location locked — ${geoResult.city}. coordinates verified. how many stops on your flow tonight?`);
-          } else if (geoResult.outsideCanada) {
+          const locationState = window.EchooLocationPlatform.readPreferences();
+          if (locationState.locationSupported === false) {
             addBubble("ai", "Echoo is launching live planning in Canada first. You can preview the app, but real near-me routing and checkout unlock only while you are in Canada.");
+          } else if (Number.isFinite(preciseLat) && Number.isFinite(preciseLng)) {
+            addBubble("ai", `location is already set for ${city}. how many stops on your flow tonight?`);
           } else {
-            addBubble("ai", `no worries — using ${city} city center as your base. how many stops on your flow tonight?`);
+            addBubble("ai", `using ${city} as your base. how many stops on your flow tonight?`);
           }
           
           addPills(["Single Stop", "2-Stop Flow", "3-Stop Flow", "Custom Flow"]);
