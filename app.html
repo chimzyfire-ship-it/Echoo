@@ -968,6 +968,7 @@
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/location-platform.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -1321,6 +1322,24 @@
         }
       };
 
+      window.EchooLocationPlatform.SUPPORTED_CITIES.forEach((supportedCity) => {
+        if (curationDb[supportedCity.name]) return;
+        const lat = supportedCity.coords[0];
+        const lng = supportedCity.coords[1];
+        curationDb[supportedCity.name] = {
+          "chill": [
+            { name: `${supportedCity.name} Listening Room`, tags: `Live music · ${supportedCity.province}`, coords: [lat + 0.004, lng - 0.004], img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=300&q=80", vibe: "Soft lighting, local performers, easy seating." },
+            { name: `${supportedCity.name} Late Kitchen`, tags: `Comfort Food · ${supportedCity.province}`, coords: [lat - 0.003, lng + 0.005], img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80", vibe: "Low-pressure dinner stop with warm service." },
+            { name: `${supportedCity.name} Quiet Lounge`, tags: `Cocktails · ${supportedCity.province}`, coords: [lat + 0.002, lng + 0.006], img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80", vibe: "A slower second stop for conversation." }
+          ],
+          "hype": [
+            { name: `${supportedCity.name} Live Stage`, tags: `Concerts · ${supportedCity.province}`, coords: [lat + 0.005, lng - 0.006], img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=300&q=80", vibe: "High-energy room, late crowd, fast entry." },
+            { name: `${supportedCity.name} Night Eats`, tags: `Food crawl · ${supportedCity.province}`, coords: [lat - 0.004, lng - 0.005], img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80", vibe: "Busy counter service and a quick reset between stops." },
+            { name: `${supportedCity.name} Arcade Bar`, tags: `Games · ${supportedCity.province}`, coords: [lat + 0.003, lng + 0.004], img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80", vibe: "Bright, loud, and easy for groups." }
+          ]
+        };
+      });
+
       function addSeeRouteButton(stops) {
         const card = document.createElement("div");
         card.className = "see-route-card";
@@ -1434,30 +1453,12 @@
       }
 
       /* ── Real Geolocation Detection ── */
-      const SUPPORTED_CITIES = [
-        { name: "Toronto",   coords: [43.6532, -79.3832] },
-        { name: "Vancouver", coords: [49.2827, -123.1207] },
-        { name: "Montreal",  coords: [45.5017, -73.5673] }
-      ];
-
-      function haversineDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 +
-                  Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-                  Math.sin(dLon/2)**2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      }
-
       function resolveCity(lat, lng) {
-        let closest = SUPPORTED_CITIES[0].name;
-        let minDist = Infinity;
-        SUPPORTED_CITIES.forEach(c => {
-          const d = haversineDistance(lat, lng, c.coords[0], c.coords[1]);
-          if (d < minDist) { minDist = d; closest = c.name; }
-        });
-        return closest;
+        const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+        if (!resolved.supported) {
+          return null;
+        }
+        return resolved.city.name;
       }
 
       function showGeoFailureModal() {
@@ -1523,6 +1524,11 @@
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const resolvedCity = resolveCity(lat, lng);
+            if (!resolvedCity) {
+              showGeoFailureModal();
+              resolve({ granted: false, outsideCanada: true });
+              return;
+            }
 
             try {
               let prefs = {};
@@ -1606,6 +1612,8 @@
 
           if (geoResult.granted) {
             addBubble("ai", `📍 location locked — ${geoResult.city}. coordinates verified. how many stops on your flow tonight?`);
+          } else if (geoResult.outsideCanada) {
+            addBubble("ai", "Echoo is launching live location planning in Canada first. I can still build from a Canadian city base for now.");
           } else {
             addBubble("ai", `no worries — using ${city} city center as your base. how many stops on your flow tonight?`);
           }

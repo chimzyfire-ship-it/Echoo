@@ -459,6 +459,7 @@
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/location-platform.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -467,7 +468,7 @@
         sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
       });
 
-      const events = [
+      let events = [
         { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy late food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Tonight", "18 min", "$28"] },
         { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Weekend", "Two stops", "$$"] },
         { id: 3, category: "movies", title: "Late film with post-show dessert", copy: "A cinema anchor paired with a place that stays open late enough to keep talking.", img: "assets/optimized/news-movie-768.jpg", webp: "assets/optimized/news-movie-768.webp", meta: ["9:40 PM", "Seats open", "$18"] },
@@ -540,8 +541,49 @@
 
       const CONFIG = {
         supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
-        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH"
+        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search"
       };
+
+      const normalizedCity = window.EchooLocationPlatform.cityByName(city);
+      if (!normalizedCity) {
+        city = "Toronto";
+      }
+
+      async function loadLocationEntities() {
+        try {
+          const response = await fetch(CONFIG.locationSearchUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
+              "apikey": CONFIG.supabaseAnonKey
+            },
+            body: JSON.stringify({ city, limit: 24 })
+          });
+          if (!response.ok) return;
+
+          const payload = await response.json();
+          if (!payload.supported || !Array.isArray(payload.results) || payload.results.length === 0) return;
+
+          events = payload.results.map((item, index) => ({
+            id: item.id || index + 1,
+            category: item.category || item.entity_type || "events",
+            title: item.title,
+            copy: item.description || "A nearby Echoo recommendation with verified Canadian location data.",
+            img: item.image_url || "assets/optimized/news-music-768.jpg",
+            webp: item.image_url || "assets/optimized/news-music-768.webp",
+            meta: [
+              item.city || city,
+              item.distance_meters ? `${Math.max(1, Math.round(item.distance_meters / 1000))} km` : "Canada",
+              item.starts_at ? new Date(item.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Open"
+            ]
+          }));
+          render();
+        } catch (error) {
+          console.warn("Echoo: location search unavailable, using static launch cards.", error);
+        }
+      }
 
       const localNewsDb = {
         "Toronto": [
@@ -631,6 +673,7 @@
       }
 
       loadNewsSlider();
+      loadLocationEntities();
 
       const slider = document.getElementById("news-slider");
       let scrollSpeed = 0.45;

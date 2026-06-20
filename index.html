@@ -739,6 +739,7 @@
       </div>
     </aside>
 
+    <script src="assets/location-platform.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -789,23 +790,6 @@
       const dismissBtn = document.getElementById("location-dismiss");
       const cityPill = document.querySelector(".city-pill");
 
-      const SUPPORTED_CITIES = [
-        { name: "Toronto", coords: [43.6532, -79.3832] },
-        { name: "Vancouver", coords: [49.2827, -123.1207] },
-        { name: "Montreal", coords: [45.5017, -73.5673] }
-      ];
-
-      function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Earth radius in km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-      }
-
       function updatePageCity(cityName) {
         // Update local preferences
         let prefs = {};
@@ -850,20 +834,17 @@
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
 
-            // Find closest city
-            let closestCity = SUPPORTED_CITIES[0].name;
-            let minDistance = Infinity;
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+            if (!resolved.supported) {
+              console.warn(resolved.message);
+              locationModal.classList.add("active");
+              locationBackdrop.classList.add("active");
+              updatePageCity(resolved.fallbackCity.name);
+              return;
+            }
 
-            SUPPORTED_CITIES.forEach((cityObj) => {
-              const dist = calculateDistance(lat, lng, cityObj.coords[0], cityObj.coords[1]);
-              if (dist < minDistance) {
-                minDistance = dist;
-                closestCity = cityObj.name;
-              }
-            });
-
-            console.log(`Resolved location to closest city: ${closestCity} (Distance: ${minDistance.toFixed(1)} km)`);
-            updatePageCity(closestCity);
+            console.log(`Resolved location to closest city: ${resolved.city.name} (Distance: ${resolved.city.distanceKm.toFixed(1)} km)`);
+            updatePageCity(resolved.city.name);
           },
           (error) => {
             console.warn("Geolocation failed or denied:", error);

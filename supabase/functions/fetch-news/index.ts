@@ -3,10 +3,15 @@
 // Schedule it using pg_cron or an external ping tool (e.g. once an hour).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SUPPORTED_CANADA_CITIES } from "../_shared/location.ts";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://dlezregdjpdqmooubwvl.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZXpyZWdkanBkcW1vb3Vid3ZsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTgzNjQ0MCwiZXhwIjoyMDk3NDEyNDQwfQ.FR1kBBV7mUo2Xqn2UWPnaauI8i7wzzjy_hE2Rgx-H7k";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const GNEWS_API_KEY = Deno.env.get("GNEWS_API_KEY") || ""; // Set this in Supabase env settings
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured in environment variables.");
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -46,11 +51,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const cities = ["Toronto", "Vancouver", "Montreal"];
+    const cities = SUPPORTED_CANADA_CITIES.map((city) => city.name);
     let articlesIngested = 0;
 
     // 1. Fetch Global News (Entertainment/Sports categories)
-    const globalUrl = `https://gnews.io/api/v4/top-headlines?category=entertainment&lang=en&apikey=${GNEWS_API_KEY}`;
+    const globalUrl = `https://gnews.io/api/v4/top-headlines?category=entertainment&lang=en&country=ca&apikey=${GNEWS_API_KEY}`;
     const globalRes = await fetch(globalUrl);
     if (globalRes.ok) {
       const data = await globalRes.json();
@@ -72,7 +77,7 @@ Deno.serve(async (req) => {
 
     // 2. Fetch City News
     for (const city of cities) {
-      const cityUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(city + " entertainment OR sports OR dining")}&lang=en&apikey=${GNEWS_API_KEY}`;
+      const cityUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(city + " Canada entertainment OR sports OR dining")}&lang=en&country=ca&apikey=${GNEWS_API_KEY}`;
       const cityRes = await fetch(cityUrl);
       if (cityRes.ok) {
         const data = await cityRes.json();
