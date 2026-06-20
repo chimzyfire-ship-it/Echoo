@@ -879,7 +879,7 @@
         <div class="ask-card">
           <form id="plan-form">
             <input id="plan-query" placeholder="feeling low and need a pick-me-up..." />
-            <button class="primary" type="submit">Find my night</button>
+            <button class="primary" type="submit">Build my plan</button>
           </form>
           <button class="ghost" id="surprise">Surprise me</button>
         </div>
@@ -892,7 +892,7 @@
           <p>Real places within walking distance, filtered by what's actually open right now.</p>
         </button>
         <button class="module" data-action="date">
-          <small>Date night</small>
+          <small>Date plan</small>
           <strong>Plan something worth remembering</strong>
           <p>Dinner, an experience, and a backup spot — all connected and timed.</p>
         </button>
@@ -937,6 +937,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/location-platform.js"></script>
+    <script src="assets/activity-context.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -948,7 +949,8 @@
       const CONFIG = {
         supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
         supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search"
+        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
+        planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
       };
 
       /* ── Preferences retrieval ── */
@@ -986,6 +988,16 @@
       energy = energy || "chill";
       tone = tone || "direct";
 
+      function getActivityContext() {
+        const cityRecord = window.EchooLocationPlatform.cityByName(city);
+        return window.EchooActivityContext.getActivityContext({
+          city,
+          timezone: cityRecord?.timezone
+        });
+      }
+
+      let activityContext = getActivityContext();
+
       /* ── Set up name / avatar ── */
       const initials = name.split(" ").filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "PU";
       document.getElementById("avatar").textContent = initials;
@@ -995,16 +1007,16 @@
       const headlineEl = document.getElementById("headline");
       const subheadEl = document.getElementById("subhead");
       
-      let customHeadline = `${firstName}, what are you in the mood for?`;
-      let customSubhead = `Tailoring plans for your vibe in ${city}.`;
+      let customHeadline = `${firstName}, what fits ${activityContext.label}?`;
+      let customSubhead = `Tailoring plans for your pace in ${city}.`;
 
       if (vibes.length > 0) {
         const firstVibe = vibes[0].toLowerCase();
         if (energy === "hype") {
-          customHeadline = `${firstName}, ready for a high-energy night?`;
+          customHeadline = `${firstName}, ready for something high-energy?`;
           customSubhead = `Finding loud spots, sports bars, or active crawls in ${city} matching "${firstVibe}".`;
         } else if (energy === "chill") {
-          customHeadline = `${firstName}, keeping it relaxed tonight?`;
+          customHeadline = `${firstName}, keeping it relaxed?`;
           customSubhead = `Curating cozy lounge spots, acoustic sets, or quiet dates in ${city} matching "${firstVibe}".`;
         } else {
           customHeadline = `${firstName}, what sounds good in ${city}?`;
@@ -1012,8 +1024,8 @@
         }
       } else {
         if (energy === "hype") {
-          customHeadline = `${firstName}, what's the move tonight?`;
-          customSubhead = `Tracking high-energy live shows, events, and late-night spots in ${city}.`;
+          customHeadline = `${firstName}, what's the move ${activityContext.label}?`;
+          customSubhead = `Tracking high-energy live shows, events, and active spots in ${city}.`;
         } else if (energy === "chill") {
           customHeadline = `${firstName}, looking to unwind?`;
           customSubhead = `Finding cozy date spots, hidden bars, and quiet listening rooms in ${city}.`;
@@ -1033,12 +1045,12 @@
           nearbyP.textContent = `Places within walking distance. Budget comfort: ${budget}.`;
         }
 
-        // Card 2: Date Night
+        // Card 2: Date plan
         const dateStrong = cards[1].querySelector("strong");
         const dateP = cards[1].querySelector("p");
         if (dateStrong && dateP) {
           if (vibes.includes("Cozy date spots")) {
-            dateStrong.textContent = "Your Curated Date Night";
+            dateStrong.textContent = "Your Curated Date Plan";
             dateP.textContent = `Cozy date itineraries in ${city} tailored to ${energy} energy.`;
           } else {
             dateStrong.textContent = "Custom Date Route";
@@ -1051,7 +1063,7 @@
         const ticketsP = cards[2].querySelector("p");
         if (ticketsStrong && ticketsP) {
           let ticketTopic = "live concerts";
-          if (vibes.includes("Late-night cinema")) ticketTopic = "cinema screenings";
+          if (vibes.includes("Late cinema")) ticketTopic = "cinema screenings";
           else if (vibes.includes("Sports")) ticketTopic = "sports events";
           else if (vibes.includes("Art & galleries")) ticketTopic = "gallery exhibitions";
           
@@ -1073,7 +1085,7 @@
           { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only zones", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" },
           { tag: "Jazz", text: "Queen West jazz club hosts unannounced late basement set", img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80" },
           { tag: "Food", text: "Ossington street crawl reveals new underground ramen spot", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally tonight", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally today", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
           { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset", img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80" }
         ],
         "Vancouver": [
@@ -1430,6 +1442,36 @@
         }
       }
 
+      async function fetchSmartPlan(limit, queryText) {
+        try {
+          const body = Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+            ? { lat: preciseLat, lng: preciseLng, query: queryText, energy, budget, limit }
+            : { city, query: queryText, energy, budget, limit };
+          const response = await fetch(CONFIG.planEngineUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
+              "apikey": CONFIG.supabaseAnonKey
+            },
+            body: JSON.stringify(body)
+          });
+          if (!response.ok) return [];
+          const payload = await response.json();
+          if (!payload.supported || !Array.isArray(payload.plans)) return [];
+          return payload.plans.map((item) => ({
+            name: item.title,
+            tags: `${item.category || "Echoo"} · ${item.distanceMeters ? Math.max(1, Math.round(item.distanceMeters / 1000)) + " km away" : item.city || city}`,
+            coords: [item.latitude, item.longitude],
+            img: item.imageUrl || "assets/optimized/news-music-768.jpg",
+            vibe: item.description || item.why || "Matched to your current location, time, and preferences."
+          })).filter((item) => Number.isFinite(item.coords[0]) && Number.isFinite(item.coords[1]));
+        } catch (error) {
+          console.warn("Echoo: smart plan engine failed, using nearby fallback.", error);
+          return [];
+        }
+      }
+
       /* ── Open / close ── */
       function openChat(userText) {
         chatBody.innerHTML = "";
@@ -1444,11 +1486,6 @@
       }
 
       document.getElementById("chat-close").addEventListener("click", closeChat);
-
-      /* ── Simulated conversation ── */
-      function delay(ms) {
-        return new Promise((r) => setTimeout(r, ms));
-      }
 
       /* ── Real Geolocation Detection ── */
       function resolveCity(lat, lng) {
@@ -1486,6 +1523,7 @@
             preciseLat = lat;
             preciseLng = lng;
             city = resolved.city.name;
+            activityContext = getActivityContext();
             window.EchooLocationPlatform.writeLocationState({
               city,
               countryCode: "CA",
@@ -1513,14 +1551,15 @@
 
         // If starting fresh (opening default chat window)
         if (!userText) {
-          addBubble("ai", `hey there! let's plan your night. i can help you compile a dynamic vibe flow, check local showtimes, or recommend food in ${city}.`);
-          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          activityContext = getActivityContext();
+          addBubble("ai", `hey there. i can build something that fits ${activityContext.label} in ${city}, check local showtimes, or recommend food nearby.`);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
           return;
         }
 
         // Heuristically check if this is an itinerary / routing request
         const textLower = userText.toLowerCase();
-        const isPlanRequest = textLower.includes("plan") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out");
+        const isPlanRequest = textLower.includes("plan") || textLower.includes("today") || textLower.includes("tonight") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out") || textLower.includes("morning") || textLower.includes("lunch") || textLower.includes("afternoon") || textLower.includes("evening");
 
         // Add user bubble
         addBubble("user", userText);
@@ -1534,9 +1573,9 @@
           if (locationState.locationSupported === false) {
             addBubble("ai", "Echoo is launching live planning in Canada first. You can preview the app, but real near-me routing and checkout unlock only while you are in Canada.");
           } else if (Number.isFinite(preciseLat) && Number.isFinite(preciseLng)) {
-            addBubble("ai", `location is already set for ${city}. how many stops on your flow tonight?`);
+            addBubble("ai", `location is already set for ${city}. how many stops should I build?`);
           } else {
-            addBubble("ai", `using ${city} as your base. how many stops on your flow tonight?`);
+            addBubble("ai", `using ${city} as your base. how many stops should I build?`);
           }
           
           addPills(["Single Stop", "2-Stop Flow", "3-Stop Flow", "Custom Flow"]);
@@ -1546,7 +1585,7 @@
           removeTyping();
           addBubble("ai", `noted! let me see what aligns with your ${energy} vibe and ${budget} budget preferences in ${city}.`);
           await delay(400);
-          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
         }
       }
 
@@ -1583,7 +1622,8 @@
           if (text === "2-Stop Flow") numStops = 2;
           if (text === "3-Stop Flow") numStops = 3;
 
-          const liveStops = await fetchPreciseNearby(numStops);
+          const smartStops = await fetchSmartPlan(numStops, `${activityContext.defaultQuery} ${currentEnergy} ${budget}`);
+          const liveStops = smartStops.length >= numStops ? smartStops : await fetchPreciseNearby(numStops);
           const stops = liveStops.length >= numStops ? liveStops.slice(0, numStops) : pool.slice(0, numStops);
           const usePreciseBase = Number.isFinite(preciseLat) && Number.isFinite(preciseLng);
           const preciseStops = usePreciseBase && liveStops.length < numStops
@@ -1638,9 +1678,9 @@
           await delay(200);
 
           addPills(["Make it cheaper", "Show me something else", "Clear route"]);
-        } else if (text === "Find my night") {
+        } else if (text === "Build my plan") {
           removeTyping();
-          runConversation("find my night");
+          runConversation(activityContext.defaultQuery);
         } else if (text === "Recommend food") {
           await delay(1000);
           removeTyping();
@@ -1649,13 +1689,13 @@
           const spot = cityDb["chill"][1]; // select dining/food stop
           addLocationCard(spot.img, spot.img, spot.name, spot.tags, spot.vibe, true);
           await delay(400);
-          addPills(["Find my night", "Show movie times"]);
+          addPills(["Build my plan", "Show movie times"]);
         } else if (text === "Show movie times") {
           await delay(1000);
           removeTyping();
-          addBubble("ai", `TIFF Lightbox in ${city} has screenings running tonight starting at 7:30 PM. Would you like to chain this into a flow?`);
+          addBubble("ai", `TIFF Lightbox in ${city} has screenings available today. Would you like to chain one into a flow?`);
           await delay(400);
-          addPills(["Find my night", "Recommend food"]);
+          addPills(["Build my plan", "Recommend food"]);
         } else if (text === "Make it cheaper") {
           await delay(1000);
           removeTyping();
@@ -1664,20 +1704,20 @@
           const spot = cityDb["chill"][0];
           addLocationCard(spot.img, spot.img, spot.name, `${spot.tags} · $`, "No cover fee, cheap drinks, cozy entry", false);
           await delay(400);
-          addPills(["Find my night", "Clear route"]);
+          addPills(["Build my plan", "Clear route"]);
         } else if (text === "Clear route") {
           await delay(600);
           removeTyping();
           addBubble("ai", "route cleared. what would you like to plan next?");
           await delay(400);
-          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
         } else {
           // Default pill response
           await delay(1000);
           removeTyping();
           addBubble("ai", "got it. here's another angle.");
           await delay(400);
-          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
         }
 
         pillBusy = false;
@@ -1691,7 +1731,7 @@
         removeTyping();
         addBubble("ai", "noted. let me pull something that fits that a little better.");
         await delay(400);
-        addPills(["Find my night", "Recommend food"]);
+        addPills(["Build my plan", "Recommend food"]);
       }
 
       /* ── Chat input submit ── */
@@ -1710,7 +1750,7 @@
       /* ── Form / button triggers ── */
       document.getElementById("plan-form").addEventListener("submit", (e) => {
         e.preventDefault();
-        const q = document.getElementById("plan-query").value.trim() || "something fun tonight";
+        const q = document.getElementById("plan-query").value.trim() || activityContext.defaultQuery;
         openChat(q);
       });
 
@@ -1731,7 +1771,7 @@
           if (action === "nearby") {
             openChat("what's good and open near me right now");
           } else if (action === "date") {
-            openChat("plan a date night worth remembering");
+            openChat("plan a date route worth remembering");
           } else if (action === "tickets") {
             openChat("any good shows or events with seats available");
           } else if (action === "crew") {

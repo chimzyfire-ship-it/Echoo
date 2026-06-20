@@ -736,7 +736,7 @@
             <input id="city-search" autocomplete="off" placeholder="What’s happening in Toronto today?" />
             <button class="send" type="submit" aria-label="Search plans"></button>
           </form>
-          <button class="main-cta" id="day-plan" type="button">Plan my night</button>
+          <button class="main-cta" id="day-plan" type="button">Plan what’s next</button>
           <button class="bored-cta" id="bored-plan" type="button">I’m bored. Surprise me.</button>
         </section>
       </main>
@@ -791,6 +791,7 @@
     </div>
 
     <script src="assets/location-platform.js"></script>
+    <script src="assets/activity-context.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -807,17 +808,24 @@
       const locationProof = document.getElementById("location-proof");
       const dayPlanBtn = document.getElementById("day-plan");
 
-      function currentDayLabel() {
-        return new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(new Date());
+      function activityContext(cityName) {
+        const cityRecord = window.EchooLocationPlatform.cityByName(cityName);
+        return window.EchooActivityContext.getActivityContext({
+          city: cityName,
+          timezone: cityRecord?.timezone
+        });
       }
 
       function planQuery(cityName) {
-        return `${currentDayLabel()} night plan in ${cityName}`;
+        return activityContext(cityName).planQuery;
       }
 
       function setDayPlanCopy(cityName) {
-        if (dayPlanBtn) dayPlanBtn.textContent = `Plan my ${currentDayLabel()} night`;
+        const context = activityContext(cityName);
+        if (dayPlanBtn) dayPlanBtn.textContent = context.planCta;
         if (sheetLink) sheetLink.href = `events.html?query=${encodeURIComponent(planQuery(cityName))}`;
+        if (searchInput) searchInput.placeholder = context.searchPlaceholder;
+        return context;
       }
 
       function openSheet(title, copy, href) {
@@ -837,11 +845,13 @@
       });
 
       dayPlanBtn.addEventListener("click", () => {
-        openSheet(`${currentDayLabel()} mode is ready.`, "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=${encodeURIComponent(planQuery("Toronto"))}`);
+        const context = activityContext("Toronto");
+        openSheet(`Built for ${context.label}.`, "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=${encodeURIComponent(context.planQuery)}`);
       });
 
       document.getElementById("bored-plan").addEventListener("click", () => {
-        openSheet("Let’s make boredom useful.", "We’ll skip the obvious list and give you three nearby ideas with different energy levels.", "events.html?query=surprise me tonight");
+        const context = activityContext("Toronto");
+        openSheet("Let’s make boredom useful.", "We’ll skip the obvious list and give you three nearby ideas with different energy levels.", `events.html?query=${encodeURIComponent(`surprise me ${context.label} in Toronto`)}`);
       });
 
       document.getElementById("sheet-close").addEventListener("click", () => {
@@ -888,13 +898,10 @@
             ? `Precise location on · ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${coords.accuracy ? ` · ±${Math.round(coords.accuracy)}m` : ""}`
             : `Using ${cityName} as your city base`;
         }
-        if (searchInput) {
-          searchInput.placeholder = `What’s happening in ${cityName} today?`;
-        }
-        setDayPlanCopy(cityName);
+        const context = setDayPlanCopy(cityName);
 
         dayPlanBtn.onclick = () => {
-          openSheet(`${currentDayLabel()} mode is ready.`, "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=${encodeURIComponent(planQuery(cityName))}`);
+          openSheet(`Built for ${context.label}.`, "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=${encodeURIComponent(context.planQuery)}`);
         };
       }
 

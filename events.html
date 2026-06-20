@@ -419,7 +419,7 @@
           <h1>Find the plan people answer yes to.</h1>
         </div>
         <form class="search" id="search-form">
-          <input id="query" placeholder="What sounds good tonight?">
+          <input id="query" placeholder="What sounds good right now?">
           <button class="primary" type="submit">Find</button>
         </form>
       </section>
@@ -460,6 +460,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/location-platform.js"></script>
+    <script src="assets/activity-context.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -469,8 +470,8 @@
       });
 
       let events = [
-        { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy late food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Tonight", "18 min", "$28"] },
-        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Tonight", "Two stops", "$$"] },
+        { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Today", "18 min", "$28"] },
+        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Today", "Two stops", "$$"] },
         { id: 3, category: "movies", title: "Late film with post-show dessert", copy: "A cinema anchor paired with a place that stays open late enough to keep talking.", img: "assets/optimized/news-movie-768.jpg", webp: "assets/optimized/news-movie-768.webp", meta: ["9:40 PM", "Seats open", "$18"] },
         { id: 4, category: "food", title: "Kitchen still open", copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Open late", "12 min", "$$"] }
       ];
@@ -481,7 +482,7 @@
 
       function render() {
         const query = queryInput.value.trim().toLowerCase();
-        const planIntent = /plan|tonight|today|night|date|near|nearby|out|discover|surprise|bored|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(query);
+        const planIntent = /plan|today|tonight|night|date|near|nearby|out|discover|surprise|bored|morning|lunch|afternoon|evening|late|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(query);
         const filtered = events.filter((event) => {
           const inFilter = activeFilter === "all" || event.category === activeFilter;
           const inQuery = !query || planIntent || `${event.title} ${event.copy} ${event.category} ${event.meta.join(" ")}`.toLowerCase().includes(query);
@@ -501,7 +502,7 @@
               <div class="meta">${event.meta.map((item) => `<span>${item}</span>`).join("")}</div>
             </div>
           </article>
-        `).join("") || `<div class="brief"><h3>Nothing close yet</h3><p>Try music, dates, movies, food, tonight, or near me.</p></div>`;
+        `).join("") || `<div class="brief"><h3>Nothing close yet</h3><p>Try music, dates, movies, food, today, or near me.</p></div>`;
       }
 
       document.getElementById("filters").addEventListener("click", (event) => {
@@ -521,7 +522,7 @@
       const filter = params.get("filter");
       const query = params.get("query") || params.get("ai");
       const previewMode = params.get("preview") === "1" || window.EchooLocationPlatform.readPreferences().locationSupported === false;
-      if (query) queryInput.value = query === "bored" ? "simple surprising tonight" : query;
+      if (query) queryInput.value = query === "bored" ? "simple surprising plan today" : query;
       if (filter) {
         const button = document.querySelector(`[data-filter="${filter}"]`);
         if (button) button.click();
@@ -549,13 +550,26 @@
       const CONFIG = {
         supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
         supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search"
+        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
+        planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
       };
 
       const normalizedCity = window.EchooLocationPlatform.cityByName(city);
       if (!normalizedCity) {
         city = "Toronto";
       }
+
+      function activityContext() {
+        const cityRecord = window.EchooLocationPlatform.cityByName(city);
+        return window.EchooActivityContext.getActivityContext({
+          city,
+          timezone: cityRecord?.timezone
+        });
+      }
+
+      const currentContext = activityContext();
+      queryInput.placeholder = currentContext.searchPlaceholder;
+      if (!queryInput.value) queryInput.value = currentContext.defaultQuery;
 
       async function loadLocationEntities() {
         if (previewMode) {
@@ -600,13 +614,55 @@
         }
       }
 
+      async function loadPlanEngine() {
+        if (previewMode) return false;
+        const queryText = queryInput.value.trim() || activityContext().defaultQuery;
+        try {
+          const response = await fetch(CONFIG.planEngineUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
+              "apikey": CONFIG.supabaseAnonKey
+            },
+            body: JSON.stringify(
+              Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+                ? { lat: preciseLat, lng: preciseLng, query: queryText, limit: 8 }
+                : { city, query: queryText, limit: 8 }
+            )
+          });
+          if (!response.ok) return false;
+          const payload = await response.json();
+          if (!payload.supported || !Array.isArray(payload.plans) || payload.plans.length === 0) return false;
+
+          events = payload.plans.map((item, index) => ({
+            id: item.id || index + 1,
+            category: item.category || "plan",
+            title: item.title,
+            copy: item.description || item.why || "A smart Echoo pick matched to your current moment.",
+            img: item.imageUrl || "assets/optimized/news-music-768.jpg",
+            webp: item.imageUrl || "assets/optimized/news-music-768.webp",
+            meta: [
+              payload.context?.dayName || "Today",
+              item.distanceMeters ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away` : item.city || city,
+              index === 0 ? "Best fit" : "Backup"
+            ]
+          }));
+          render();
+          return true;
+        } catch (error) {
+          console.warn("Echoo: plan engine unavailable, falling back to location search.", error);
+          return false;
+        }
+      }
+
       const localNewsDb = {
         "Toronto": [
           { tag: "TIFF", text: "Midnight Madness lineups announced for September", img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80" },
           { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only zones", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" },
           { tag: "Jazz", text: "Queen West jazz club hosts unannounced late basement set", img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80" },
           { tag: "Food", text: "Ossington street crawl reveals new underground ramen spot", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally tonight", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally today", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
           { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset", img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80" }
         ],
         "Vancouver": [
@@ -688,7 +744,9 @@
       }
 
       loadNewsSlider();
-      loadLocationEntities();
+      loadPlanEngine().then((loaded) => {
+        if (!loaded) loadLocationEntities();
+      });
 
       const slider = document.getElementById("news-slider");
       let scrollSpeed = 0.45;
