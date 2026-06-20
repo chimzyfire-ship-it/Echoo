@@ -1523,6 +1523,18 @@
             hideGeoFailureModal();
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+            if (!resolved.supported) {
+              window.EchooLocationPlatform.writeLocationState({
+                city: "Toronto",
+                countryCode: "outside_ca",
+                locationSupported: false,
+                locationReason: resolved.reason
+              });
+              city = "Toronto";
+              resolve({ granted: false, outsideCanada: true });
+              return;
+            }
             const resolvedCity = resolveCity(lat, lng);
             if (!resolvedCity) {
               showGeoFailureModal();
@@ -1535,6 +1547,8 @@
               const stored = localStorage.getItem("echoo_preferences");
               if (stored) prefs = JSON.parse(stored);
               prefs.city = resolvedCity;
+              prefs.countryCode = "CA";
+              prefs.locationSupported = true;
               prefs.lastLat = lat;
               prefs.lastLng = lng;
               localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
@@ -1613,7 +1627,7 @@
           if (geoResult.granted) {
             addBubble("ai", `📍 location locked — ${geoResult.city}. coordinates verified. how many stops on your flow tonight?`);
           } else if (geoResult.outsideCanada) {
-            addBubble("ai", "Echoo is launching live location planning in Canada first. I can still build from a Canadian city base for now.");
+            addBubble("ai", "Echoo is launching live planning in Canada first. You can preview the app, but real near-me routing and checkout unlock only while you are in Canada.");
           } else {
             addBubble("ai", `no worries — using ${city} city center as your base. how many stops on your flow tonight?`);
           }

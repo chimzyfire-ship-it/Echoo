@@ -3,8 +3,12 @@ import {
   getSupabaseAdmin,
   isInsideCanadaBounds,
   jsonResponse,
+  logLocationEvent,
   nearestSupportedCity,
   normalizeCityName,
+  readLocationCache,
+  sha256Hex,
+  writeLocationCache,
 } from "../_shared/location.ts";
 
 type NormalizePayload = {
@@ -18,7 +22,37 @@ type NormalizePayload = {
   confidenceScore?: number;
 };
 
+async function geocodeWithOpenStreetMap(query: string) {
+  const url = new URL("https://nominatim.openstreetmap.org/search");
+  url.searchParams.set("q", query);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("limit", "1");
+  url.searchParams.set("countrycodes", "ca");
+  url.searchParams.set("addressdetails", "1");
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Accept": "application/json",
+      "User-Agent": "Echoo MVP geocoder (contact: admin@echoo.app)",
+    },
+  });
+  if (!response.ok) return null;
+
+  const results = await response.json();
+  const first = Array.isArray(results) ? results[0] : null;
+  if (!first) return null;
+
+  return {
+    lat: Number(first.lat),
+    lng: Number(first.lon),
+    formattedAddress: first.display_name as string,
+    provider: "openstreetmap",
+    providerId: String(first.place_id),
+  };
+}
+
 Deno.serve(async (req) => {
+  const startedAt = Date.now();
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
@@ -29,10 +63,40 @@ Deno.serve(async (req) => {
 
   try {
     const payload = (await req.json()) as NormalizePayload;
-    const lat = Number(payload.lat);
-    const lng = Number(payload.lng);
+    const supabase = getSupabaseAdmin();
+    let lat = Number(payload.lat);
+    let lng = Number(payload.lng);
+    let formattedAddress = payload.formattedAddress || payload.title;
+    let placeProvider = payload.placeProvider || null;
+    let placeProviderId = payload.placeProviderId || null;
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      const query = [payload.formattedAddress || payload.title, payload.city, "Canada"].filter(Boolean).join(", ");
+      if (query.trim().length > 8) {
+        const cacheKey = await sha256Hex(`geocode:v1:${query.toLowerCase()}`);
+        const cached = await readLocationCache(supabase, cacheKey);
+        const geocoded = cached || await geocodeWithOpenStreetMap(query);
+        if (geocoded) {
+          await writeLocationCache(supabase, cacheKey, geocoded, 60 * 60 * 24 * 14);
+          lat = Number(geocoded.lat);
+          lng = Number(geocoded.lng);
+          formattedAddress = geocoded.formattedAddress || formattedAddress;
+          placeProvider = placeProvider || geocoded.provider;
+          placeProviderId = placeProviderId || geocoded.providerId;
+        }
+      }
+    }
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      await logLocationEvent(supabase, {
+        functionName: "location-normalize",
+        eventType: "geocode_failed",
+        status: "needs_review",
+        durationMs: Date.now() - startedAt,
+        reason: "missing_coordinates",
+        request: { title: payload.title, formattedAddress: payload.formattedAddress, city: payload.city },
+        responseSummary: { locationStatus: "needs_review" },
+      });
       return jsonResponse({
         supported: false,
         locationStatus: "needs_review",
@@ -42,6 +106,15 @@ Deno.serve(async (req) => {
     }
 
     if (!isInsideCanadaBounds(lat, lng)) {
+      await logLocationEvent(supabase, {
+        functionName: "location-normalize",
+        eventType: "unsupported_region",
+        status: "blocked",
+        durationMs: Date.now() - startedAt,
+        reason: "outside_canada",
+        request: { title: payload.title, lat, lng, city: payload.city },
+        responseSummary: { supported: false },
+      });
       return jsonResponse({
         supported: false,
         locationStatus: "needs_review",
@@ -57,8 +130,7 @@ Deno.serve(async (req) => {
     const isSupportedRegion = true;
     const locationStatus = confidenceScore >= 0.65 ? "published" : "needs_review";
 
-    const supabase = getSupabaseAdmin();
-    const upsertOptions = payload.placeProvider && payload.placeProviderId
+    const upsertOptions = placeProvider && placeProviderId
       ? { onConflict: "place_provider,place_provider_id" }
       : {};
     const { data, error } = await supabase
@@ -67,12 +139,12 @@ Deno.serve(async (req) => {
         country_code: "CA",
         admin_area_1: region.province,
         city: region.name,
-        formatted_address: payload.formattedAddress || payload.title || `${region.name}, Canada`,
+        formatted_address: formattedAddress || `${region.name}, Canada`,
         latitude: lat,
         longitude: lng,
         timezone: region.timezone,
-        place_provider: payload.placeProvider || null,
-        place_provider_id: payload.placeProviderId || null,
+        place_provider: placeProvider,
+        place_provider_id: placeProviderId,
         confidence_score: confidenceScore,
         is_supported_region: isSupportedRegion,
         location_status: locationStatus,
@@ -81,6 +153,17 @@ Deno.serve(async (req) => {
       .single();
 
     if (error) throw error;
+
+    await logLocationEvent(supabase, {
+      functionName: "location-normalize",
+      eventType: Date.now() - startedAt > 1000 ? "slow_geocode" : "normalize",
+      durationMs: Date.now() - startedAt,
+      countryCode: "CA",
+      adminArea1: region.province,
+      city: region.name,
+      request: { title: payload.title, city: payload.city, hadCoordinates: Number.isFinite(payload.lat) && Number.isFinite(payload.lng) },
+      responseSummary: { locationStatus, placeId: data.id, provider: placeProvider },
+    });
 
     return jsonResponse({
       supported: true,

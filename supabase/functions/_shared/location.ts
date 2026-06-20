@@ -55,6 +55,72 @@ export function getSupabaseAdmin() {
   });
 }
 
+export async function sha256Hex(input: string): Promise<string> {
+  const bytes = new TextEncoder().encode(input);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash))
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export async function readLocationCache(supabase: ReturnType<typeof createClient>, cacheKey: string) {
+  const { data, error } = await supabase
+    .from("location_query_cache")
+    .select("payload, expires_at")
+    .eq("cache_key", cacheKey)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  if (new Date(data.expires_at).getTime() <= Date.now()) return null;
+  return data.payload;
+}
+
+export async function writeLocationCache(
+  supabase: ReturnType<typeof createClient>,
+  cacheKey: string,
+  payload: unknown,
+  ttlSeconds = 120,
+) {
+  await supabase
+    .from("location_query_cache")
+    .upsert({
+      cache_key: cacheKey,
+      payload,
+      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+    }, { onConflict: "cache_key" });
+}
+
+export async function logLocationEvent(
+  supabase: ReturnType<typeof createClient>,
+  event: {
+    functionName: string;
+    eventType: string;
+    status?: string;
+    cacheHit?: boolean;
+    durationMs?: number;
+    countryCode?: string | null;
+    adminArea1?: string | null;
+    city?: string | null;
+    reason?: string | null;
+    request?: Record<string, unknown>;
+    responseSummary?: Record<string, unknown>;
+  },
+) {
+  await supabase.from("location_request_logs").insert({
+    function_name: event.functionName,
+    event_type: event.eventType,
+    status: event.status || "ok",
+    cache_hit: event.cacheHit || false,
+    duration_ms: event.durationMs,
+    country_code: event.countryCode,
+    admin_area_1: event.adminArea1,
+    city: event.city,
+    reason: event.reason,
+    request: event.request || {},
+    response_summary: event.responseSummary || {},
+  });
+}
+
 export function isInsideCanadaBounds(lat: number, lng: number): boolean {
   return (
     Number.isFinite(lat) &&
@@ -109,4 +175,3 @@ export function clampLimit(value: unknown): number {
   if (!Number.isFinite(parsed)) return 50;
   return Math.max(1, Math.min(Math.round(parsed), 100));
 }
-

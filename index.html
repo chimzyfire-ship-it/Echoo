@@ -669,6 +669,16 @@
       .location-modal-btn:hover {
         background: var(--panel);
       }
+      .location-modal .preview-link {
+        display: inline-flex;
+        margin-top: 8px;
+        color: var(--signal);
+        font-size: 12px;
+        font-weight: 850;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
       /* Blurred overlay behind modal */
       .modal-backdrop {
         position: fixed;
@@ -788,6 +798,9 @@
       const locationBackdrop = document.getElementById("location-backdrop");
       const tryAgainBtn = document.getElementById("location-try-again");
       const dismissBtn = document.getElementById("location-dismiss");
+      const modalTitle = document.getElementById("location-modal-title");
+      const modalCopy = document.getElementById("location-modal-copy");
+      const modalInstructions = document.getElementById("location-instructions");
       const cityPill = document.querySelector(".city-pill");
 
       function updatePageCity(cityName) {
@@ -797,8 +810,12 @@
           const stored = localStorage.getItem("echoo_preferences");
           if (stored) prefs = JSON.parse(stored);
         } catch(e) {}
-        prefs.city = cityName;
-        localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
+        window.EchooLocationPlatform.writeLocationState({
+          ...prefs,
+          city: cityName,
+          countryCode: "CA",
+          locationSupported: true
+        });
 
         // Update DOM elements
         if (cityPill) cityPill.textContent = `${cityName} today`;
@@ -821,7 +838,8 @@
       function detectUserLocation() {
         if (!navigator.geolocation) {
           console.warn("Geolocation not supported by browser.");
-          updatePageCity("Toronto"); // Default fallback
+          showCanadaPreviewModal("Location is off", "Choose a Canadian launch city manually, or continue previewing Echoo until location is available.");
+          updatePageCity("Toronto");
           return;
         }
 
@@ -837,9 +855,13 @@
             const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
             if (!resolved.supported) {
               console.warn(resolved.message);
-              locationModal.classList.add("active");
-              locationBackdrop.classList.add("active");
-              updatePageCity(resolved.fallbackCity.name);
+              window.EchooLocationPlatform.writeLocationState({
+                city: resolved.fallbackCity.name,
+                countryCode: "outside_ca",
+                locationSupported: false,
+                locationReason: resolved.reason
+              });
+              showCanadaPreviewModal("Canada launch only", "You can preview Echoo, but live discovery, routing, booking, and checkout are available only in Canada during MVP.");
               return;
             }
 
@@ -848,12 +870,18 @@
           },
           (error) => {
             console.warn("Geolocation failed or denied:", error);
-            // If denied or prompt ignored, show custom instructions modal
-            locationModal.classList.add("active");
-            locationBackdrop.classList.add("active");
+            showCanadaPreviewModal("Location access needed", "Echoo uses device location to unlock live Canada discovery. You can still choose a launch city manually.");
           },
           { timeout: 8000 }
         );
+      }
+
+      function showCanadaPreviewModal(title, copy) {
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalCopy) modalCopy.textContent = copy;
+        if (modalInstructions) modalInstructions.hidden = title === "Canada launch only";
+        locationModal.classList.add("active");
+        locationBackdrop.classList.add("active");
       }
 
       // Try again triggers detection again
@@ -865,6 +893,12 @@
       dismissBtn.addEventListener("click", () => {
         locationModal.classList.remove("active");
         locationBackdrop.classList.remove("active");
+        window.EchooLocationPlatform.writeLocationState({
+          city: "Toronto",
+          countryCode: "CA",
+          locationSupported: true,
+          locationPrecision: "manual_city"
+        });
         updatePageCity("Toronto");
       });
 
@@ -877,10 +911,10 @@
 
     <!-- Location Settings Prompt Modal -->
     <div class="location-modal" id="location-settings-modal">
-      <h2>Location Access Required</h2>
-      <p>Echoo needs your phone's location access to find and verify curated vibe flows, showtimes, and date itineraries near you.</p>
+      <h2 id="location-modal-title">Canada launch access</h2>
+      <p id="location-modal-copy">Echoo needs your location to unlock live Canadian discovery, routing, showtimes, and local date itineraries.</p>
       
-      <div class="instruction-section">
+      <div class="instruction-section" id="location-instructions">
         <div class="instruction-title">iPhone (iOS) Directions:</div>
         <ol class="instruction-list">
           <li>Open your iPhone <b>Settings</b>.</li>
@@ -899,9 +933,10 @@
       </div>
 
       <div class="location-modal-buttons">
-        <button class="location-modal-btn" id="location-dismiss">Skip</button>
+        <button class="location-modal-btn" id="location-dismiss">Use Toronto</button>
         <button class="location-modal-btn primary" id="location-try-again">Try Again</button>
       </div>
+      <a class="preview-link" href="events.html?preview=1">Preview Echoo</a>
     </div>
   </body>
 </html>

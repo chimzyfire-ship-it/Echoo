@@ -5,8 +5,12 @@ import {
   getSupabaseAdmin,
   isInsideCanadaBounds,
   jsonResponse,
+  logLocationEvent,
   nearestSupportedCity,
   normalizeCityName,
+  readLocationCache,
+  sha256Hex,
+  writeLocationCache,
 } from "../_shared/location.ts";
 
 type SearchPayload = {
@@ -26,6 +30,7 @@ function optionalNumber(value: unknown): number | undefined {
 }
 
 Deno.serve(async (req) => {
+  const startedAt = Date.now();
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
@@ -50,18 +55,51 @@ Deno.serve(async (req) => {
     const radiusMeters = clampRadiusMeters(payload.radiusMeters);
     const limit = clampLimit(payload.limit);
     const supabase = getSupabaseAdmin();
+    const cacheKey = await sha256Hex(JSON.stringify({
+      v: 1,
+      lat: payload.lat ? Number(payload.lat).toFixed(4) : null,
+      lng: payload.lng ? Number(payload.lng).toFixed(4) : null,
+      city: payload.city || null,
+      radiusMeters,
+      entityType: payload.entityType || null,
+      category: payload.category || null,
+      limit,
+    }));
+    const cached = await readLocationCache(supabase, cacheKey);
+    if (cached) {
+      await logLocationEvent(supabase, {
+        functionName: "location-search",
+        eventType: "cache_hit",
+        cacheHit: true,
+        durationMs: Date.now() - startedAt,
+        city: typeof payload.city === "string" ? payload.city : null,
+        request: { city: payload.city, radiusMeters, entityType: payload.entityType, category: payload.category, limit },
+        responseSummary: { cached: true },
+      });
+      return jsonResponse(cached);
+    }
 
     if (Number.isFinite(payload.lat) && Number.isFinite(payload.lng)) {
       const lat = Number(payload.lat);
       const lng = Number(payload.lng);
 
       if (!isInsideCanadaBounds(lat, lng)) {
-        return jsonResponse({
+        const response = {
           supported: false,
           reason: "outside_canada",
           message: "Echoo is launching location discovery in Canada first.",
           results: [],
-        }, 200);
+        };
+        await logLocationEvent(supabase, {
+          functionName: "location-search",
+          eventType: "unsupported_region",
+          status: "blocked",
+          durationMs: Date.now() - startedAt,
+          reason: "outside_canada",
+          request: { lat, lng, radiusMeters, limit },
+          responseSummary: { supported: false },
+        });
+        return jsonResponse(response, 200);
       }
 
       const region = nearestSupportedCity(lat, lng);
@@ -76,23 +114,45 @@ Deno.serve(async (req) => {
 
       if (error) throw error;
 
-      return jsonResponse({
+      const response = {
         supported: true,
         mode: "nearby",
         region,
         radiusMeters,
         results: data || [],
+      };
+      await writeLocationCache(supabase, cacheKey, response, 90);
+      await logLocationEvent(supabase, {
+        functionName: "location-search",
+        eventType: Date.now() - startedAt > 750 ? "slow_search" : "search",
+        durationMs: Date.now() - startedAt,
+        countryCode: "CA",
+        adminArea1: region.province,
+        city: region.name,
+        request: { lat, lng, radiusMeters, entityType: payload.entityType, category: payload.category, limit },
+        responseSummary: { count: response.results.length },
       });
+      return jsonResponse(response);
     }
 
     const city = normalizeCityName(payload.city || "Toronto");
     if (!city) {
-      return jsonResponse({
+      const response = {
         supported: false,
         reason: "unsupported_city",
         message: "Echoo is active across Canada first. Choose a supported Canadian launch city.",
         results: [],
-      }, 200);
+      };
+      await logLocationEvent(supabase, {
+        functionName: "location-search",
+        eventType: "unsupported_region",
+        status: "blocked",
+        durationMs: Date.now() - startedAt,
+        reason: "unsupported_city",
+        request: { city: payload.city, limit },
+        responseSummary: { supported: false },
+      });
+      return jsonResponse(response, 200);
     }
 
     const { data, error } = await supabase.rpc("search_region_entities", {
@@ -106,12 +166,24 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
-    return jsonResponse({
+    const response = {
       supported: true,
       mode: "city",
       region: city,
       results: data || [],
+    };
+    await writeLocationCache(supabase, cacheKey, response, 180);
+    await logLocationEvent(supabase, {
+      functionName: "location-search",
+      eventType: Date.now() - startedAt > 750 ? "slow_search" : "search",
+      durationMs: Date.now() - startedAt,
+      countryCode: "CA",
+      adminArea1: city.province,
+      city: city.name,
+      request: { city: payload.city, entityType: payload.entityType, category: payload.category, limit },
+      responseSummary: { count: response.results.length },
     });
+    return jsonResponse(response);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown location search error";
     return jsonResponse({ error: message }, 500);

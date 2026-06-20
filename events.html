@@ -519,6 +519,7 @@
       const params = new URLSearchParams(window.location.search);
       const filter = params.get("filter");
       const query = params.get("query") || params.get("ai");
+      const previewMode = params.get("preview") === "1" || window.EchooLocationPlatform.readPreferences().locationSupported === false;
       if (query) queryInput.value = query === "bored" ? "simple surprising tonight" : query;
       if (filter) {
         const button = document.querySelector(`[data-filter="${filter}"]`);
@@ -551,6 +552,10 @@
       }
 
       async function loadLocationEntities() {
+        if (previewMode) {
+          console.info("Echoo: preview mode active; live Canada location search is paused.");
+          return;
+        }
         try {
           const response = await fetch(CONFIG.locationSearchUrl, {
             method: "POST",

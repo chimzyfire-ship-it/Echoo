@@ -76,6 +76,26 @@
     };
   }
 
+  function readPreferences() {
+    try {
+      return JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function writeLocationState(state) {
+    const prefs = readPreferences();
+    const next = { ...prefs, ...state, locationCheckedAt: new Date().toISOString() };
+    localStorage.setItem("echoo_preferences", JSON.stringify(next));
+    return next;
+  }
+
+  function isCanadaActive() {
+    const prefs = readPreferences();
+    return prefs.countryCode === "CA" && prefs.locationSupported !== false;
+  }
+
   window.EchooLocationPlatform = {
     CANADA_BOUNDS,
     SUPPORTED_CITIES,
@@ -83,6 +103,9 @@
     distanceKm,
     isInsideCanadaBounds,
     nearestSupportedCity,
-    resolveCoordinates
+    readPreferences,
+    resolveCoordinates,
+    isCanadaActive,
+    writeLocationState
   };
 })();
