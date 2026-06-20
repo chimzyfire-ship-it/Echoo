@@ -1479,37 +1479,64 @@
           }
 
           function attemptGeoFix() {
+            // Stage 1: Try high-accuracy (satellite) first.
+            // Timeout is set to 4000ms. If it times out or fails (often indoors), we fall back.
             navigator.geolocation.getCurrentPosition(
               (position) => {
-                hideGeoFailureModal();
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const resolvedCity = resolveCity(lat, lng);
-
-                try {
-                  let prefs = {};
-                  const stored = localStorage.getItem("echoo_preferences");
-                  if (stored) prefs = JSON.parse(stored);
-                  prefs.city = resolvedCity;
-                  prefs.lastLat = lat;
-                  prefs.lastLng = lng;
-                  localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
-                } catch(e) {}
-
-                city = resolvedCity;
-                console.log(`[Echoo] GPS fix: ${lat.toFixed(4)}, ${lng.toFixed(4)} → ${resolvedCity}`);
-                resolve({ granted: true, lat, lng, city: resolvedCity });
+                handleSuccess(position);
               },
               (error) => {
-                console.warn("[Echoo] Geolocation error:", error.code, error.message);
-                showGeoFailureModal();
+                console.warn("[Echoo] Stage 1 (High Accuracy) failed. Code:", error.code, error.message);
+                
+                if (error.code === 1) {
+                  // PERMISSION_DENIED: User explicitly blocked or settings turned off Safari location.
+                  // Show the instruction modal immediately.
+                  showGeoFailureModal();
+                } else {
+                  // POSITION_UNAVAILABLE (2) or TIMEOUT (3): GPS satellite signal weak or indoors.
+                  // Stage 2: Fall back to low-accuracy Wi-Fi/cell tower positioning (instant indoors).
+                  console.log("[Echoo] Falling back to Stage 2 (Low Accuracy / Wi-Fi)...");
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => handleSuccess(pos),
+                    (err) => {
+                      console.warn("[Echoo] Stage 2 failed. Code:", err.code, err.message);
+                      showGeoFailureModal();
+                    },
+                    {
+                      enableHighAccuracy: false,
+                      timeout: 6000,
+                      maximumAge: 300000 // Accept a cached position up to 5 minutes old
+                    }
+                  );
+                }
               },
               {
                 enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
+                timeout: 4000,
+                maximumAge: 0 // Do not accept cached positions for high accuracy
               }
             );
+          }
+
+          function handleSuccess(position) {
+            hideGeoFailureModal();
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const resolvedCity = resolveCity(lat, lng);
+
+            try {
+              let prefs = {};
+              const stored = localStorage.getItem("echoo_preferences");
+              if (stored) prefs = JSON.parse(stored);
+              prefs.city = resolvedCity;
+              prefs.lastLat = lat;
+              prefs.lastLng = lng;
+              localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
+            } catch(e) {}
+
+            city = resolvedCity;
+            console.log(`[Echoo] GPS fix: ${lat.toFixed(4)}, ${lng.toFixed(4)} → ${resolvedCity}`);
+            resolve({ granted: true, lat, lng, city: resolvedCity });
           }
 
           const onSkip = () => {
