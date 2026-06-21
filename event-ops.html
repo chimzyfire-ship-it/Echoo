@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Echoo Event Ops</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080907;
+        --panel: #11130f;
+        --panel-2: #191b15;
+        --ink: #f5f1e8;
+        --muted: #a8a397;
+        --line: rgba(245, 241, 232, 0.14);
+        --signal: #e7c98e;
+        --danger: #ef7777;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(90deg, rgba(245,241,232,0.035) 1px, transparent 1px) 0 0 / 34px 34px,
+          var(--bg);
+      }
+      a { color: inherit; text-decoration: none; }
+      button, input, select { font: inherit; }
+      main { width: min(1180px, 100%); margin: 0 auto; padding: 28px 16px 80px; }
+      header { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 18px; }
+      h1 { margin: 0; font-size: clamp(36px, 8vw, 82px); line-height: 0.88; letter-spacing: -0.075em; }
+      h2 { margin: 0; letter-spacing: -0.04em; }
+      p { color: var(--muted); line-height: 1.45; }
+      .panel, .card {
+        border: 1px solid var(--line);
+        background: rgba(17, 19, 15, 0.92);
+        padding: 16px;
+      }
+      .grid { display: grid; gap: 14px; }
+      .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+      .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .stat { border: 1px solid var(--line); background: var(--panel-2); padding: 14px; }
+      .stat strong { display: block; font-size: 28px; letter-spacing: -0.05em; }
+      .meta { color: var(--muted); font-size: 13px; font-weight: 750; }
+      input, select {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        outline: 0;
+        color: var(--ink);
+        background: rgba(8, 9, 7, 0.84);
+        padding: 0 10px;
+      }
+      button {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        color: var(--ink);
+        background: rgba(245, 241, 232, 0.045);
+        cursor: pointer;
+        font-weight: 950;
+      }
+      button.primary { background: var(--signal); color: #151311; border-color: transparent; }
+      button.danger { color: var(--danger); }
+      .table { display: grid; gap: 8px; }
+      .row {
+        display: grid;
+        gap: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel-2);
+        padding: 12px;
+      }
+      .tier-row { grid-template-columns: minmax(0, 1fr); }
+      .attendee-tools { display: grid; gap: 8px; }
+      .empty { border: 1px dashed var(--line); color: var(--muted); padding: 16px; }
+      @media (min-width: 860px) {
+        .layout { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
+        .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .tier-row { grid-template-columns: minmax(0, 1.2fr) 0.7fr 0.7fr 0.8fr auto; align-items: end; }
+        .attendee-tools { grid-template-columns: 1fr 180px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <div class="meta">Owner operations</div>
+          <h1 id="title">Event Ops</h1>
+          <p id="subtitle">Manage inventory, attendees, pending orders, and door check-in readiness.</p>
+        </div>
+        <div class="toolbar">
+          <a class="meta" id="detail-link" href="events.html">Event detail</a>
+          <a class="meta" id="checkin-link" href="checkin.html">Check-in</a>
+        </div>
+      </header>
+
+      <section class="panel grid" style="margin-bottom:14px;">
+        <label class="meta">Owner token
+          <input id="admin-token" type="password" autocomplete="off" placeholder="Ticketing admin token">
+        </label>
+        <div class="toolbar">
+          <button class="primary" id="load" type="button">Load operations</button>
+          <button id="publish" type="button">Publish</button>
+          <button id="unpublish" type="button">Unpublish</button>
+          <button class="danger" id="archive" type="button">Archive</button>
+        </div>
+      </section>
+
+      <section class="grid layout">
+        <div class="grid">
+          <section class="stats" id="stats"></section>
+
+          <section class="panel grid">
+            <h2>Ticket tiers</h2>
+            <div class="table" id="tiers"><div class="empty">Load operations to edit tiers.</div></div>
+          </section>
+
+          <section class="panel grid">
+            <div class="toolbar" style="justify-content:space-between;">
+              <h2>Attendee list</h2>
+              <a class="meta" id="checkin-link-2" href="checkin.html">Open check-in scanner</a>
+            </div>
+            <div class="attendee-tools">
+              <input id="attendee-search" placeholder="Search name, email, code">
+              <select id="attendee-filter">
+                <option value="all">All confirmed</option>
+                <option value="checked_in">Checked in</option>
+                <option value="not_checked_in">Not checked in</option>
+              </select>
+            </div>
+            <div class="table" id="attendees"><div class="empty">Load operations to see attendees.</div></div>
+          </section>
+        </div>
+
+        <aside class="panel grid">
+          <h2>Pending manual orders</h2>
+          <p>Paid orders stay pending until payment is confirmed by the owner. This is the payment-provider gate until Stripe is connected.</p>
+          <div class="table" id="orders"><div class="empty">Load operations to see pending orders.</div></div>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
+      const ENDPOINT = "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-ops";
+      const params = new URLSearchParams(window.location.search);
+      const eventId = params.get("id");
+      const tokenEl = document.getElementById("admin-token");
+      const tiersEl = document.getElementById("tiers");
+      const ordersEl = document.getElementById("orders");
+      const attendeesEl = document.getElementById("attendees");
+      const statsEl = document.getElementById("stats");
+      const searchEl = document.getElementById("attendee-search");
+      const filterEl = document.getElementById("attendee-filter");
+      let state = null;
+
+      tokenEl.value = localStorage.getItem("echoo_ticketing_admin_token") || localStorage.getItem("echoo_location_admin_token") || "";
+
+      function headers() {
+        const token = tokenEl.value.trim();
+        localStorage.setItem("echoo_ticketing_admin_token", token);
+        return { "Content-Type": "application/json", "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "x-admin-token": token };
+      }
+
+      function money(cents, currency = "CAD") {
+        return new Intl.NumberFormat("en-CA", { style: "currency", currency }).format((Number(cents) || 0) / 100);
+      }
+
+      async function api(options = {}) {
+        const method = options.method || "GET";
+        const url = method === "GET" ? `${ENDPOINT}?eventId=${encodeURIComponent(eventId || "")}` : ENDPOINT;
+        const response = await fetch(url, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+        const json = await response.json();
+        if (!response.ok) throw new Error(json.error || "Operations request failed");
+        return json;
+      }
+
+      function renderStats() {
+        const metrics = state.metrics || {};
+        statsEl.innerHTML = `
+          <div class="stat"><span class="meta">Confirmed tickets</span><strong>${metrics.confirmedTickets || 0}</strong></div>
+          <div class="stat"><span class="meta">Checked in</span><strong>${metrics.checkedIn || 0}</strong></div>
+          <div class="stat"><span class="meta">Pending orders</span><strong>${metrics.pendingOrders || 0}</strong></div>
+          <div class="stat"><span class="meta">Confirmed revenue</span><strong>${money(metrics.revenueCents || 0)}</strong></div>
+        `;
+      }
+
+      function renderTiers() {
+        tiersEl.innerHTML = state.tiers.length ? state.tiers.map((tier) => `
+          <div class="row tier-row">
+            <div>
+              <strong>${tier.name}</strong>
+              <div class="meta">${money(tier.price_cents, tier.currency)} · ${tier.confirmed || 0} confirmed · ${tier.activeHeld || 0} held · ${tier.remaining_quantity} remaining</div>
+            </div>
+            <label class="meta">Capacity <input data-capacity="${tier.id}" value="${tier.capacity}" inputmode="numeric"></label>
+            <label class="meta">Status
+              <select data-status="${tier.id}">
+                <option value="on_sale">On sale</option>
+                <option value="paused">Paused</option>
+                <option value="sold_out">Sold out</option>
+              </select>
+            </label>
+            <span class="meta">Pending ${tier.pending || 0}</span>
+            <button data-save-tier="${tier.id}" type="button">Save tier</button>
+          </div>
+        `).join("") : '<div class="empty">No tiers attached.</div>';
+        state.tiers.forEach((tier) => {
+          const select = tiersEl.querySelector(`[data-status="${tier.id}"]`);
+          if (select) select.value = tier.sale_status;
+        });
+      }
+
+      function renderOrders() {
+        const pending = (state.orders || []).filter((order) => order.status === "pending");
+        ordersEl.innerHTML = pending.length ? pending.map((order) => `
+          <div class="row">
+            <strong>${order.buyer_name || "Buyer"} · ${order.ticket_tiers?.name || "Ticket"}</strong>
+            <div class="meta">${order.buyer_email || "No email"} · ${order.quantity} ticket(s) · ${money(order.total_cents, order.currency)} · ${order.payment_status}</div>
+            <button class="primary" data-confirm-order="${order.id}" type="button">Confirm manual payment</button>
+          </div>
+        `).join("") : '<div class="empty">No pending manual orders.</div>';
+      }
+
+      function renderAttendees() {
+        const query = searchEl.value.trim().toLowerCase();
+        const filter = filterEl.value;
+        const attendees = (state.attendees || []).filter((ticket) => {
+          const haystack = `${ticket.display_code} ${ticket.ticket_orders?.buyer_name || ""} ${ticket.ticket_orders?.buyer_email || ""} ${ticket.ticket_tiers?.name || ""}`.toLowerCase();
+          const inSearch = !query || haystack.includes(query);
+          const inFilter = filter === "all" || (filter === "checked_in" ? ticket.checked_in_at : !ticket.checked_in_at);
+          return inSearch && inFilter;
+        });
+        attendeesEl.innerHTML = attendees.length ? attendees.map((ticket) => `
+          <div class="row">
+            <strong>${ticket.ticket_orders?.buyer_name || "Guest"} · ${ticket.display_code}</strong>
+            <div class="meta">${ticket.ticket_orders?.buyer_email || "No email"} · ${ticket.ticket_tiers?.name || "Ticket"} · ${ticket.checked_in_at ? `Checked in ${new Date(ticket.checked_in_at).toLocaleTimeString()}` : "Not checked in"}</div>
+          </div>
+        `).join("") : '<div class="empty">No attendees match this view.</div>';
+      }
+
+      function render() {
+        document.getElementById("title").textContent = state.event.title;
+        document.getElementById("subtitle").textContent = `${state.event.venue_name} · ${state.event.city}, ${state.event.province} · ${state.event.status}`;
+        document.getElementById("detail-link").href = `event.html?id=${state.event.id}`;
+        document.getElementById("checkin-link").href = `checkin.html?id=${state.event.id}`;
+        document.getElementById("checkin-link-2").href = `checkin.html?id=${state.event.id}`;
+        renderStats();
+        renderTiers();
+        renderOrders();
+        renderAttendees();
+      }
+
+      async function load() {
+        if (!eventId) {
+          statsEl.innerHTML = '<div class="empty">Missing event id.</div>';
+          return;
+        }
+        statsEl.innerHTML = '<div class="empty">Loading operations...</div>';
+        state = await api();
+        render();
+      }
+
+      async function mutate(action, extra = {}) {
+        state = await api({ method: "PATCH", body: JSON.stringify({ action, eventId, ...extra }) });
+        render();
+      }
+
+      document.getElementById("load").addEventListener("click", () => load().catch((error) => statsEl.innerHTML = `<div class="empty">${error.message}</div>`));
+      document.getElementById("publish").addEventListener("click", () => mutate("event-status", { status: "published" }).catch(alert));
+      document.getElementById("unpublish").addEventListener("click", () => mutate("event-status", { status: "draft" }).catch(alert));
+      document.getElementById("archive").addEventListener("click", () => mutate("event-status", { status: "archived" }).catch(alert));
+      tiersEl.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-save-tier]");
+        if (!button) return;
+        const tierId = button.dataset.saveTier;
+        mutate("tier-update", {
+          tierId,
+          capacity: Number(tiersEl.querySelector(`[data-capacity="${tierId}"]`).value || 0),
+          saleStatus: tiersEl.querySelector(`[data-status="${tierId}"]`).value
+        }).catch(alert);
+      });
+      ordersEl.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-confirm-order]");
+        if (!button) return;
+        mutate("confirm-order", { orderId: button.dataset.confirmOrder }).catch(alert);
+      });
+      searchEl.addEventListener("input", renderAttendees);
+      filterEl.addEventListener("change", renderAttendees);
+      load().catch((error) => statsEl.innerHTML = `<div class="empty">${error.message}</div>`);
+    </script>
+  </body>
+</html>

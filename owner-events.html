@@ -215,6 +215,7 @@
     </main>
 
     <script>
+      const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
       const ENDPOINT = "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-manage";
       const CONFIRM_ENDPOINT = "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-confirm";
       const tokenEl = document.getElementById("admin-token");
@@ -233,7 +234,7 @@
       function tokenHeaders() {
         const token = tokenEl.value.trim();
         localStorage.setItem("echoo_ticketing_admin_token", token);
-        return { "Content-Type": "application/json", "x-admin-token": token };
+        return { "Content-Type": "application/json", "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "x-admin-token": token };
       }
 
       async function api(path = "", options = {}) {
@@ -323,6 +324,8 @@
             <div class="toolbar">
               <button data-edit="${event.id}" type="button">Edit</button>
               <a class="meta" href="event.html?id=${event.id}">Open detail</a>
+              <a class="meta" href="event-ops.html?id=${event.id}">Operations</a>
+              <a class="meta" href="checkin.html?id=${event.id}">Check-in</a>
             </div>
           </article>
         `).join("") : '<div class="empty">No owner events yet.</div>';
