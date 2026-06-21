@@ -492,7 +492,7 @@
         });
 
         list.innerHTML = filtered.map((event) => `
-          <article class="event" data-id="${event.id}">
+          <article class="event" data-id="${event.id}" ${event.detailId ? `data-detail-id="${event.detailId}"` : ""}>
             <picture>
               <source srcset="${event.webp}" type="image/webp">
               <img src="${event.img}" alt="" loading="lazy" decoding="async">
@@ -518,6 +518,12 @@
       document.getElementById("search-form").addEventListener("submit", (event) => {
         event.preventDefault();
         render();
+      });
+
+      list.addEventListener("click", (event) => {
+        const card = event.target.closest("[data-detail-id]");
+        if (!card) return;
+        window.location.href = `event.html?id=${encodeURIComponent(card.dataset.detailId)}`;
       });
 
       const params = new URLSearchParams(window.location.search);
@@ -599,6 +605,7 @@
 
           events = payload.results.map((item, index) => ({
             id: item.id || index + 1,
+            detailId: item.entity_id || item.id,
             category: item.category || item.entity_type || "events",
             title: item.title,
             copy: item.description || "A nearby Echoo recommendation with verified Canadian location data.",
@@ -639,6 +646,7 @@
 
           events = payload.plans.map((item, index) => ({
             id: item.id || index + 1,
+            detailId: item.entityId || item.id,
             category: item.category || "plan",
             title: item.title,
             copy: item.description || item.why || "A smart Echoo pick matched to your current moment.",

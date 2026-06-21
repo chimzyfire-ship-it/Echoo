@@ -128,6 +128,8 @@ Deno.serve(async (req) => {
 
     const plans = candidates.slice(0, limit).map((item: any, index: number) => ({
       id: item.id,
+      entityId: item.entity_id,
+      entityType: item.entity_type,
       title: item.title,
       category: item.category || item.entity_type,
       imageUrl: item.image_url,

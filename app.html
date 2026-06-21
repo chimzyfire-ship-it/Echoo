@@ -1385,9 +1385,14 @@
         if (el) el.remove();
       }
 
-      function addLocationCard(img, imgWebp, placeName, tags, vibe, hot) {
+      function addLocationCard(img, imgWebp, placeName, tags, vibe, hot, detailId) {
         const card = document.createElement("div");
         card.className = hot ? "loc-card hot" : "loc-card";
+        if (detailId) {
+          card.dataset.detailId = detailId;
+          card.style.cursor = "pointer";
+          card.title = "Open event details";
+        }
         const hotBadge = hot ? '<div class="loc-card-hot">Trending now</div>' : '';
         card.innerHTML = `
           <picture>
@@ -1399,7 +1404,13 @@
             <div class="loc-card-tags">${tags}</div>
             <div class="loc-card-name">${placeName}</div>
             <div class="loc-card-vibe">${vibe}</div>
+            ${detailId ? '<div class="loc-card-tags" style="margin-top:8px;">Open details and tickets</div>' : ''}
           </div>`;
+        if (detailId) {
+          card.addEventListener("click", () => {
+            window.location.href = `event.html?id=${encodeURIComponent(detailId)}`;
+          });
+        }
         chatBody.appendChild(card);
         scrollChat();
       }
@@ -1442,6 +1453,7 @@
           const payload = await response.json();
           if (!payload.supported || !Array.isArray(payload.results)) return [];
           return payload.results.map((item) => ({
+            detailId: item.entity_id || item.id,
             name: item.title,
             tags: `${item.category || item.entity_type || "Echoo"} · ${item.distance_meters ? Math.max(1, Math.round(item.distance_meters / 1000)) + " km away" : city}`,
             coords: [item.latitude, item.longitude],
@@ -1472,6 +1484,7 @@
           const payload = await response.json();
           if (!payload.supported || !Array.isArray(payload.plans)) return [];
           return payload.plans.map((item) => ({
+            detailId: item.entityId || item.id,
             name: item.title,
             tags: `${item.category || "Echoo"} · ${item.distanceMeters ? Math.max(1, Math.round(item.distanceMeters / 1000)) + " km away" : item.city || city}`,
             coords: [item.latitude, item.longitude],
@@ -1658,7 +1671,8 @@
               stop.name,
               `${stop.tags} · ${budget}`,
               stop.vibe,
-              i === 0 // Mark first card as trending badge
+              i === 0,
+              stop.detailId
             );
 
             // Add dashed connecting track if not the last stop
