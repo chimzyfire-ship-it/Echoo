@@ -155,6 +155,8 @@
         -ms-overflow-style: none;
         cursor: grab;
         user-select: none;
+        touch-action: pan-x;
+        scroll-behavior: auto;
       }
       .news-slider::-webkit-scrollbar {
         display: none;
@@ -1170,49 +1172,59 @@
 
       // Marquee slider functionality
       const slider = document.getElementById("news-slider");
-      let scrollSpeed = 0.45;
+      let scrollSpeed = 0.18;
       let autoScrollActive = true;
       let interactionTimeout;
+      let isDraggingNews = false;
+      let newsStartX = 0;
+      let newsStartScrollLeft = 0;
+      let isProgrammaticScroll = false;
 
       function step() {
         if (autoScrollActive && slider) {
+          isProgrammaticScroll = true;
           slider.scrollLeft += scrollSpeed;
           if (slider.scrollLeft >= slider.scrollWidth / 2) {
             slider.scrollLeft = 0;
           }
+          requestAnimationFrame(() => { isProgrammaticScroll = false; });
         }
         requestAnimationFrame(step);
       }
 
-      function resetAutoScroll() {
+      function pauseNewsAutoScroll(delay = 2600) {
         autoScrollActive = false;
         clearTimeout(interactionTimeout);
         interactionTimeout = setTimeout(() => {
           autoScrollActive = true;
-        }, 4000);
+        }, delay);
       }
 
       if (slider) {
-        slider.addEventListener("mousedown", () => autoScrollActive = false);
-        slider.addEventListener("touchstart", () => autoScrollActive = false);
-        slider.addEventListener("scroll", resetAutoScroll);
-
-        let isDown = false;
-        let startX;
-        let scrollLeftVal;
-        slider.addEventListener("mousedown", (e) => {
-          isDown = true;
-          startX = e.pageX - slider.offsetLeft;
-          scrollLeftVal = slider.scrollLeft;
+        slider.addEventListener("pointerdown", (event) => {
+          isDraggingNews = true;
+          newsStartX = event.clientX;
+          newsStartScrollLeft = slider.scrollLeft;
+          slider.setPointerCapture?.(event.pointerId);
+          pauseNewsAutoScroll(5000);
         });
-        slider.addEventListener("mouseleave", () => isDown = false);
-        slider.addEventListener("mouseup", () => isDown = false);
-        slider.addEventListener("mousemove", (e) => {
-          if (!isDown) return;
-          e.preventDefault();
-          const x = e.pageX - slider.offsetLeft;
-          const walk = (x - startX) * 1.5;
-          slider.scrollLeft = scrollLeftVal - walk;
+        slider.addEventListener("pointermove", (event) => {
+          if (!isDraggingNews) return;
+          event.preventDefault();
+          const delta = event.clientX - newsStartX;
+          slider.scrollLeft = newsStartScrollLeft - delta;
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
+          slider.addEventListener(type, (event) => {
+            if (!isDraggingNews) return;
+            isDraggingNews = false;
+            if (slider.hasPointerCapture?.(event.pointerId)) slider.releasePointerCapture(event.pointerId);
+            pauseNewsAutoScroll(1800);
+          });
+        });
+        slider.addEventListener("wheel", () => pauseNewsAutoScroll(2200), { passive: true });
+        slider.addEventListener("scroll", () => {
+          if (!isProgrammaticScroll && !isDraggingNews) pauseNewsAutoScroll(2200);
         });
 
         requestAnimationFrame(step);
