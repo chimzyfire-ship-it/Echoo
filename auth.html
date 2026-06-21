@@ -593,6 +593,13 @@
                   <button type="button" class="city-pill selected" data-city="Toronto">Toronto</button>
                   <button type="button" class="city-pill" data-city="Vancouver">Vancouver</button>
                   <button type="button" class="city-pill" data-city="Montreal">Montreal</button>
+                  <button type="button" class="city-pill" data-city="Calgary">Calgary</button>
+                  <button type="button" class="city-pill" data-city="Edmonton">Edmonton</button>
+                  <button type="button" class="city-pill" data-city="Ottawa">Ottawa</button>
+                  <button type="button" class="city-pill" data-city="Winnipeg">Winnipeg</button>
+                  <button type="button" class="city-pill" data-city="Quebec City">Quebec City</button>
+                  <button type="button" class="city-pill" data-city="Halifax">Halifax</button>
+                  <button type="button" class="city-pill" data-city="Victoria">Victoria</button>
                 </div>
               </div>
             </div>
@@ -619,6 +626,7 @@
       </section>
     </main>
 
+    <script src="assets/location-platform.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -635,6 +643,7 @@
           preDetectedCity = JSON.parse(stored).city || "Toronto";
         }
       } catch(e) {}
+      preDetectedCity = window.EchooLocationPlatform.cityByName(preDetectedCity)?.name || "Toronto";
 
       /* ---- State ---- */
       const state = {
@@ -855,7 +864,8 @@
         const vibes = [...state.vibes].join(",");
         const budget = state.budget || "$";
         const energy = state.energy || "chill";
-        const city  = state.city || cityInput.value || "Toronto";
+        const selectedCity = window.EchooLocationPlatform.cityByName(state.city || cityInput.value);
+        const city  = selectedCity ? selectedCity.name : "Toronto";
         const tone  = state.tone || "direct";
 
         const prefs = { name, email, vibes, budget, energy, city, tone };

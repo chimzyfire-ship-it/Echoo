@@ -192,6 +192,8 @@
         -ms-overflow-style: none;
         cursor: grab;
         user-select: none;
+        touch-action: pan-x;
+        scroll-behavior: auto;
       }
       .news-slider::-webkit-scrollbar {
         display: none;
@@ -419,7 +421,7 @@
           <h1>Find the plan people answer yes to.</h1>
         </div>
         <form class="search" id="search-form">
-          <input id="query" placeholder="What sounds good tonight?">
+          <input id="query" placeholder="What sounds good right now?">
           <button class="primary" type="submit">Find</button>
         </form>
       </section>
@@ -459,6 +461,8 @@
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/location-platform.js"></script>
+    <script src="assets/activity-context.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -467,9 +471,9 @@
         sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
       });
 
-      const events = [
-        { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy late food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Tonight", "18 min", "$28"] },
-        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Weekend", "Two stops", "$$"] },
+      let events = [
+        { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Today", "18 min", "$28"] },
+        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Today", "Two stops", "$$"] },
         { id: 3, category: "movies", title: "Late film with post-show dessert", copy: "A cinema anchor paired with a place that stays open late enough to keep talking.", img: "assets/optimized/news-movie-768.jpg", webp: "assets/optimized/news-movie-768.webp", meta: ["9:40 PM", "Seats open", "$18"] },
         { id: 4, category: "food", title: "Kitchen still open", copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Open late", "12 min", "$$"] }
       ];
@@ -480,14 +484,15 @@
 
       function render() {
         const query = queryInput.value.trim().toLowerCase();
+        const planIntent = /plan|today|tonight|night|date|near|nearby|out|discover|surprise|bored|morning|lunch|afternoon|evening|late|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(query);
         const filtered = events.filter((event) => {
           const inFilter = activeFilter === "all" || event.category === activeFilter;
-          const inQuery = !query || `${event.title} ${event.copy} ${event.category}`.toLowerCase().includes(query);
+          const inQuery = !query || planIntent || `${event.title} ${event.copy} ${event.category} ${event.meta.join(" ")}`.toLowerCase().includes(query);
           return inFilter && inQuery;
         });
 
         list.innerHTML = filtered.map((event) => `
-          <article class="event" data-id="${event.id}">
+          <article class="event" data-id="${event.id}" ${event.detailId ? `data-detail-id="${event.detailId}"` : ""}>
             <picture>
               <source srcset="${event.webp}" type="image/webp">
               <img src="${event.img}" alt="" loading="lazy" decoding="async">
@@ -499,7 +504,7 @@
               <div class="meta">${event.meta.map((item) => `<span>${item}</span>`).join("")}</div>
             </div>
           </article>
-        `).join("") || `<div class="brief"><h3>Nothing close yet</h3><p>Try a broader mood, place, or time. Plain language works best.</p></div>`;
+        `).join("") || `<div class="brief"><h3>Nothing close yet</h3><p>Try music, dates, movies, food, today, or near me.</p></div>`;
       }
 
       document.getElementById("filters").addEventListener("click", (event) => {
@@ -515,10 +520,17 @@
         render();
       });
 
+      list.addEventListener("click", (event) => {
+        const card = event.target.closest("[data-detail-id]");
+        if (!card) return;
+        window.location.href = `event.html?id=${encodeURIComponent(card.dataset.detailId)}`;
+      });
+
       const params = new URLSearchParams(window.location.search);
       const filter = params.get("filter");
       const query = params.get("query") || params.get("ai");
-      if (query) queryInput.value = query === "bored" ? "simple surprising tonight" : query;
+      const previewMode = params.get("preview") === "1" || window.EchooLocationPlatform.readPreferences().locationSupported === false;
+      if (query) queryInput.value = query === "bored" ? "simple surprising plan today" : query;
       if (filter) {
         const button = document.querySelector(`[data-filter="${filter}"]`);
         if (button) button.click();
@@ -528,11 +540,16 @@
 
       /* ── News Bubble Slider ── */
       let city = params.get("city");
+      let preciseLat;
+      let preciseLng;
       if (!city) {
         const stored = localStorage.getItem("echoo_preferences");
         if (stored) {
           try {
-            city = JSON.parse(stored).city;
+            const prefs = JSON.parse(stored);
+            city = prefs.city;
+            preciseLat = Number(prefs.lastLat);
+            preciseLng = Number(prefs.lastLng);
           } catch(e) {}
         }
       }
@@ -540,8 +557,114 @@
 
       const CONFIG = {
         supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
-        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH"
+        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
+        planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
       };
+
+      const normalizedCity = window.EchooLocationPlatform.cityByName(city);
+      if (!normalizedCity) {
+        city = "Toronto";
+      }
+
+      function activityContext() {
+        const cityRecord = window.EchooLocationPlatform.cityByName(city);
+        return window.EchooActivityContext.getActivityContext({
+          city,
+          timezone: cityRecord?.timezone
+        });
+      }
+
+      const currentContext = activityContext();
+      queryInput.placeholder = currentContext.searchPlaceholder;
+      if (!queryInput.value) queryInput.value = currentContext.defaultQuery;
+
+      async function loadLocationEntities() {
+        if (previewMode) {
+          console.info("Echoo: preview mode active; live Canada location search is paused.");
+          return;
+        }
+        try {
+          const response = await fetch(CONFIG.locationSearchUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
+              "apikey": CONFIG.supabaseAnonKey
+            },
+            body: JSON.stringify(
+              Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+                ? { lat: preciseLat, lng: preciseLng, radiusMeters: 25000, limit: 24 }
+                : { city, limit: 24 }
+            )
+          });
+          if (!response.ok) return;
+
+          const payload = await response.json();
+          if (!payload.supported || !Array.isArray(payload.results) || payload.results.length === 0) return;
+
+          events = payload.results.map((item, index) => ({
+            id: item.id || index + 1,
+            detailId: item.entity_id || item.id,
+            category: item.category || item.entity_type || "events",
+            title: item.title,
+            copy: item.description || "A nearby Echoo recommendation with verified Canadian location data.",
+            img: item.image_url || "assets/optimized/news-music-768.jpg",
+            webp: item.image_url || "assets/optimized/news-music-768.webp",
+            meta: [
+              item.city || city,
+              item.distance_meters ? `${Math.max(1, Math.round(item.distance_meters / 1000))} km away` : "Canada",
+              item.starts_at ? new Date(item.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Open"
+            ]
+          }));
+          render();
+        } catch (error) {
+          console.warn("Echoo: location search unavailable, using static launch cards.", error);
+        }
+      }
+
+      async function loadPlanEngine() {
+        if (previewMode) return false;
+        const queryText = queryInput.value.trim() || activityContext().defaultQuery;
+        try {
+          const response = await fetch(CONFIG.planEngineUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
+              "apikey": CONFIG.supabaseAnonKey
+            },
+            body: JSON.stringify(
+              Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+                ? { lat: preciseLat, lng: preciseLng, query: queryText, limit: 8 }
+                : { city, query: queryText, limit: 8 }
+            )
+          });
+          if (!response.ok) return false;
+          const payload = await response.json();
+          if (!payload.supported || !Array.isArray(payload.plans) || payload.plans.length === 0) return false;
+
+          events = payload.plans.map((item, index) => ({
+            id: item.id || index + 1,
+            detailId: item.entityId || item.id,
+            category: item.category || "plan",
+            title: item.title,
+            copy: item.description || item.why || "A smart Echoo pick matched to your current moment.",
+            img: item.imageUrl || "assets/optimized/news-music-768.jpg",
+            webp: item.imageUrl || "assets/optimized/news-music-768.webp",
+            meta: [
+              payload.context?.dayName || "Today",
+              item.distanceMeters ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away` : item.city || city,
+              index === 0 ? "Best fit" : "Backup"
+            ]
+          }));
+          render();
+          return true;
+        } catch (error) {
+          console.warn("Echoo: plan engine unavailable, falling back to location search.", error);
+          return false;
+        }
+      }
 
       const localNewsDb = {
         "Toronto": [
@@ -549,7 +672,7 @@
           { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only zones", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" },
           { tag: "Jazz", text: "Queen West jazz club hosts unannounced late basement set", img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80" },
           { tag: "Food", text: "Ossington street crawl reveals new underground ramen spot", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally tonight", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally today", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
           { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset", img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80" }
         ],
         "Vancouver": [
@@ -631,51 +754,64 @@
       }
 
       loadNewsSlider();
+      loadPlanEngine().then((loaded) => {
+        if (!loaded) loadLocationEntities();
+      });
 
       const slider = document.getElementById("news-slider");
-      let scrollSpeed = 0.45;
+      let scrollSpeed = 0.18;
       let autoScrollActive = true;
       let interactionTimeout;
+      let isDraggingNews = false;
+      let newsStartX = 0;
+      let newsStartScrollLeft = 0;
+      let isProgrammaticScroll = false;
 
       function step() {
         if (autoScrollActive && slider) {
+          isProgrammaticScroll = true;
           slider.scrollLeft += scrollSpeed;
           if (slider.scrollLeft >= slider.scrollWidth / 2) {
             slider.scrollLeft = 0;
           }
+          requestAnimationFrame(() => { isProgrammaticScroll = false; });
         }
         requestAnimationFrame(step);
       }
 
-      function resetAutoScroll() {
+      function pauseNewsAutoScroll(delay = 2600) {
         autoScrollActive = false;
         clearTimeout(interactionTimeout);
         interactionTimeout = setTimeout(() => {
           autoScrollActive = true;
-        }, 4000);
+        }, delay);
       }
 
       if (slider) {
-        slider.addEventListener("mousedown", () => autoScrollActive = false);
-        slider.addEventListener("touchstart", () => autoScrollActive = false);
-        slider.addEventListener("scroll", resetAutoScroll);
-
-        let isDown = false;
-        let startX;
-        let scrollLeftVal;
-        slider.addEventListener("mousedown", (e) => {
-          isDown = true;
-          startX = e.pageX - slider.offsetLeft;
-          scrollLeftVal = slider.scrollLeft;
+        slider.addEventListener("pointerdown", (event) => {
+          isDraggingNews = true;
+          newsStartX = event.clientX;
+          newsStartScrollLeft = slider.scrollLeft;
+          slider.setPointerCapture?.(event.pointerId);
+          pauseNewsAutoScroll(5000);
         });
-        slider.addEventListener("mouseleave", () => isDown = false);
-        slider.addEventListener("mouseup", () => isDown = false);
-        slider.addEventListener("mousemove", (e) => {
-          if (!isDown) return;
-          e.preventDefault();
-          const x = e.pageX - slider.offsetLeft;
-          const walk = (x - startX) * 1.5;
-          slider.scrollLeft = scrollLeftVal - walk;
+        slider.addEventListener("pointermove", (event) => {
+          if (!isDraggingNews) return;
+          event.preventDefault();
+          const delta = event.clientX - newsStartX;
+          slider.scrollLeft = newsStartScrollLeft - delta;
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
+          slider.addEventListener(type, (event) => {
+            if (!isDraggingNews) return;
+            isDraggingNews = false;
+            if (slider.hasPointerCapture?.(event.pointerId)) slider.releasePointerCapture(event.pointerId);
+            pauseNewsAutoScroll(1800);
+          });
+        });
+        slider.addEventListener("wheel", () => pauseNewsAutoScroll(2200), { passive: true });
+        slider.addEventListener("scroll", () => {
+          if (!isProgrammaticScroll && !isDraggingNews) pauseNewsAutoScroll(2200);
         });
 
         requestAnimationFrame(step);

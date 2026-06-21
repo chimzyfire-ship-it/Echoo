@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Echoo Event</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080907;
+        --panel: #11130f;
+        --panel-2: #191b15;
+        --ink: #f5f1e8;
+        --muted: #a8a397;
+        --line: rgba(245, 241, 232, 0.14);
+        --signal: #e7c98e;
+        --rose: #d8a2d9;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--ink); }
+      a { color: inherit; text-decoration: none; }
+      button, input, select { font: inherit; }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(8, 9, 7, 0.94);
+      }
+      .brand { font-size: 25px; font-weight: 950; letter-spacing: -0.05em; }
+      .topbar nav { display: flex; gap: 10px; color: var(--muted); font-weight: 850; }
+      main { width: min(1120px, 100%); margin: 0 auto; padding: 18px 16px 80px; }
+      .hero {
+        display: grid;
+        gap: 18px;
+        padding: 20px 0;
+      }
+      .hero img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        filter: saturate(0.7) contrast(1.05);
+        border: 1px solid var(--line);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(42px, 10vw, 88px);
+        line-height: 0.88;
+        letter-spacing: -0.075em;
+      }
+      p { color: var(--muted); line-height: 1.5; }
+      .kicker {
+        color: var(--signal);
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+      .grid { display: grid; gap: 14px; }
+      .content { display: grid; gap: 16px; }
+      .panel {
+        border: 1px solid var(--line);
+        background: rgba(17, 19, 15, 0.92);
+        padding: 16px;
+      }
+      .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+      .meta span, .pill {
+        border: 1px solid var(--line);
+        color: var(--muted);
+        padding: 7px 10px;
+        font-size: 12px;
+        font-weight: 850;
+      }
+      .ticket-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        border: 1px solid var(--line);
+        padding: 12px;
+        background: var(--panel-2);
+      }
+      .ticket-row strong { display: block; }
+      label {
+        display: grid;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      input, select {
+        min-height: 46px;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        outline: 0;
+        color: var(--ink);
+        background: rgba(8, 9, 7, 0.84);
+        padding: 0 12px;
+      }
+      button {
+        min-height: 50px;
+        border: 1px solid transparent;
+        border-radius: 0;
+        color: #151311;
+        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        cursor: pointer;
+        font-weight: 950;
+      }
+      button:disabled { opacity: 0.55; cursor: not-allowed; }
+      .route-card {
+        border: 1px solid var(--line);
+        padding: 12px;
+        background: rgba(245, 241, 232, 0.035);
+      }
+      .empty { border: 1px dashed var(--line); color: var(--muted); padding: 16px; }
+      @media (min-width: 900px) {
+        .hero { grid-template-columns: minmax(0, 1fr) 420px; align-items: end; padding: 42px 0 24px; }
+        .content { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html">echoo</a>
+      <nav><a href="events.html">Discover</a><a href="tickets.html">My Tickets</a></nav>
+    </header>
+    <main>
+      <section id="event-root" class="grid"><div class="empty">Loading event...</div></section>
+    </main>
+    <script>
+      const CONFIG = {
+        anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+        eventDetailUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-detail",
+        ticketReserveUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-reserve",
+        planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
+      };
+      const params = new URLSearchParams(window.location.search);
+      const eventId = params.get("id");
+      const root = document.getElementById("event-root");
+
+      function sessionId() {
+        let id = localStorage.getItem("echoo_ticket_session_id");
+        if (!id) {
+          id = crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          localStorage.setItem("echoo_ticket_session_id", id);
+        }
+        return id;
+      }
+
+      function money(cents, currency = "CAD") {
+        return new Intl.NumberFormat("en-CA", { style: "currency", currency }).format((Number(cents) || 0) / 100);
+      }
+
+      function headers() {
+        return { "Content-Type": "application/json", "Authorization": `Bearer ${CONFIG.anonKey}`, "apikey": CONFIG.anonKey };
+      }
+
+      async function loadRelated(event) {
+        const box = document.getElementById("related-plans");
+        if (!box || !Number.isFinite(Number(event.latitude)) || !Number.isFinite(Number(event.longitude))) return;
+        try {
+          const response = await fetch(CONFIG.planEngineUrl, {
+            method: "POST",
+            headers: headers(),
+            body: JSON.stringify({ lat: Number(event.latitude), lng: Number(event.longitude), query: `before or after ${event.category} near ${event.venue_name}`, limit: 3 })
+          });
+          const json = await response.json();
+          const plans = Array.isArray(json.plans) ? json.plans.filter((plan) => plan.id !== event.location_entity_id).slice(0, 3) : [];
+          box.innerHTML = plans.length ? plans.map((plan) => `
+            <article class="route-card">
+              <strong>${plan.title}</strong>
+              <p>${plan.description || plan.why || "A nearby Echoo suggestion."}</p>
+            </article>
+          `).join("") : '<div class="empty">Related nearby ideas will appear here as more events are added.</div>';
+        } catch (error) {
+          box.innerHTML = '<div class="empty">Related nearby ideas are unavailable right now.</div>';
+        }
+      }
+
+      async function reserve(event, tiers) {
+        const tierId = document.getElementById("tier").value;
+        const tier = tiers.find((item) => item.id === tierId);
+        const quantity = Number(document.getElementById("quantity").value || 1);
+        const buyerName = document.getElementById("buyer-name").value.trim();
+        const buyerEmail = document.getElementById("buyer-email").value.trim();
+        const status = document.getElementById("reserve-status");
+        if (!buyerEmail) {
+          status.textContent = "Add an email so the ticket can be found later.";
+          return;
+        }
+        status.textContent = "Reserving tickets...";
+        try {
+          const response = await fetch(CONFIG.ticketReserveUrl, {
+            method: "POST",
+            headers: headers(),
+            body: JSON.stringify({ eventId: event.id, tierId, quantity, buyerName, buyerEmail, sessionId: sessionId() })
+          });
+          const json = await response.json();
+          if (!response.ok) throw new Error(json.error || "Reservation failed");
+          localStorage.setItem("echoo_ticket_buyer_email", buyerEmail);
+          localStorage.setItem("echoo_last_ticket_order_id", json.confirmed?.order?.id || json.order?.id || "");
+          if (json.confirmed) {
+            status.innerHTML = `Ticket confirmed for ${tier.name}. <a href="tickets.html">Open My Tickets</a>`;
+          } else {
+            status.innerHTML = `Order reserved for ${money(json.order.total_cents, json.order.currency)}. Payment provider is not connected yet, so an owner can confirm this manual order after payment. Order ID: <strong>${json.order.id}</strong>`;
+          }
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      }
+
+      function render(event, tiers) {
+        const starts = event.starts_at ? new Date(event.starts_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Date coming soon";
+        root.innerHTML = `
+          <section class="hero">
+            <div>
+              <div class="kicker">${event.category || "event"}</div>
+              <h1>${event.title}</h1>
+              <p>${event.description || "A verified Echoo event in Canada."}</p>
+              <div class="meta">
+                <span>${starts}</span>
+                <span>${event.venue_name || "Venue TBA"}</span>
+                <span>${event.city}, ${event.province || "CA"}</span>
+              </div>
+            </div>
+            <img src="${event.image_url || "assets/optimized/news-music-768.jpg"}" alt="">
+          </section>
+          <section class="content">
+            <div class="grid">
+              <div class="panel">
+                <h2 style="margin-top:0;">Venue</h2>
+                <p>${event.venue_name || "Venue TBA"}${event.address ? ` · ${event.address}` : ""}</p>
+                <div class="meta"><span>${Number(event.latitude).toFixed(4)}, ${Number(event.longitude).toFixed(4)}</span><span>Canada-first verified location</span></div>
+              </div>
+              <div class="panel">
+                <h2 style="margin-top:0;">Before or after this</h2>
+                <div class="grid" id="related-plans"><div class="empty">Loading nearby ideas...</div></div>
+              </div>
+            </div>
+            <aside class="panel grid">
+              <h2 style="margin:0;">Tickets</h2>
+              ${tiers.length ? `
+                <label>Ticket tier
+                  <select id="tier">${tiers.map((tier) => `<option value="${tier.id}">${tier.name} · ${money(tier.price_cents, tier.currency)} · ${tier.remaining_quantity} left</option>`).join("")}</select>
+                </label>
+                <label>Quantity <input id="quantity" type="number" min="1" max="10" value="1"></label>
+                <label>Name <input id="buyer-name" autocomplete="name" placeholder="Buyer name"></label>
+                <label>Email <input id="buyer-email" autocomplete="email" placeholder="name@example.com"></label>
+                <button id="reserve-btn" type="button">Reserve ticket</button>
+                <p id="reserve-status"></p>
+              ` : '<div class="empty">Ticket tiers are not attached to this listing yet.</div>'}
+            </aside>
+          </section>
+        `;
+        const storedEmail = localStorage.getItem("echoo_ticket_buyer_email");
+        if (storedEmail && document.getElementById("buyer-email")) document.getElementById("buyer-email").value = storedEmail;
+        if (tiers.length) document.getElementById("reserve-btn").addEventListener("click", () => reserve(event, tiers));
+        loadRelated(event);
+      }
+
+      async function load() {
+        if (!eventId) {
+          root.innerHTML = '<div class="empty">Missing event id.</div>';
+          return;
+        }
+        try {
+          const response = await fetch(`${CONFIG.eventDetailUrl}?id=${encodeURIComponent(eventId)}`, { headers: headers() });
+          const json = await response.json();
+          if (!response.ok) throw new Error(json.error || "Event unavailable");
+          render(json.event, json.tiers || []);
+        } catch (error) {
+          root.innerHTML = `<div class="empty">${error.message}</div>`;
+        }
+      }
+
+      load();
+    </script>
+  </body>
+</html>

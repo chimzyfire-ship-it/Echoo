@@ -245,6 +245,15 @@
         font-size: 13px;
         font-weight: 750;
       }
+      .location-proof {
+        display: block;
+        min-height: 18px;
+        margin-top: 8px;
+        color: rgba(246, 240, 230, 0.72);
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: 0.02em;
+      }
 
       .city-pill::before {
         content: "";
@@ -669,6 +678,16 @@
       .location-modal-btn:hover {
         background: var(--panel);
       }
+      .location-modal .preview-link {
+        display: inline-flex;
+        margin-top: 8px;
+        color: var(--signal);
+        font-size: 12px;
+        font-weight: 850;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
       /* Blurred overlay behind modal */
       .modal-backdrop {
         position: fixed;
@@ -708,6 +727,7 @@
           <h1 id="landing-title">Discover your city, your way.</h1>
           <p class="tagline">Find the plans people will actually say yes to.</p>
           <span class="city-pill">Toronto today</span>
+          <span class="location-proof" id="location-proof">Detecting your location...</span>
         </section>
 
         <section class="control-stack" aria-label="Plan your day">
@@ -716,7 +736,7 @@
             <input id="city-search" autocomplete="off" placeholder="What’s happening in Toronto today?" />
             <button class="send" type="submit" aria-label="Search plans"></button>
           </form>
-          <button class="main-cta" id="weekend-plan" type="button">Plan my instant weekend</button>
+          <button class="main-cta" id="day-plan" type="button">Plan what’s next</button>
           <button class="bored-cta" id="bored-plan" type="button">I’m bored. Surprise me.</button>
         </section>
       </main>
@@ -725,13 +745,13 @@
     <nav class="bottom-nav" aria-label="Main navigation">
       <a class="nav-link active" href="index.html" aria-current="page"><span class="glyph home"></span><span>Home</span></a>
       <a class="nav-link" href="events.html"><span class="glyph discover"></span><span>Discover</span></a>
-      <a class="nav-link" href="events.html?filter=dates"><span class="glyph weekend"></span><span>Weekend</span></a>
+      <a class="nav-link" href="events.html?query=today"><span class="glyph weekend"></span><span>Today</span></a>
       <a class="nav-link" href="app.html"><span class="glyph people"></span><span>Friends</span></a>
       <a class="nav-link" href="auth.html"><span class="glyph profile"></span><span>Profile</span></a>
     </nav>
 
     <aside class="sheet" id="plan-sheet" aria-hidden="true" aria-live="polite">
-      <h2 id="sheet-title">Weekend mode is ready.</h2>
+      <h2 id="sheet-title">Your plan is ready.</h2>
       <p id="sheet-copy">We’ll start with a simple city plan: one anchor, one food stop, one easy backup if the group changes its mind.</p>
       <div class="sheet-actions">
         <a id="sheet-link" href="events.html?query=weekend">Show the plan</a>
@@ -739,167 +759,13 @@
       </div>
     </aside>
 
-    <script>
-      /* Diagnostic logger for redirects */
-      window.addEventListener('beforeunload', () => {
-        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
-        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
-        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
-      });
-
-      const searchInput = document.getElementById("city-search");
-      const sheet = document.getElementById("plan-sheet");
-      const sheetTitle = document.getElementById("sheet-title");
-      const sheetCopy = document.getElementById("sheet-copy");
-      const sheetLink = document.getElementById("sheet-link");
-
-      function openSheet(title, copy, href) {
-        sheetTitle.textContent = title;
-        sheetCopy.textContent = copy;
-        sheetLink.href = href;
-        sheet.classList.add("open");
-        sheet.setAttribute("aria-hidden", "false");
-      }
-
-      document.getElementById("focus-search").addEventListener("click", () => searchInput.focus());
-
-      document.getElementById("search-form").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const query = searchInput.value.trim() || "Toronto today";
-        window.location.href = `events.html?query=${encodeURIComponent(query)}`;
-      });
-
-      document.getElementById("weekend-plan").addEventListener("click", () => {
-        openSheet("Your weekend can start now.", "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", "events.html?query=instant weekend in Toronto");
-      });
-
-      document.getElementById("bored-plan").addEventListener("click", () => {
-        openSheet("Let’s make boredom useful.", "We’ll skip the obvious list and give you three nearby ideas with different energy levels.", "events.html?query=surprise me tonight");
-      });
-
-      document.getElementById("sheet-close").addEventListener("click", () => {
-        sheet.classList.remove("open");
-        sheet.setAttribute("aria-hidden", "true");
-      });
-
-      /* ── Geolocation & City Resolution ── */
-      const locationModal = document.getElementById("location-settings-modal");
-      const locationBackdrop = document.getElementById("location-backdrop");
-      const tryAgainBtn = document.getElementById("location-try-again");
-      const dismissBtn = document.getElementById("location-dismiss");
-      const cityPill = document.querySelector(".city-pill");
-
-      const SUPPORTED_CITIES = [
-        { name: "Toronto", coords: [43.6532, -79.3832] },
-        { name: "Vancouver", coords: [49.2827, -123.1207] },
-        { name: "Montreal", coords: [45.5017, -73.5673] }
-      ];
-
-      function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Earth radius in km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-      }
-
-      function updatePageCity(cityName) {
-        // Update local preferences
-        let prefs = {};
-        try {
-          const stored = localStorage.getItem("echoo_preferences");
-          if (stored) prefs = JSON.parse(stored);
-        } catch(e) {}
-        prefs.city = cityName;
-        localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
-
-        // Update DOM elements
-        if (cityPill) cityPill.textContent = `${cityName} today`;
-        if (searchInput) {
-          searchInput.placeholder = `What’s happening in ${cityName} today?`;
-        }
-
-        // Update weekend plan button click listener to use the correct city name
-        const weekendPlanBtn = document.getElementById("weekend-plan");
-        if (weekendPlanBtn) {
-          // Re-bind click event to use corrected city name
-          const oldBtn = weekendPlanBtn.cloneNode(true);
-          weekendPlanBtn.parentNode.replaceChild(oldBtn, weekendPlanBtn);
-          oldBtn.addEventListener("click", () => {
-            openSheet("Your weekend can start now.", "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=instant weekend in ${cityName}`);
-          });
-        }
-      }
-
-      function detectUserLocation() {
-        if (!navigator.geolocation) {
-          console.warn("Geolocation not supported by browser.");
-          updatePageCity("Toronto"); // Default fallback
-          return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            // Success: Close modals if open
-            locationModal.classList.remove("active");
-            locationBackdrop.classList.remove("active");
-
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-
-            // Find closest city
-            let closestCity = SUPPORTED_CITIES[0].name;
-            let minDistance = Infinity;
-
-            SUPPORTED_CITIES.forEach((cityObj) => {
-              const dist = calculateDistance(lat, lng, cityObj.coords[0], cityObj.coords[1]);
-              if (dist < minDistance) {
-                minDistance = dist;
-                closestCity = cityObj.name;
-              }
-            });
-
-            console.log(`Resolved location to closest city: ${closestCity} (Distance: ${minDistance.toFixed(1)} km)`);
-            updatePageCity(closestCity);
-          },
-          (error) => {
-            console.warn("Geolocation failed or denied:", error);
-            // If denied or prompt ignored, show custom instructions modal
-            locationModal.classList.add("active");
-            locationBackdrop.classList.add("active");
-          },
-          { timeout: 8000 }
-        );
-      }
-
-      // Try again triggers detection again
-      tryAgainBtn.addEventListener("click", () => {
-        detectUserLocation();
-      });
-
-      // Dismiss triggers default fallback (Toronto)
-      dismissBtn.addEventListener("click", () => {
-        locationModal.classList.remove("active");
-        locationBackdrop.classList.remove("active");
-        updatePageCity("Toronto");
-      });
-
-      // Run on page load immediately
-      detectUserLocation();
-    </script>
-
-    <!-- Location Modal Backdrop -->
     <div class="modal-backdrop" id="location-backdrop"></div>
 
-    <!-- Location Settings Prompt Modal -->
     <div class="location-modal" id="location-settings-modal">
-      <h2>Location Access Required</h2>
-      <p>Echoo needs your phone's location access to find and verify curated vibe flows, showtimes, and date itineraries near you.</p>
+      <h2 id="location-modal-title">Canada launch access</h2>
+      <p id="location-modal-copy">Echoo needs your location to unlock live Canadian discovery, routing, showtimes, and local date itineraries.</p>
       
-      <div class="instruction-section">
+      <div class="instruction-section" id="location-instructions">
         <div class="instruction-title">iPhone (iOS) Directions:</div>
         <ol class="instruction-list">
           <li>Open your iPhone <b>Settings</b>.</li>
@@ -918,9 +784,196 @@
       </div>
 
       <div class="location-modal-buttons">
-        <button class="location-modal-btn" id="location-dismiss">Skip</button>
+        <button class="location-modal-btn" id="location-dismiss">Use Toronto</button>
         <button class="location-modal-btn primary" id="location-try-again">Try Again</button>
       </div>
+      <a class="preview-link" href="events.html?preview=1">Preview Echoo</a>
     </div>
+
+    <script src="assets/location-platform.js"></script>
+    <script src="assets/activity-context.js"></script>
+    <script>
+      /* Diagnostic logger for redirects */
+      window.addEventListener('beforeunload', () => {
+        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
+        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
+        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
+      });
+
+      const searchInput = document.getElementById("city-search");
+      const sheet = document.getElementById("plan-sheet");
+      const sheetTitle = document.getElementById("sheet-title");
+      const sheetCopy = document.getElementById("sheet-copy");
+      const sheetLink = document.getElementById("sheet-link");
+      const locationProof = document.getElementById("location-proof");
+      const dayPlanBtn = document.getElementById("day-plan");
+
+      function activityContext(cityName) {
+        const cityRecord = window.EchooLocationPlatform.cityByName(cityName);
+        return window.EchooActivityContext.getActivityContext({
+          city: cityName,
+          timezone: cityRecord?.timezone
+        });
+      }
+
+      function planQuery(cityName) {
+        return activityContext(cityName).planQuery;
+      }
+
+      function setDayPlanCopy(cityName) {
+        const context = activityContext(cityName);
+        if (dayPlanBtn) dayPlanBtn.textContent = context.planCta;
+        if (sheetLink) sheetLink.href = `events.html?query=${encodeURIComponent(planQuery(cityName))}`;
+        if (searchInput) searchInput.placeholder = context.searchPlaceholder;
+        return context;
+      }
+
+      function openSheet(title, copy, href) {
+        sheetTitle.textContent = title;
+        sheetCopy.textContent = copy;
+        sheetLink.href = href;
+        sheet.classList.add("open");
+        sheet.setAttribute("aria-hidden", "false");
+      }
+
+      document.getElementById("focus-search").addEventListener("click", () => searchInput.focus());
+
+      document.getElementById("search-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const query = searchInput.value.trim() || "Toronto today";
+        window.location.href = `events.html?query=${encodeURIComponent(query)}`;
+      });
+
+      dayPlanBtn.addEventListener("click", () => {
+        const context = activityContext("Toronto");
+        openSheet(`Built for ${context.label}.`, "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=${encodeURIComponent(context.planQuery)}`);
+      });
+
+      document.getElementById("bored-plan").addEventListener("click", () => {
+        const context = activityContext("Toronto");
+        openSheet("Let’s make boredom useful.", "We’ll skip the obvious list and give you three nearby ideas with different energy levels.", `events.html?query=${encodeURIComponent(`surprise me ${context.label} in Toronto`)}`);
+      });
+
+      document.getElementById("sheet-close").addEventListener("click", () => {
+        sheet.classList.remove("open");
+        sheet.setAttribute("aria-hidden", "true");
+      });
+
+      /* ── Geolocation & City Resolution ── */
+      const locationModal = document.getElementById("location-settings-modal");
+      const locationBackdrop = document.getElementById("location-backdrop");
+      const tryAgainBtn = document.getElementById("location-try-again");
+      const dismissBtn = document.getElementById("location-dismiss");
+      const modalTitle = document.getElementById("location-modal-title");
+      const modalCopy = document.getElementById("location-modal-copy");
+      const modalInstructions = document.getElementById("location-instructions");
+      const cityPill = document.querySelector(".city-pill");
+
+      function updatePageCity(cityName, coords) {
+        // Update local preferences
+        let prefs = {};
+        try {
+          const stored = localStorage.getItem("echoo_preferences");
+          if (stored) prefs = JSON.parse(stored);
+        } catch(e) {}
+        const locationState = {
+          ...prefs,
+          city: cityName,
+          countryCode: "CA",
+          locationSupported: true
+        };
+        if (coords) {
+          locationState.lastLat = coords.lat;
+          locationState.lastLng = coords.lng;
+          locationState.locationPrecision = "gps";
+        } else if (!locationState.locationPrecision) {
+          locationState.locationPrecision = "manual_city";
+        }
+        window.EchooLocationPlatform.writeLocationState(locationState);
+
+        // Update DOM elements
+        if (cityPill) cityPill.textContent = `${cityName} today`;
+        if (locationProof) {
+          locationProof.textContent = coords
+            ? `Precise location on · ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${coords.accuracy ? ` · ±${Math.round(coords.accuracy)}m` : ""}`
+            : `Using ${cityName} as your city base`;
+        }
+        const context = setDayPlanCopy(cityName);
+
+        dayPlanBtn.onclick = () => {
+          openSheet(`Built for ${context.label}.`, "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.", `events.html?query=${encodeURIComponent(context.planQuery)}`);
+        };
+      }
+
+      function detectUserLocation() {
+        if (!navigator.geolocation) {
+          console.warn("Geolocation not supported by browser.");
+          showCanadaPreviewModal("Location is off", "Choose a Canadian launch city manually, or continue previewing Echoo until location is available.");
+          updatePageCity("Toronto");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Success: Close modals if open
+            locationModal.classList.remove("active");
+            locationBackdrop.classList.remove("active");
+
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+            if (!resolved.supported) {
+              console.warn(resolved.message);
+              window.EchooLocationPlatform.writeLocationState({
+                city: resolved.fallbackCity.name,
+                countryCode: "outside_ca",
+                locationSupported: false,
+                locationReason: resolved.reason
+              });
+              showCanadaPreviewModal("Canada launch only", "You can preview Echoo, but live discovery, routing, booking, and checkout are available only in Canada during MVP.");
+              return;
+            }
+
+            console.log(`Resolved location to closest city: ${resolved.city.name} (Distance: ${resolved.city.distanceKm.toFixed(1)} km)`);
+            updatePageCity(resolved.city.name, { lat, lng, accuracy: position.coords.accuracy });
+          },
+          (error) => {
+            console.warn("Geolocation failed or denied:", error);
+            showCanadaPreviewModal("Location access needed", "Echoo uses device location to unlock live Canada discovery. You can still choose a launch city manually.");
+          },
+          { timeout: 8000 }
+        );
+      }
+
+      function showCanadaPreviewModal(title, copy) {
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalCopy) modalCopy.textContent = copy;
+        if (modalInstructions) modalInstructions.hidden = title === "Canada launch only";
+        locationModal.classList.add("active");
+        locationBackdrop.classList.add("active");
+      }
+
+      // Try again triggers detection again
+      tryAgainBtn.addEventListener("click", () => {
+        detectUserLocation();
+      });
+
+      // Dismiss triggers default fallback (Toronto)
+      dismissBtn.addEventListener("click", () => {
+        locationModal.classList.remove("active");
+        locationBackdrop.classList.remove("active");
+        window.EchooLocationPlatform.writeLocationState({
+          city: "Toronto",
+          countryCode: "CA",
+          locationSupported: true,
+          locationPrecision: "manual_city"
+        });
+        updatePageCity("Toronto");
+      });
+
+      detectUserLocation();
+      setDayPlanCopy("Toronto");
+    </script>
   </body>
 </html>

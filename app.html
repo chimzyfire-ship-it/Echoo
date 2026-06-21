@@ -155,6 +155,8 @@
         -ms-overflow-style: none;
         cursor: grab;
         user-select: none;
+        touch-action: pan-x;
+        scroll-behavior: auto;
       }
       .news-slider::-webkit-scrollbar {
         display: none;
@@ -879,7 +881,7 @@
         <div class="ask-card">
           <form id="plan-form">
             <input id="plan-query" placeholder="feeling low and need a pick-me-up..." />
-            <button class="primary" type="submit">Find my night</button>
+            <button class="primary" type="submit">Build my plan</button>
           </form>
           <button class="ghost" id="surprise">Surprise me</button>
         </div>
@@ -892,7 +894,7 @@
           <p>Real places within walking distance, filtered by what's actually open right now.</p>
         </button>
         <button class="module" data-action="date">
-          <small>Date night</small>
+          <small>Date plan</small>
           <strong>Plan something worth remembering</strong>
           <p>Dinner, an experience, and a backup spot — all connected and timed.</p>
         </button>
@@ -928,38 +930,6 @@
       <div class="map-container" id="map-container"></div>
     </div>
 
-    <!-- Location Failure Backdrop (dark blur behind modal) -->
-    <div class="geo-backdrop" id="geo-backdrop"></div>
-
-    <!-- Location Settings Instruction Modal (shown when GPS is off or denied) -->
-    <div class="geo-settings-modal" id="geo-settings-modal">
-      <h3>Enable Location Services</h3>
-      <p>Echoo tried to access your location but your device GPS is off or permission was denied. Turn it on so we can verify real walking distances on your flow.</p>
-
-      <div class="geo-instructions">
-        <div class="geo-instruction-title">iPhone (iOS) Directions:</div>
-        <ol class="geo-instruction-list">
-          <li>Open your iPhone <b>Settings</b>.</li>
-          <li>Tap <b>Privacy & Security</b> &gt; <b>Location Services</b>.</li>
-          <li>Scroll and tap your browser (e.g. <b>Safari</b> or <b>Chrome</b>).</li>
-          <li>Select <b>"While Using the App"</b> and ensure <b>Precise Location</b> is on.</li>
-        </ol>
-
-        <div class="geo-instruction-title">Android Directions:</div>
-        <ol class="geo-instruction-list">
-          <li>Open your phone <b>Settings</b>.</li>
-          <li>Tap <b>Apps</b> &gt; <b>Chrome</b> (or your browser app).</li>
-          <li>Tap <b>Permissions</b> &gt; <b>Location</b>.</li>
-          <li>Choose <b>"Allow only while using the app"</b>.</li>
-        </ol>
-      </div>
-
-      <div class="geo-modal-buttons">
-        <button class="geo-modal-btn" id="geo-skip">Skip</button>
-        <button class="geo-modal-btn primary" id="geo-retry">Try Again</button>
-      </div>
-    </div>
-
     <nav class="bottom-nav" aria-label="Primary">
       <a class="active" href="app.html">Home</a>
       <a href="events.html">Explore</a>
@@ -968,6 +938,8 @@
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/location-platform.js"></script>
+    <script src="assets/activity-context.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener('beforeunload', () => {
@@ -978,7 +950,9 @@
 
       const CONFIG = {
         supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
-        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH"
+        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
+        planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
       };
 
       /* ── Preferences retrieval ── */
@@ -989,6 +963,8 @@
       let budget = params.get("budget");
       let energy = params.get("energy");
       let tone = params.get("tone");
+      let preciseLat;
+      let preciseLng;
 
       if (!name) {
         const stored = localStorage.getItem("echoo_preferences");
@@ -1001,6 +977,8 @@
             budget = prefs.budget;
             energy = prefs.energy;
             tone = prefs.tone;
+            preciseLat = Number(prefs.lastLat);
+            preciseLng = Number(prefs.lastLng);
           } catch (e) {}
         }
       }
@@ -1012,6 +990,16 @@
       energy = energy || "chill";
       tone = tone || "direct";
 
+      function getActivityContext() {
+        const cityRecord = window.EchooLocationPlatform.cityByName(city);
+        return window.EchooActivityContext.getActivityContext({
+          city,
+          timezone: cityRecord?.timezone
+        });
+      }
+
+      let activityContext = getActivityContext();
+
       /* ── Set up name / avatar ── */
       const initials = name.split(" ").filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "PU";
       document.getElementById("avatar").textContent = initials;
@@ -1021,16 +1009,16 @@
       const headlineEl = document.getElementById("headline");
       const subheadEl = document.getElementById("subhead");
       
-      let customHeadline = `${firstName}, what are you in the mood for?`;
-      let customSubhead = `Tailoring plans for your vibe in ${city}.`;
+      let customHeadline = `${firstName}, what fits ${activityContext.label}?`;
+      let customSubhead = `Tailoring plans for your pace in ${city}.`;
 
       if (vibes.length > 0) {
         const firstVibe = vibes[0].toLowerCase();
         if (energy === "hype") {
-          customHeadline = `${firstName}, ready for a high-energy night?`;
+          customHeadline = `${firstName}, ready for something high-energy?`;
           customSubhead = `Finding loud spots, sports bars, or active crawls in ${city} matching "${firstVibe}".`;
         } else if (energy === "chill") {
-          customHeadline = `${firstName}, keeping it relaxed tonight?`;
+          customHeadline = `${firstName}, keeping it relaxed?`;
           customSubhead = `Curating cozy lounge spots, acoustic sets, or quiet dates in ${city} matching "${firstVibe}".`;
         } else {
           customHeadline = `${firstName}, what sounds good in ${city}?`;
@@ -1038,8 +1026,8 @@
         }
       } else {
         if (energy === "hype") {
-          customHeadline = `${firstName}, what's the move tonight?`;
-          customSubhead = `Tracking high-energy live shows, events, and late-night spots in ${city}.`;
+          customHeadline = `${firstName}, what's the move ${activityContext.label}?`;
+          customSubhead = `Tracking high-energy live shows, events, and active spots in ${city}.`;
         } else if (energy === "chill") {
           customHeadline = `${firstName}, looking to unwind?`;
           customSubhead = `Finding cozy date spots, hidden bars, and quiet listening rooms in ${city}.`;
@@ -1059,12 +1047,12 @@
           nearbyP.textContent = `Places within walking distance. Budget comfort: ${budget}.`;
         }
 
-        // Card 2: Date Night
+        // Card 2: Date plan
         const dateStrong = cards[1].querySelector("strong");
         const dateP = cards[1].querySelector("p");
         if (dateStrong && dateP) {
           if (vibes.includes("Cozy date spots")) {
-            dateStrong.textContent = "Your Curated Date Night";
+            dateStrong.textContent = "Your Curated Date Plan";
             dateP.textContent = `Cozy date itineraries in ${city} tailored to ${energy} energy.`;
           } else {
             dateStrong.textContent = "Custom Date Route";
@@ -1077,7 +1065,7 @@
         const ticketsP = cards[2].querySelector("p");
         if (ticketsStrong && ticketsP) {
           let ticketTopic = "live concerts";
-          if (vibes.includes("Late-night cinema")) ticketTopic = "cinema screenings";
+          if (vibes.includes("Late cinema")) ticketTopic = "cinema screenings";
           else if (vibes.includes("Sports")) ticketTopic = "sports events";
           else if (vibes.includes("Art & galleries")) ticketTopic = "gallery exhibitions";
           
@@ -1099,7 +1087,7 @@
           { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only zones", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" },
           { tag: "Jazz", text: "Queen West jazz club hosts unannounced late basement set", img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80" },
           { tag: "Food", text: "Ossington street crawl reveals new underground ramen spot", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally tonight", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
+          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally today", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
           { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset", img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80" }
         ],
         "Vancouver": [
@@ -1184,49 +1172,59 @@
 
       // Marquee slider functionality
       const slider = document.getElementById("news-slider");
-      let scrollSpeed = 0.45;
+      let scrollSpeed = 0.18;
       let autoScrollActive = true;
       let interactionTimeout;
+      let isDraggingNews = false;
+      let newsStartX = 0;
+      let newsStartScrollLeft = 0;
+      let isProgrammaticScroll = false;
 
       function step() {
         if (autoScrollActive && slider) {
+          isProgrammaticScroll = true;
           slider.scrollLeft += scrollSpeed;
           if (slider.scrollLeft >= slider.scrollWidth / 2) {
             slider.scrollLeft = 0;
           }
+          requestAnimationFrame(() => { isProgrammaticScroll = false; });
         }
         requestAnimationFrame(step);
       }
 
-      function resetAutoScroll() {
+      function pauseNewsAutoScroll(delay = 2600) {
         autoScrollActive = false;
         clearTimeout(interactionTimeout);
         interactionTimeout = setTimeout(() => {
           autoScrollActive = true;
-        }, 4000);
+        }, delay);
       }
 
       if (slider) {
-        slider.addEventListener("mousedown", () => autoScrollActive = false);
-        slider.addEventListener("touchstart", () => autoScrollActive = false);
-        slider.addEventListener("scroll", resetAutoScroll);
-
-        let isDown = false;
-        let startX;
-        let scrollLeftVal;
-        slider.addEventListener("mousedown", (e) => {
-          isDown = true;
-          startX = e.pageX - slider.offsetLeft;
-          scrollLeftVal = slider.scrollLeft;
+        slider.addEventListener("pointerdown", (event) => {
+          isDraggingNews = true;
+          newsStartX = event.clientX;
+          newsStartScrollLeft = slider.scrollLeft;
+          slider.setPointerCapture?.(event.pointerId);
+          pauseNewsAutoScroll(5000);
         });
-        slider.addEventListener("mouseleave", () => isDown = false);
-        slider.addEventListener("mouseup", () => isDown = false);
-        slider.addEventListener("mousemove", (e) => {
-          if (!isDown) return;
-          e.preventDefault();
-          const x = e.pageX - slider.offsetLeft;
-          const walk = (x - startX) * 1.5;
-          slider.scrollLeft = scrollLeftVal - walk;
+        slider.addEventListener("pointermove", (event) => {
+          if (!isDraggingNews) return;
+          event.preventDefault();
+          const delta = event.clientX - newsStartX;
+          slider.scrollLeft = newsStartScrollLeft - delta;
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
+          slider.addEventListener(type, (event) => {
+            if (!isDraggingNews) return;
+            isDraggingNews = false;
+            if (slider.hasPointerCapture?.(event.pointerId)) slider.releasePointerCapture(event.pointerId);
+            pauseNewsAutoScroll(1800);
+          });
+        });
+        slider.addEventListener("wheel", () => pauseNewsAutoScroll(2200), { passive: true });
+        slider.addEventListener("scroll", () => {
+          if (!isProgrammaticScroll && !isDraggingNews) pauseNewsAutoScroll(2200);
         });
 
         requestAnimationFrame(step);
@@ -1239,10 +1237,7 @@
       const chatSend  = document.getElementById("chat-send");
       const mapOverlay = document.getElementById("map-overlay");
       const mapClose   = document.getElementById("map-close");
-      const geoBackdrop = document.getElementById("geo-backdrop");
-      const geoModal    = document.getElementById("geo-settings-modal");
-      const geoSkipBtn  = document.getElementById("geo-skip");
-      const geoRetryBtn = document.getElementById("geo-retry");
+      
 
       /* ── Modular Map Wrapper ── */
       const EchooMap = {
@@ -1321,6 +1316,24 @@
         }
       };
 
+      window.EchooLocationPlatform.SUPPORTED_CITIES.forEach((supportedCity) => {
+        if (curationDb[supportedCity.name]) return;
+        const lat = supportedCity.coords[0];
+        const lng = supportedCity.coords[1];
+        curationDb[supportedCity.name] = {
+          "chill": [
+            { name: `${supportedCity.name} Listening Room`, tags: `Live music · ${supportedCity.province}`, coords: [lat + 0.004, lng - 0.004], img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=300&q=80", vibe: "Soft lighting, local performers, easy seating." },
+            { name: `${supportedCity.name} Late Kitchen`, tags: `Comfort Food · ${supportedCity.province}`, coords: [lat - 0.003, lng + 0.005], img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80", vibe: "Low-pressure dinner stop with warm service." },
+            { name: `${supportedCity.name} Quiet Lounge`, tags: `Cocktails · ${supportedCity.province}`, coords: [lat + 0.002, lng + 0.006], img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80", vibe: "A slower second stop for conversation." }
+          ],
+          "hype": [
+            { name: `${supportedCity.name} Live Stage`, tags: `Concerts · ${supportedCity.province}`, coords: [lat + 0.005, lng - 0.006], img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=300&q=80", vibe: "High-energy room, late crowd, fast entry." },
+            { name: `${supportedCity.name} Night Eats`, tags: `Food crawl · ${supportedCity.province}`, coords: [lat - 0.004, lng - 0.005], img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80", vibe: "Busy counter service and a quick reset between stops." },
+            { name: `${supportedCity.name} Arcade Bar`, tags: `Games · ${supportedCity.province}`, coords: [lat + 0.003, lng + 0.004], img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80", vibe: "Bright, loud, and easy for groups." }
+          ]
+        };
+      });
+
       function addSeeRouteButton(stops) {
         const card = document.createElement("div");
         card.className = "see-route-card";
@@ -1372,9 +1385,14 @@
         if (el) el.remove();
       }
 
-      function addLocationCard(img, imgWebp, placeName, tags, vibe, hot) {
+      function addLocationCard(img, imgWebp, placeName, tags, vibe, hot, detailId) {
         const card = document.createElement("div");
         card.className = hot ? "loc-card hot" : "loc-card";
+        if (detailId) {
+          card.dataset.detailId = detailId;
+          card.style.cursor = "pointer";
+          card.title = "Open event details";
+        }
         const hotBadge = hot ? '<div class="loc-card-hot">Trending now</div>' : '';
         card.innerHTML = `
           <picture>
@@ -1386,7 +1404,13 @@
             <div class="loc-card-tags">${tags}</div>
             <div class="loc-card-name">${placeName}</div>
             <div class="loc-card-vibe">${vibe}</div>
+            ${detailId ? '<div class="loc-card-tags" style="margin-top:8px;">Open details and tickets</div>' : ''}
           </div>`;
+        if (detailId) {
+          card.addEventListener("click", () => {
+            window.location.href = `event.html?id=${encodeURIComponent(detailId)}`;
+          });
+        }
         chatBody.appendChild(card);
         scrollChat();
       }
@@ -1413,6 +1437,66 @@
         scrollChat();
       }
 
+      async function fetchPreciseNearby(limit) {
+        if (!Number.isFinite(preciseLat) || !Number.isFinite(preciseLng)) return [];
+        try {
+          const response = await fetch(CONFIG.locationSearchUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
+              "apikey": CONFIG.supabaseAnonKey
+            },
+            body: JSON.stringify({ lat: preciseLat, lng: preciseLng, radiusMeters: 25000, limit })
+          });
+          if (!response.ok) return [];
+          const payload = await response.json();
+          if (!payload.supported || !Array.isArray(payload.results)) return [];
+          return payload.results.map((item) => ({
+            detailId: item.entity_id || item.id,
+            name: item.title,
+            tags: `${item.category || item.entity_type || "Echoo"} · ${item.distance_meters ? Math.max(1, Math.round(item.distance_meters / 1000)) + " km away" : city}`,
+            coords: [item.latitude, item.longitude],
+            img: item.image_url || "assets/optimized/news-music-768.jpg",
+            vibe: item.description || "Verified nearby recommendation from Echoo location search."
+          }));
+        } catch (error) {
+          console.warn("Echoo: precise nearby search failed, using curated local fallback.", error);
+          return [];
+        }
+      }
+
+      async function fetchSmartPlan(limit, queryText) {
+        try {
+          const body = Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+            ? { lat: preciseLat, lng: preciseLng, query: queryText, energy, budget, limit }
+            : { city, query: queryText, energy, budget, limit };
+          const response = await fetch(CONFIG.planEngineUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
+              "apikey": CONFIG.supabaseAnonKey
+            },
+            body: JSON.stringify(body)
+          });
+          if (!response.ok) return [];
+          const payload = await response.json();
+          if (!payload.supported || !Array.isArray(payload.plans)) return [];
+          return payload.plans.map((item) => ({
+            detailId: item.entityId || item.id,
+            name: item.title,
+            tags: `${item.category || "Echoo"} · ${item.distanceMeters ? Math.max(1, Math.round(item.distanceMeters / 1000)) + " km away" : item.city || city}`,
+            coords: [item.latitude, item.longitude],
+            img: item.imageUrl || "assets/optimized/news-music-768.jpg",
+            vibe: item.description || item.why || "Matched to your current location, time, and preferences."
+          })).filter((item) => Number.isFinite(item.coords[0]) && Number.isFinite(item.coords[1]));
+        } catch (error) {
+          console.warn("Echoo: smart plan engine failed, using nearby fallback.", error);
+          return [];
+        }
+      }
+
       /* ── Open / close ── */
       function openChat(userText) {
         chatBody.innerHTML = "";
@@ -1428,137 +1512,58 @@
 
       document.getElementById("chat-close").addEventListener("click", closeChat);
 
-      /* ── Simulated conversation ── */
-      function delay(ms) {
-        return new Promise((r) => setTimeout(r, ms));
-      }
-
       /* ── Real Geolocation Detection ── */
-      const SUPPORTED_CITIES = [
-        { name: "Toronto",   coords: [43.6532, -79.3832] },
-        { name: "Vancouver", coords: [49.2827, -123.1207] },
-        { name: "Montreal",  coords: [45.5017, -73.5673] }
-      ];
-
-      function haversineDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 +
-                  Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-                  Math.sin(dLon/2)**2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      }
-
       function resolveCity(lat, lng) {
-        let closest = SUPPORTED_CITIES[0].name;
-        let minDist = Infinity;
-        SUPPORTED_CITIES.forEach(c => {
-          const d = haversineDistance(lat, lng, c.coords[0], c.coords[1]);
-          if (d < minDist) { minDist = d; closest = c.name; }
-        });
-        return closest;
+        const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+        if (!resolved.supported) {
+          return null;
+        }
+        return resolved.city.name;
       }
 
-      function showGeoFailureModal() {
-        geoBackdrop.classList.add("active");
-        geoModal.classList.add("active");
-      }
+      function captureDeviceLocationOnAppLoad() {
+        const prefs = window.EchooLocationPlatform.readPreferences();
+        if (Number.isFinite(Number(prefs.lastLat)) && Number.isFinite(Number(prefs.lastLng)) && prefs.locationSupported !== false) {
+          preciseLat = Number(prefs.lastLat);
+          preciseLng = Number(prefs.lastLng);
+          return;
+        }
+        if (!navigator.geolocation) return;
 
-      function hideGeoFailureModal() {
-        geoBackdrop.classList.remove("active");
-        geoModal.classList.remove("active");
-      }
-
-      function requestLocationPermission() {
-        return new Promise((resolve) => {
-          if (!navigator.geolocation) {
-            console.warn("[Echoo] Geolocation API not supported.");
-            resolve({ granted: false });
-            return;
-          }
-
-          function attemptGeoFix() {
-            // Stage 1: Try high-accuracy (satellite) first.
-            // Timeout is set to 4000ms. If it times out or fails (often indoors), we fall back.
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                handleSuccess(position);
-              },
-              (error) => {
-                console.warn("[Echoo] Stage 1 (High Accuracy) failed. Code:", error.code, error.message);
-                
-                if (error.code === 1) {
-                  // PERMISSION_DENIED: User explicitly blocked or settings turned off Safari location.
-                  // Show the instruction modal immediately.
-                  showGeoFailureModal();
-                } else {
-                  // POSITION_UNAVAILABLE (2) or TIMEOUT (3): GPS satellite signal weak or indoors.
-                  // Stage 2: Fall back to low-accuracy Wi-Fi/cell tower positioning (instant indoors).
-                  console.log("[Echoo] Falling back to Stage 2 (Low Accuracy / Wi-Fi)...");
-                  navigator.geolocation.getCurrentPosition(
-                    (pos) => handleSuccess(pos),
-                    (err) => {
-                      console.warn("[Echoo] Stage 2 failed. Code:", err.code, err.message);
-                      showGeoFailureModal();
-                    },
-                    {
-                      enableHighAccuracy: false,
-                      timeout: 6000,
-                      maximumAge: 300000 // Accept a cached position up to 5 minutes old
-                    }
-                  );
-                }
-              },
-              {
-                enableHighAccuracy: true,
-                timeout: 4000,
-                maximumAge: 0 // Do not accept cached positions for high accuracy
-              }
-            );
-          }
-
-          function handleSuccess(position) {
-            hideGeoFailureModal();
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            const resolvedCity = resolveCity(lat, lng);
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+            if (!resolved.supported) {
+              window.EchooLocationPlatform.writeLocationState({
+                city: "Toronto",
+                countryCode: "outside_ca",
+                locationSupported: false,
+                locationReason: resolved.reason
+              });
+              return;
+            }
 
-            try {
-              let prefs = {};
-              const stored = localStorage.getItem("echoo_preferences");
-              if (stored) prefs = JSON.parse(stored);
-              prefs.city = resolvedCity;
-              prefs.lastLat = lat;
-              prefs.lastLng = lng;
-              localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
-            } catch(e) {}
-
-            city = resolvedCity;
-            console.log(`[Echoo] GPS fix: ${lat.toFixed(4)}, ${lng.toFixed(4)} → ${resolvedCity}`);
-            resolve({ granted: true, lat, lng, city: resolvedCity });
-          }
-
-          const onSkip = () => {
-            cleanup();
-            hideGeoFailureModal();
-            resolve({ granted: false });
-          };
-          const onRetry = () => {
-            hideGeoFailureModal();
-            attemptGeoFix();
-          };
-          function cleanup() {
-            geoSkipBtn.removeEventListener("click", onSkip);
-            geoRetryBtn.removeEventListener("click", onRetry);
-          }
-
-          geoSkipBtn.addEventListener("click", onSkip);
-          geoRetryBtn.addEventListener("click", onRetry);
-
-          attemptGeoFix();
-        });
+            preciseLat = lat;
+            preciseLng = lng;
+            city = resolved.city.name;
+            activityContext = getActivityContext();
+            window.EchooLocationPlatform.writeLocationState({
+              city,
+              countryCode: "CA",
+              locationSupported: true,
+              locationPrecision: "gps",
+              lastLat: lat,
+              lastLng: lng
+            });
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 300000 }
+        );
       }
+
+      captureDeviceLocationOnAppLoad();
 
       /* ── Simulated conversation ── */
       function delay(ms) {
@@ -1571,22 +1576,15 @@
 
         // If starting fresh (opening default chat window)
         if (!userText) {
-          addBubble("ai", `hey there! let's plan your night. i can help you compile a dynamic vibe flow, check local showtimes, or recommend food in ${city}.`);
-          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          activityContext = getActivityContext();
+          addBubble("ai", `hey there. i can build something that fits ${activityContext.label} in ${city}, check local showtimes, or recommend food nearby.`);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
           return;
         }
 
         // Heuristically check if this is an itinerary / routing request
         const textLower = userText.toLowerCase();
-        const isPlanRequest = textLower.includes("plan") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out");
-
-        // iOS Safari Fix: We MUST trigger navigator.geolocation synchronously 
-        // with the user's click event. Any 'await' before calling it will drop 
-        // the user-gesture token and Safari will silently block the request.
-        let geoPromise = null;
-        if (isPlanRequest) {
-          geoPromise = requestLocationPermission();
-        }
+        const isPlanRequest = textLower.includes("plan") || textLower.includes("today") || textLower.includes("tonight") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out") || textLower.includes("morning") || textLower.includes("lunch") || textLower.includes("afternoon") || textLower.includes("evening");
 
         // Add user bubble
         addBubble("user", userText);
@@ -1596,18 +1594,13 @@
         if (isPlanRequest) {
           await delay(600);
           removeTyping();
-          addBubble("ai", "got it — verifying your location for real-time routing and walking distances.");
-
-          addTyping();
-
-          const geoResult = await geoPromise;
-
-          removeTyping();
-
-          if (geoResult.granted) {
-            addBubble("ai", `📍 location locked — ${geoResult.city}. coordinates verified. how many stops on your flow tonight?`);
+          const locationState = window.EchooLocationPlatform.readPreferences();
+          if (locationState.locationSupported === false) {
+            addBubble("ai", "Echoo is launching live planning in Canada first. You can preview the app, but real near-me routing and checkout unlock only while you are in Canada.");
+          } else if (Number.isFinite(preciseLat) && Number.isFinite(preciseLng)) {
+            addBubble("ai", `location is already set for ${city}. how many stops should I build?`);
           } else {
-            addBubble("ai", `no worries — using ${city} city center as your base. how many stops on your flow tonight?`);
+            addBubble("ai", `using ${city} as your base. how many stops should I build?`);
           }
           
           addPills(["Single Stop", "2-Stop Flow", "3-Stop Flow", "Custom Flow"]);
@@ -1617,7 +1610,7 @@
           removeTyping();
           addBubble("ai", `noted! let me see what aligns with your ${energy} vibe and ${budget} budget preferences in ${city}.`);
           await delay(400);
-          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
         }
       }
 
@@ -1654,32 +1647,49 @@
           if (text === "2-Stop Flow") numStops = 2;
           if (text === "3-Stop Flow") numStops = 3;
 
-          const stops = pool.slice(0, numStops);
+          const smartStops = await fetchSmartPlan(numStops, `${activityContext.defaultQuery} ${currentEnergy} ${budget}`);
+          const liveStops = smartStops.length >= numStops ? smartStops : await fetchPreciseNearby(numStops);
+          const stops = liveStops.length >= numStops ? liveStops.slice(0, numStops) : pool.slice(0, numStops);
+          const usePreciseBase = Number.isFinite(preciseLat) && Number.isFinite(preciseLng);
+          const preciseStops = usePreciseBase && liveStops.length < numStops
+            ? stops.map((stop, index) => ({
+                ...stop,
+                coords: [
+                  preciseLat + (index + 1) * 0.0025,
+                  preciseLng + (index % 2 === 0 ? -0.0022 : 0.0022)
+                ],
+                tags: `${stop.tags} · near your verified location`
+              }))
+            : stops;
 
           // Render stops in chat
-          for (let i = 0; i < stops.length; i++) {
-            const stop = stops[i];
+          for (let i = 0; i < preciseStops.length; i++) {
+            const stop = preciseStops[i];
             addLocationCard(
               stop.img,
               stop.img, // fallback WebP is same URL for mock pictures
               stop.name,
               `${stop.tags} · ${budget}`,
               stop.vibe,
-              i === 0 // Mark first card as trending badge
+              i === 0,
+              stop.detailId
             );
 
             // Add dashed connecting track if not the last stop
-            if (i < stops.length - 1) {
+            if (i < preciseStops.length - 1) {
               await delay(300);
-              const minutes = (i + 1) * 6 + 4;
-              const distance = (i + 1) * 450 + 200;
+              const minutes = usePreciseBase ? (i + 1) * 5 + 3 : (i + 1) * 6 + 4;
+              const distance = usePreciseBase ? (i + 1) * 350 + 150 : (i + 1) * 450 + 200;
               addTrack(`${minutes} min · ${distance}m walk`);
             }
             await delay(400);
           }
 
           // AI intro/outro copies
-          let outroMsg = `here is your curated ${stops.length}-stop flow matching your ${energy} vibe in ${city}.`;
+          let outroMsg = `here is your curated ${preciseStops.length}-stop flow matching your ${energy} vibe in ${city}.`;
+          if (usePreciseBase) {
+            outroMsg = `here is your ${preciseStops.length}-stop flow built from your verified location, not just the city center.`;
+          }
           if (tone === "direct") {
             outroMsg = `fits the vibe. should I adjust any details?`;
           } else if (tone === "detailed") {
@@ -1690,13 +1700,13 @@
           await delay(200);
 
           // Add see route button (opens map overlay)
-          addSeeRouteButton(stops);
+          addSeeRouteButton(preciseStops);
           await delay(200);
 
           addPills(["Make it cheaper", "Show me something else", "Clear route"]);
-        } else if (text === "Find my night") {
+        } else if (text === "Build my plan") {
           removeTyping();
-          runConversation("find my night");
+          runConversation(activityContext.defaultQuery);
         } else if (text === "Recommend food") {
           await delay(1000);
           removeTyping();
@@ -1705,13 +1715,13 @@
           const spot = cityDb["chill"][1]; // select dining/food stop
           addLocationCard(spot.img, spot.img, spot.name, spot.tags, spot.vibe, true);
           await delay(400);
-          addPills(["Find my night", "Show movie times"]);
+          addPills(["Build my plan", "Show movie times"]);
         } else if (text === "Show movie times") {
           await delay(1000);
           removeTyping();
-          addBubble("ai", `TIFF Lightbox in ${city} has screenings running tonight starting at 7:30 PM. Would you like to chain this into a flow?`);
+          addBubble("ai", `TIFF Lightbox in ${city} has screenings available today. Would you like to chain one into a flow?`);
           await delay(400);
-          addPills(["Find my night", "Recommend food"]);
+          addPills(["Build my plan", "Recommend food"]);
         } else if (text === "Make it cheaper") {
           await delay(1000);
           removeTyping();
@@ -1720,20 +1730,20 @@
           const spot = cityDb["chill"][0];
           addLocationCard(spot.img, spot.img, spot.name, `${spot.tags} · $`, "No cover fee, cheap drinks, cozy entry", false);
           await delay(400);
-          addPills(["Find my night", "Clear route"]);
+          addPills(["Build my plan", "Clear route"]);
         } else if (text === "Clear route") {
           await delay(600);
           removeTyping();
           addBubble("ai", "route cleared. what would you like to plan next?");
           await delay(400);
-          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
         } else {
           // Default pill response
           await delay(1000);
           removeTyping();
           addBubble("ai", "got it. here's another angle.");
           await delay(400);
-          addPills(["Find my night", "Recommend food", "Show movie times"]);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
         }
 
         pillBusy = false;
@@ -1747,7 +1757,7 @@
         removeTyping();
         addBubble("ai", "noted. let me pull something that fits that a little better.");
         await delay(400);
-        addPills(["Find my night", "Recommend food"]);
+        addPills(["Build my plan", "Recommend food"]);
       }
 
       /* ── Chat input submit ── */
@@ -1766,7 +1776,7 @@
       /* ── Form / button triggers ── */
       document.getElementById("plan-form").addEventListener("submit", (e) => {
         e.preventDefault();
-        const q = document.getElementById("plan-query").value.trim() || "something fun tonight";
+        const q = document.getElementById("plan-query").value.trim() || activityContext.defaultQuery;
         openChat(q);
       });
 
@@ -1787,7 +1797,7 @@
           if (action === "nearby") {
             openChat("what's good and open near me right now");
           } else if (action === "date") {
-            openChat("plan a date night worth remembering");
+            openChat("plan a date route worth remembering");
           } else if (action === "tickets") {
             openChat("any good shows or events with seats available");
           } else if (action === "crew") {
