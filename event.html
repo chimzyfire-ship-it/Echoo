@@ -115,6 +115,25 @@
         padding: 12px;
         background: rgba(245, 241, 232, 0.035);
       }
+      .stay-card {
+        display: grid;
+        gap: 10px;
+        border: 1px solid var(--line);
+        padding: 12px;
+        background: rgba(245, 241, 232, 0.035);
+      }
+      .stay-card img {
+        width: 100%;
+        height: 128px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        filter: saturate(0.72) contrast(1.04);
+      }
+      .stay-card strong { display: block; }
+      .stay-price {
+        color: var(--signal);
+        font-weight: 950;
+      }
       .empty { border: 1px dashed var(--line); color: var(--muted); padding: 16px; }
       @media (min-width: 900px) {
         .hero { grid-template-columns: minmax(0, 1fr) 420px; align-items: end; padding: 42px 0 24px; }
@@ -134,6 +153,7 @@
       const CONFIG = {
         anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
         eventDetailUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-detail",
+        eventStaysUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-stays",
         ticketReserveUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-reserve",
         planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
       };
@@ -158,6 +178,26 @@
         return { "Content-Type": "application/json", "Authorization": `Bearer ${CONFIG.anonKey}`, "apikey": CONFIG.anonKey };
       }
 
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        })[character]);
+      }
+
+      function safeAssetUrl(value, fallback) {
+        const url = String(value || "");
+        return /^(https?:\/\/|assets\/)/.test(url) ? url : fallback;
+      }
+
+      function safeExternalUrl(value) {
+        const url = String(value || "");
+        return /^https?:\/\//.test(url) ? url : "";
+      }
+
       async function loadRelated(event) {
         const box = document.getElementById("related-plans");
         if (!box || !Number.isFinite(Number(event.latitude)) || !Number.isFinite(Number(event.longitude))) return;
@@ -171,12 +211,42 @@
           const plans = Array.isArray(json.plans) ? json.plans.filter((plan) => plan.id !== event.location_entity_id).slice(0, 3) : [];
           box.innerHTML = plans.length ? plans.map((plan) => `
             <article class="route-card">
-              <strong>${plan.title}</strong>
-              <p>${plan.description || plan.why || "A nearby Echoo suggestion."}</p>
+              <strong>${escapeHtml(plan.title)}</strong>
+              <p>${escapeHtml(plan.description || plan.why || "A nearby Echoo suggestion.")}</p>
             </article>
           `).join("") : '<div class="empty">Related nearby ideas will appear here as more events are added.</div>';
         } catch (error) {
           box.innerHTML = '<div class="empty">Related nearby ideas are unavailable right now.</div>';
+        }
+      }
+
+      async function loadStays(event) {
+        const box = document.getElementById("event-stays");
+        if (!box) return;
+        try {
+          const response = await fetch(`${CONFIG.eventStaysUrl}?eventId=${encodeURIComponent(event.id)}`, { headers: headers() });
+          const json = await response.json();
+          if (!response.ok) throw new Error(json.error || "Stay recommendations unavailable");
+          const stays = Array.isArray(json.stays) ? json.stays : [];
+          const fallbackImage = "assets/optimized/news-date-768.jpg";
+          box.innerHTML = stays.length ? stays.map((stay) => `
+            <article class="stay-card">
+              <img src="${escapeHtml(safeAssetUrl(stay.imageUrl, fallbackImage))}" alt="">
+              <div>
+                <strong>${escapeHtml(stay.hotelName)}</strong>
+                <p>${escapeHtml(stay.description || stay.why)}</p>
+                <div class="meta">
+                  <span>${Math.max(0.1, stay.distanceMeters / 1000).toFixed(1)} km away</span>
+                  <span>${Number(stay.rating || 0).toFixed(1)} rating</span>
+                  <span class="stay-price">${money(stay.nightlyRateCents, stay.currency)}</span>
+                </div>
+                <p>${escapeHtml(stay.why)}</p>
+                ${safeExternalUrl(stay.bookingUrl) ? `<a class="pill" href="${escapeHtml(safeExternalUrl(stay.bookingUrl))}" target="_blank" rel="noopener">View stay options</a>` : ""}
+              </div>
+            </article>
+          `).join("") : '<div class="empty">Stay recommendations will appear here once nearby options are loaded.</div>';
+        } catch (error) {
+          box.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
         }
       }
 
@@ -214,37 +284,43 @@
 
       function render(event, tiers) {
         const starts = event.starts_at ? new Date(event.starts_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Date coming soon";
+        const eventImage = safeAssetUrl(event.image_url, "assets/optimized/news-music-768.jpg");
         root.innerHTML = `
           <section class="hero">
             <div>
-              <div class="kicker">${event.category || "event"}</div>
-              <h1>${event.title}</h1>
-              <p>${event.description || "A verified Echoo event in Canada."}</p>
+              <div class="kicker">${escapeHtml(event.category || "event")}</div>
+              <h1>${escapeHtml(event.title)}</h1>
+              <p>${escapeHtml(event.description || "A verified Echoo event in Canada.")}</p>
               <div class="meta">
-                <span>${starts}</span>
-                <span>${event.venue_name || "Venue TBA"}</span>
-                <span>${event.city}, ${event.province || "CA"}</span>
+                <span>${escapeHtml(starts)}</span>
+                <span>${escapeHtml(event.venue_name || "Venue TBA")}</span>
+                <span>${escapeHtml(event.city)}, ${escapeHtml(event.province || "CA")}</span>
               </div>
             </div>
-            <img src="${event.image_url || "assets/optimized/news-music-768.jpg"}" alt="">
+            <img src="${escapeHtml(eventImage)}" alt="">
           </section>
           <section class="content">
             <div class="grid">
               <div class="panel">
                 <h2 style="margin-top:0;">Venue</h2>
-                <p>${event.venue_name || "Venue TBA"}${event.address ? ` · ${event.address}` : ""}</p>
+                <p>${escapeHtml(event.venue_name || "Venue TBA")}${event.address ? ` · ${escapeHtml(event.address)}` : ""}</p>
                 <div class="meta"><span>${Number(event.latitude).toFixed(4)}, ${Number(event.longitude).toFixed(4)}</span><span>Canada-first verified location</span></div>
               </div>
               <div class="panel">
                 <h2 style="margin-top:0;">Before or after this</h2>
                 <div class="grid" id="related-plans"><div class="empty">Loading nearby ideas...</div></div>
               </div>
+              <div class="panel">
+                <h2 style="margin-top:0;">Where to stay</h2>
+                <p>Smart nearby picks for people coming in for the event.</p>
+                <div class="grid" id="event-stays"><div class="empty">Loading stay matches...</div></div>
+              </div>
             </div>
             <aside class="panel grid">
               <h2 style="margin:0;">Tickets</h2>
               ${tiers.length ? `
                 <label>Ticket tier
-                  <select id="tier">${tiers.map((tier) => `<option value="${tier.id}">${tier.name} · ${money(tier.price_cents, tier.currency)} · ${tier.remaining_quantity} left</option>`).join("")}</select>
+                  <select id="tier">${tiers.map((tier) => `<option value="${escapeHtml(tier.id)}">${escapeHtml(tier.name)} · ${money(tier.price_cents, tier.currency)} · ${Number(tier.remaining_quantity || 0)} left</option>`).join("")}</select>
                 </label>
                 <label>Quantity <input id="quantity" type="number" min="1" max="10" value="1"></label>
                 <label>Name <input id="buyer-name" autocomplete="name" placeholder="Buyer name"></label>
@@ -259,6 +335,7 @@
         if (storedEmail && document.getElementById("buyer-email")) document.getElementById("buyer-email").value = storedEmail;
         if (tiers.length) document.getElementById("reserve-btn").addEventListener("click", () => reserve(event, tiers));
         loadRelated(event);
+        loadStays(event);
       }
 
       async function load() {
