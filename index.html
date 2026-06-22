@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Echoo</title>
+    <link rel="preload" as="image" href="assets/landing-page-logo-3d.png" />
     <style>
       :root {
         color-scheme: dark;
@@ -192,24 +193,24 @@
       }
 
       .hero-logo {
-        width: min(170px, 48vw);
-        height: min(118px, 34vw);
-        overflow: hidden;
+        width: clamp(154px, 45vw, 218px);
+        aspect-ratio: 760 / 629;
         display: grid;
-        place-items: start center;
+        place-items: center;
+        perspective: 720px;
+        isolation: isolate;
       }
 
       .hero-logo img {
         width: 100%;
-        height: auto;
-        filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.42));
-      }
-
-      .hero-logo span {
+        height: 100%;
+        object-fit: contain;
         display: block;
-        width: 100%;
-        height: 76px;
-        background: url("assets/echoo-new-logo.jpg") center 8% / 148% auto no-repeat;
+        transform: rotateX(7deg) rotateY(-8deg) translateY(2px);
+        filter:
+          drop-shadow(0 20px 24px rgba(0, 0, 0, 0.52))
+          drop-shadow(0 5px 8px rgba(255, 204, 150, 0.16));
+        backface-visibility: hidden;
       }
 
       h1 {
@@ -723,7 +724,9 @@
 
       <main class="hero">
         <section class="hero-center" aria-labelledby="landing-title">
-          <div class="hero-logo" aria-hidden="true"><span></span></div>
+          <div class="hero-logo" aria-hidden="true">
+            <img src="assets/landing-page-logo-3d.png" width="760" height="629" alt="" decoding="async" fetchpriority="high">
+          </div>
           <h1 id="landing-title">Discover your city, your way.</h1>
           <p class="tagline">Find the plans people will actually say yes to.</p>
           <span class="city-pill">Toronto today</span>
