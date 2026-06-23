@@ -472,7 +472,7 @@
         </div>
         <form class="search" id="search-form">
           <input id="query" placeholder="What sounds good right now?" />
-          <button class="primary" type="submit">Find</button>
+          <button class="primary" type="submit">Search</button>
         </form>
       </section>
 
@@ -640,7 +640,12 @@
         .getElementById("search-form")
         .addEventListener("submit", (event) => {
           event.preventDefault();
-          render();
+          const q = queryInput.value.trim();
+          if (q) {
+            window.location.href = `app.html?q=${encodeURIComponent(q)}`;
+          } else {
+            render();
+          }
         });
 
       list.addEventListener("click", (event) => {

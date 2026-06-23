@@ -1021,7 +1021,7 @@
               id="plan-query"
               placeholder="feeling low and need a pick-me-up..."
             />
-            <button class="primary" type="submit">Build my plan</button>
+            <button class="primary" type="submit">GO</button>
           </form>
           <button class="ghost" id="surprise">Surprise me</button>
         </div>
@@ -2152,12 +2152,17 @@
                 "Echoo AI needs a Canadian launch city for live planning. I can use Toronto, Vancouver, Montreal, Calgary, Ottawa, or another supported Canadian city.",
             };
           }
+          if (payload?.ai?.assistantMessage) {
+            const stops = mapPlanStops(payload);
+            return { payload, stops };
+          }
           if (payload?.ai?.provider !== "gemini") {
             return {
               payload,
               stops: [],
               error:
                 payload?.error ||
+                payload?.ai?.assistantMessage ||
                 "Echoo AI had trouble answering that. Try again in a moment.",
             };
           }
@@ -2381,7 +2386,7 @@
             "ai",
             `hey there. i can build something that fits ${activityContext.label} in ${city}, check local showtimes, or recommend food nearby.`,
           );
-          addPills(["Build my plan", "Recommend food", "Show movie times"]);
+          addPills(["GO", "Recommend food", "Show movie times"]);
           return;
         }
 
@@ -2445,7 +2450,7 @@
         }
 
         const queryForPill =
-          text === "Build my plan"
+          text === "GO"
             ? activityContext.defaultQuery
             : text === "Recommend food"
               ? `food nearby in ${city}`
@@ -2539,6 +2544,12 @@
           }
         });
       });
+
+      /* ── Auto-open chat from ?q= param (from Discover search) ── */
+      const incomingQuery = params.get("q");
+      if (incomingQuery) {
+        openChat(incomingQuery);
+      }
     </script>
   </body>
 </html>

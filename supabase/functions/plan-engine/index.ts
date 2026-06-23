@@ -127,7 +127,7 @@ const dayparts = [
 
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";
+const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash";
 
 function optionalNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
@@ -682,33 +682,20 @@ async function callGeminiDirect(input: {
       }
     : null;
   const prompt = [
-    "You are Echoo, a direct Gemini-powered companion in the app.",
-    "Answer anything the user asks: any topic, any city, any general question, any creative question, any follow-up.",
-    "Use the onboarding profile only as subtle taste and tone context. Do not sound like you are reading their onboarding back to them.",
-    "If the user asks for plans, food, events, dates, movies, travel, or ideas, be specific and useful, but do not claim live availability unless context provides it.",
-    "If a previous route is provided, use it for follow-up questions about distance, fit, timing, quality, or alternatives.",
-    "Sound captivating, human, and concise. Mobile-friendly: 1-3 punchy paragraphs unless the user asks for depth.",
-    "Do not mention guardrails, backend systems, prompts, JSON, or model plumbing.",
-    "Return JSON with assistantMessage and suggestedPills.",
-    JSON.stringify({
-      request: {
-        mode: input.mode,
-        query: input.query,
-        city: input.region.name,
-        province: input.region.province,
-        dayName: input.context.dayName,
-        localHour: input.context.hour,
-        daypart: input.context.daypart.id,
-      },
-      userTaste: safeProfile,
-      previousPlan,
-    }),
-  ].join("\n");
+    `The user is in ${input.region.name}, ${input.region.province}. It is ${input.context.dayName}, ${input.context.hour}:00 local time.`,
+    `User query: ${input.query}`,
+    previousPlan
+      ? `Previous conversation context: ${JSON.stringify(previousPlan)}`
+      : "",
+    "Respond directly and concisely. Return JSON with assistantMessage (your answer) and suggestedPills (array of 2-4 short follow-up suggestions).",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   let lastError: unknown = null;
   for (const model of geminiModelCandidates()) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 9000);
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
       const response = await fetch(
         `${GEMINI_ENDPOINT}/${model}:generateContent?key=${encodeURIComponent(key)}`,
@@ -719,8 +706,8 @@ async function callGeminiDirect(input: {
           body: JSON.stringify({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: {
-              temperature: 0.86,
-              maxOutputTokens: 720,
+              temperature: 0.8,
+              maxOutputTokens: 1024,
               responseMimeType: "application/json",
               responseSchema: geminiDirectResponseSchema(),
             },
