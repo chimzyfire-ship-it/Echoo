@@ -57,6 +57,7 @@ type GeminiPlan = {
   routeTitle?: string;
   summary?: string;
   suggestedPills?: string[];
+  model?: string;
   stopNotes?: Array<{
     id?: string;
     title?: string;
@@ -114,6 +115,10 @@ const dayparts = [
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models";
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+const DEFAULT_GEMINI_FALLBACK_MODELS = [
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+];
 
 function optionalNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
@@ -392,6 +397,16 @@ function cleanText(value: unknown, fallback = "") {
     .trim();
 }
 
+function uniqueStrings(values: string[]) {
+  const seen = new Set<string>();
+  return values.filter((value) => {
+    const clean = value.trim();
+    if (!clean || seen.has(clean)) return false;
+    seen.add(clean);
+    return true;
+  });
+}
+
 function candidateKey(item: Candidate) {
   return String(item.entity_id || item.id || item.title);
 }
@@ -503,8 +518,7 @@ function coerceGeminiPlan(value: unknown): GeminiPlan | null {
 
 function parseGeminiJson(text: string): GeminiPlan | null {
   const source = String(text || "");
-  const fenced =
-    source.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)?.[1] || "";
+  const fenced = source.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)?.[1] || "";
   const candidates = [
     stripGeminiFences(source),
     stripGeminiFences(fenced),
@@ -528,10 +542,7 @@ function parseGeminiJson(text: string): GeminiPlan | null {
 
 function extractJsonStringField(text: string, field: string) {
   const source = stripGeminiFences(text);
-  const pattern = new RegExp(
-    `"${field}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`,
-    "i",
-  );
+  const pattern = new RegExp(`"${field}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`, "i");
   const match = source.match(pattern);
   if (!match) return "";
   try {
@@ -539,6 +550,60 @@ function extractJsonStringField(text: string, field: string) {
   } catch (_err) {
     return cleanText(match[1].replace(/\\"/g, '"'));
   }
+}
+
+function geminiModelCandidates() {
+  const configured = Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL;
+  const configuredFallbacks = (Deno.env.get("GEMINI_FALLBACK_MODELS") || "")
+    .split(",")
+    .map((model) => model.trim())
+    .filter(Boolean);
+  return uniqueStrings([
+    configured,
+    ...configuredFallbacks,
+    ...DEFAULT_GEMINI_FALLBACK_MODELS,
+  ]);
+}
+
+function geminiResponseSchema() {
+  return {
+    type: "OBJECT",
+    properties: {
+      assistantMessage: { type: "STRING" },
+      routeTitle: { type: "STRING" },
+      summary: { type: "STRING" },
+      suggestedPills: { type: "ARRAY", items: { type: "STRING" } },
+      stopNotes: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            id: { type: "STRING" },
+            title: { type: "STRING" },
+            why: { type: "STRING" },
+            timing: { type: "STRING" },
+          },
+        },
+      },
+    },
+    required: ["assistantMessage", "routeTitle", "summary"],
+  };
+}
+
+function shouldTryNextGeminiModel(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "");
+  return /503|502|504|429|UNAVAILABLE|RESOURCE_EXHAUSTED|high demand|overloaded|could not parse|empty response/i.test(
+    message,
+  );
+}
+
+function rawGeminiTextFallback(text: string) {
+  const cleaned = stripGeminiFences(text);
+  if (!cleaned) return "";
+  if (/^[[{]/.test(cleaned) || /"assistantMessage"\s*:/.test(cleaned)) {
+    return "";
+  }
+  return cleanText(cleaned).slice(0, 520);
 }
 
 function titleFromGeminiText(text: string, fallback: string) {
@@ -562,7 +627,6 @@ async function callGeminiPlan(input: {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) throw new Error("GEMINI_API_KEY is not configured.");
 
-  const model = Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL;
   const gender =
     input.profile.gender && input.profile.gender !== "Prefer not to say"
       ? input.profile.gender
@@ -617,79 +681,105 @@ async function callGeminiPlan(input: {
     }),
   ].join("\n");
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 9000);
-  try {
-    const response = await fetch(
-      `${GEMINI_ENDPOINT}/${model}:generateContent?key=${encodeURIComponent(key)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: input.mode === "surprise" ? 0.82 : 0.62,
-            maxOutputTokens: 900,
-            responseMimeType: "application/json",
-          },
-        }),
-      },
-    );
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "");
-      throw new Error(
-        `Gemini request failed (${response.status}): ${errorText.slice(0, 220)}`,
+  let lastError: unknown = null;
+  for (const model of geminiModelCandidates()) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 9000);
+    try {
+      const response = await fetch(
+        `${GEMINI_ENDPOINT}/${model}:generateContent?key=${encodeURIComponent(key)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: input.mode === "surprise" ? 0.82 : 0.62,
+              maxOutputTokens: 900,
+              responseMimeType: "application/json",
+              responseSchema: geminiResponseSchema(),
+            },
+          }),
+        },
       );
-    }
-    const payload = await response.json();
-    const text =
-      payload?.candidates?.[0]?.content?.parts
-        ?.map((part: any) => part.text || "")
-        .join("\n") || "";
-    const parsed = parseGeminiJson(text);
-    const assistantMessage =
-      cleanText(parsed?.assistantMessage) ||
-      extractJsonStringField(text, "assistantMessage");
-    const routeTitle =
-      cleanText(parsed?.routeTitle) || extractJsonStringField(text, "routeTitle");
-    const summary =
-      cleanText(parsed?.summary) || extractJsonStringField(text, "summary");
-    const assistantFallback = cleanText(
-      assistantMessage || summary || routeTitle,
-    ).slice(0, 520);
-    if (!assistantFallback) {
-      throw new Error("Gemini returned a response Echoo could not parse.");
-    }
-    const result = {
-      assistantMessage: cleanText(assistantMessage, assistantFallback).slice(
-        0,
-        520,
-      ),
-      routeTitle: cleanText(
-        routeTitle,
-        titleFromGeminiText(
-          assistantFallback,
-          `${input.region.name} plan`,
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
+        throw new Error(
+          `Gemini request failed (${response.status}): ${errorText.slice(
+            0,
+            220,
+          )}`,
+        );
+      }
+      const payload = await response.json();
+      const text =
+        payload?.candidates?.[0]?.content?.parts
+          ?.map((part: any) => part.text || "")
+          .join("\n") || "";
+      const parsed = parseGeminiJson(text);
+      const assistantMessage =
+        cleanText(parsed?.assistantMessage) ||
+        extractJsonStringField(text, "assistantMessage");
+      const routeTitle =
+        cleanText(parsed?.routeTitle) ||
+        extractJsonStringField(text, "routeTitle");
+      const summary =
+        cleanText(parsed?.summary) || extractJsonStringField(text, "summary");
+      const assistantFallback = cleanText(
+        assistantMessage || summary || routeTitle,
+      ).slice(0, 520);
+      if (!assistantFallback) {
+        const rawFallback = rawGeminiTextFallback(text);
+        if (!rawFallback) {
+          throw new Error("Gemini returned a response Echoo could not parse.");
+        }
+        return {
+          assistantMessage: rawFallback,
+          routeTitle: titleFromGeminiText(
+            rawFallback,
+            `${input.region.name} plan`,
+          ),
+          summary: rawFallback.slice(0, 220),
+          suggestedPills: [],
+          stopNotes: [],
+          model,
+        };
+      }
+      const result = {
+        assistantMessage: cleanText(assistantMessage, assistantFallback).slice(
+          0,
+          520,
         ),
-      ).slice(0, 120),
-      summary: cleanText(summary, assistantFallback).slice(0, 220),
-      suggestedPills: safeStrings(parsed?.suggestedPills).slice(0, 4),
-      stopNotes: Array.isArray(parsed?.stopNotes)
-        ? parsed.stopNotes.slice(0, 6).map((note) => ({
-            id: cleanText(note.id),
-            title: cleanText(note.title),
-            why: cleanText(note.why).slice(0, 180),
-            timing: cleanText(note.timing).slice(0, 80),
-          }))
-        : [],
-    };
-    return result;
-  } catch (_err) {
-    throw _err;
-  } finally {
-    clearTimeout(timeout);
+        routeTitle: cleanText(
+          routeTitle,
+          titleFromGeminiText(assistantFallback, `${input.region.name} plan`),
+        ).slice(0, 120),
+        summary: cleanText(summary, assistantFallback).slice(0, 220),
+        suggestedPills: safeStrings(parsed?.suggestedPills).slice(0, 4),
+        model,
+        stopNotes: Array.isArray(parsed?.stopNotes)
+          ? parsed.stopNotes.slice(0, 6).map((note) => ({
+              id: cleanText(note.id),
+              title: cleanText(note.title),
+              why: cleanText(note.why).slice(0, 180),
+              timing: cleanText(note.timing).slice(0, 80),
+            }))
+          : [],
+      };
+      return result;
+    } catch (err) {
+      lastError = err;
+      if (!shouldTryNextGeminiModel(err)) {
+        throw err;
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
   }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Gemini could not complete the request.");
 }
 
 Deno.serve(async (req) => {
@@ -875,7 +965,8 @@ Deno.serve(async (req) => {
       },
       ai: {
         provider: "gemini",
-        model: Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL,
+        model:
+          aiPlan.model || Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL,
         assistantMessage: aiPlan.assistantMessage,
         routeTitle: aiPlan.routeTitle,
         suggestedPills: aiPlan.suggestedPills,
@@ -906,6 +997,7 @@ Deno.serve(async (req) => {
         count: plans.length,
         daypart: context.daypart.id,
         aiProvider: response.ai.provider,
+        aiModel: response.ai.model,
         stopCount: actualPlanShape.stopCount,
       },
     });
