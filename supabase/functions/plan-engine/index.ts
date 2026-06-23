@@ -127,11 +127,7 @@ const dayparts = [
 
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
-const DEFAULT_GEMINI_FALLBACK_MODELS = [
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-];
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";
 
 function optionalNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
@@ -567,15 +563,7 @@ function extractJsonStringField(text: string, field: string) {
 
 function geminiModelCandidates() {
   const configured = Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL;
-  const configuredFallbacks = (Deno.env.get("GEMINI_FALLBACK_MODELS") || "")
-    .split(",")
-    .map((model) => model.trim())
-    .filter(Boolean);
-  return uniqueStrings([
-    configured,
-    ...configuredFallbacks,
-    ...DEFAULT_GEMINI_FALLBACK_MODELS,
-  ]);
+  return uniqueStrings([configured]);
 }
 
 function geminiResponseSchema() {
@@ -654,9 +642,7 @@ function echooChatResponse(
 
 function shouldTryNextGeminiModel(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "");
-  return /503|502|504|429|UNAVAILABLE|RESOURCE_EXHAUSTED|high demand|overloaded|could not parse|empty response/i.test(
-    message,
-  );
+  return /503|502|504|UNAVAILABLE|high demand|overloaded/i.test(message);
 }
 
 async function callGeminiDirect(input: {

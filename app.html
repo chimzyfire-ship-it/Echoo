@@ -2464,15 +2464,28 @@
         pillBusy = false;
       }
 
+      let chatBusy = false;
       async function sendFollowUp(text) {
-        addBubble("user", text);
-        await delay(500);
-        addTyping();
-        await presentSmartPlan(text, 4, "chat", true);
+        if (chatBusy) return;
+        chatBusy = true;
+        chatSend.disabled = true;
+        chatInput.disabled = true;
+        try {
+          addBubble("user", text);
+          await delay(500);
+          addTyping();
+          await presentSmartPlan(text, 4, "chat", true);
+        } finally {
+          chatBusy = false;
+          chatSend.disabled = false;
+          chatInput.disabled = false;
+          chatInput.focus();
+        }
       }
 
       /* ── Chat input submit ── */
       function handleChatSend() {
+        if (chatBusy) return;
         const text = chatInput.value.trim();
         if (!text) return;
         chatInput.value = "";
