@@ -491,6 +491,7 @@
         flex-direction: column;
         gap: 14px;
         -webkit-overflow-scrolling: touch;
+        scroll-padding-bottom: 96px;
       }
 
       /* Bubbles */
@@ -575,7 +576,8 @@
 
       /* Location card */
       .loc-card {
-        align-self: stretch;
+        align-self: flex-start;
+        width: min(560px, 100%);
         border: 1px solid var(--line);
         overflow: hidden;
         animation: bubbleIn 300ms ease both;
@@ -642,7 +644,8 @@
         align-items: center;
         gap: 0;
         padding: 2px 0;
-        align-self: stretch;
+        align-self: flex-start;
+        width: min(560px, 100%);
         animation: bubbleIn 240ms ease both;
       }
 
@@ -672,6 +675,8 @@
         display: flex;
         gap: 8px;
         overflow-x: auto;
+        width: min(560px, 100%);
+        align-self: flex-start;
         padding-bottom: 4px;
         -webkit-overflow-scrolling: touch;
         animation: bubbleIn 200ms ease both;
@@ -717,6 +722,9 @@
         padding: 12px 16px;
         border-top: 1px solid var(--line);
         background: rgba(8, 9, 7, 0.96);
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
       }
 
       .chat-input-bar input {
@@ -783,6 +791,11 @@
         .loc-card {
           max-width: 520px;
         }
+        .track,
+        .pills,
+        .see-route-card {
+          max-width: 520px;
+        }
         .bubble.user {
           max-width: 420px;
         }
@@ -837,7 +850,8 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        width: 100%;
+        align-self: flex-start;
+        width: min(560px, 100%);
         padding: 14px;
         background: var(--panel-2);
         border: 1px dashed var(--signal);
@@ -2039,7 +2053,11 @@
         try {
           const authState = await authGate;
           if (authState && authState.ok === false)
-            return { payload: null, stops: [] };
+            return {
+              payload: null,
+              stops: [],
+              error: "Finish signup and onboarding to use Echoo AI.",
+            };
           const response = await fetch(CONFIG.planEngineUrl, {
             method: "POST",
             headers: window.EchooAuth
@@ -2050,20 +2068,39 @@
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
                   apikey: CONFIG.supabaseAnonKey,
-                },
+            },
             body: JSON.stringify(planRequestBody(limit, queryText, mode)),
           });
-          if (!response.ok) return { payload: null, stops: [] };
           const payload = await response.json();
-          const stops = mapPlanStops(payload);
           lastPlanEnginePayload = payload;
+          if (!response.ok) {
+            return {
+              payload,
+              stops: [],
+              error:
+                payload?.error ||
+                "Echoo AI could not answer that cleanly. Try again in a moment.",
+            };
+          }
+          if (payload?.ai?.provider !== "gemini") {
+            return {
+              payload,
+              stops: [],
+              error: "Echoo AI did not return a Gemini response.",
+            };
+          }
+          const stops = mapPlanStops(payload);
           return { payload, stops };
         } catch (error) {
           console.warn(
-            "Echoo: smart plan engine failed, using nearby fallback.",
+            "Echoo: smart plan engine failed.",
             error,
           );
-          return { payload: null, stops: [] };
+          return {
+            payload: null,
+            stops: [],
+            error: "Echoo AI could not connect. Try again in a moment.",
+          };
         }
       }
 
@@ -2157,13 +2194,6 @@
         return new Promise((r) => setTimeout(r, ms));
       }
 
-      function fallbackCuratedStops(numStops) {
-        const currentEnergy = energy === "hype" ? "hype" : "chill";
-        const cityDb = curationDb[city] || curationDb["Toronto"];
-        const pool = cityDb[currentEnergy] || cityDb["chill"];
-        return pool.slice(0, numStops);
-      }
-
       async function presentSmartPlan(
         queryText,
         maxStops = 4,
@@ -2174,41 +2204,32 @@
         await delay(700);
 
         const planResult = await requestSmartPlan(maxStops, queryText, mode);
+        if (planResult.error) {
+          removeTyping();
+          addBubble("ai", planResult.error);
+          addPills(["Try again", "Change budget", "Start over"]);
+          return;
+        }
         const desiredStops =
           planResult.payload?.planShape?.stopCount ||
-          Math.min(maxStops, Math.max(1, planResult.stops.length || 2));
-        const smartStops = planResult.stops;
-        const liveStops =
-          smartStops.length >= desiredStops
-            ? smartStops
-            : await fetchPreciseNearby(desiredStops);
-        const stops =
-          liveStops.length >= desiredStops
-            ? liveStops.slice(0, desiredStops)
-            : fallbackCuratedStops(desiredStops);
+          Math.min(maxStops, Math.max(1, planResult.stops.length));
+        const preciseStops = planResult.stops.slice(0, desiredStops);
+        if (!preciseStops.length) {
+          removeTyping();
+          addBubble(
+            "ai",
+            "Echoo AI answered, but there were no real places attached. Try a nearby food, event, movie, or date request.",
+          );
+          addPills(["Try food nearby", "Try events tonight", "Start over"]);
+          return;
+        }
         const usePreciseBase =
           Number.isFinite(preciseLat) && Number.isFinite(preciseLng);
-        const preciseStops =
-          usePreciseBase && liveStops.length < desiredStops
-            ? stops.map((stop, index) => ({
-                ...stop,
-                coords: [
-                  preciseLat + (index + 1) * 0.0025,
-                  preciseLng + (index % 2 === 0 ? -0.0022 : 0.0022),
-                ],
-                tags: `${stop.tags} · near your verified location`,
-              }))
-            : stops;
 
         removeTyping();
 
         const ai = planResult.payload?.ai;
-        const intro =
-          ai?.assistantMessage ||
-          (mode === "surprise"
-            ? `Here is the move: a ${energy}, ${budget} surprise in ${city} that still fits your profile.`
-            : `I built this around "${queryText}". It is direct, local, and tuned to your ${energy} pace.`);
-        addBubble("ai", intro);
+        addBubble("ai", ai.assistantMessage);
         await delay(350);
 
         for (let i = 0; i < preciseStops.length; i++) {
@@ -2234,7 +2255,7 @@
           await delay(360);
         }
 
-        const summary = planResult.payload?.summary || ai?.routeTitle;
+        const summary = planResult.payload?.summary;
         if (summary) {
           addBubble("ai", summary);
           await delay(180);
@@ -2242,11 +2263,7 @@
 
         addSeeRouteButton(preciseStops);
         await delay(200);
-        addPills(
-          ai?.suggestedPills?.length
-            ? ai.suggestedPills
-            : ["Make it cheaper", "Show me something else", "Clear route"],
-        );
+        addPills(ai.suggestedPills);
       }
 
       let pendingBudgetIntent = null;
@@ -2273,12 +2290,6 @@
         ]);
       }
 
-      function isEchooSupportedRequest(text) {
-        return /plan|food|eat|drink|restaurant|bar|coffee|movie|cinema|show|event|ticket|date|hotel|stay|near|nearby|music|concert|culture|gallery|museum|route|budget|cheap|premium|surprise|bored|friends|group|tonight|today|weekend|morning|afternoon|evening|late/i.test(
-          text,
-        );
-      }
-
       async function runConversation(userText) {
         // Clear chat body
         chatBody.innerHTML = "";
@@ -2294,21 +2305,7 @@
           return;
         }
 
-        // Heuristically check if this is an itinerary / routing request
         const textLower = userText.toLowerCase();
-        const isPlanRequest =
-          textLower.includes("plan") ||
-          textLower.includes("today") ||
-          textLower.includes("tonight") ||
-          textLower.includes("night") ||
-          textLower.includes("near me") ||
-          textLower.includes("house") ||
-          textLower.includes("vibe") ||
-          textLower.includes("out") ||
-          textLower.includes("morning") ||
-          textLower.includes("lunch") ||
-          textLower.includes("afternoon") ||
-          textLower.includes("evening");
         const isSurpriseRequest = /surprise|bored|get out/.test(textLower);
 
         if (isSurpriseRequest) {
@@ -2320,29 +2317,7 @@
         addBubble("user", userText);
         await delay(500);
         addTyping();
-
-        if (isPlanRequest) {
-          const locationState = window.EchooLocationPlatform.readPreferences();
-          if (locationState.locationSupported === false) {
-            removeTyping();
-            addBubble(
-              "ai",
-              "Echoo is launching live planning in Canada first. You can preview the app, but real near-me routing and checkout unlock only while you are in Canada.",
-            );
-          } else {
-            await presentSmartPlan(userText, 4, "build_plan", true);
-          }
-        } else {
-          // General question response
-          await delay(800);
-          removeTyping();
-          addBubble(
-            "ai",
-            "I can help with Echoo planning only: local plans, events, food, movies, tickets, date routes, stays, and nearby culture. Give me one of those and I’ll build something useful.",
-          );
-          await delay(400);
-          addPills(["Build my plan", "Recommend food", "Show movie times"]);
-        }
+        await presentSmartPlan(userText, 4, "build_plan", true);
       }
 
       /* ── Pill tap handler ── */
@@ -2373,228 +2348,46 @@
           return;
         }
 
+        if (/change budget/i.test(text)) {
+          removeTyping();
+          askBudgetBeforeSurprise(
+            activityContext.defaultQuery,
+            "Change budget",
+          );
+          pillBusy = false;
+          return;
+        }
+
+        if (/clear route|start over/i.test(text)) {
+          await delay(300);
+          removeTyping();
+          addBubble("ai", "Tell me what you want to do next.");
+          await delay(200);
+          addPills(["Food nearby", "Events tonight", "Surprise me"]);
+          pillBusy = false;
+          return;
+        }
+
         if (/make it cheaper/i.test(text)) {
           setBudgetPreference("$");
-          await presentSmartPlan(
-            `${activityContext.defaultQuery} make it cheaper`,
-            4,
-            "build_plan",
-            true,
-          );
-          pillBusy = false;
-          return;
         }
 
-        if (/show me something else/i.test(text)) {
-          await presentSmartPlan(
-            `${activityContext.defaultQuery} show me a different angle`,
-            4,
-            "surprise",
-            true,
-          );
-          pillBusy = false;
-          return;
-        }
-
-        if (
-          /add a second stop|add a third stop|make it one stop|make it shorter/i.test(
-            text,
-          )
-        ) {
-          const maxStops = /one stop|shorter/i.test(text)
-            ? 1
-            : /third/i.test(text)
-              ? 3
-              : 2;
-          await presentSmartPlan(
-            `${activityContext.defaultQuery} ${text}`,
-            maxStops,
-            "build_plan",
-            true,
-          );
-          pillBusy = false;
-          return;
-        }
-
-        if (/add food nearby/i.test(text)) {
-          await presentSmartPlan(
-            `${activityContext.defaultQuery} add food nearby`,
-            3,
-            "food",
-            true,
-          );
-          pillBusy = false;
-          return;
-        }
-
-        // Handle flows lengths
-        if (
-          text === "Single Stop" ||
-          text === "2-Stop Flow" ||
-          text === "3-Stop Flow" ||
-          text === "Custom Flow"
-        ) {
-          await delay(1000);
-          removeTyping();
-
-          if (text === "Custom Flow") {
-            addBubble(
-              "ai",
-              "sounds good. tell me exactly what you're in the mood for (e.g. 'sports game to a bar and a restaurant') and I'll chain it.",
-            );
-            pillBusy = false;
-            return;
-          }
-
-          // Generate stops dynamically from curationDb based on profile energy/city
-          const currentEnergy = energy === "hype" ? "hype" : "chill";
-          const cityDb = curationDb[city] || curationDb["Toronto"];
-          const pool = cityDb[currentEnergy] || cityDb["chill"];
-
-          let numStops = 1;
-          if (text === "2-Stop Flow") numStops = 2;
-          if (text === "3-Stop Flow") numStops = 3;
-
-          const smartStops = await fetchSmartPlan(
-            numStops,
-            `${activityContext.defaultQuery} ${currentEnergy} ${budget}`,
-          );
-          const liveStops =
-            smartStops.length >= numStops
-              ? smartStops
-              : await fetchPreciseNearby(numStops);
-          const stops =
-            liveStops.length >= numStops
-              ? liveStops.slice(0, numStops)
-              : pool.slice(0, numStops);
-          const usePreciseBase =
-            Number.isFinite(preciseLat) && Number.isFinite(preciseLng);
-          const preciseStops =
-            usePreciseBase && liveStops.length < numStops
-              ? stops.map((stop, index) => ({
-                  ...stop,
-                  coords: [
-                    preciseLat + (index + 1) * 0.0025,
-                    preciseLng + (index % 2 === 0 ? -0.0022 : 0.0022),
-                  ],
-                  tags: `${stop.tags} · near your verified location`,
-                }))
-              : stops;
-
-          // Render stops in chat
-          for (let i = 0; i < preciseStops.length; i++) {
-            const stop = preciseStops[i];
-            addLocationCard(
-              stop.img,
-              stop.img, // fallback WebP is same URL for mock pictures
-              stop.name,
-              `${stop.tags} · ${budget}`,
-              stop.vibe,
-              i === 0,
-              stop.detailId,
-            );
-
-            // Add dashed connecting track if not the last stop
-            if (i < preciseStops.length - 1) {
-              await delay(300);
-              const minutes = usePreciseBase
-                ? (i + 1) * 5 + 3
-                : (i + 1) * 6 + 4;
-              const distance = usePreciseBase
-                ? (i + 1) * 350 + 150
-                : (i + 1) * 450 + 200;
-              addTrack(`${minutes} min · ${distance}m walk`);
-            }
-            await delay(400);
-          }
-
-          // AI intro/outro copies
-          let outroMsg = `here is your curated ${preciseStops.length}-stop flow matching your ${energy} vibe in ${city}.`;
-          if (usePreciseBase) {
-            outroMsg = `here is your ${preciseStops.length}-stop flow built from your verified location, not just the city center.`;
-          }
-          if (tone === "direct") {
-            outroMsg = `fits the vibe. should I adjust any details?`;
-          } else if (tone === "detailed") {
-            outroMsg = `all stops fit your ${budget} budget preference and are open right now. you can see this flow on the map.`;
-          }
-
-          addBubble("ai", outroMsg);
-          await delay(200);
-
-          // Add see route button (opens map overlay)
-          addSeeRouteButton(preciseStops);
-          await delay(200);
-
-          addPills([
-            "Make it cheaper",
-            "Show me something else",
-            "Clear route",
-          ]);
-        } else if (text === "Build my plan") {
-          removeTyping();
-          runConversation(activityContext.defaultQuery);
-        } else if (text === "Recommend food") {
-          await delay(1000);
-          removeTyping();
-          addBubble(
-            "ai",
-            `here's a highly recommended spot in ${city} matching your budget:`,
-          );
-          const cityDb = curationDb[city] || curationDb["Toronto"];
-          const spot = cityDb["chill"][1]; // select dining/food stop
-          addLocationCard(
-            spot.img,
-            spot.img,
-            spot.name,
-            spot.tags,
-            spot.vibe,
-            true,
-          );
-          await delay(400);
-          addPills(["Build my plan", "Show movie times"]);
-        } else if (text === "Show movie times") {
-          await delay(1000);
-          removeTyping();
-          addBubble(
-            "ai",
-            `TIFF Lightbox in ${city} has screenings available today. Would you like to chain one into a flow?`,
-          );
-          await delay(400);
-          addPills(["Build my plan", "Recommend food"]);
-        } else if (text === "Make it cheaper") {
-          await delay(1000);
-          removeTyping();
-          addBubble(
-            "ai",
-            `i've adjusted the budget. here's a cheaper alternative that keeps the same vibe:`,
-          );
-          const cityDb = curationDb[city] || curationDb["Toronto"];
-          const spot = cityDb["chill"][0];
-          addLocationCard(
-            spot.img,
-            spot.img,
-            spot.name,
-            `${spot.tags} · $`,
-            "No cover fee, cheap drinks, cozy entry",
-            false,
-          );
-          await delay(400);
-          addPills(["Build my plan", "Clear route"]);
-        } else if (text === "Clear route") {
-          await delay(600);
-          removeTyping();
-          addBubble("ai", "route cleared. what would you like to plan next?");
-          await delay(400);
-          addPills(["Build my plan", "Recommend food", "Show movie times"]);
-        } else {
-          // Default pill response
-          await delay(1000);
-          removeTyping();
-          addBubble("ai", "got it. here's another angle.");
-          await delay(400);
-          addPills(["Build my plan", "Recommend food", "Show movie times"]);
-        }
+        const queryForPill =
+          text === "Build my plan"
+            ? activityContext.defaultQuery
+            : text === "Recommend food"
+              ? `food nearby in ${city}`
+              : text === "Show movie times"
+                ? `movie times and a simple plan near ${city}`
+                : text === "Try again"
+                  ? activityContext.defaultQuery
+                  : text;
+        await presentSmartPlan(
+          queryForPill,
+          /one stop|shorter/i.test(text) ? 1 : /third|food/i.test(text) ? 3 : 4,
+          /surprise|something else/i.test(text) ? "surprise" : "build_plan",
+          true,
+        );
 
         pillBusy = false;
       }
@@ -2603,17 +2396,6 @@
         addBubble("user", text);
         await delay(500);
         addTyping();
-        if (!isEchooSupportedRequest(text)) {
-          await delay(700);
-          removeTyping();
-          addBubble(
-            "ai",
-            "I can only help inside Echoo’s lane: plans, events, food, movies, tickets, date routes, stays, and nearby culture.",
-          );
-          await delay(300);
-          addPills(["Build my plan", "Recommend food", "Show movie times"]);
-          return;
-        }
         await presentSmartPlan(
           text,
           4,

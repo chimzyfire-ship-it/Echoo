@@ -113,12 +113,7 @@ const dayparts = [
 
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
-const DEFAULT_PILLS = [
-  "Make it cheaper",
-  "Show me something else",
-  "Add food nearby",
-];
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
 function optionalNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
@@ -459,69 +454,6 @@ function scoreCandidate(item: any, tags: string[], profile: PlanProfile) {
   );
 }
 
-function fallbackWhy(
-  item: Candidate,
-  index: number,
-  profile: PlanProfile,
-  context: ReturnType<typeof currentContext>,
-  mode = "",
-) {
-  const interests = (profile.interests || []).slice(0, 2).join(" and ");
-  const motivations = (profile.motivations || [])
-    .slice(0, 1)
-    .join("")
-    .toLowerCase();
-  if (mode === "surprise") {
-    return index === 0
-      ? `Unexpected enough to feel fresh, but still grounded in your ${profile.energy || "current"} pace.`
-      : `Keeps the plan moving without drifting away from your taste.`;
-  }
-  if (motivations) {
-    return `Strong fit for ${motivations}, ${context.daypart.id.replace("_", " ")}, and your ${profile.budget || "$"} comfort zone.`;
-  }
-  if (interests) {
-    return `Matched to your ${interests} signals and the current ${context.daypart.id.replace("_", " ")} window.`;
-  }
-  return index === 0
-    ? `Best fit for ${context.daypart.id.replace("_", " ")} near ${item.city || profile.city || "your city"}.`
-    : "A strong backup that still matches the current pace.";
-}
-
-function fallbackAssistantMessage(
-  mode: string,
-  query: string,
-  city: string,
-  profile: PlanProfile,
-  plans: Candidate[],
-) {
-  const first = plans[0]?.title || "the strongest nearby pick";
-  const second = plans[1]?.title;
-  const budget = profile.budget || "$";
-  const energy = profile.energy || "chill";
-  const interest = (profile.interests || [])[0];
-  const reason = interest ? ` with your ${interest.toLowerCase()} signal` : "";
-  if (mode === "surprise" || /surprise|bored|get out/i.test(query)) {
-    return second
-      ? `Here is the move: start at ${first}, then keep ${second} as the turn. It is not random; it is a ${energy}, ${budget} surprise${reason} and enough structure to actually leave now.`
-      : `Here is the move: ${first}. It is a ${energy}, ${budget} surprise${reason} and enough structure to actually leave now.`;
-  }
-  return `I built this around "${query || "your current mood"}": ${first} first${second ? `, then ${second}` : ""}. It keeps the plan direct, local, and inside your ${budget} comfort zone.`;
-}
-
-function fallbackRouteTitle(mode: string, city: string, profile: PlanProfile) {
-  if (mode === "surprise") return `A sharper surprise in ${city}`;
-  const motivation = (profile.motivations || [])[0];
-  return motivation ? `${motivation} in ${city}` : `Built for you in ${city}`;
-}
-
-function fallbackPills(planShape: PlanShape) {
-  if (planShape.stopCount === 1)
-    return ["Add a second stop", "Show me something else", "Make it cheaper"];
-  if (planShape.stopCount === 2)
-    return ["Make it one stop", "Add a third stop", "Make it cheaper"];
-  return ["Make it shorter", "Show me something else", "Make it cheaper"];
-}
-
 function parseGeminiJson(text: string): GeminiPlan | null {
   const cleaned = text
     .replace(/^```(?:json)?/i, "")
@@ -551,9 +483,9 @@ async function callGeminiPlan(input: {
   profile: PlanProfile;
   planShape: PlanShape;
   plans: Candidate[];
-}): Promise<GeminiPlan | null> {
+}): Promise<GeminiPlan> {
   const key = Deno.env.get("GEMINI_API_KEY");
-  if (!key) return null;
+  if (!key) throw new Error("GEMINI_API_KEY is not configured.");
 
   const model = Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL;
   const gender =
@@ -586,8 +518,8 @@ async function callGeminiPlan(input: {
     "Write direct, interesting, no-filler recommendations for the exact button request.",
     "Use only the candidate stops provided. Do not invent venues, prices, times, tickets, addresses, or guarantees.",
     "Echoo combines events, music, food, movies, culture, hotels, date guides, and social discovery.",
-    "Guardrail: only answer within Echoo's allowed scope: local plans, events, food, movies, hotels/stays, tickets, date guides, culture, and social discovery.",
-    "If the request is outside that scope, redirect briefly to what Echoo can plan and still return candidates from the list.",
+    "Never scold the user or say you can only help inside a lane. If their wording is broad or messy, infer the nearest useful local plan.",
+    "If they ask whether this is Gemini, answer naturally and then continue helping with the local plan.",
     "Budget is a hard preference. Make the plan feel appropriate for the selected budget tier.",
     "Surprise mode should feel unexpected but still safe, local, and coherent with the user's profile.",
     "Build-plan mode should solve the user's stated request immediately.",
@@ -629,15 +561,22 @@ async function callGeminiPlan(input: {
         }),
       },
     );
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(
+        `Gemini request failed (${response.status}): ${errorText.slice(0, 220)}`,
+      );
+    }
     const payload = await response.json();
     const text =
       payload?.candidates?.[0]?.content?.parts
         ?.map((part: any) => part.text || "")
         .join("\n") || "";
     const parsed = parseGeminiJson(text);
-    if (!parsed || typeof parsed !== "object") return null;
-    return {
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("Gemini returned a response Echoo could not parse.");
+    }
+    const result = {
       assistantMessage: cleanText(parsed.assistantMessage).slice(0, 520),
       routeTitle: cleanText(parsed.routeTitle).slice(0, 120),
       summary: cleanText(parsed.summary).slice(0, 220),
@@ -651,8 +590,15 @@ async function callGeminiPlan(input: {
           }))
         : [],
     };
+    if (!result.assistantMessage || !result.routeTitle || !result.summary) {
+      throw new Error("Gemini response was missing required plan copy.");
+    }
+    if (!result.suggestedPills.length) {
+      throw new Error("Gemini response was missing suggested actions.");
+    }
+    return result;
   } catch (_err) {
-    return null;
+    throw _err;
   } finally {
     clearTimeout(timeout);
   }
@@ -763,6 +709,16 @@ Deno.serve(async (req) => {
       .sort((a: Candidate, b: Candidate) => b.score - a.score)
       .slice(0, Math.max(4, planShape.stopCount));
 
+    if (candidates.length < planShape.stopCount) {
+      return jsonResponse(
+        {
+          error: "Not enough real Echoo places are available for this plan.",
+          code: "insufficient_candidates",
+        },
+        404,
+      );
+    }
+
     const aiPlan = await callGeminiPlan({
       query,
       mode,
@@ -795,27 +751,12 @@ Deno.serve(async (req) => {
           latitude: item.latitude,
           longitude: item.longitude,
           distanceMeters: item.distance_meters || null,
-          why: note?.why || fallbackWhy(item, index, profile, context, mode),
+          why: note?.why || "",
           timing: note?.timing || null,
           description: item.description,
           score: Number(item.score.toFixed(3)),
         };
       });
-
-    const assistantMessage =
-      aiPlan?.assistantMessage ||
-      fallbackAssistantMessage(
-        mode,
-        query,
-        region.name,
-        profile,
-        candidates.slice(0, planShape.stopCount),
-      );
-    const routeTitle =
-      aiPlan?.routeTitle || fallbackRouteTitle(mode, region.name, profile);
-    const suggestedPills = aiPlan?.suggestedPills?.length
-      ? aiPlan.suggestedPills
-      : fallbackPills(planShape);
 
     const response = {
       supported: true,
@@ -829,17 +770,13 @@ Deno.serve(async (req) => {
         tags,
       },
       ai: {
-        provider: aiPlan ? "gemini" : "echoo-fallback",
-        model: aiPlan
-          ? Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL
-          : "deterministic",
-        assistantMessage,
-        routeTitle,
-        suggestedPills,
+        provider: "gemini",
+        model: Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL,
+        assistantMessage: aiPlan.assistantMessage,
+        routeTitle: aiPlan.routeTitle,
+        suggestedPills: aiPlan.suggestedPills,
       },
-      summary:
-        aiPlan?.summary ||
-        `Built for ${context.daypart.id.replace("_", " ")} in ${region.name}.`,
+      summary: aiPlan.summary,
       plans,
     };
 
@@ -873,13 +810,25 @@ Deno.serve(async (req) => {
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Unknown plan engine error";
+    const isGeminiError =
+      /Gemini|GEMINI_API_KEY|response Echoo could not parse|required plan copy|suggested actions/i.test(
+        message,
+      );
     await logLocationEvent(supabase, {
       functionName: "plan-engine",
-      eventType: "plan_failed",
+      eventType: isGeminiError ? "gemini_failed" : "plan_failed",
       status: "error",
       reason: message,
       durationMs: Date.now() - startedAt,
     });
-    return jsonResponse({ error: message }, 500);
+    return jsonResponse(
+      {
+        error: isGeminiError
+          ? "Echoo AI is not connected cleanly yet."
+          : message,
+        code: isGeminiError ? "ai_unavailable" : "plan_failed",
+      },
+      isGeminiError ? 502 : 500,
+    );
   }
 });
