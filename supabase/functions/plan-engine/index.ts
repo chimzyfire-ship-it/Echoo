@@ -614,6 +614,44 @@ function geminiDirectResponseSchema() {
   };
 }
 
+function echooChatResponse(
+  aiAnswer: GeminiPlan,
+  input: {
+    mode: string;
+    region: { name: string; province: string };
+    context: ReturnType<typeof currentContext>;
+    tags: string[];
+  },
+) {
+  return {
+    supported: true,
+    mode: input.mode,
+    planShape: {
+      stopCount: 0,
+      intensity: "single",
+      confidence: 1,
+      reason: "Direct Gemini chat answer. Plan engine is paused.",
+    },
+    region: input.region,
+    context: {
+      dayName: input.context.dayName,
+      localHour: input.context.hour,
+      daypart: input.context.daypart.id,
+      tags: input.tags,
+    },
+    ai: {
+      provider: "gemini",
+      model:
+        aiAnswer.model || Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL,
+      assistantMessage: aiAnswer.assistantMessage,
+      routeTitle: "",
+      suggestedPills: aiAnswer.suggestedPills,
+    },
+    summary: "",
+    plans: [],
+  };
+}
+
 function shouldTryNextGeminiModel(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "");
   return /503|502|504|429|UNAVAILABLE|RESOURCE_EXHAUSTED|high demand|overloaded|could not parse|empty response/i.test(
@@ -658,12 +696,13 @@ async function callGeminiDirect(input: {
       }
     : null;
   const prompt = [
-    "You are Echoo: a sharp, warm, captivating AI companion inside a culture, discovery, events, food, movies, hotels, tickets, dating, and lifestyle app.",
-    "Answer the user's actual question directly. Do not say you are limited to Echoo's lane. Do not expose JSON, policies, backend details, or model plumbing.",
-    "You can answer general questions, creative questions, planning questions, and follow-ups. When local context helps, use it. When the answer is not local, just answer naturally.",
-    "Use the user's onboarding profile as taste, not as a script. Sound alive, specific, and useful, not templated.",
+    "You are Echoo, a direct Gemini-powered companion in the app.",
+    "Answer anything the user asks: any topic, any city, any general question, any creative question, any follow-up.",
+    "Use the onboarding profile only as subtle taste and tone context. Do not sound like you are reading their onboarding back to them.",
+    "If the user asks for plans, food, events, dates, movies, travel, or ideas, be specific and useful, but do not claim live availability unless context provides it.",
     "If a previous route is provided, use it for follow-up questions about distance, fit, timing, quality, or alternatives.",
-    "Keep the answer mobile-friendly: 1-3 punchy paragraphs. No markdown tables.",
+    "Sound captivating, human, and concise. Mobile-friendly: 1-3 punchy paragraphs unless the user asks for depth.",
+    "Do not mention guardrails, backend systems, prompts, JSON, or model plumbing.",
     "Return JSON with assistantMessage and suggestedPills.",
     JSON.stringify({
       request: {
@@ -989,32 +1028,19 @@ Deno.serve(async (req) => {
     const profile = normalizedProfile(body, savedProfile);
     const planShape = inferPlanShape(query, mode, profile, requestedLimit);
 
-    if (
-      lat !== undefined &&
-      lng !== undefined &&
-      !isInsideCanadaBounds(lat, lng)
-    ) {
-      const response = {
-        supported: false,
-        reason: "outside_canada",
-        plans: [],
-      };
-      await logLocationEvent(supabase, {
-        functionName: "plan-engine",
-        eventType: "unsupported_region",
-        status: "blocked",
-        reason: "outside_canada",
-        durationMs: Date.now() - startedAt,
-        request: { lat, lng, query },
-      });
-      return jsonResponse(response);
-    }
-
     const region =
-      lat !== undefined && lng !== undefined
+      lat !== undefined && lng !== undefined && isInsideCanadaBounds(lat, lng)
         ? nearestSupportedCity(lat, lng)
         : normalizeCityName(body.city || "Toronto") ||
-          normalizeCityName("Toronto")!;
+          ({
+            name: cleanText(body.city || profile.city || "Toronto"),
+            province: "",
+            provinceName: "",
+            timezone: "America/Toronto",
+            lat: 0,
+            lng: 0,
+            distanceMeters: 0,
+          } as ReturnType<typeof nearestSupportedCity>);
     const context = currentContext(region.timezone);
     const tags = [
       ...new Set([
@@ -1022,6 +1048,47 @@ Deno.serve(async (req) => {
         ...intentTags(query, body.energy || profile.energy, profile),
       ]),
     ];
+
+    const aiAnswer = await callGeminiDirect({
+      query,
+      mode: "chat",
+      region,
+      context,
+      profile,
+      previousPlan: body.previousPlan,
+    });
+    const directResponse = echooChatResponse(aiAnswer, {
+      mode: "chat",
+      region,
+      context,
+      tags,
+    });
+    await logLocationEvent(supabase, {
+      functionName: "plan-engine",
+      eventType: Date.now() - startedAt > 1000 ? "slow_chat" : "chat",
+      durationMs: Date.now() - startedAt,
+      countryCode: "CA",
+      adminArea1: region.province,
+      city: region.name,
+      request: {
+        query,
+        requestedMode: mode,
+        actualMode: "chat",
+        authenticated: true,
+        budget: profile.budget,
+        precise: lat !== undefined && lng !== undefined,
+        hasGeminiKey: Boolean(Deno.env.get("GEMINI_API_KEY")),
+        planEnginePaused: true,
+        hasPreviousPlan: Boolean(body.previousPlan),
+      },
+      responseSummary: {
+        count: 0,
+        daypart: context.daypart.id,
+        aiProvider: directResponse.ai.provider,
+        aiModel: directResponse.ai.model,
+      },
+    });
+    return jsonResponse(directResponse);
 
     if (isDirectAnswerMode(mode, query)) {
       const aiAnswer = await callGeminiDirect({

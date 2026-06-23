@@ -2385,19 +2385,11 @@
           return;
         }
 
-        const textLower = userText.toLowerCase();
-        const isSurpriseRequest = /surprise|bored|get out/.test(textLower);
-
-        if (isSurpriseRequest) {
-          askBudgetBeforeSurprise(userText, "Surprise me");
-          return;
-        }
-
         // Add user bubble
         addBubble("user", userText);
         await delay(500);
         addTyping();
-        await presentSmartPlan(userText, 4, "build_plan", true);
+        await presentSmartPlan(userText, 4, "chat", true);
       }
 
       /* ── Pill tap handler ── */
@@ -2476,12 +2468,7 @@
         addBubble("user", text);
         await delay(500);
         addTyping();
-        await presentSmartPlan(
-          text,
-          4,
-          /surprise|bored|get out/i.test(text) ? "surprise" : "chat",
-          true,
-        );
+        await presentSmartPlan(text, 4, "chat", true);
       }
 
       /* ── Chat input submit ── */
