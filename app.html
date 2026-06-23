@@ -1149,8 +1149,10 @@
       budget = budget || storedPrefs.budget;
       energy = energy || storedPrefs.energy;
       tone = tone || storedPrefs.tone;
-      preciseLat = Number(storedPrefs.lastLat);
-      preciseLng = Number(storedPrefs.lastLng);
+      if (storedPrefs.locationSupported !== false) {
+        preciseLat = Number(storedPrefs.lastLat);
+        preciseLng = Number(storedPrefs.lastLng);
+      }
 
       name = name || "Preview User";
       city = city || "Toronto";
@@ -1192,8 +1194,10 @@
           : typeof prefs.vibes === "string" && prefs.vibes
             ? prefs.vibes.split(",")
             : vibes;
-        preciseLat = Number(prefs.lastLat ?? preciseLat);
-        preciseLng = Number(prefs.lastLng ?? preciseLng);
+        if (prefs.locationSupported !== false) {
+          preciseLat = Number(prefs.lastLat ?? preciseLat);
+          preciseLng = Number(prefs.lastLng ?? preciseLng);
+        }
         Object.assign(personalizationProfile, {
           interests: Array.isArray(prefs.interests)
             ? prefs.interests
@@ -2022,7 +2026,14 @@
           limit,
           profile: personalizationProfile,
         };
-        return Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+        const resolved =
+          Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+            ? window.EchooLocationPlatform.resolveCoordinates(
+                preciseLat,
+                preciseLng,
+              )
+            : null;
+        return resolved?.supported
           ? { ...base, lat: preciseLat, lng: preciseLng }
           : { ...base, city };
       }
@@ -2080,6 +2091,14 @@
               error:
                 payload?.error ||
                 "Echoo AI could not answer that cleanly. Try again in a moment.",
+            };
+          }
+          if (payload?.supported === false) {
+            return {
+              payload,
+              stops: [],
+              error:
+                "Echoo AI needs a Canadian launch city for live planning. I can use Toronto, Vancouver, Montreal, Calgary, Ottawa, or another supported Canadian city.",
             };
           }
           if (payload?.ai?.provider !== "gemini") {

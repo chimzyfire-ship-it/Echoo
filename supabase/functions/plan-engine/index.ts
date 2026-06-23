@@ -709,15 +709,31 @@ Deno.serve(async (req) => {
       .sort((a: Candidate, b: Candidate) => b.score - a.score)
       .slice(0, Math.max(4, planShape.stopCount));
 
-    if (candidates.length < planShape.stopCount) {
+    if (!candidates.length) {
       return jsonResponse(
         {
-          error: "Not enough real Echoo places are available for this plan.",
+          error: "No real Echoo places are available for this plan yet.",
           code: "insufficient_candidates",
         },
         404,
       );
     }
+    const actualStopCount = Math.min(planShape.stopCount, candidates.length);
+    const actualPlanShape =
+      actualStopCount === planShape.stopCount
+        ? planShape
+        : {
+            ...planShape,
+            stopCount: actualStopCount,
+            intensity:
+              actualStopCount === 1
+                ? "single"
+                : actualStopCount === 2
+                  ? "pair"
+                  : "flow",
+            reason:
+              "Echoo used the strongest real candidates available for this city.",
+          };
 
     const aiPlan = await callGeminiPlan({
       query,
@@ -725,8 +741,8 @@ Deno.serve(async (req) => {
       region,
       context,
       profile,
-      planShape,
-      plans: candidates.slice(0, planShape.stopCount),
+      planShape: actualPlanShape,
+      plans: candidates.slice(0, actualStopCount),
     });
     const noteById = new Map(
       (aiPlan?.stopNotes || []).map((note) => [
@@ -736,7 +752,7 @@ Deno.serve(async (req) => {
     );
 
     const plans = candidates
-      .slice(0, planShape.stopCount)
+      .slice(0, actualStopCount)
       .map((item: Candidate, index: number) => {
         const note =
           noteById.get(candidateKey(item)) || noteById.get(item.title);
@@ -761,7 +777,7 @@ Deno.serve(async (req) => {
     const response = {
       supported: true,
       mode,
-      planShape,
+      planShape: actualPlanShape,
       region,
       context: {
         dayName: context.dayName,
@@ -794,7 +810,7 @@ Deno.serve(async (req) => {
         authenticated: true,
         budget: profile.budget,
         requestedLimit,
-        planShape,
+        planShape: actualPlanShape,
         precise: lat !== undefined && lng !== undefined,
         hasGeminiKey: Boolean(Deno.env.get("GEMINI_API_KEY")),
       },
@@ -802,7 +818,7 @@ Deno.serve(async (req) => {
         count: plans.length,
         daypart: context.daypart.id,
         aiProvider: response.ai.provider,
-        stopCount: planShape.stopCount,
+        stopCount: actualPlanShape.stopCount,
       },
     });
 

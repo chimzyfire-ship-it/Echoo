@@ -1059,7 +1059,17 @@
 
       document
         .getElementById("focus-search")
-        .addEventListener("click", () => searchInput.focus());
+        .addEventListener("click", async () => {
+          const query = searchInput.value.trim();
+          if (query) {
+            await openProtectedRoute(
+              `events.html?query=${encodeURIComponent(query)}`,
+            );
+            return;
+          }
+          searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
+          searchInput.focus({ preventScroll: true });
+        });
 
       document
         .getElementById("search-form")
