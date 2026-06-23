@@ -16,35 +16,61 @@
         --line: rgba(245, 241, 232, 0.13);
         --line-strong: rgba(245, 241, 232, 0.28);
         --signal: #e7c98e;
+        --signal-2: #9f8cff;
+        --green: #9bd4b4;
         --rose: #d8a2d9;
         --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         min-height: 100svh;
         color: var(--ink);
         background:
           linear-gradient(180deg, rgba(8, 9, 7, 0.5), rgba(8, 9, 7, 0.94)),
-          url("assets/optimized/echoo-mobile-bg-768.jpg") center / cover no-repeat,
+          url("assets/optimized/echoo-mobile-bg-768.jpg") center / cover
+            no-repeat,
           var(--bg);
         background:
           linear-gradient(180deg, rgba(8, 9, 7, 0.5), rgba(8, 9, 7, 0.94)),
-          url("assets/optimized/echoo-mobile-bg-768.webp") center / cover no-repeat,
+          url("assets/optimized/echoo-mobile-bg-768.webp") center / cover
+            no-repeat,
           var(--bg);
         display: grid;
         place-items: center;
         padding: 16px;
       }
 
-      a { color: inherit; text-decoration: none; }
-      button, input { font: inherit; }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      a:focus-visible {
+        outline: 3px solid rgba(231, 201, 142, 0.82);
+        outline-offset: 3px;
+      }
 
       /* ---- Auth shell ---- */
       .auth-shell {
-        width: min(460px, 100%);
+        width: min(720px, 100%);
       }
 
       .back {
@@ -169,7 +195,9 @@
         padding: 0 15px;
         font-size: 16px;
         font-weight: 750;
-        transition: border-color 160ms ease, background 160ms ease;
+        transition:
+          border-color 160ms ease,
+          background 160ms ease;
       }
 
       input:focus {
@@ -195,11 +223,19 @@
         cursor: pointer;
         font-weight: 950;
         letter-spacing: -0.03em;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease;
       }
 
       .submit {
-        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        background: linear-gradient(
+          135deg,
+          #e4bd78 0%,
+          #f2ddb0 42%,
+          var(--rose) 100%
+        );
         color: #151311;
         font-size: 18px;
       }
@@ -234,15 +270,21 @@
         color: var(--ink);
       }
 
-      .signup-only { display: none; }
-      .signup .signup-only { display: grid; }
+      .signup-only {
+        display: none;
+      }
+      .signup .signup-only {
+        display: grid;
+      }
 
       /* ---- Fade utility ---- */
       .fade-out {
         opacity: 0;
         transform: translateY(-6px);
         pointer-events: none;
-        transition: opacity 220ms ease, transform 220ms ease;
+        transition:
+          opacity 220ms ease,
+          transform 220ms ease;
       }
 
       .fade-in-up {
@@ -250,8 +292,14 @@
       }
 
       @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(12px); }
-        to   { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       /* ---- Onboarding ---- */
@@ -264,9 +312,10 @@
       }
 
       .ob-progress {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
         gap: 4px;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
       }
 
       .ob-bar {
@@ -274,7 +323,9 @@
         height: 3px;
         border: 1px solid var(--line);
         background: transparent;
-        transition: background 260ms ease, border-color 260ms ease;
+        transition:
+          background 260ms ease,
+          border-color 260ms ease;
       }
 
       .ob-bar.past {
@@ -289,24 +340,34 @@
 
       .ob-panel {
         border: 1px solid var(--line);
-        background: rgba(17, 19, 15, 0.92);
+        background:
+          linear-gradient(145deg, rgba(159, 140, 255, 0.1), transparent 34%),
+          linear-gradient(180deg, rgba(245, 241, 232, 0.045), transparent 44%),
+          rgba(17, 19, 15, 0.94);
         box-shadow: var(--shadow);
       }
 
       .ob-head {
-        padding: 22px;
+        padding: 24px;
         border-bottom: 1px solid var(--line);
       }
 
       .ob-head h1 {
-        max-width: 360px;
-        font-size: clamp(34px, 10vw, 50px);
+        max-width: 540px;
+        font-size: clamp(36px, 8vw, 58px);
       }
 
       .ob-body {
-        padding: 22px;
+        padding: 20px;
         display: grid;
-        gap: 18px;
+        gap: 16px;
+      }
+
+      .ob-scroll {
+        max-height: min(57svh, 600px);
+        overflow: auto;
+        padding: 2px 5px 2px 0;
+        scrollbar-color: rgba(245, 241, 232, 0.24) transparent;
       }
 
       .ob-step {
@@ -325,36 +386,56 @@
       .chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 9px;
       }
 
       .chip {
-        padding: 12px 18px;
+        position: relative;
+        min-height: 42px;
+        padding: 10px 15px;
         border: 1px solid var(--line);
-        background: transparent;
+        background: rgba(8, 9, 7, 0.48);
         color: var(--ink);
         font-size: 14px;
-        font-weight: 750;
+        font-weight: 850;
         letter-spacing: -0.02em;
         cursor: pointer;
-        border-radius: 0;
-        transition: border-color 160ms ease, background 160ms ease;
+        border-radius: 999px;
+        transition:
+          border-color 160ms ease,
+          background 160ms ease,
+          color 160ms ease,
+          transform 160ms ease;
         user-select: none;
       }
 
       .chip:hover {
         border-color: var(--line-strong);
+        transform: translateY(-1px);
       }
 
       .chip.selected {
-        border-color: var(--signal);
-        background: rgba(231, 201, 142, 0.08);
-        color: var(--signal);
+        border-color: rgba(159, 140, 255, 0.85);
+        background: rgba(159, 140, 255, 0.2);
+        color: #f7f3ff;
+        box-shadow: inset 0 0 0 1px rgba(245, 241, 232, 0.1);
+      }
+
+      .chip.selected::after {
+        content: "";
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        margin-left: 10px;
+        border-radius: 50%;
+        background: var(--signal);
+        vertical-align: 1px;
       }
 
       /* City pills */
       .city-pills {
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         margin-top: 4px;
       }
@@ -368,7 +449,10 @@
         font-size: 13px;
         font-weight: 750;
         cursor: pointer;
-        transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+        transition:
+          border-color 160ms ease,
+          color 160ms ease,
+          background 160ms ease;
       }
 
       .city-pill:hover {
@@ -388,13 +472,21 @@
         gap: 10px;
       }
 
+      .ob-cards.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .ob-card {
+        min-height: 88px;
         padding: 16px;
         border: 1px solid var(--line);
-        background: transparent;
+        background: rgba(8, 9, 7, 0.4);
         cursor: pointer;
         text-align: left;
-        transition: border-color 160ms ease, background 160ms ease;
+        transition:
+          border-color 160ms ease,
+          background 160ms ease,
+          transform 160ms ease;
       }
 
       .ob-card:hover {
@@ -402,8 +494,8 @@
       }
 
       .ob-card.selected {
-        border-color: var(--signal);
-        background: rgba(231, 201, 142, 0.08);
+        border-color: rgba(231, 201, 142, 0.72);
+        background: rgba(231, 201, 142, 0.1);
       }
 
       .ob-card .ob-card-name {
@@ -423,18 +515,105 @@
         line-height: 1.4;
       }
 
+      .ob-section {
+        display: grid;
+        gap: 11px;
+        margin-bottom: 22px;
+      }
+
+      .ob-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .ob-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 950;
+        letter-spacing: -0.03em;
+      }
+
+      .ob-section-title::before {
+        content: "";
+        width: 18px;
+        height: 1px;
+        background: var(--signal-2);
+      }
+
+      .preference-fieldset {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      .screen-reader {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      .custom-field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: fit-content;
+        min-height: 44px;
+        max-width: 100%;
+        border: 1px solid var(--line);
+        background: rgba(8, 9, 7, 0.62);
+        padding: 0 14px;
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .custom-field input {
+        min-height: 42px;
+        width: min(220px, 54vw);
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font-size: 14px;
+      }
+
+      .identity-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .privacy-note {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+      }
+
       .ob-continue {
         width: 100%;
         min-height: 58px;
         border: 1px solid var(--line);
         border-radius: 0;
-        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        background: linear-gradient(
+          135deg,
+          #e4bd78 0%,
+          #f2ddb0 42%,
+          var(--rose) 100%
+        );
         color: #151311;
         font-size: 18px;
         font-weight: 950;
         letter-spacing: -0.03em;
         cursor: pointer;
-        transition: transform 180ms ease, border-color 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease;
         margin-top: 4px;
       }
 
@@ -459,6 +638,30 @@
       .ob-skip:hover {
         color: var(--muted);
       }
+
+      @media (max-width: 560px) {
+        body {
+          align-items: start;
+          place-items: start center;
+        }
+
+        .auth-shell {
+          width: 100%;
+        }
+
+        .ob-cards.two {
+          grid-template-columns: 1fr;
+        }
+
+        .ob-head,
+        .ob-body {
+          padding: 18px;
+        }
+
+        .ob-scroll {
+          max-height: 54svh;
+        }
+      }
     </style>
   </head>
   <body>
@@ -469,157 +672,73 @@
       <section class="panel" id="auth-panel">
         <div class="auth-head">
           <div class="brand">
-            <span class="brand-logo" aria-hidden="true"><img src="assets/echoo-new-logo.jpg" alt=""></span>
+            <span class="brand-logo" aria-hidden="true"
+              ><img src="assets/echoo-new-logo.jpg" alt=""
+            /></span>
             <div class="mode" aria-label="Authentication mode">
-              <button class="active" id="signin-tab" type="button">Sign in</button>
+              <button class="active" id="signin-tab" type="button">
+                Sign in
+              </button>
               <button id="signup-tab" type="button">Join</button>
             </div>
           </div>
           <h1 id="title">Step back into the city.</h1>
-          <p class="sub" id="copy">Your saved places, plans, and conversations are waiting.</p>
+          <p class="sub" id="copy">
+            Your saved places, plans, and conversations are waiting.
+          </p>
         </div>
 
         <form id="auth-form">
           <div class="field signup-only">
             <label for="name">Name</label>
-            <input id="name" autocomplete="name" placeholder="Your name">
+            <input id="name" autocomplete="name" placeholder="Your name" />
           </div>
           <div class="field">
             <label for="email">Email</label>
-            <input id="email" autocomplete="email" placeholder="name@example.com">
+            <input
+              id="email"
+              autocomplete="email"
+              placeholder="name@example.com"
+            />
           </div>
           <div class="field">
             <label for="password">Password</label>
-            <input id="password" type="password" autocomplete="current-password" placeholder="Password">
+            <input
+              id="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Password"
+            />
           </div>
           <div class="meta">
             <span>Secured by Echoo</span>
             <a href="#">Need help?</a>
           </div>
-          <button class="submit" type="submit" id="submit-label">Open my city</button>
+          <button class="submit" type="submit" id="submit-label">
+            Open my city
+          </button>
           <div class="divider">or</div>
-          <button class="provider" type="button" data-provider="Google">Continue with Google</button>
-          <button class="provider" type="button" data-provider="Apple">Continue with Apple</button>
+          <button class="provider" type="button" data-provider="Google">
+            Continue with Google
+          </button>
+          <button class="provider" type="button" data-provider="Apple">
+            Continue with Apple
+          </button>
         </form>
       </section>
 
       <!-- ONBOARDING PANEL -->
       <section class="onboarding" id="onboarding">
-        <div class="ob-progress">
-          <div class="ob-bar current" data-step="0"></div>
-          <div class="ob-bar" data-step="1"></div>
-          <div class="ob-bar" data-step="2"></div>
-          <div class="ob-bar" data-step="3"></div>
-          <div class="ob-bar" data-step="4"></div>
-        </div>
+        <div class="ob-progress" id="ob-progress" aria-hidden="true"></div>
         <div class="ob-panel">
           <div class="ob-head">
             <h1 id="ob-title">What draws you out?</h1>
-            <p class="sub" id="ob-sub">Pick what sounds like your kind of night.</p>
+            <p class="sub" id="ob-sub">
+              Pick what sounds like your kind of night.
+            </p>
           </div>
           <div class="ob-body">
-
-            <!-- Step 1: Vibes -->
-            <div class="ob-step active" data-ob-step="0">
-              <div class="ob-step-inner">
-                <div class="chips">
-                  <button type="button" class="chip" data-vibe="Nightclubs &amp; DJs">Nightclubs &amp; DJs</button>
-                  <button type="button" class="chip" data-vibe="Hiking &amp; Outdoor">Hiking &amp; Outdoor</button>
-                  <button type="button" class="chip" data-vibe="Gaming &amp; Arcades">Gaming &amp; Arcades</button>
-                  <button type="button" class="chip" data-vibe="Speakeasies &amp; Cocktails">Speakeasies &amp; Cocktails</button>
-                  <button type="button" class="chip" data-vibe="Coffee Shop Crawls">Coffee Shop Crawls</button>
-                  <button type="button" class="chip" data-vibe="Concerts &amp; Festivals">Concerts &amp; Festivals</button>
-                  <button type="button" class="chip" data-vibe="Beaches &amp; Parks">Beaches &amp; Parks</button>
-                  <button type="button" class="chip" data-vibe="Museums &amp; History">Museums &amp; History</button>
-                  <button type="button" class="chip" data-vibe="Live music">Live music</button>
-                  <button type="button" class="chip" data-vibe="Late-night cinema">Late-night cinema</button>
-                  <button type="button" class="chip" data-vibe="Cozy date spots">Cozy date spots</button>
-                  <button type="button" class="chip" data-vibe="Rooftop bars">Rooftop bars</button>
-                  <button type="button" class="chip" data-vibe="Art &amp; galleries">Art &amp; galleries</button>
-                  <button type="button" class="chip" data-vibe="Street food crawls">Street food crawls</button>
-                  <button type="button" class="chip" data-vibe="Sports">Sports</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 2: Budget -->
-            <div class="ob-step" data-ob-step="1">
-              <div class="ob-step-inner">
-                <div class="ob-cards">
-                  <button type="button" class="ob-card selected" data-budget="$">
-                    <span class="ob-card-name">Low-key &amp; cheap ($)</span>
-                    <span class="ob-card-desc">Casual hangs. Street bites, local pubs, free galleries.</span>
-                  </button>
-                  <button type="button" class="ob-card" data-budget="$$">
-                    <span class="ob-card-name">Mid-range &amp; curated ($$)</span>
-                    <span class="ob-card-desc">Reasonable spends. Cozy dining, coffee dates, indie shows.</span>
-                  </button>
-                  <button type="button" class="ob-card" data-budget="$$$">
-                    <span class="ob-card-name">Premium &amp; splurge ($$$)</span>
-                    <span class="ob-card-desc">High-end experiences. Speakeasies, fine dining, live theater.</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 3: Energy Level -->
-            <div class="ob-step" data-ob-step="2">
-              <div class="ob-step-inner">
-                <div class="ob-cards">
-                  <button type="button" class="ob-card selected" data-energy="chill">
-                    <span class="ob-card-name">Chill &amp; Intimate</span>
-                    <span class="ob-card-desc">Soft music, quiet conversation, comfortable lounge seating.</span>
-                  </button>
-                  <button type="button" class="ob-card" data-energy="hype">
-                    <span class="ob-card-name">Vibrant &amp; Loud</span>
-                    <span class="ob-card-desc">Live performance, high volume, crowded spaces, games.</span>
-                  </button>
-                  <button type="button" class="ob-card" data-energy="curious">
-                    <span class="ob-card-name">Spontaneous &amp; Mixed</span>
-                    <span class="ob-card-desc">Exploratory crawls, surprise detours, a mix of quiet and loud.</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 4: City -->
-            <div class="ob-step" data-ob-step="3">
-              <div class="ob-step-inner">
-                <div class="field">
-                  <label for="ob-city">Your city</label>
-                  <input id="ob-city" type="text" value="Toronto" placeholder="Your city">
-                </div>
-                <div class="city-pills">
-                  <button type="button" class="city-pill selected" data-city="Toronto">Toronto</button>
-                  <button type="button" class="city-pill" data-city="Vancouver">Vancouver</button>
-                  <button type="button" class="city-pill" data-city="Montreal">Montreal</button>
-                  <button type="button" class="city-pill" data-city="Calgary">Calgary</button>
-                  <button type="button" class="city-pill" data-city="Edmonton">Edmonton</button>
-                  <button type="button" class="city-pill" data-city="Ottawa">Ottawa</button>
-                  <button type="button" class="city-pill" data-city="Winnipeg">Winnipeg</button>
-                  <button type="button" class="city-pill" data-city="Quebec City">Quebec City</button>
-                  <button type="button" class="city-pill" data-city="Halifax">Halifax</button>
-                  <button type="button" class="city-pill" data-city="Victoria">Victoria</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 5: Tone -->
-            <div class="ob-step" data-ob-step="4">
-              <div class="ob-step-inner">
-                <div class="ob-cards">
-                  <button type="button" class="ob-card selected" data-tone="direct">
-                    <span class="ob-card-name">Direct &amp; chill</span>
-                    <span class="ob-card-desc">Short answers. No fluff. Just the move.</span>
-                  </button>
-                  <button type="button" class="ob-card" data-tone="detailed">
-                    <span class="ob-card-name">Detailed curator</span>
-                    <span class="ob-card-desc">Context, alternatives, and the full picture.</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
+            <div id="ob-steps"></div>
             <button type="button" class="ob-continue" id="ob-next">Next</button>
           </div>
         </div>
@@ -629,10 +748,19 @@
     <script src="assets/location-platform.js"></script>
     <script>
       /* Diagnostic logger for redirects */
-      window.addEventListener('beforeunload', () => {
-        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
-        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
-        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
+      window.addEventListener("beforeunload", () => {
+        const history = JSON.parse(
+          sessionStorage.getItem("echoo_unload_log") || "[]",
+        );
+        history.push({
+          time: new Date().toISOString(),
+          url: window.location.href,
+          stack: new Error().stack,
+        });
+        sessionStorage.setItem(
+          "echoo_unload_log",
+          JSON.stringify(history.slice(-10)),
+        );
       });
 
       // Check stored preference for pre-detected city
@@ -642,36 +770,49 @@
         if (stored) {
           preDetectedCity = JSON.parse(stored).city || "Toronto";
         }
-      } catch(e) {}
-      preDetectedCity = window.EchooLocationPlatform.cityByName(preDetectedCity)?.name || "Toronto";
+      } catch (e) {}
+      preDetectedCity =
+        window.EchooLocationPlatform.cityByName(preDetectedCity)?.name ||
+        "Toronto";
 
       /* ---- State ---- */
       const state = {
-        mode: "signin",        // "signin" | "signup"
+        mode: "signin", // "signin" | "signup"
         obStep: 0,
         vibes: new Set(),
+        eventStyles: new Set(),
+        audiences: new Set(),
+        motivations: new Set(),
+        customInterest: "",
+        customEventStyle: "",
+        customAudience: "",
+        customMotivation: "",
         budget: "$",
         energy: "chill",
         city: preDetectedCity,
+        gender: "Prefer not to say",
+        dob: "",
         tone: "direct",
         userName: "",
         userEmail: "",
       };
 
       /* ---- DOM refs ---- */
-      const authPanel   = document.getElementById("auth-panel");
-      const onboarding  = document.getElementById("onboarding");
-      const title       = document.getElementById("title");
-      const copy        = document.getElementById("copy");
-      const signInTab   = document.getElementById("signin-tab");
-      const signUpTab   = document.getElementById("signup-tab");
+      const authPanel = document.getElementById("auth-panel");
+      const onboarding = document.getElementById("onboarding");
+      const title = document.getElementById("title");
+      const copy = document.getElementById("copy");
+      const signInTab = document.getElementById("signin-tab");
+      const signUpTab = document.getElementById("signup-tab");
       const submitLabel = document.getElementById("submit-label");
-      const obTitle     = document.getElementById("ob-title");
-      const obSub       = document.getElementById("ob-sub");
-      const obNext      = document.getElementById("ob-next");
-      const obBars      = document.querySelectorAll(".ob-bar");
-      const obSteps     = document.querySelectorAll(".ob-step");
-      const cityInput   = document.getElementById("ob-city");
+      const obTitle = document.getElementById("ob-title");
+      const obSub = document.getElementById("ob-sub");
+      const obNext = document.getElementById("ob-next");
+      const obProgress = document.getElementById("ob-progress");
+      const obStepsWrap = document.getElementById("ob-steps");
+      let obBars = [];
+      let obSteps = [];
+      let cityInput;
 
       /* ---- Copy maps ---- */
       const COPY = {
@@ -688,12 +829,390 @@
       };
 
       const OB_STEPS = [
-        { title: "What draws you out?",           sub: "Pick what sounds like your kind of night.", btn: "Next" },
-        { title: "What's the budget vibe?",       sub: "We'll tailor suggestions to your spend comfort.", btn: "Next" },
-        { title: "What's your energy speed?",     sub: "Tell us the pace you want to keep.", btn: "Next" },
-        { title: "Where's home base?",            sub: "We'll find what's close and worth it.",   btn: "Next" },
-        { title: "How should Echoo talk to you?",  sub: "Pick a voice for your recommendations.",   btn: "Let's go" },
+        {
+          type: "interest-map",
+          title: "Build your interest map.",
+          sub: "Choose the signals Echoo should use when it reads the city for you.",
+          btn: "Continue",
+        },
+        {
+          type: "multi",
+          key: "eventStyles",
+          customKey: "customEventStyle",
+          title: "How do you like to hang out?",
+          sub: "Pick the types of events you would actually say yes to.",
+          btn: "Continue",
+          options: [
+            "Small gatherings",
+            "Big events",
+            "Casual hangouts",
+            "Sport activities",
+            "Quiet events",
+            "Thoughtful & deep",
+            "Food & drinks",
+            "Talks",
+            "Cultural events",
+          ],
+          customLabel: "Or type an event style",
+        },
+        {
+          type: "multi",
+          key: "audiences",
+          customKey: "customAudience",
+          title: "Who do you want to meet?",
+          sub: "This helps Echoo shape the people, groups, and rooms it surfaces.",
+          btn: "Continue",
+          options: [
+            "People my age",
+            "Students",
+            "Professionals",
+            "Other parents",
+            "Other expats",
+            "Tech folks",
+            "No preference",
+            "Same-minded people",
+          ],
+          customLabel: "Or type a group",
+        },
+        {
+          type: "multi",
+          key: "motivations",
+          customKey: "customMotivation",
+          title: "What's bringing you to Echoo?",
+          sub: "Tell the engine what kind of outcome matters most right now.",
+          btn: "Continue",
+          options: [
+            "Meet new people",
+            "Try new things",
+            "Find a date",
+            "Create community",
+            "Grow my network",
+            "Get more active",
+            "Discover new hobbies",
+            "Just looking",
+            "Learn something new",
+          ],
+          customLabel: "Or type a reason",
+        },
+        {
+          type: "cards",
+          title: "Set your spending comfort.",
+          sub: "Echoo will keep recommendations within the range that feels right.",
+          btn: "Continue",
+          key: "budget",
+          options: [
+            {
+              value: "$",
+              name: "Low-key and accessible",
+              desc: "Free events, casual hangs, street food, local community rooms.",
+            },
+            {
+              value: "$$",
+              name: "Curated but reasonable",
+              desc: "Independent shows, coffee dates, special dinners, strong everyday picks.",
+            },
+            {
+              value: "$$$",
+              name: "Premium when it is worth it",
+              desc: "High-touch rooms, destination nights, intimate performances, fine dining.",
+            },
+          ],
+        },
+        {
+          type: "cards",
+          title: "Choose the pace.",
+          sub: "The same city can feel calm, electric, or exploratory.",
+          btn: "Continue",
+          key: "energy",
+          options: [
+            {
+              value: "chill",
+              name: "Chill and intimate",
+              desc: "Quiet rooms, lower friction, time to talk, softer transitions.",
+            },
+            {
+              value: "hype",
+              name: "Active and social",
+              desc: "Crowds, movement, games, live performance, big-room energy.",
+            },
+            {
+              value: "curious",
+              name: "Open-ended and mixed",
+              desc: "A little structure, a little surprise, and room for discovery.",
+            },
+          ],
+        },
+        {
+          type: "city",
+          title: "Where should Echoo start?",
+          sub: "Use a supported city now. Precise location can refine this later.",
+          btn: "Continue",
+        },
+        {
+          type: "identity",
+          title: "Optional personal context.",
+          sub: "Age and gender can improve fit. These fields are private and can be skipped.",
+          btn: "Continue",
+        },
+        {
+          type: "cards",
+          title: "How should Echoo talk to you?",
+          sub: "Pick the recommendation style your AI guide should use.",
+          btn: "Let's go",
+          key: "tone",
+          options: [
+            {
+              value: "direct",
+              name: "Direct and decisive",
+              desc: "Short answers, clear tradeoffs, fewer words.",
+            },
+            {
+              value: "detailed",
+              name: "Curated and contextual",
+              desc: "Why it fits, alternate routes, and fuller planning context.",
+            },
+          ],
+        },
       ];
+
+      const INTEREST_SECTIONS = [
+        {
+          title: "Art & Culture",
+          options: [
+            "Art",
+            "Creativity",
+            "Artists",
+            "Performing Arts",
+            "Collaboration Between Creative Minds",
+            "Theater",
+            "Painting",
+            "Cultural Activities",
+            "Museum",
+          ],
+        },
+        {
+          title: "Career & Business",
+          options: [
+            "Entrepreneurship",
+            "Professional Networking",
+            "Startup Businesses",
+            "Business Strategy",
+            "Professional Development",
+            "Investing",
+            "Leadership",
+            "Innovation",
+            "Online Marketing",
+            "Professional Women",
+            "Young Professionals",
+            "Musicians",
+            "Fashion Design",
+          ],
+        },
+        {
+          title: "Community & Environment",
+          options: [
+            "Community Building",
+            "Community Service",
+            "Sustainability",
+          ],
+        },
+        {
+          title: "Dancing",
+          options: [
+            "Dancing",
+            "Social Dancing",
+            "Dance Lessons",
+            "Latin Dance",
+            "Salsa",
+          ],
+        },
+        {
+          title: "Games",
+          options: [
+            "Game Night",
+            "Board Games",
+            "Games",
+            "Gaming",
+            "Card Games",
+            "Video Games",
+          ],
+        },
+        {
+          title: "Health & Wellbeing",
+          options: [
+            "Wellness",
+            "Meditation",
+            "Healthy Living",
+            "Energy Healing",
+            "Yoga",
+            "Alternative Medicine",
+            "Nutrition",
+            "Healthy Eating",
+          ],
+        },
+        {
+          title: "More Signals",
+          options: [
+            "Hobbies & Passions",
+            "Identity & Language",
+            "Music",
+            "Parents & Family",
+            "Pets & Animals",
+            "Religion & Spirituality",
+            "Science & Education",
+            "Social Activities",
+            "Sports & Fitness",
+          ],
+        },
+      ];
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function chip(label, key) {
+        return `<button type="button" class="chip" data-multi="${escapeHtml(key)}" data-value="${escapeHtml(label)}" aria-pressed="false">${escapeHtml(label)}</button>`;
+      }
+
+      function renderCustomInput(id, label) {
+        return `
+          <label class="custom-field" for="${id}">
+            <span>${escapeHtml(label)}</span>
+            <input id="${id}" data-custom="${id}" placeholder="Type here">
+          </label>
+        `;
+      }
+
+      function renderOnboardingUI() {
+        obProgress.innerHTML = OB_STEPS.map(
+          (_, i) =>
+            `<div class="ob-bar${i === 0 ? " current" : ""}" data-step="${i}"></div>`,
+        ).join("");
+        obProgress.style.gridTemplateColumns = `repeat(${OB_STEPS.length}, 1fr)`;
+
+        obStepsWrap.innerHTML = OB_STEPS.map((step, index) => {
+          let body = "";
+
+          if (step.type === "interest-map") {
+            body = `
+              <div class="ob-scroll">
+                <fieldset class="preference-fieldset">
+                  <legend class="screen-reader">Interest categories</legend>
+                  ${INTEREST_SECTIONS.map(
+                    (section) => `
+                    <div class="ob-section">
+                      <div class="ob-section-title">${escapeHtml(section.title)}</div>
+                      <div class="chips">${section.options.map((option) => chip(option, "vibes")).join("")}</div>
+                    </div>
+                  `,
+                  ).join("")}
+                  ${renderCustomInput("customInterest", "Add another interest")}
+                </fieldset>
+              </div>
+            `;
+          }
+
+          if (step.type === "multi") {
+            body = `
+              <fieldset class="preference-fieldset">
+                <legend class="screen-reader">${escapeHtml(step.title)}</legend>
+                <div class="chips">${step.options.map((option) => chip(option, step.key)).join("")}</div>
+                ${renderCustomInput(step.customKey, step.customLabel)}
+              </fieldset>
+            `;
+          }
+
+          if (step.type === "cards") {
+            body = `
+              <div class="ob-cards two" role="radiogroup" aria-label="${escapeHtml(step.title)}">
+                ${step.options
+                  .map(
+                    (option) => `
+                  <button type="button" class="ob-card${state[step.key] === option.value ? " selected" : ""}" data-single="${escapeHtml(step.key)}" data-value="${escapeHtml(option.value)}" role="radio" aria-checked="${state[step.key] === option.value ? "true" : "false"}">
+                    <span class="ob-card-name">${escapeHtml(option.name)}</span>
+                    <span class="ob-card-desc">${escapeHtml(option.desc)}</span>
+                  </button>
+                `,
+                  )
+                  .join("")}
+              </div>
+            `;
+          }
+
+          if (step.type === "city") {
+            body = `
+              <div class="field">
+                <label for="ob-city">Your city</label>
+                <input id="ob-city" type="text" value="${escapeHtml(state.city)}" placeholder="Your city" autocomplete="address-level2">
+              </div>
+              <div class="city-pills" role="radiogroup" aria-label="Supported cities">
+                ${[
+                  "Toronto",
+                  "Vancouver",
+                  "Montreal",
+                  "Calgary",
+                  "Edmonton",
+                  "Ottawa",
+                  "Winnipeg",
+                  "Quebec City",
+                  "Halifax",
+                  "Victoria",
+                ]
+                  .map(
+                    (cityName) => `
+                  <button type="button" class="city-pill${state.city === cityName ? " selected" : ""}" data-city="${escapeHtml(cityName)}" role="radio" aria-checked="${state.city === cityName ? "true" : "false"}">${escapeHtml(cityName)}</button>
+                `,
+                  )
+                  .join("")}
+              </div>
+            `;
+          }
+
+          if (step.type === "identity") {
+            body = `
+              <div class="identity-grid">
+                <p class="privacy-note">Use this only for personalization. Avoiding the question is always valid.</p>
+                <div class="ob-cards" role="radiogroup" aria-label="Gender">
+                  ${[
+                    "Prefer not to say",
+                    "Female",
+                    "Male",
+                    "Nonbinary",
+                    "Not Listed",
+                  ]
+                    .map(
+                      (option) => `
+                    <button type="button" class="ob-card${state.gender === option ? " selected" : ""}" data-single="gender" data-value="${escapeHtml(option)}" role="radio" aria-checked="${state.gender === option ? "true" : "false"}">
+                      <span class="ob-card-name">${escapeHtml(option)}</span>
+                    </button>
+                  `,
+                    )
+                    .join("")}
+                </div>
+                <div class="field">
+                  <label for="dob">Date of birth</label>
+                  <input id="dob" type="date" value="${escapeHtml(state.dob)}" autocomplete="bday">
+                </div>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="ob-step${index === 0 ? " active" : ""}" data-ob-step="${index}" aria-hidden="${index === 0 ? "false" : "true"}">
+              <div class="ob-step-inner">${body}</div>
+            </div>
+          `;
+        }).join("");
+
+        obBars = [...document.querySelectorAll(".ob-bar")];
+        obSteps = [...document.querySelectorAll(".ob-step")];
+        cityInput = document.getElementById("ob-city");
+        bindOnboardingControls();
+      }
 
       /* ---- Mode switching ---- */
       function setMode(mode) {
@@ -704,8 +1223,8 @@
         signUpTab.classList.toggle("active", joining);
 
         const c = joining ? COPY.signup : COPY.signin;
-        title.textContent       = c.title;
-        copy.textContent        = c.sub;
+        title.textContent = c.title;
+        copy.textContent = c.sub;
         submitLabel.textContent = c.btn;
       }
 
@@ -714,12 +1233,16 @@
 
       /* ---- Auth submit ---- */
       function captureUser(providerName) {
-        state.userName  = document.getElementById("name").value.trim() || providerName || "";
+        state.userName =
+          document.getElementById("name").value.trim() || providerName || "";
         state.userEmail = document.getElementById("email").value.trim();
       }
 
       function finishSignIn(providerName) {
-        const name  = document.getElementById("name").value.trim() || providerName || "User";
+        const name =
+          document.getElementById("name").value.trim() ||
+          providerName ||
+          "User";
         const email = document.getElementById("email").value.trim();
         window.location.href = `app.html?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
       }
@@ -760,17 +1283,18 @@
         const step = OB_STEPS[index];
 
         obTitle.textContent = step.title;
-        obSub.textContent   = step.sub;
-        obNext.textContent  = step.btn;
+        obSub.textContent = step.sub;
+        obNext.textContent = step.btn;
 
         obBars.forEach((bar, i) => {
           bar.classList.remove("past", "current");
-          if (i < index)      bar.classList.add("past");
+          if (i < index) bar.classList.add("past");
           else if (i === index) bar.classList.add("current");
         });
 
         obSteps.forEach((s) => {
           s.classList.remove("active");
+          s.setAttribute("aria-hidden", "true");
           const inner = s.querySelector(".ob-step-inner");
           if (inner) inner.style.animation = "none";
         });
@@ -779,99 +1303,168 @@
         /* Force reflow for re-triggering animation */
         void target.offsetWidth;
         target.classList.add("active");
+        target.setAttribute("aria-hidden", "false");
         const inner = target.querySelector(".ob-step-inner");
         if (inner) inner.style.animation = "";
+
+        const focusTarget = target.querySelector("button, input");
+        if (focusTarget)
+          setTimeout(() => focusTarget.focus({ preventScroll: true }), 80);
       }
 
       obNext.addEventListener("click", () => {
-        if (state.obStep < 4) {
+        if (state.obStep < OB_STEPS.length - 1) {
           renderObStep(state.obStep + 1);
         } else {
           finishOnboarding();
         }
       });
 
-      /* ---- Chip selection (vibes) ---- */
-      document.querySelectorAll(".chip").forEach((chip) => {
-        chip.addEventListener("click", () => {
-          const v = chip.dataset.vibe;
-          if (state.vibes.has(v)) {
-            state.vibes.delete(v);
-            chip.classList.remove("selected");
-          } else {
-            state.vibes.add(v);
-            chip.classList.add("selected");
-          }
-        });
-      });
+      function updatePressedState(button, selected) {
+        button.classList.toggle("selected", selected);
+        if (button.hasAttribute("aria-pressed"))
+          button.setAttribute("aria-pressed", selected ? "true" : "false");
+      }
 
-      /* ---- Budget selection ---- */
-      document.querySelectorAll("[data-budget]").forEach((card) => {
-        card.addEventListener("click", () => {
-          state.budget = card.dataset.budget;
-          document.querySelectorAll("[data-budget]").forEach((c) => c.classList.remove("selected"));
-          card.classList.add("selected");
-        });
-      });
-
-      /* ---- Energy selection ---- */
-      document.querySelectorAll("[data-energy]").forEach((card) => {
-        card.addEventListener("click", () => {
-          state.energy = card.dataset.energy;
-          document.querySelectorAll("[data-energy]").forEach((c) => c.classList.remove("selected"));
-          card.classList.add("selected");
-        });
-      });
-
-      /* ---- City pills ---- */
-      document.querySelectorAll(".city-pill").forEach((pill) => {
-        pill.addEventListener("click", () => {
-          state.city = pill.dataset.city;
-          cityInput.value = pill.dataset.city;
-          document.querySelectorAll(".city-pill").forEach((p) => p.classList.remove("selected"));
-          pill.classList.add("selected");
-        });
-      });
-
-      cityInput.addEventListener("input", () => {
-        state.city = cityInput.value;
-        document.querySelectorAll(".city-pill").forEach((p) => {
-          p.classList.toggle("selected", p.dataset.city === cityInput.value);
-        });
-      });
-
-      /* ---- Tone selection ---- */
-      document.querySelectorAll("[data-tone]").forEach((card) => {
-        card.addEventListener("click", () => {
-          state.tone = card.dataset.tone;
-          document.querySelectorAll("[data-tone]").forEach((c) => c.classList.remove("selected"));
-          card.classList.add("selected");
-        });
-      });
-
-      // Initialize city input and pills selection based on pre-detected city
-      if (cityInput) {
-        cityInput.value = state.city;
-        document.querySelectorAll(".city-pill").forEach((p) => {
-          p.classList.toggle("selected", p.dataset.city === state.city);
+      function updateRadioState(key, value) {
+        state[key] = value;
+        document.querySelectorAll(`[data-single="${key}"]`).forEach((card) => {
+          const selected = card.dataset.value === value;
+          card.classList.toggle("selected", selected);
+          card.setAttribute("aria-checked", selected ? "true" : "false");
         });
       }
 
+      function bindOnboardingControls() {
+        obStepsWrap.addEventListener("click", (event) => {
+          const multi = event.target.closest("[data-multi]");
+          if (multi) {
+            const key = multi.dataset.multi;
+            const value = multi.dataset.value;
+            const bucket = state[key];
+            if (!bucket || typeof bucket.has !== "function") return;
+            if (bucket.has(value)) {
+              bucket.delete(value);
+              updatePressedState(multi, false);
+            } else {
+              bucket.add(value);
+              updatePressedState(multi, true);
+            }
+            return;
+          }
+
+          const single = event.target.closest("[data-single]");
+          if (single) {
+            updateRadioState(single.dataset.single, single.dataset.value);
+            return;
+          }
+
+          const cityPill = event.target.closest("[data-city]");
+          if (cityPill) {
+            state.city = cityPill.dataset.city;
+            if (cityInput) cityInput.value = state.city;
+            document.querySelectorAll(".city-pill").forEach((pill) => {
+              const selected = pill.dataset.city === state.city;
+              pill.classList.toggle("selected", selected);
+              pill.setAttribute("aria-checked", selected ? "true" : "false");
+            });
+          }
+        });
+
+        obStepsWrap.addEventListener("input", (event) => {
+          if (event.target.id === "ob-city") {
+            state.city = event.target.value;
+            document.querySelectorAll(".city-pill").forEach((pill) => {
+              const selected = pill.dataset.city === state.city;
+              pill.classList.toggle("selected", selected);
+              pill.setAttribute("aria-checked", selected ? "true" : "false");
+            });
+          }
+
+          if (event.target.id === "dob") {
+            state.dob = event.target.value;
+          }
+
+          if (event.target.dataset.custom) {
+            state[event.target.dataset.custom] = event.target.value.trim();
+          }
+        });
+      }
+
+      renderOnboardingUI();
+
       /* ---- Finish onboarding ---- */
       function finishOnboarding() {
-        const name  = state.userName || "User";
+        const name = state.userName || "User";
         const email = state.userEmail;
-        const vibes = [...state.vibes].join(",");
+        const customInterest = state.customInterest
+          ? [state.customInterest]
+          : [];
+        const customEventStyle = state.customEventStyle
+          ? [state.customEventStyle]
+          : [];
+        const customAudience = state.customAudience
+          ? [state.customAudience]
+          : [];
+        const customMotivation = state.customMotivation
+          ? [state.customMotivation]
+          : [];
+        const interests = [...state.vibes, ...customInterest];
+        const eventStyles = [...state.eventStyles, ...customEventStyle];
+        const audiences = [...state.audiences, ...customAudience];
+        const motivations = [...state.motivations, ...customMotivation];
+        const vibes = interests.join(",");
         const budget = state.budget || "$";
         const energy = state.energy || "chill";
-        const selectedCity = window.EchooLocationPlatform.cityByName(state.city || cityInput.value);
-        const city  = selectedCity ? selectedCity.name : "Toronto";
-        const tone  = state.tone || "direct";
+        const selectedCity = window.EchooLocationPlatform.cityByName(
+          state.city || cityInput.value,
+        );
+        const city = selectedCity
+          ? selectedCity.name
+          : (state.city || cityInput?.value || "Toronto").trim();
+        const tone = state.tone || "direct";
+        const gender = state.gender || "Prefer not to say";
+        const dob = state.dob || "";
+        const personalizationProfile = {
+          interests,
+          eventStyles,
+          audiences,
+          motivations,
+          budget,
+          energy,
+          city,
+          gender,
+          dob,
+          tone,
+        };
 
-        const prefs = { name, email, vibes, budget, energy, city, tone };
+        const prefs = {
+          name,
+          email,
+          vibes,
+          interests,
+          eventStyles,
+          audiences,
+          motivations,
+          budget,
+          energy,
+          city,
+          gender,
+          dob,
+          tone,
+          personalizationProfile,
+        };
         localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
 
-        const params = new URLSearchParams(prefs);
+        const params = new URLSearchParams({
+          name,
+          email,
+          vibes,
+          budget,
+          energy,
+          city,
+          tone,
+        });
         window.location.href = `app.html?${params.toString()}`;
       }
     </script>
