@@ -18,22 +18,46 @@
         --signal: #e7c98e;
         --rose: #d8a2d9;
         --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         min-height: 100vh;
         color: var(--ink);
         background:
-          linear-gradient(90deg, rgba(245,241,232,0.035) 1px, transparent 1px) 0 0 / 34px 34px,
-          radial-gradient(circle at 78% 4%, rgba(216,255,95,0.1), transparent 25rem),
+          linear-gradient(
+              90deg,
+              rgba(245, 241, 232, 0.035) 1px,
+              transparent 1px
+            )
+            0 0 / 34px 34px,
+          radial-gradient(
+            circle at 78% 4%,
+            rgba(216, 255, 95, 0.1),
+            transparent 25rem
+          ),
           var(--bg);
       }
 
-      a { color: inherit; text-decoration: none; }
-      button, input { font: inherit; }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      input {
+        font: inherit;
+      }
 
       .topbar {
         position: sticky;
@@ -130,13 +154,21 @@
         border-radius: 0;
         cursor: pointer;
         font-weight: 950;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease;
       }
 
       .primary {
         border-color: transparent;
         color: #151311;
-        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        background: linear-gradient(
+          135deg,
+          #e4bd78 0%,
+          #f2ddb0 42%,
+          var(--rose) 100%
+        );
         padding: 0 18px;
       }
 
@@ -218,7 +250,9 @@
         border-radius: 4px;
         border: 1px solid var(--line);
         background: var(--panel);
-        transition: border-color 180ms ease, background-color 180ms ease;
+        transition:
+          border-color 180ms ease,
+          background-color 180ms ease;
       }
 
       .news-card:hover {
@@ -273,7 +307,9 @@
         padding-bottom: 4px;
       }
 
-      .filters::-webkit-scrollbar { display: none; }
+      .filters::-webkit-scrollbar {
+        display: none;
+      }
 
       .content {
         display: grid;
@@ -288,7 +324,10 @@
         border: 1px solid var(--line);
         background: rgba(17, 19, 15, 0.84);
         cursor: pointer;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease;
       }
 
       .event:hover {
@@ -386,10 +425,14 @@
         font-weight: 850;
       }
 
-      .bottom-nav a.active { color: var(--signal); }
+      .bottom-nav a.active {
+        color: var(--signal);
+      }
 
       @media (min-width: 860px) {
-        .shell { padding: 34px 28px 70px; }
+        .shell {
+          padding: 34px 28px 70px;
+        }
         .hero {
           grid-template-columns: 1fr 480px;
           align-items: end;
@@ -399,16 +442,23 @@
           grid-template-columns: 1fr 340px;
           align-items: start;
         }
-        .event { grid-template-columns: 190px 1fr; }
-        .event img { width: 190px; height: 210px; }
-        .bottom-nav { display: none; }
+        .event {
+          grid-template-columns: 190px 1fr;
+        }
+        .event img {
+          width: 190px;
+          height: 210px;
+        }
+        .bottom-nav {
+          display: none;
+        }
       }
     </style>
   </head>
   <body>
     <header class="topbar">
       <a class="brand" href="index.html">
-        <img src="assets/echoo-new-logo.jpg" alt="">
+        <img src="assets/echoo-new-logo.jpg" alt="" />
         <span>echoo</span>
       </a>
       <a href="auth.html">Sign in</a>
@@ -421,7 +471,7 @@
           <h1>Find the plan people answer yes to.</h1>
         </div>
         <form class="search" id="search-form">
-          <input id="query" placeholder="What sounds good right now?">
+          <input id="query" placeholder="What sounds good right now?" />
           <button class="primary" type="submit">Find</button>
         </form>
       </section>
@@ -441,13 +491,25 @@
         <button class="filter" data-filter="food">Food</button>
       </div>
 
-      <section class="content" style="margin-top: 16px;">
+      <section class="content" style="margin-top: 16px">
         <div id="events-list"></div>
         <aside class="side">
           <div class="brief">
             <h3 id="brief-title">A few good starts</h3>
-            <p id="brief-copy">One easy plan, one interesting plan, and one backup for when the group changes its mind.</p>
-            <a class="primary" style="display:inline-flex;align-items:center;text-decoration:none;" href="app.html">Plan with friends</a>
+            <p id="brief-copy">
+              One easy plan, one interesting plan, and one backup for when the
+              group changes its mind.
+            </p>
+            <a
+              class="primary"
+              style="
+                display: inline-flex;
+                align-items: center;
+                text-decoration: none;
+              "
+              href="app.html"
+              >Plan with friends</a
+            >
           </div>
         </aside>
       </section>
@@ -461,21 +523,63 @@
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
     <script src="assets/location-platform.js"></script>
     <script src="assets/activity-context.js"></script>
     <script>
       /* Diagnostic logger for redirects */
-      window.addEventListener('beforeunload', () => {
-        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
-        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
-        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
+      window.addEventListener("beforeunload", () => {
+        const history = JSON.parse(
+          sessionStorage.getItem("echoo_unload_log") || "[]",
+        );
+        history.push({
+          time: new Date().toISOString(),
+          url: window.location.href,
+          stack: new Error().stack,
+        });
+        sessionStorage.setItem(
+          "echoo_unload_log",
+          JSON.stringify(history.slice(-10)),
+        );
       });
 
       let events = [
-        { id: 1, category: "music", title: "Basement listening room", copy: "A small-room set with reserved standing space and an easy food route nearby.", img: "assets/optimized/news-music-768.jpg", webp: "assets/optimized/news-music-768.webp", meta: ["Today", "18 min", "$28"] },
-        { id: 2, category: "dates", title: "Rooftop dinner plus quiet walk", copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Today", "Two stops", "$$"] },
-        { id: 3, category: "movies", title: "Late film with post-show dessert", copy: "A cinema anchor paired with a place that stays open late enough to keep talking.", img: "assets/optimized/news-movie-768.jpg", webp: "assets/optimized/news-movie-768.webp", meta: ["9:40 PM", "Seats open", "$18"] },
-        { id: 4, category: "food", title: "Kitchen still open", copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.", img: "assets/optimized/news-date-768.jpg", webp: "assets/optimized/news-date-768.webp", meta: ["Open late", "12 min", "$$"] }
+        {
+          id: 1,
+          category: "music",
+          title: "Basement listening room",
+          copy: "A small-room set with reserved standing space and an easy food route nearby.",
+          img: "assets/optimized/news-music-768.jpg",
+          webp: "assets/optimized/news-music-768.webp",
+          meta: ["Today", "18 min", "$28"],
+        },
+        {
+          id: 2,
+          category: "dates",
+          title: "Rooftop dinner plus quiet walk",
+          copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.",
+          img: "assets/optimized/news-date-768.jpg",
+          webp: "assets/optimized/news-date-768.webp",
+          meta: ["Today", "Two stops", "$$"],
+        },
+        {
+          id: 3,
+          category: "movies",
+          title: "Late film with post-show dessert",
+          copy: "A cinema anchor paired with a place that stays open late enough to keep talking.",
+          img: "assets/optimized/news-movie-768.jpg",
+          webp: "assets/optimized/news-movie-768.webp",
+          meta: ["9:40 PM", "Seats open", "$18"],
+        },
+        {
+          id: 4,
+          category: "food",
+          title: "Kitchen still open",
+          copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.",
+          img: "assets/optimized/news-date-768.jpg",
+          webp: "assets/optimized/news-date-768.webp",
+          meta: ["Open late", "12 min", "$$"],
+        },
       ];
 
       const list = document.getElementById("events-list");
@@ -484,14 +588,26 @@
 
       function render() {
         const query = queryInput.value.trim().toLowerCase();
-        const planIntent = /plan|today|tonight|night|date|near|nearby|out|discover|surprise|bored|morning|lunch|afternoon|evening|late|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(query);
+        const planIntent =
+          /plan|today|tonight|night|date|near|nearby|out|discover|surprise|bored|morning|lunch|afternoon|evening|late|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(
+            query,
+          );
         const filtered = events.filter((event) => {
-          const inFilter = activeFilter === "all" || event.category === activeFilter;
-          const inQuery = !query || planIntent || `${event.title} ${event.copy} ${event.category} ${event.meta.join(" ")}`.toLowerCase().includes(query);
+          const inFilter =
+            activeFilter === "all" || event.category === activeFilter;
+          const inQuery =
+            !query ||
+            planIntent ||
+            `${event.title} ${event.copy} ${event.category} ${event.meta.join(" ")}`
+              .toLowerCase()
+              .includes(query);
           return inFilter && inQuery;
         });
 
-        list.innerHTML = filtered.map((event) => `
+        list.innerHTML =
+          filtered
+            .map(
+              (event) => `
           <article class="event" data-id="${event.id}" ${event.detailId ? `data-detail-id="${event.detailId}"` : ""}>
             <picture>
               <source srcset="${event.webp}" type="image/webp">
@@ -504,21 +620,28 @@
               <div class="meta">${event.meta.map((item) => `<span>${item}</span>`).join("")}</div>
             </div>
           </article>
-        `).join("") || `<div class="brief"><h3>Nothing close yet</h3><p>Try music, dates, movies, food, today, or near me.</p></div>`;
+        `,
+            )
+            .join("") ||
+          `<div class="brief"><h3>Nothing close yet</h3><p>Try music, dates, movies, food, today, or near me.</p></div>`;
       }
 
       document.getElementById("filters").addEventListener("click", (event) => {
         const button = event.target.closest("[data-filter]");
         if (!button) return;
         activeFilter = button.dataset.filter;
-        document.querySelectorAll("[data-filter]").forEach((item) => item.classList.toggle("active", item === button));
+        document
+          .querySelectorAll("[data-filter]")
+          .forEach((item) => item.classList.toggle("active", item === button));
         render();
       });
 
-      document.getElementById("search-form").addEventListener("submit", (event) => {
-        event.preventDefault();
-        render();
-      });
+      document
+        .getElementById("search-form")
+        .addEventListener("submit", (event) => {
+          event.preventDefault();
+          render();
+        });
 
       list.addEventListener("click", (event) => {
         const card = event.target.closest("[data-detail-id]");
@@ -529,8 +652,15 @@
       const params = new URLSearchParams(window.location.search);
       const filter = params.get("filter");
       const query = params.get("query") || params.get("ai");
-      const previewMode = params.get("preview") === "1" || window.EchooLocationPlatform.readPreferences().locationSupported === false;
-      if (query) queryInput.value = query === "bored" ? "simple surprising plan today" : query;
+      let budget = params.get("budget");
+      let storedPrefs = {};
+      const previewMode =
+        params.get("preview") === "1" ||
+        window.EchooLocationPlatform.readPreferences().locationSupported ===
+          false;
+      if (query)
+        queryInput.value =
+          query === "bored" ? "simple surprising plan today" : query;
       if (filter) {
         const button = document.querySelector(`[data-filter="${filter}"]`);
         if (button) button.click();
@@ -542,24 +672,94 @@
       let city = params.get("city");
       let preciseLat;
       let preciseLng;
+      const stored = localStorage.getItem("echoo_preferences");
+      if (stored) {
+        try {
+          storedPrefs = JSON.parse(stored);
+        } catch (e) {}
+      }
+      if (budget) {
+        try {
+          localStorage.setItem(
+            "echoo_preferences",
+            JSON.stringify({ ...storedPrefs, budget }),
+          );
+          storedPrefs = { ...storedPrefs, budget };
+        } catch (e) {}
+      }
       if (!city) {
-        const stored = localStorage.getItem("echoo_preferences");
-        if (stored) {
-          try {
-            const prefs = JSON.parse(stored);
-            city = prefs.city;
-            preciseLat = Number(prefs.lastLat);
-            preciseLng = Number(prefs.lastLng);
-          } catch(e) {}
-        }
+        city = storedPrefs.city;
+        preciseLat = Number(storedPrefs.lastLat);
+        preciseLng = Number(storedPrefs.lastLng);
       }
       city = city || "Toronto";
+      budget = budget || storedPrefs.budget || "$";
+      const personalizationProfile = {
+        interests: Array.isArray(storedPrefs.interests)
+          ? storedPrefs.interests
+          : [],
+        eventStyles: Array.isArray(storedPrefs.eventStyles)
+          ? storedPrefs.eventStyles
+          : [],
+        audiences: Array.isArray(storedPrefs.audiences)
+          ? storedPrefs.audiences
+          : [],
+        motivations: Array.isArray(storedPrefs.motivations)
+          ? storedPrefs.motivations
+          : [],
+        budget,
+        energy: storedPrefs.energy || "chill",
+        city,
+        gender: storedPrefs.gender || "Prefer not to say",
+        dob: storedPrefs.dob || "",
+        tone: storedPrefs.tone || "direct",
+      };
+
+      function applyPreferenceSnapshot(prefs = {}) {
+        if (!prefs || typeof prefs !== "object") return;
+        storedPrefs = { ...storedPrefs, ...prefs };
+        city = prefs.city || city;
+        budget = params.get("budget") || prefs.budget || budget;
+        preciseLat = Number(prefs.lastLat ?? preciseLat);
+        preciseLng = Number(prefs.lastLng ?? preciseLng);
+        Object.assign(personalizationProfile, {
+          interests: Array.isArray(prefs.interests)
+            ? prefs.interests
+            : personalizationProfile.interests,
+          eventStyles: Array.isArray(prefs.eventStyles)
+            ? prefs.eventStyles
+            : personalizationProfile.eventStyles,
+          audiences: Array.isArray(prefs.audiences)
+            ? prefs.audiences
+            : personalizationProfile.audiences,
+          motivations: Array.isArray(prefs.motivations)
+            ? prefs.motivations
+            : personalizationProfile.motivations,
+          budget,
+          energy: prefs.energy || personalizationProfile.energy,
+          city,
+          gender: prefs.gender || personalizationProfile.gender,
+          dob: prefs.dob || personalizationProfile.dob,
+          tone: prefs.tone || personalizationProfile.tone,
+        });
+      }
+
+      const authGate = window.EchooAuth
+        ? window.EchooAuth.requireOnboarding({
+            next: window.EchooAuth.currentRelativeUrl(),
+          }).then((state) => {
+            if (state.ok) applyPreferenceSnapshot(state.preferences);
+            return state;
+          })
+        : Promise.resolve({ ok: true });
 
       const CONFIG = {
         supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
         supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
-        planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
+        locationSearchUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
+        planEngineUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine",
       };
 
       const normalizedCity = window.EchooLocationPlatform.cityByName(city);
@@ -571,7 +771,7 @@
         const cityRecord = window.EchooLocationPlatform.cityByName(city);
         return window.EchooActivityContext.getActivityContext({
           city,
-          timezone: cityRecord?.timezone
+          timezone: cityRecord?.timezone,
         });
       }
 
@@ -580,123 +780,274 @@
       if (!queryInput.value) queryInput.value = currentContext.defaultQuery;
 
       async function loadLocationEntities() {
+        const authState = await authGate;
+        if (authState && authState.ok === false) return;
         if (previewMode) {
-          console.info("Echoo: preview mode active; live Canada location search is paused.");
+          console.info(
+            "Echoo: preview mode active; live Canada location search is paused.",
+          );
           return;
         }
         try {
           const response = await fetch(CONFIG.locationSearchUrl, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
-              "apikey": CONFIG.supabaseAnonKey
-            },
+            headers: window.EchooAuth
+              ? await window.EchooAuth.authHeaders({
+                  "Content-Type": "application/json",
+                })
+              : {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                  apikey: CONFIG.supabaseAnonKey,
+                },
             body: JSON.stringify(
               Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
-                ? { lat: preciseLat, lng: preciseLng, radiusMeters: 25000, limit: 24 }
-                : { city, limit: 24 }
-            )
+                ? {
+                    lat: preciseLat,
+                    lng: preciseLng,
+                    radiusMeters: 25000,
+                    limit: 24,
+                  }
+                : { city, limit: 24 },
+            ),
           });
           if (!response.ok) return;
 
           const payload = await response.json();
-          if (!payload.supported || !Array.isArray(payload.results) || payload.results.length === 0) return;
+          if (
+            !payload.supported ||
+            !Array.isArray(payload.results) ||
+            payload.results.length === 0
+          )
+            return;
 
           events = payload.results.map((item, index) => ({
             id: item.id || index + 1,
             detailId: item.entity_id || item.id,
             category: item.category || item.entity_type || "events",
             title: item.title,
-            copy: item.description || "A nearby Echoo recommendation with verified Canadian location data.",
+            copy:
+              item.description ||
+              "A nearby Echoo recommendation with verified Canadian location data.",
             img: item.image_url || "assets/optimized/news-music-768.jpg",
             webp: item.image_url || "assets/optimized/news-music-768.webp",
             meta: [
               item.city || city,
-              item.distance_meters ? `${Math.max(1, Math.round(item.distance_meters / 1000))} km away` : "Canada",
-              item.starts_at ? new Date(item.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Open"
-            ]
+              item.distance_meters
+                ? `${Math.max(1, Math.round(item.distance_meters / 1000))} km away`
+                : "Canada",
+              item.starts_at
+                ? new Date(item.starts_at).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "Open",
+            ],
           }));
           render();
         } catch (error) {
-          console.warn("Echoo: location search unavailable, using static launch cards.", error);
+          console.warn(
+            "Echoo: location search unavailable, using static launch cards.",
+            error,
+          );
         }
       }
 
       async function loadPlanEngine() {
+        const authState = await authGate;
+        if (authState && authState.ok === false) return false;
         if (previewMode) return false;
-        const queryText = queryInput.value.trim() || activityContext().defaultQuery;
+        const queryText =
+          queryInput.value.trim() || activityContext().defaultQuery;
         try {
           const response = await fetch(CONFIG.planEngineUrl, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
-              "apikey": CONFIG.supabaseAnonKey
-            },
+            headers: window.EchooAuth
+              ? await window.EchooAuth.authHeaders({
+                  "Content-Type": "application/json",
+                })
+              : {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                  apikey: CONFIG.supabaseAnonKey,
+                },
             body: JSON.stringify(
               Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
-                ? { lat: preciseLat, lng: preciseLng, query: queryText, limit: 8 }
-                : { city, query: queryText, limit: 8 }
-            )
+                ? {
+                    lat: preciseLat,
+                    lng: preciseLng,
+                    query: queryText,
+                    mode: params.get("mode") || "build_plan",
+                    budget,
+                    profile: personalizationProfile,
+                    limit: 4,
+                  }
+                : {
+                    city,
+                    query: queryText,
+                    mode: params.get("mode") || "build_plan",
+                    budget,
+                    profile: personalizationProfile,
+                    limit: 4,
+                  },
+            ),
           });
           if (!response.ok) return false;
           const payload = await response.json();
-          if (!payload.supported || !Array.isArray(payload.plans) || payload.plans.length === 0) return false;
+          if (
+            !payload.supported ||
+            !Array.isArray(payload.plans) ||
+            payload.plans.length === 0
+          )
+            return false;
 
           events = payload.plans.map((item, index) => ({
             id: item.id || index + 1,
             detailId: item.entityId || item.id,
             category: item.category || "plan",
             title: item.title,
-            copy: item.description || item.why || "A smart Echoo pick matched to your current moment.",
+            copy:
+              item.description ||
+              item.why ||
+              "A smart Echoo pick matched to your current moment.",
             img: item.imageUrl || "assets/optimized/news-music-768.jpg",
             webp: item.imageUrl || "assets/optimized/news-music-768.webp",
             meta: [
               payload.context?.dayName || "Today",
-              item.distanceMeters ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away` : item.city || city,
-              index === 0 ? "Best fit" : "Backup"
-            ]
+              item.distanceMeters
+                ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away`
+                : item.city || city,
+              index === 0
+                ? `${budget} best fit`
+                : payload.planShape?.intensity || "Backup",
+            ],
           }));
           render();
           return true;
         } catch (error) {
-          console.warn("Echoo: plan engine unavailable, falling back to location search.", error);
+          console.warn(
+            "Echoo: plan engine unavailable, falling back to location search.",
+            error,
+          );
           return false;
         }
       }
 
       const localNewsDb = {
-        "Toronto": [
-          { tag: "TIFF", text: "Midnight Madness lineups announced for September", img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only zones", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Jazz", text: "Queen West jazz club hosts unannounced late basement set", img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Food", text: "Ossington street crawl reveals new underground ramen spot", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally today", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset", img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80" }
+        Toronto: [
+          {
+            tag: "TIFF",
+            text: "Midnight Madness lineups announced for September",
+            img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Patio",
+            text: "Kensington Market tests weekend pedestrian-only zones",
+            img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Jazz",
+            text: "Queen West jazz club hosts unannounced late basement set",
+            img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Food",
+            text: "Ossington street crawl reveals new underground ramen spot",
+            img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Sports",
+            text: "Scotiabank Arena hosts outdoor pre-game rally today",
+            img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Rooftop",
+            text: "Broadview Hotel opens winterized rooftop deck early for sunset",
+            img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80",
+          },
         ],
-        "Vancouver": [
-          { tag: "Beach", text: "Kitsilano beach bonfire permits extended for summer weekends", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Theatre", text: "Granville Island waterfront stage premieres new indie play", img: "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Cocktails", text: "Gastown lounge rated top 50 in North America for mixology", img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Ride", text: "Stanley Park night cycle ride draws record five hundred riders", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Food", text: "Richmond Night Market expands late fusion food stands", img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=120&q=80" }
+        Vancouver: [
+          {
+            tag: "Beach",
+            text: "Kitsilano beach bonfire permits extended for summer weekends",
+            img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Theatre",
+            text: "Granville Island waterfront stage premieres new indie play",
+            img: "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Cocktails",
+            text: "Gastown lounge rated top 50 in North America for mixology",
+            img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Ride",
+            text: "Stanley Park night cycle ride draws record five hundred riders",
+            img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Food",
+            text: "Richmond Night Market expands late fusion food stands",
+            img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=120&q=80",
+          },
         ],
-        "Montreal": [
-          { tag: "Jazz", text: "Montreal Jazz Fest reveals free outdoor street show lineup", img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Bagels", text: "Mile End food crawl introduces late-night wood-fired bakery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Art", text: "Plateau Mont-Royal street art murals expand down Saint-Laurent", img: "https://images.unsplash.com/photo-156121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Speakeasy", text: "Old Montreal speakeasy hidden behind vintage phone booth", img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Music", text: "Saint-Denis underground electronic gig sells out in record minutes", img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=120&q=80" }
-        ]
+        Montreal: [
+          {
+            tag: "Jazz",
+            text: "Montreal Jazz Fest reveals free outdoor street show lineup",
+            img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Bagels",
+            text: "Mile End food crawl introduces late-night wood-fired bakery",
+            img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Art",
+            text: "Plateau Mont-Royal street art murals expand down Saint-Laurent",
+            img: "https://images.unsplash.com/photo-156121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Speakeasy",
+            text: "Old Montreal speakeasy hidden behind vintage phone booth",
+            img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Music",
+            text: "Saint-Denis underground electronic gig sells out in record minutes",
+            img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=120&q=80",
+          },
+        ],
       };
 
       const worldNews = [
-        { tag: "Outdoor", text: "National parks report massive surge in summer night hikers", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=120&q=80" },
-        { tag: "Gaming", text: "Indie retro arcades and console lounges trending globally", img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=120&q=80" },
-        { tag: "Coffee", text: "Slow-drip specialty coffee crawls taking over urban neighborhoods", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=120&q=80" },
-        { tag: "Concert", text: "Major outdoor music festival tours announce carbon-neutral lineups", img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=120&q=80" },
-        { tag: "Museum", text: "Historic virtual-reality exhibitions open globally at science centers", img: "https://images.unsplash.com/photo-1566121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80" }
+        {
+          tag: "Outdoor",
+          text: "National parks report massive surge in summer night hikers",
+          img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=120&q=80",
+        },
+        {
+          tag: "Gaming",
+          text: "Indie retro arcades and console lounges trending globally",
+          img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=120&q=80",
+        },
+        {
+          tag: "Coffee",
+          text: "Slow-drip specialty coffee crawls taking over urban neighborhoods",
+          img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=120&q=80",
+        },
+        {
+          tag: "Concert",
+          text: "Major outdoor music festival tours announce carbon-neutral lineups",
+          img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=120&q=80",
+        },
+        {
+          tag: "Museum",
+          text: "Historic virtual-reality exhibitions open globally at science centers",
+          img: "https://images.unsplash.com/photo-1566121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80",
+        },
       ];
 
       async function loadNewsSlider() {
@@ -704,26 +1055,37 @@
 
         if (CONFIG.supabaseUrl && CONFIG.supabaseAnonKey && window.supabase) {
           try {
-            const supabaseClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+            const supabaseClient = window.supabase.createClient(
+              CONFIG.supabaseUrl,
+              CONFIG.supabaseAnonKey,
+            );
             const { data, error } = await supabaseClient
-              .from('news')
-              .select('*')
+              .from("news")
+              .select("*")
               .or(`city.eq.${city},city.eq.Global`)
-              .order('published_at', { ascending: false })
+              .order("published_at", { ascending: false })
               .limit(12);
 
             if (!error && data && data.length > 0) {
-              displayNews = data.map(item => ({
+              displayNews = data.map((item) => ({
                 tag: item.tag,
                 text: item.title,
-                img: item.image_url || "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80"
+                img:
+                  item.image_url ||
+                  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80",
               }));
               console.log("Echoo: Loaded real-time news from Supabase.");
             } else if (error) {
-              console.warn("Echoo: Supabase query error, falling back to mock news:", error.message);
+              console.warn(
+                "Echoo: Supabase query error, falling back to mock news:",
+                error.message,
+              );
             }
           } catch (e) {
-            console.warn("Echoo: Failed to query Supabase, falling back to mock news:", e);
+            console.warn(
+              "Echoo: Failed to query Supabase, falling back to mock news:",
+              e,
+            );
           }
         }
 
@@ -741,7 +1103,9 @@
         const newsTrack = document.getElementById("news-track");
         if (newsTrack) {
           const doubledNews = [...displayNews, ...displayNews];
-          newsTrack.innerHTML = doubledNews.map(item => `
+          newsTrack.innerHTML = doubledNews
+            .map(
+              (item) => `
             <div class="news-card">
               <img src="${item.img}" alt="" loading="lazy">
               <div class="news-info">
@@ -749,14 +1113,21 @@
                 <span class="headline">${item.text}</span>
               </div>
             </div>
-          `).join("");
+          `,
+            )
+            .join("");
         }
       }
 
-      loadNewsSlider();
-      loadPlanEngine().then((loaded) => {
-        if (!loaded) loadLocationEntities();
-      });
+      async function bootDiscovery() {
+        const authState = await authGate;
+        if (authState && authState.ok === false) return;
+        loadNewsSlider();
+        const loaded = await loadPlanEngine();
+        if (!loaded) await loadLocationEntities();
+      }
+
+      bootDiscovery();
 
       const slider = document.getElementById("news-slider");
       let scrollSpeed = 0.18;
@@ -774,7 +1145,9 @@
           if (slider.scrollLeft >= slider.scrollWidth / 2) {
             slider.scrollLeft = 0;
           }
-          requestAnimationFrame(() => { isProgrammaticScroll = false; });
+          requestAnimationFrame(() => {
+            isProgrammaticScroll = false;
+          });
         }
         requestAnimationFrame(step);
       }
@@ -805,13 +1178,17 @@
           slider.addEventListener(type, (event) => {
             if (!isDraggingNews) return;
             isDraggingNews = false;
-            if (slider.hasPointerCapture?.(event.pointerId)) slider.releasePointerCapture(event.pointerId);
+            if (slider.hasPointerCapture?.(event.pointerId))
+              slider.releasePointerCapture(event.pointerId);
             pauseNewsAutoScroll(1800);
           });
         });
-        slider.addEventListener("wheel", () => pauseNewsAutoScroll(2200), { passive: true });
+        slider.addEventListener("wheel", () => pauseNewsAutoScroll(2200), {
+          passive: true,
+        });
         slider.addEventListener("scroll", () => {
-          if (!isProgrammaticScroll && !isDraggingNews) pauseNewsAutoScroll(2200);
+          if (!isProgrammaticScroll && !isDraggingNews)
+            pauseNewsAutoScroll(2200);
         });
 
         requestAnimationFrame(step);

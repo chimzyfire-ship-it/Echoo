@@ -20,23 +20,52 @@
         --clay: #c87952;
         --blue: #91a7ff;
         --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         min-height: 100vh;
         color: var(--ink);
         background:
-          linear-gradient(90deg, rgba(245,241,232,0.035) 1px, transparent 1px) 0 0 / 34px 34px,
-          radial-gradient(circle at 84% 0%, rgba(145,167,255,0.12), transparent 26rem),
-          radial-gradient(circle at 8% 40%, rgba(216,255,95,0.08), transparent 20rem),
+          linear-gradient(
+              90deg,
+              rgba(245, 241, 232, 0.035) 1px,
+              transparent 1px
+            )
+            0 0 / 34px 34px,
+          radial-gradient(
+            circle at 84% 0%,
+            rgba(145, 167, 255, 0.12),
+            transparent 26rem
+          ),
+          radial-gradient(
+            circle at 8% 40%,
+            rgba(216, 255, 95, 0.08),
+            transparent 20rem
+          ),
           var(--bg);
       }
 
-      a { color: inherit; text-decoration: none; }
-      button, input, select { font: inherit; }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
 
       /* ── Topbar ── */
       .topbar {
@@ -78,7 +107,12 @@
         display: grid;
         place-items: center;
         color: #151311;
-        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        background: linear-gradient(
+          135deg,
+          #e4bd78 0%,
+          #f2ddb0 42%,
+          var(--rose) 100%
+        );
         font-size: 13px;
         font-weight: 950;
       }
@@ -181,7 +215,9 @@
         border-radius: 4px;
         border: 1px solid var(--line);
         background: var(--panel);
-        transition: border-color 180ms ease, background-color 180ms ease;
+        transition:
+          border-color 180ms ease,
+          background-color 180ms ease;
       }
 
       .news-card:hover {
@@ -244,7 +280,8 @@
         gap: 10px;
       }
 
-      input, select {
+      input,
+      select {
         min-height: 58px;
         width: 100%;
         border: 1px solid var(--line);
@@ -256,7 +293,10 @@
         font-weight: 750;
       }
 
-      input:focus, select:focus { border-color: var(--signal); }
+      input:focus,
+      select:focus {
+        border-color: var(--signal);
+      }
 
       .primary,
       .ghost {
@@ -266,12 +306,20 @@
         cursor: pointer;
         font-weight: 950;
         letter-spacing: -0.03em;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease;
       }
 
       .primary {
         color: #10110e;
-        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        background: linear-gradient(
+          135deg,
+          #e4bd78 0%,
+          #f2ddb0 42%,
+          var(--rose) 100%
+        );
         border-color: transparent;
       }
 
@@ -300,7 +348,10 @@
         border: 1px solid var(--line);
         background: rgba(17, 19, 15, 0.84);
         overflow: hidden;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease;
       }
 
       .module:hover {
@@ -367,9 +418,13 @@
         font-weight: 850;
       }
 
-      .bottom-nav a.active { color: var(--signal); }
+      .bottom-nav a.active {
+        color: var(--signal);
+      }
 
-      body.chat-open .bottom-nav { transform: translateY(100%); }
+      body.chat-open .bottom-nav {
+        transform: translateY(100%);
+      }
 
       /* ── Chat overlay ── */
       .chat-overlay {
@@ -416,7 +471,9 @@
         flex-shrink: 0;
       }
 
-      .chat-close:hover { border-color: var(--line-strong); }
+      .chat-close:hover {
+        border-color: var(--line-strong);
+      }
 
       .chat-header-title {
         font-size: 14px;
@@ -446,14 +503,25 @@
       }
 
       @keyframes bubbleIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to   { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .bubble.user {
         align-self: flex-end;
         max-width: 78%;
-        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        background: linear-gradient(
+          135deg,
+          #e4bd78 0%,
+          #f2ddb0 42%,
+          var(--rose) 100%
+        );
         color: #151311;
         font-weight: 750;
         border-radius: 2px 0 0 0;
@@ -488,12 +556,21 @@
         animation: dotPulse 1.1s ease-in-out infinite;
       }
 
-      .typing-dot:nth-child(2) { animation-delay: 150ms; }
-      .typing-dot:nth-child(3) { animation-delay: 300ms; }
+      .typing-dot:nth-child(2) {
+        animation-delay: 150ms;
+      }
+      .typing-dot:nth-child(3) {
+        animation-delay: 300ms;
+      }
 
       @keyframes dotPulse {
-        0%, 100% { opacity: 0.3; }
-        50%      { opacity: 1; }
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
       }
 
       /* Location card */
@@ -600,7 +677,9 @@
         animation: bubbleIn 200ms ease both;
       }
 
-      .pills::-webkit-scrollbar { display: none; }
+      .pills::-webkit-scrollbar {
+        display: none;
+      }
 
       .pill {
         flex: 0 0 auto;
@@ -614,7 +693,9 @@
         letter-spacing: -0.01em;
         cursor: pointer;
         white-space: nowrap;
-        transition: border-color 180ms ease, color 180ms ease;
+        transition:
+          border-color 180ms ease,
+          color 180ms ease;
       }
 
       .pill:hover,
@@ -650,7 +731,12 @@
         padding: 0 20px;
         border: 1px solid transparent;
         border-radius: 0;
-        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        background: linear-gradient(
+          135deg,
+          #e4bd78 0%,
+          #f2ddb0 42%,
+          var(--rose) 100%
+        );
         color: #10110e;
         font-weight: 950;
         font-size: 14px;
@@ -659,25 +745,47 @@
         transition: transform 180ms ease;
       }
 
-      .chat-send:hover { transform: translateY(-1px); }
+      .chat-send:hover {
+        transform: translateY(-1px);
+      }
 
       /* ── Responsive ── */
       @media (min-width: 760px) {
-        .shell { padding: 28px 28px 60px; }
+        .shell {
+          padding: 28px 28px 60px;
+        }
         .welcome {
           grid-template-columns: 1fr 410px;
           align-items: end;
           padding: 54px 0 30px;
         }
-        .ask-card { align-self: stretch; }
-        .ask-card form { grid-template-columns: 1fr auto; align-items: end; }
-        .grid { grid-template-columns: repeat(4, 1fr); }
-        .bottom-nav { display: none; }
+        .ask-card {
+          align-self: stretch;
+        }
+        .ask-card form {
+          grid-template-columns: 1fr auto;
+          align-items: end;
+        }
+        .grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+        .bottom-nav {
+          display: none;
+        }
 
-        .chat-body { padding: 28px 24px; }
-        .chat-input-bar { padding: 14px 24px; }
-        .bubble, .loc-card { max-width: 520px; }
-        .bubble.user { max-width: 420px; }
+        .chat-body {
+          padding: 28px 24px;
+        }
+        .chat-input-bar {
+          padding: 14px 24px;
+        }
+        .bubble,
+        .loc-card {
+          max-width: 520px;
+        }
+        .bubble.user {
+          max-width: 420px;
+        }
       }
 
       /* Full-screen Slide-up Map Overlay */
@@ -748,7 +856,9 @@
         border-style: solid;
       }
       /* Leaflet Dark Customizations */
-      .leaflet-bar { border: 1px solid var(--line) !important; }
+      .leaflet-bar {
+        border: 1px solid var(--line) !important;
+      }
       .leaflet-bar a {
         background-color: var(--panel) !important;
         color: var(--ink) !important;
@@ -761,9 +871,11 @@
       /* ── Geo Failure Backdrop ── */
       .geo-backdrop {
         position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7);
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(4px);
         z-index: 19000;
         opacity: 0;
@@ -778,7 +890,8 @@
       /* ── Geo Settings Instruction Modal ── */
       .geo-settings-modal {
         position: fixed;
-        top: 50%; left: 50%;
+        top: 50%;
+        left: 50%;
         transform: translate(-50%, -50%) scale(0.95);
         width: calc(100% - 40px);
         max-width: 360px;
@@ -787,7 +900,7 @@
         border-radius: 6px;
         padding: 24px;
         z-index: 20000;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
         opacity: 0;
         pointer-events: none;
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -829,7 +942,9 @@
         padding-left: 16px;
         margin: 0 0 14px 0;
       }
-      .geo-instruction-list li { margin-bottom: 5px; }
+      .geo-instruction-list li {
+        margin-bottom: 5px;
+      }
       .geo-modal-buttons {
         display: flex;
         gap: 12px;
@@ -849,15 +964,20 @@
         border-color: var(--signal);
         color: var(--signal);
       }
-      .geo-modal-btn:hover { background: var(--panel); }
+      .geo-modal-btn:hover {
+        background: var(--panel);
+      }
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   </head>
   <body>
     <header class="topbar">
       <a class="brand" href="index.html">
-        <img src="assets/echoo-new-logo.jpg" alt="">
+        <img src="assets/echoo-new-logo.jpg" alt="" />
         <span>echoo</span>
       </a>
       <div class="avatar" id="avatar">PU</div>
@@ -868,7 +988,10 @@
         <div>
           <div class="kicker">Powered by AI</div>
           <h1 id="headline">What are you in the mood for?</h1>
-          <p id="subhead">Tell us what you're feeling. Echoo finds the places, plans the route, and connects the dots.</p>
+          <p id="subhead">
+            Tell us what you're feeling. Echoo finds the places, plans the
+            route, and connects the dots.
+          </p>
         </div>
 
         <!-- News Carousel Section -->
@@ -880,7 +1003,10 @@
 
         <div class="ask-card">
           <form id="plan-form">
-            <input id="plan-query" placeholder="feeling low and need a pick-me-up..." />
+            <input
+              id="plan-query"
+              placeholder="feeling low and need a pick-me-up..."
+            />
             <button class="primary" type="submit">Build my plan</button>
           </form>
           <button class="ghost" id="surprise">Surprise me</button>
@@ -891,12 +1017,17 @@
         <button class="module" data-action="nearby">
           <small>Nearby</small>
           <strong>What's open around me</strong>
-          <p>Real places within walking distance, filtered by what's actually open right now.</p>
+          <p>
+            Real places within walking distance, filtered by what's actually
+            open right now.
+          </p>
         </button>
         <button class="module" data-action="date">
           <small>Date plan</small>
           <strong>Plan something worth remembering</strong>
-          <p>Dinner, an experience, and a backup spot — all connected and timed.</p>
+          <p>
+            Dinner, an experience, and a backup spot — all connected and timed.
+          </p>
         </button>
         <button class="module" data-action="tickets">
           <small>Tickets</small>
@@ -906,7 +1037,10 @@
         <button class="module" data-action="crew">
           <small>Group plan</small>
           <strong>Get everyone to say yes</strong>
-          <p>Share a short list your friends can vote on instead of another group chat.</p>
+          <p>
+            Share a short list your friends can vote on instead of another group
+            chat.
+          </p>
         </button>
       </section>
     </main>
@@ -914,7 +1048,9 @@
     <!-- Chat overlay -->
     <div class="chat-overlay" id="chat-overlay">
       <div class="chat-header">
-        <button class="chat-close" id="chat-close" aria-label="Close chat">&#x2715;</button>
+        <button class="chat-close" id="chat-close" aria-label="Close chat">
+          &#x2715;
+        </button>
         <span class="chat-header-title">echoo is thinking with you</span>
       </div>
       <div class="chat-body" id="chat-body"></div>
@@ -926,7 +1062,9 @@
 
     <!-- Map slide-up overlay -->
     <div class="map-overlay" id="map-overlay">
-      <button class="map-close" id="map-close" aria-label="Close map">&#x2715;</button>
+      <button class="map-close" id="map-close" aria-label="Close map">
+        &#x2715;
+      </button>
       <div class="map-container" id="map-container"></div>
     </div>
 
@@ -938,21 +1076,33 @@
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
     <script src="assets/location-platform.js"></script>
     <script src="assets/activity-context.js"></script>
     <script>
       /* Diagnostic logger for redirects */
-      window.addEventListener('beforeunload', () => {
-        const history = JSON.parse(sessionStorage.getItem('echoo_unload_log') || '[]');
-        history.push({ time: new Date().toISOString(), url: window.location.href, stack: new Error().stack });
-        sessionStorage.setItem('echoo_unload_log', JSON.stringify(history.slice(-10)));
+      window.addEventListener("beforeunload", () => {
+        const history = JSON.parse(
+          sessionStorage.getItem("echoo_unload_log") || "[]",
+        );
+        history.push({
+          time: new Date().toISOString(),
+          url: window.location.href,
+          stack: new Error().stack,
+        });
+        sessionStorage.setItem(
+          "echoo_unload_log",
+          JSON.stringify(history.slice(-10)),
+        );
       });
 
       const CONFIG = {
         supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
         supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        locationSearchUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
-        planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
+        locationSearchUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
+        planEngineUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine",
       };
 
       /* ── Preferences retrieval ── */
@@ -965,23 +1115,28 @@
       let tone = params.get("tone");
       let preciseLat;
       let preciseLng;
+      let storedPrefs = {};
 
-      if (!name) {
-        const stored = localStorage.getItem("echoo_preferences");
-        if (stored) {
-          try {
-            const prefs = JSON.parse(stored);
-            name = prefs.name;
-            city = prefs.city;
-            vibes = prefs.vibes;
-            budget = prefs.budget;
-            energy = prefs.energy;
-            tone = prefs.tone;
-            preciseLat = Number(prefs.lastLat);
-            preciseLng = Number(prefs.lastLng);
-          } catch (e) {}
-        }
+      const stored = localStorage.getItem("echoo_preferences");
+      if (stored) {
+        try {
+          storedPrefs = JSON.parse(stored);
+        } catch (e) {}
       }
+
+      name = name || storedPrefs.name;
+      city = city || storedPrefs.city;
+      vibes =
+        vibes ||
+        storedPrefs.vibes ||
+        (Array.isArray(storedPrefs.interests)
+          ? storedPrefs.interests.join(",")
+          : "");
+      budget = budget || storedPrefs.budget;
+      energy = energy || storedPrefs.energy;
+      tone = tone || storedPrefs.tone;
+      preciseLat = Number(storedPrefs.lastLat);
+      preciseLng = Number(storedPrefs.lastLng);
 
       name = name || "Preview User";
       city = city || "Toronto";
@@ -989,26 +1144,119 @@
       budget = budget || "$";
       energy = energy || "chill";
       tone = tone || "direct";
+      const personalizationProfile = {
+        interests: Array.isArray(storedPrefs.interests)
+          ? storedPrefs.interests
+          : vibes,
+        eventStyles: Array.isArray(storedPrefs.eventStyles)
+          ? storedPrefs.eventStyles
+          : [],
+        audiences: Array.isArray(storedPrefs.audiences)
+          ? storedPrefs.audiences
+          : [],
+        motivations: Array.isArray(storedPrefs.motivations)
+          ? storedPrefs.motivations
+          : [],
+        budget,
+        energy,
+        city,
+        gender: storedPrefs.gender || "Prefer not to say",
+        dob: storedPrefs.dob || "",
+        tone,
+      };
+
+      let activeSession = null;
+      function applyPreferenceSnapshot(prefs = {}) {
+        if (!prefs || typeof prefs !== "object") return;
+        name = prefs.name || name;
+        city = prefs.city || city;
+        budget = prefs.budget || budget;
+        energy = prefs.energy || energy;
+        tone = prefs.tone || tone;
+        vibes = Array.isArray(prefs.interests)
+          ? prefs.interests
+          : typeof prefs.vibes === "string" && prefs.vibes
+            ? prefs.vibes.split(",")
+            : vibes;
+        preciseLat = Number(prefs.lastLat ?? preciseLat);
+        preciseLng = Number(prefs.lastLng ?? preciseLng);
+        Object.assign(personalizationProfile, {
+          interests: Array.isArray(prefs.interests)
+            ? prefs.interests
+            : personalizationProfile.interests,
+          eventStyles: Array.isArray(prefs.eventStyles)
+            ? prefs.eventStyles
+            : personalizationProfile.eventStyles,
+          audiences: Array.isArray(prefs.audiences)
+            ? prefs.audiences
+            : personalizationProfile.audiences,
+          motivations: Array.isArray(prefs.motivations)
+            ? prefs.motivations
+            : personalizationProfile.motivations,
+          budget,
+          energy,
+          city,
+          gender: prefs.gender || personalizationProfile.gender,
+          dob: prefs.dob || personalizationProfile.dob,
+          tone,
+        });
+      }
+
+      const authGate = window.EchooAuth
+        ? window.EchooAuth.requireOnboarding({
+            next: window.EchooAuth.currentRelativeUrl(),
+          }).then((state) => {
+            if (state.ok) {
+              activeSession = state.session;
+              applyPreferenceSnapshot(state.preferences);
+            }
+            return state;
+          })
+        : Promise.resolve({ ok: true });
+
+      function setBudgetPreference(nextBudget) {
+        budget = nextBudget || budget || "$";
+        personalizationProfile.budget = budget;
+        try {
+          const latest = JSON.parse(
+            localStorage.getItem("echoo_preferences") || "{}",
+          );
+          localStorage.setItem(
+            "echoo_preferences",
+            JSON.stringify({ ...latest, budget }),
+          );
+        } catch (e) {}
+        window.EchooAuth?.updateOnboardingPatch({ budget }).catch((error) =>
+          console.warn("Echoo: budget profile update failed.", error),
+        );
+      }
 
       function getActivityContext() {
         const cityRecord = window.EchooLocationPlatform.cityByName(city);
         return window.EchooActivityContext.getActivityContext({
           city,
-          timezone: cityRecord?.timezone
+          timezone: cityRecord?.timezone,
         });
       }
 
       let activityContext = getActivityContext();
 
       /* ── Set up name / avatar ── */
-      const initials = name.split(" ").filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "PU";
+      const initials =
+        name
+          .split(" ")
+          .filter(Boolean)
+          .map((p) => p[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase() || "PU";
       document.getElementById("avatar").textContent = initials;
       const firstName = name.split(" ")[0] || "You";
 
       /* ── Customize Dashboard copy based on Onboarding ── */
       const headlineEl = document.getElementById("headline");
       const subheadEl = document.getElementById("subhead");
-      
+
       let customHeadline = `${firstName}, what fits ${activityContext.label}?`;
       let customSubhead = `Tailoring plans for your pace in ${city}.`;
 
@@ -1067,8 +1315,9 @@
           let ticketTopic = "live concerts";
           if (vibes.includes("Late cinema")) ticketTopic = "cinema screenings";
           else if (vibes.includes("Sports")) ticketTopic = "sports events";
-          else if (vibes.includes("Art & galleries")) ticketTopic = "gallery exhibitions";
-          
+          else if (vibes.includes("Art & galleries"))
+            ticketTopic = "gallery exhibitions";
+
           ticketsStrong.textContent = `Available slots in ${city}`;
           ticketsP.textContent = `Lock in tickets for nearby ${ticketTopic} that fit your budget.`;
         }
@@ -1082,36 +1331,120 @@
 
       /* ── News Slider Database ── */
       const localNewsDb = {
-        "Toronto": [
-          { tag: "TIFF", text: "Midnight Madness lineups announced for September", img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Patio", text: "Kensington Market tests weekend pedestrian-only zones", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Jazz", text: "Queen West jazz club hosts unannounced late basement set", img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Food", text: "Ossington street crawl reveals new underground ramen spot", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Sports", text: "Scotiabank Arena hosts outdoor pre-game rally today", img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Rooftop", text: "Broadview Hotel opens winterized rooftop deck early for sunset", img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80" }
+        Toronto: [
+          {
+            tag: "TIFF",
+            text: "Midnight Madness lineups announced for September",
+            img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Patio",
+            text: "Kensington Market tests weekend pedestrian-only zones",
+            img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Jazz",
+            text: "Queen West jazz club hosts unannounced late basement set",
+            img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Food",
+            text: "Ossington street crawl reveals new underground ramen spot",
+            img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Sports",
+            text: "Scotiabank Arena hosts outdoor pre-game rally today",
+            img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Rooftop",
+            text: "Broadview Hotel opens winterized rooftop deck early for sunset",
+            img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80",
+          },
         ],
-        "Vancouver": [
-          { tag: "Beach", text: "Kitsilano beach bonfire permits extended for summer weekends", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Theatre", text: "Granville Island waterfront stage premieres new indie play", img: "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Cocktails", text: "Gastown lounge rated top 50 in North America for mixology", img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Ride", text: "Stanley Park night cycle ride draws record five hundred riders", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Food", text: "Richmond Night Market expands late fusion food stands", img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=120&q=80" }
+        Vancouver: [
+          {
+            tag: "Beach",
+            text: "Kitsilano beach bonfire permits extended for summer weekends",
+            img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Theatre",
+            text: "Granville Island waterfront stage premieres new indie play",
+            img: "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Cocktails",
+            text: "Gastown lounge rated top 50 in North America for mixology",
+            img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Ride",
+            text: "Stanley Park night cycle ride draws record five hundred riders",
+            img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Food",
+            text: "Richmond Night Market expands late fusion food stands",
+            img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=120&q=80",
+          },
         ],
-        "Montreal": [
-          { tag: "Jazz", text: "Montreal Jazz Fest reveals free outdoor street show lineup", img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Bagels", text: "Mile End food crawl introduces late-night wood-fired bakery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Art", text: "Plateau Mont-Royal street art murals expand down Saint-Laurent", img: "https://images.unsplash.com/photo-156121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Speakeasy", text: "Old Montreal speakeasy hidden behind vintage phone booth", img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=120&q=80" },
-          { tag: "Music", text: "Saint-Denis underground electronic gig sells out in record minutes", img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=120&q=80" }
-        ]
+        Montreal: [
+          {
+            tag: "Jazz",
+            text: "Montreal Jazz Fest reveals free outdoor street show lineup",
+            img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Bagels",
+            text: "Mile End food crawl introduces late-night wood-fired bakery",
+            img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Art",
+            text: "Plateau Mont-Royal street art murals expand down Saint-Laurent",
+            img: "https://images.unsplash.com/photo-156121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Speakeasy",
+            text: "Old Montreal speakeasy hidden behind vintage phone booth",
+            img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=120&q=80",
+          },
+          {
+            tag: "Music",
+            text: "Saint-Denis underground electronic gig sells out in record minutes",
+            img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=120&q=80",
+          },
+        ],
       };
 
       const worldNews = [
-        { tag: "Outdoor", text: "National parks report massive surge in summer night hikers", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=120&q=80" },
-        { tag: "Gaming", text: "Indie retro arcades and console lounges trending globally", img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=120&q=80" },
-        { tag: "Coffee", text: "Slow-drip specialty coffee crawls taking over urban neighborhoods", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=120&q=80" },
-        { tag: "Concert", text: "Major outdoor music festival tours announce carbon-neutral lineups", img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=120&q=80" },
-        { tag: "Museum", text: "Historic virtual-reality exhibitions open globally at science centers", img: "https://images.unsplash.com/photo-1566121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80" }
+        {
+          tag: "Outdoor",
+          text: "National parks report massive surge in summer night hikers",
+          img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=120&q=80",
+        },
+        {
+          tag: "Gaming",
+          text: "Indie retro arcades and console lounges trending globally",
+          img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=120&q=80",
+        },
+        {
+          tag: "Coffee",
+          text: "Slow-drip specialty coffee crawls taking over urban neighborhoods",
+          img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=120&q=80",
+        },
+        {
+          tag: "Concert",
+          text: "Major outdoor music festival tours announce carbon-neutral lineups",
+          img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=120&q=80",
+        },
+        {
+          tag: "Museum",
+          text: "Historic virtual-reality exhibitions open globally at science centers",
+          img: "https://images.unsplash.com/photo-1566121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80",
+        },
       ];
 
       async function loadNewsSlider() {
@@ -1119,26 +1452,37 @@
 
         if (CONFIG.supabaseUrl && CONFIG.supabaseAnonKey && window.supabase) {
           try {
-            const supabaseClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+            const supabaseClient = window.supabase.createClient(
+              CONFIG.supabaseUrl,
+              CONFIG.supabaseAnonKey,
+            );
             const { data, error } = await supabaseClient
-              .from('news')
-              .select('*')
+              .from("news")
+              .select("*")
               .or(`city.eq.${city},city.eq.Global`)
-              .order('published_at', { ascending: false })
+              .order("published_at", { ascending: false })
               .limit(12);
 
             if (!error && data && data.length > 0) {
-              displayNews = data.map(item => ({
+              displayNews = data.map((item) => ({
                 tag: item.tag,
                 text: item.title,
-                img: item.image_url || "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80"
+                img:
+                  item.image_url ||
+                  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80",
               }));
               console.log("Echoo: Loaded real-time news from Supabase.");
             } else if (error) {
-              console.warn("Echoo: Supabase query error, falling back to mock news:", error.message);
+              console.warn(
+                "Echoo: Supabase query error, falling back to mock news:",
+                error.message,
+              );
             }
           } catch (e) {
-            console.warn("Echoo: Failed to query Supabase, falling back to mock news:", e);
+            console.warn(
+              "Echoo: Failed to query Supabase, falling back to mock news:",
+              e,
+            );
           }
         }
 
@@ -1156,7 +1500,9 @@
         const newsTrack = document.getElementById("news-track");
         if (newsTrack) {
           const doubledNews = [...displayNews, ...displayNews];
-          newsTrack.innerHTML = doubledNews.map(item => `
+          newsTrack.innerHTML = doubledNews
+            .map(
+              (item) => `
             <div class="news-card">
               <img src="${item.img}" alt="" loading="lazy">
               <div class="news-info">
@@ -1164,7 +1510,9 @@
                 <span class="headline">${item.text}</span>
               </div>
             </div>
-          `).join("");
+          `,
+            )
+            .join("");
         }
       }
 
@@ -1187,7 +1535,9 @@
           if (slider.scrollLeft >= slider.scrollWidth / 2) {
             slider.scrollLeft = 0;
           }
-          requestAnimationFrame(() => { isProgrammaticScroll = false; });
+          requestAnimationFrame(() => {
+            isProgrammaticScroll = false;
+          });
         }
         requestAnimationFrame(step);
       }
@@ -1218,102 +1568,221 @@
           slider.addEventListener(type, (event) => {
             if (!isDraggingNews) return;
             isDraggingNews = false;
-            if (slider.hasPointerCapture?.(event.pointerId)) slider.releasePointerCapture(event.pointerId);
+            if (slider.hasPointerCapture?.(event.pointerId))
+              slider.releasePointerCapture(event.pointerId);
             pauseNewsAutoScroll(1800);
           });
         });
-        slider.addEventListener("wheel", () => pauseNewsAutoScroll(2200), { passive: true });
+        slider.addEventListener("wheel", () => pauseNewsAutoScroll(2200), {
+          passive: true,
+        });
         slider.addEventListener("scroll", () => {
-          if (!isProgrammaticScroll && !isDraggingNews) pauseNewsAutoScroll(2200);
+          if (!isProgrammaticScroll && !isDraggingNews)
+            pauseNewsAutoScroll(2200);
         });
 
         requestAnimationFrame(step);
       }
 
       /* ── DOM refs ── */
-      const overlay  = document.getElementById("chat-overlay");
+      const overlay = document.getElementById("chat-overlay");
       const chatBody = document.getElementById("chat-body");
       const chatInput = document.getElementById("chat-input");
-      const chatSend  = document.getElementById("chat-send");
+      const chatSend = document.getElementById("chat-send");
       const mapOverlay = document.getElementById("map-overlay");
-      const mapClose   = document.getElementById("map-close");
-      
+      const mapClose = document.getElementById("map-close");
 
       /* ── Modular Map Wrapper ── */
       const EchooMap = {
         mapInstance: null,
-        init: function(elementId, center) {
+        init: function (elementId, center) {
           if (this.mapInstance) {
             this.mapInstance.remove();
           }
-          const map = L.map(elementId, { zoomControl: true }).setView(center, 14);
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap'
-          }).addTo(map);
+          const map = L.map(elementId, { zoomControl: true }).setView(
+            center,
+            14,
+          );
+          L.tileLayer(
+            "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+            {
+              attribution: "&copy; OpenStreetMap",
+            },
+          ).addTo(map);
           this.mapInstance = map;
           return map;
         },
-        drawRoute: function(stops) {
+        drawRoute: function (stops) {
           if (!this.mapInstance) return;
           const coords = [];
           stops.forEach((stop, index) => {
             coords.push(stop.coords);
             L.circleMarker(stop.coords, {
-              color: '#E7C98E',
-              fillColor: '#000000',
+              color: "#E7C98E",
+              fillColor: "#000000",
               fillOpacity: 1,
               radius: 6,
-              weight: 2
-            }).addTo(this.mapInstance).bindPopup(`<b>Stop ${index + 1}: ${stop.name}</b>`);
+              weight: 2,
+            })
+              .addTo(this.mapInstance)
+              .bindPopup(`<b>Stop ${index + 1}: ${stop.name}</b>`);
           });
           L.polyline(coords, {
-            color: '#E7C98E',
+            color: "#E7C98E",
             weight: 3,
             opacity: 0.8,
-            dashArray: '5, 5'
+            dashArray: "5, 5",
           }).addTo(this.mapInstance);
           this.mapInstance.fitBounds(coords, { padding: [40, 40] });
-        }
+        },
       };
 
       /* ── Dynamic Curation Database ── */
       const curationDb = {
-        "Toronto": {
-          "chill": [
-            { name: "Kensington Listening Room", tags: "Jazz & Vinyl · Kensington", coords: [43.6552, -79.4022], img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=300&q=80", vibe: "Dimly lit, cozy booths, vinyl-forward audio setup." },
-            { name: "Late Kitchen on Dundas", tags: "Comfort Food · Dundas West", coords: [43.6534, -79.4050], img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80", vibe: "Quiet counter seats, soft playlists, fresh ingredients." },
-            { name: "Ossington Tea & Vinyl", tags: "Speakeasy Lounge · Ossington", coords: [43.6490, -79.4190], img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80", vibe: "Hidden tea house playing vintage soul records." }
+        Toronto: {
+          chill: [
+            {
+              name: "Kensington Listening Room",
+              tags: "Jazz & Vinyl · Kensington",
+              coords: [43.6552, -79.4022],
+              img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=300&q=80",
+              vibe: "Dimly lit, cozy booths, vinyl-forward audio setup.",
+            },
+            {
+              name: "Late Kitchen on Dundas",
+              tags: "Comfort Food · Dundas West",
+              coords: [43.6534, -79.405],
+              img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80",
+              vibe: "Quiet counter seats, soft playlists, fresh ingredients.",
+            },
+            {
+              name: "Ossington Tea & Vinyl",
+              tags: "Speakeasy Lounge · Ossington",
+              coords: [43.649, -79.419],
+              img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80",
+              vibe: "Hidden tea house playing vintage soul records.",
+            },
           ],
-          "hype": [
-            { name: "Queen West Club Basement", tags: "Techno & DJs · Queen West", coords: [43.6482, -79.4005], img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80", vibe: "Loud sound system, dark warehouse vibes, energetic crowd." },
-            { name: "Ossington Street Tacos", tags: "Late-night Tacos · Ossington", coords: [43.6495, -79.4182], img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80", vibe: "Bustling open-counter, fast service, vibrant outdoor patio." },
-            { name: "Dundas Arcade & Drinks", tags: "Gaming & Drinks · Dundas West", coords: [43.6515, -79.4120], img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80", vibe: "Retro arcade machines, loud indie rock, neon aesthetic." }
-          ]
+          hype: [
+            {
+              name: "Queen West Club Basement",
+              tags: "Techno & DJs · Queen West",
+              coords: [43.6482, -79.4005],
+              img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80",
+              vibe: "Loud sound system, dark warehouse vibes, energetic crowd.",
+            },
+            {
+              name: "Ossington Street Tacos",
+              tags: "Late-night Tacos · Ossington",
+              coords: [43.6495, -79.4182],
+              img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80",
+              vibe: "Bustling open-counter, fast service, vibrant outdoor patio.",
+            },
+            {
+              name: "Dundas Arcade & Drinks",
+              tags: "Gaming & Drinks · Dundas West",
+              coords: [43.6515, -79.412],
+              img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80",
+              vibe: "Retro arcade machines, loud indie rock, neon aesthetic.",
+            },
+          ],
         },
-        "Vancouver": {
-          "chill": [
-            { name: "Gastown Cozy Bar", tags: "Speakeasy · Gastown", coords: [49.2827, -123.1207], img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80", vibe: "Hidden entrance, intimate seating, custom mixology drinks." },
-            { name: "Davie Street Delicacies", tags: "Local Bakery · West End", coords: [49.2785, -123.1325], img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80", vibe: "Acoustic lounge music, fresh late crepes, relaxed spacing." },
-            { name: "Kitsilano Sunset Pier", tags: "Beach View · Kitsilano", coords: [49.2740, -123.1530], img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80", vibe: "Beautiful twilight viewing spot, chill waves, fresh air." }
+        Vancouver: {
+          chill: [
+            {
+              name: "Gastown Cozy Bar",
+              tags: "Speakeasy · Gastown",
+              coords: [49.2827, -123.1207],
+              img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80",
+              vibe: "Hidden entrance, intimate seating, custom mixology drinks.",
+            },
+            {
+              name: "Davie Street Delicacies",
+              tags: "Local Bakery · West End",
+              coords: [49.2785, -123.1325],
+              img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+              vibe: "Acoustic lounge music, fresh late crepes, relaxed spacing.",
+            },
+            {
+              name: "Kitsilano Sunset Pier",
+              tags: "Beach View · Kitsilano",
+              coords: [49.274, -123.153],
+              img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80",
+              vibe: "Beautiful twilight viewing spot, chill waves, fresh air.",
+            },
           ],
-          "hype": [
-            { name: "Granville Live Stage", tags: "Live Music · Granville", coords: [49.2798, -123.1235], img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=300&q=80", vibe: "Live rock sets, high-energy dance floor, packed venue." },
-            { name: "Richmond Night Eats", tags: "Night Market · Richmond", coords: [49.1915, -123.1310], img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80", vibe: "Over 100 food stalls, loud background music, fast paced crowds." },
-            { name: "Yaletown Cocktail Loft", tags: "DJ Loft · Yaletown", coords: [49.2760, -123.1200], img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80", vibe: "House DJs, packed dancefloor, vibrant lighting." }
-          ]
+          hype: [
+            {
+              name: "Granville Live Stage",
+              tags: "Live Music · Granville",
+              coords: [49.2798, -123.1235],
+              img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=300&q=80",
+              vibe: "Live rock sets, high-energy dance floor, packed venue.",
+            },
+            {
+              name: "Richmond Night Eats",
+              tags: "Night Market · Richmond",
+              coords: [49.1915, -123.131],
+              img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80",
+              vibe: "Over 100 food stalls, loud background music, fast paced crowds.",
+            },
+            {
+              name: "Yaletown Cocktail Loft",
+              tags: "DJ Loft · Yaletown",
+              coords: [49.276, -123.12],
+              img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+              vibe: "House DJs, packed dancefloor, vibrant lighting.",
+            },
+          ],
         },
-        "Montreal": {
-          "chill": [
-            { name: "Plateau Acoustic Café", tags: "Acoustic Room · Plateau", coords: [45.5215, -73.5825], img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=300&q=80", vibe: "Soft lighting, unplugged sets, local artists." },
-            { name: "Saint-Denis Sweet Crepes", tags: "Comfort Food · Saint-Denis", coords: [45.5180, -73.5890], img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80", vibe: "Indie background music, cozy dates, intimate seating." },
-            { name: "Mile End Vinyl Lounge", tags: "Record Listening · Mile End", coords: [45.5240, -73.5950], img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=300&q=80", vibe: "Warm analog audio system, quiet library aesthetic." }
+        Montreal: {
+          chill: [
+            {
+              name: "Plateau Acoustic Café",
+              tags: "Acoustic Room · Plateau",
+              coords: [45.5215, -73.5825],
+              img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=300&q=80",
+              vibe: "Soft lighting, unplugged sets, local artists.",
+            },
+            {
+              name: "Saint-Denis Sweet Crepes",
+              tags: "Comfort Food · Saint-Denis",
+              coords: [45.518, -73.589],
+              img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80",
+              vibe: "Indie background music, cozy dates, intimate seating.",
+            },
+            {
+              name: "Mile End Vinyl Lounge",
+              tags: "Record Listening · Mile End",
+              coords: [45.524, -73.595],
+              img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=300&q=80",
+              vibe: "Warm analog audio system, quiet library aesthetic.",
+            },
           ],
-          "hype": [
-            { name: "Saint-Laurent Electronic Gig", tags: "Electronic DJ · Mile End", coords: [45.5262, -73.5960], img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80", vibe: "Neon lights, heavy bass, high-tempo dancing." },
-            { name: "Late Bagels Mile End", tags: "Wood-fired Bakery · Mile End", coords: [45.5228, -73.5965], img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80", vibe: "Busy queues, lively open kitchen, hot bagels on the go." },
-            { name: "Crescent Bar & Arcade", tags: "Retro Arcade · Downtown", coords: [45.4980, -73.5760], img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80", vibe: "Classic arcade cabinets, neon wall lighting, loud pop beats." }
-          ]
-        }
+          hype: [
+            {
+              name: "Saint-Laurent Electronic Gig",
+              tags: "Electronic DJ · Mile End",
+              coords: [45.5262, -73.596],
+              img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80",
+              vibe: "Neon lights, heavy bass, high-tempo dancing.",
+            },
+            {
+              name: "Late Bagels Mile End",
+              tags: "Wood-fired Bakery · Mile End",
+              coords: [45.5228, -73.5965],
+              img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+              vibe: "Busy queues, lively open kitchen, hot bagels on the go.",
+            },
+            {
+              name: "Crescent Bar & Arcade",
+              tags: "Retro Arcade · Downtown",
+              coords: [45.498, -73.576],
+              img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80",
+              vibe: "Classic arcade cabinets, neon wall lighting, loud pop beats.",
+            },
+          ],
+        },
       };
 
       window.EchooLocationPlatform.SUPPORTED_CITIES.forEach((supportedCity) => {
@@ -1321,23 +1790,59 @@
         const lat = supportedCity.coords[0];
         const lng = supportedCity.coords[1];
         curationDb[supportedCity.name] = {
-          "chill": [
-            { name: `${supportedCity.name} Listening Room`, tags: `Live music · ${supportedCity.province}`, coords: [lat + 0.004, lng - 0.004], img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=300&q=80", vibe: "Soft lighting, local performers, easy seating." },
-            { name: `${supportedCity.name} Late Kitchen`, tags: `Comfort Food · ${supportedCity.province}`, coords: [lat - 0.003, lng + 0.005], img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80", vibe: "Low-pressure dinner stop with warm service." },
-            { name: `${supportedCity.name} Quiet Lounge`, tags: `Cocktails · ${supportedCity.province}`, coords: [lat + 0.002, lng + 0.006], img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80", vibe: "A slower second stop for conversation." }
+          chill: [
+            {
+              name: `${supportedCity.name} Listening Room`,
+              tags: `Live music · ${supportedCity.province}`,
+              coords: [lat + 0.004, lng - 0.004],
+              img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=300&q=80",
+              vibe: "Soft lighting, local performers, easy seating.",
+            },
+            {
+              name: `${supportedCity.name} Late Kitchen`,
+              tags: `Comfort Food · ${supportedCity.province}`,
+              coords: [lat - 0.003, lng + 0.005],
+              img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80",
+              vibe: "Low-pressure dinner stop with warm service.",
+            },
+            {
+              name: `${supportedCity.name} Quiet Lounge`,
+              tags: `Cocktails · ${supportedCity.province}`,
+              coords: [lat + 0.002, lng + 0.006],
+              img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80",
+              vibe: "A slower second stop for conversation.",
+            },
           ],
-          "hype": [
-            { name: `${supportedCity.name} Live Stage`, tags: `Concerts · ${supportedCity.province}`, coords: [lat + 0.005, lng - 0.006], img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=300&q=80", vibe: "High-energy room, late crowd, fast entry." },
-            { name: `${supportedCity.name} Night Eats`, tags: `Food crawl · ${supportedCity.province}`, coords: [lat - 0.004, lng - 0.005], img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80", vibe: "Busy counter service and a quick reset between stops." },
-            { name: `${supportedCity.name} Arcade Bar`, tags: `Games · ${supportedCity.province}`, coords: [lat + 0.003, lng + 0.004], img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80", vibe: "Bright, loud, and easy for groups." }
-          ]
+          hype: [
+            {
+              name: `${supportedCity.name} Live Stage`,
+              tags: `Concerts · ${supportedCity.province}`,
+              coords: [lat + 0.005, lng - 0.006],
+              img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=300&q=80",
+              vibe: "High-energy room, late crowd, fast entry.",
+            },
+            {
+              name: `${supportedCity.name} Night Eats`,
+              tags: `Food crawl · ${supportedCity.province}`,
+              coords: [lat - 0.004, lng - 0.005],
+              img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80",
+              vibe: "Busy counter service and a quick reset between stops.",
+            },
+            {
+              name: `${supportedCity.name} Arcade Bar`,
+              tags: `Games · ${supportedCity.province}`,
+              coords: [lat + 0.003, lng + 0.004],
+              img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80",
+              vibe: "Bright, loud, and easy for groups.",
+            },
+          ],
         };
       });
 
       function addSeeRouteButton(stops) {
         const card = document.createElement("div");
         card.className = "see-route-card";
-        card.innerHTML = '🗺️ See Route on Map';
+        card.innerHTML = "🗺️ See Route on Map";
         card.addEventListener("click", () => {
           mapOverlay.classList.add("open");
           // Initialize map after overlay opens and has physical dimensions
@@ -1374,7 +1879,8 @@
         const el = document.createElement("div");
         el.className = "typing";
         el.id = "typing-current";
-        el.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+        el.innerHTML =
+          '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
         chatBody.appendChild(el);
         scrollChat();
         return el;
@@ -1385,7 +1891,15 @@
         if (el) el.remove();
       }
 
-      function addLocationCard(img, imgWebp, placeName, tags, vibe, hot, detailId) {
+      function addLocationCard(
+        img,
+        imgWebp,
+        placeName,
+        tags,
+        vibe,
+        hot,
+        detailId,
+      ) {
         const card = document.createElement("div");
         card.className = hot ? "loc-card hot" : "loc-card";
         if (detailId) {
@@ -1393,7 +1907,9 @@
           card.style.cursor = "pointer";
           card.title = "Open event details";
         }
-        const hotBadge = hot ? '<div class="loc-card-hot">Trending now</div>' : '';
+        const hotBadge = hot
+          ? '<div class="loc-card-hot">Trending now</div>'
+          : "";
         card.innerHTML = `
           <picture>
             <source srcset="${imgWebp}" type="image/webp">
@@ -1404,7 +1920,7 @@
             <div class="loc-card-tags">${tags}</div>
             <div class="loc-card-name">${placeName}</div>
             <div class="loc-card-vibe">${vibe}</div>
-            ${detailId ? '<div class="loc-card-tags" style="margin-top:8px;">Open details and tickets</div>' : ''}
+            ${detailId ? '<div class="loc-card-tags" style="margin-top:8px;">Open details and tickets</div>' : ""}
           </div>`;
         if (detailId) {
           card.addEventListener("click", () => {
@@ -1438,16 +1954,26 @@
       }
 
       async function fetchPreciseNearby(limit) {
-        if (!Number.isFinite(preciseLat) || !Number.isFinite(preciseLng)) return [];
+        if (!Number.isFinite(preciseLat) || !Number.isFinite(preciseLng))
+          return [];
         try {
           const response = await fetch(CONFIG.locationSearchUrl, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
-              "apikey": CONFIG.supabaseAnonKey
-            },
-            body: JSON.stringify({ lat: preciseLat, lng: preciseLng, radiusMeters: 25000, limit })
+            headers: window.EchooAuth
+              ? await window.EchooAuth.authHeaders({
+                  "Content-Type": "application/json",
+                })
+              : {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                  apikey: CONFIG.supabaseAnonKey,
+                },
+            body: JSON.stringify({
+              lat: preciseLat,
+              lng: preciseLng,
+              radiusMeters: 25000,
+              limit,
+            }),
           });
           if (!response.ok) return [];
           const payload = await response.json();
@@ -1458,43 +1984,92 @@
             tags: `${item.category || item.entity_type || "Echoo"} · ${item.distance_meters ? Math.max(1, Math.round(item.distance_meters / 1000)) + " km away" : city}`,
             coords: [item.latitude, item.longitude],
             img: item.image_url || "assets/optimized/news-music-768.jpg",
-            vibe: item.description || "Verified nearby recommendation from Echoo location search."
+            vibe:
+              item.description ||
+              "Verified nearby recommendation from Echoo location search.",
           }));
         } catch (error) {
-          console.warn("Echoo: precise nearby search failed, using curated local fallback.", error);
+          console.warn(
+            "Echoo: precise nearby search failed, using curated local fallback.",
+            error,
+          );
           return [];
         }
       }
 
-      async function fetchSmartPlan(limit, queryText) {
-        try {
-          const body = Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
-            ? { lat: preciseLat, lng: preciseLng, query: queryText, energy, budget, limit }
-            : { city, query: queryText, energy, budget, limit };
-          const response = await fetch(CONFIG.planEngineUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${CONFIG.supabaseAnonKey}`,
-              "apikey": CONFIG.supabaseAnonKey
-            },
-            body: JSON.stringify(body)
-          });
-          if (!response.ok) return [];
-          const payload = await response.json();
-          if (!payload.supported || !Array.isArray(payload.plans)) return [];
-          return payload.plans.map((item) => ({
+      let lastPlanEnginePayload = null;
+
+      function planRequestBody(limit, queryText, mode = "build_plan") {
+        const base = {
+          query: queryText,
+          mode,
+          energy,
+          budget,
+          limit,
+          profile: personalizationProfile,
+        };
+        return Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+          ? { ...base, lat: preciseLat, lng: preciseLng }
+          : { ...base, city };
+      }
+
+      function mapPlanStops(payload) {
+        if (!payload?.supported || !Array.isArray(payload.plans)) return [];
+        return payload.plans
+          .map((item) => ({
             detailId: item.entityId || item.id,
             name: item.title,
             tags: `${item.category || "Echoo"} · ${item.distanceMeters ? Math.max(1, Math.round(item.distanceMeters / 1000)) + " km away" : item.city || city}`,
             coords: [item.latitude, item.longitude],
             img: item.imageUrl || "assets/optimized/news-music-768.jpg",
-            vibe: item.description || item.why || "Matched to your current location, time, and preferences."
-          })).filter((item) => Number.isFinite(item.coords[0]) && Number.isFinite(item.coords[1]));
+            vibe:
+              item.why ||
+              item.description ||
+              "Matched to your current location, time, and preferences.",
+            timing: item.timing || "",
+          }))
+          .filter(
+            (item) =>
+              Number.isFinite(item.coords[0]) &&
+              Number.isFinite(item.coords[1]),
+          );
+      }
+
+      async function requestSmartPlan(limit, queryText, mode = "build_plan") {
+        try {
+          const authState = await authGate;
+          if (authState && authState.ok === false)
+            return { payload: null, stops: [] };
+          const response = await fetch(CONFIG.planEngineUrl, {
+            method: "POST",
+            headers: window.EchooAuth
+              ? await window.EchooAuth.authHeaders({
+                  "Content-Type": "application/json",
+                })
+              : {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                  apikey: CONFIG.supabaseAnonKey,
+                },
+            body: JSON.stringify(planRequestBody(limit, queryText, mode)),
+          });
+          if (!response.ok) return { payload: null, stops: [] };
+          const payload = await response.json();
+          const stops = mapPlanStops(payload);
+          lastPlanEnginePayload = payload;
+          return { payload, stops };
         } catch (error) {
-          console.warn("Echoo: smart plan engine failed, using nearby fallback.", error);
-          return [];
+          console.warn(
+            "Echoo: smart plan engine failed, using nearby fallback.",
+            error,
+          );
+          return { payload: null, stops: [] };
         }
+      }
+
+      async function fetchSmartPlan(limit, queryText, mode = "build_plan") {
+        const result = await requestSmartPlan(limit, queryText, mode);
+        return result.stops;
       }
 
       /* ── Open / close ── */
@@ -1510,11 +2085,16 @@
         document.body.classList.remove("chat-open");
       }
 
-      document.getElementById("chat-close").addEventListener("click", closeChat);
+      document
+        .getElementById("chat-close")
+        .addEventListener("click", closeChat);
 
       /* ── Real Geolocation Detection ── */
       function resolveCity(lat, lng) {
-        const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+        const resolved = window.EchooLocationPlatform.resolveCoordinates(
+          lat,
+          lng,
+        );
         if (!resolved.supported) {
           return null;
         }
@@ -1523,7 +2103,11 @@
 
       function captureDeviceLocationOnAppLoad() {
         const prefs = window.EchooLocationPlatform.readPreferences();
-        if (Number.isFinite(Number(prefs.lastLat)) && Number.isFinite(Number(prefs.lastLng)) && prefs.locationSupported !== false) {
+        if (
+          Number.isFinite(Number(prefs.lastLat)) &&
+          Number.isFinite(Number(prefs.lastLng)) &&
+          prefs.locationSupported !== false
+        ) {
           preciseLat = Number(prefs.lastLat);
           preciseLng = Number(prefs.lastLng);
           return;
@@ -1534,13 +2118,16 @@
           (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(
+              lat,
+              lng,
+            );
             if (!resolved.supported) {
               window.EchooLocationPlatform.writeLocationState({
                 city: "Toronto",
                 countryCode: "outside_ca",
                 locationSupported: false,
-                locationReason: resolved.reason
+                locationReason: resolved.reason,
               });
               return;
             }
@@ -1555,11 +2142,11 @@
               locationSupported: true,
               locationPrecision: "gps",
               lastLat: lat,
-              lastLng: lng
+              lastLng: lng,
             });
           },
           () => {},
-          { enableHighAccuracy: true, timeout: 6000, maximumAge: 300000 }
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 300000 },
         );
       }
 
@@ -1570,6 +2157,128 @@
         return new Promise((r) => setTimeout(r, ms));
       }
 
+      function fallbackCuratedStops(numStops) {
+        const currentEnergy = energy === "hype" ? "hype" : "chill";
+        const cityDb = curationDb[city] || curationDb["Toronto"];
+        const pool = cityDb[currentEnergy] || cityDb["chill"];
+        return pool.slice(0, numStops);
+      }
+
+      async function presentSmartPlan(
+        queryText,
+        maxStops = 4,
+        mode = "build_plan",
+        typingAlreadyVisible = false,
+      ) {
+        if (!typingAlreadyVisible) addTyping();
+        await delay(700);
+
+        const planResult = await requestSmartPlan(maxStops, queryText, mode);
+        const desiredStops =
+          planResult.payload?.planShape?.stopCount ||
+          Math.min(maxStops, Math.max(1, planResult.stops.length || 2));
+        const smartStops = planResult.stops;
+        const liveStops =
+          smartStops.length >= desiredStops
+            ? smartStops
+            : await fetchPreciseNearby(desiredStops);
+        const stops =
+          liveStops.length >= desiredStops
+            ? liveStops.slice(0, desiredStops)
+            : fallbackCuratedStops(desiredStops);
+        const usePreciseBase =
+          Number.isFinite(preciseLat) && Number.isFinite(preciseLng);
+        const preciseStops =
+          usePreciseBase && liveStops.length < desiredStops
+            ? stops.map((stop, index) => ({
+                ...stop,
+                coords: [
+                  preciseLat + (index + 1) * 0.0025,
+                  preciseLng + (index % 2 === 0 ? -0.0022 : 0.0022),
+                ],
+                tags: `${stop.tags} · near your verified location`,
+              }))
+            : stops;
+
+        removeTyping();
+
+        const ai = planResult.payload?.ai;
+        const intro =
+          ai?.assistantMessage ||
+          (mode === "surprise"
+            ? `Here is the move: a ${energy}, ${budget} surprise in ${city} that still fits your profile.`
+            : `I built this around "${queryText}". It is direct, local, and tuned to your ${energy} pace.`);
+        addBubble("ai", intro);
+        await delay(350);
+
+        for (let i = 0; i < preciseStops.length; i++) {
+          const stop = preciseStops[i];
+          addLocationCard(
+            stop.img,
+            stop.img,
+            stop.name,
+            `${stop.tags} · ${budget}`,
+            stop.timing ? `${stop.vibe} ${stop.timing}` : stop.vibe,
+            i === 0,
+            stop.detailId,
+          );
+
+          if (i < preciseStops.length - 1) {
+            await delay(280);
+            const minutes = usePreciseBase ? (i + 1) * 5 + 3 : (i + 1) * 6 + 4;
+            const distance = usePreciseBase
+              ? (i + 1) * 350 + 150
+              : (i + 1) * 450 + 200;
+            addTrack(`${minutes} min · ${distance}m walk`);
+          }
+          await delay(360);
+        }
+
+        const summary = planResult.payload?.summary || ai?.routeTitle;
+        if (summary) {
+          addBubble("ai", summary);
+          await delay(180);
+        }
+
+        addSeeRouteButton(preciseStops);
+        await delay(200);
+        addPills(
+          ai?.suggestedPills?.length
+            ? ai.suggestedPills
+            : ["Make it cheaper", "Show me something else", "Clear route"],
+        );
+      }
+
+      let pendingBudgetIntent = null;
+
+      function budgetFromLabel(text) {
+        if (/free|cheap|\$/.test(text) && !/\$\$/.test(text)) return "$";
+        if (/special|premium|splurge|\$\$\$/.test(text)) return "$$$";
+        if (/mid|comfortable|reasonable|\$\$/.test(text)) return "$$";
+        return "";
+      }
+
+      function askBudgetBeforeSurprise(queryText, userLabel = "Surprise me") {
+        chatBody.innerHTML = "";
+        pendingBudgetIntent = { query: queryText, mode: "surprise" };
+        addBubble("user", userLabel);
+        addBubble(
+          "ai",
+          "Before I surprise you, what budget should I respect for this outing?",
+        );
+        addPills([
+          "Keep it free or cheap",
+          "Comfortable mid-range",
+          "Make it special",
+        ]);
+      }
+
+      function isEchooSupportedRequest(text) {
+        return /plan|food|eat|drink|restaurant|bar|coffee|movie|cinema|show|event|ticket|date|hotel|stay|near|nearby|music|concert|culture|gallery|museum|route|budget|cheap|premium|surprise|bored|friends|group|tonight|today|weekend|morning|afternoon|evening|late/i.test(
+          text,
+        );
+      }
+
       async function runConversation(userText) {
         // Clear chat body
         chatBody.innerHTML = "";
@@ -1577,14 +2286,35 @@
         // If starting fresh (opening default chat window)
         if (!userText) {
           activityContext = getActivityContext();
-          addBubble("ai", `hey there. i can build something that fits ${activityContext.label} in ${city}, check local showtimes, or recommend food nearby.`);
+          addBubble(
+            "ai",
+            `hey there. i can build something that fits ${activityContext.label} in ${city}, check local showtimes, or recommend food nearby.`,
+          );
           addPills(["Build my plan", "Recommend food", "Show movie times"]);
           return;
         }
 
         // Heuristically check if this is an itinerary / routing request
         const textLower = userText.toLowerCase();
-        const isPlanRequest = textLower.includes("plan") || textLower.includes("today") || textLower.includes("tonight") || textLower.includes("night") || textLower.includes("near me") || textLower.includes("house") || textLower.includes("vibe") || textLower.includes("out") || textLower.includes("morning") || textLower.includes("lunch") || textLower.includes("afternoon") || textLower.includes("evening");
+        const isPlanRequest =
+          textLower.includes("plan") ||
+          textLower.includes("today") ||
+          textLower.includes("tonight") ||
+          textLower.includes("night") ||
+          textLower.includes("near me") ||
+          textLower.includes("house") ||
+          textLower.includes("vibe") ||
+          textLower.includes("out") ||
+          textLower.includes("morning") ||
+          textLower.includes("lunch") ||
+          textLower.includes("afternoon") ||
+          textLower.includes("evening");
+        const isSurpriseRequest = /surprise|bored|get out/.test(textLower);
+
+        if (isSurpriseRequest) {
+          askBudgetBeforeSurprise(userText, "Surprise me");
+          return;
+        }
 
         // Add user bubble
         addBubble("user", userText);
@@ -1592,23 +2322,24 @@
         addTyping();
 
         if (isPlanRequest) {
-          await delay(600);
-          removeTyping();
           const locationState = window.EchooLocationPlatform.readPreferences();
           if (locationState.locationSupported === false) {
-            addBubble("ai", "Echoo is launching live planning in Canada first. You can preview the app, but real near-me routing and checkout unlock only while you are in Canada.");
-          } else if (Number.isFinite(preciseLat) && Number.isFinite(preciseLng)) {
-            addBubble("ai", `location is already set for ${city}. how many stops should I build?`);
+            removeTyping();
+            addBubble(
+              "ai",
+              "Echoo is launching live planning in Canada first. You can preview the app, but real near-me routing and checkout unlock only while you are in Canada.",
+            );
           } else {
-            addBubble("ai", `using ${city} as your base. how many stops should I build?`);
+            await presentSmartPlan(userText, 4, "build_plan", true);
           }
-          
-          addPills(["Single Stop", "2-Stop Flow", "3-Stop Flow", "Custom Flow"]);
         } else {
           // General question response
           await delay(800);
           removeTyping();
-          addBubble("ai", `noted! let me see what aligns with your ${energy} vibe and ${budget} budget preferences in ${city}.`);
+          addBubble(
+            "ai",
+            "I can help with Echoo planning only: local plans, events, food, movies, tickets, date routes, stays, and nearby culture. Give me one of those and I’ll build something useful.",
+          );
           await delay(400);
           addPills(["Build my plan", "Recommend food", "Show movie times"]);
         }
@@ -1627,13 +2358,90 @@
         await delay(400);
         addTyping();
 
+        const selectedBudget = budgetFromLabel(text);
+        if (pendingBudgetIntent && selectedBudget) {
+          setBudgetPreference(selectedBudget);
+          const intent = pendingBudgetIntent;
+          pendingBudgetIntent = null;
+          await presentSmartPlan(
+            `${intent.query} budget ${selectedBudget}`,
+            4,
+            intent.mode,
+            true,
+          );
+          pillBusy = false;
+          return;
+        }
+
+        if (/make it cheaper/i.test(text)) {
+          setBudgetPreference("$");
+          await presentSmartPlan(
+            `${activityContext.defaultQuery} make it cheaper`,
+            4,
+            "build_plan",
+            true,
+          );
+          pillBusy = false;
+          return;
+        }
+
+        if (/show me something else/i.test(text)) {
+          await presentSmartPlan(
+            `${activityContext.defaultQuery} show me a different angle`,
+            4,
+            "surprise",
+            true,
+          );
+          pillBusy = false;
+          return;
+        }
+
+        if (
+          /add a second stop|add a third stop|make it one stop|make it shorter/i.test(
+            text,
+          )
+        ) {
+          const maxStops = /one stop|shorter/i.test(text)
+            ? 1
+            : /third/i.test(text)
+              ? 3
+              : 2;
+          await presentSmartPlan(
+            `${activityContext.defaultQuery} ${text}`,
+            maxStops,
+            "build_plan",
+            true,
+          );
+          pillBusy = false;
+          return;
+        }
+
+        if (/add food nearby/i.test(text)) {
+          await presentSmartPlan(
+            `${activityContext.defaultQuery} add food nearby`,
+            3,
+            "food",
+            true,
+          );
+          pillBusy = false;
+          return;
+        }
+
         // Handle flows lengths
-        if (text === "Single Stop" || text === "2-Stop Flow" || text === "3-Stop Flow" || text === "Custom Flow") {
+        if (
+          text === "Single Stop" ||
+          text === "2-Stop Flow" ||
+          text === "3-Stop Flow" ||
+          text === "Custom Flow"
+        ) {
           await delay(1000);
           removeTyping();
 
           if (text === "Custom Flow") {
-            addBubble("ai", "sounds good. tell me exactly what you're in the mood for (e.g. 'sports game to a bar and a restaurant') and I'll chain it.");
+            addBubble(
+              "ai",
+              "sounds good. tell me exactly what you're in the mood for (e.g. 'sports game to a bar and a restaurant') and I'll chain it.",
+            );
             pillBusy = false;
             return;
           }
@@ -1642,25 +2450,36 @@
           const currentEnergy = energy === "hype" ? "hype" : "chill";
           const cityDb = curationDb[city] || curationDb["Toronto"];
           const pool = cityDb[currentEnergy] || cityDb["chill"];
-          
+
           let numStops = 1;
           if (text === "2-Stop Flow") numStops = 2;
           if (text === "3-Stop Flow") numStops = 3;
 
-          const smartStops = await fetchSmartPlan(numStops, `${activityContext.defaultQuery} ${currentEnergy} ${budget}`);
-          const liveStops = smartStops.length >= numStops ? smartStops : await fetchPreciseNearby(numStops);
-          const stops = liveStops.length >= numStops ? liveStops.slice(0, numStops) : pool.slice(0, numStops);
-          const usePreciseBase = Number.isFinite(preciseLat) && Number.isFinite(preciseLng);
-          const preciseStops = usePreciseBase && liveStops.length < numStops
-            ? stops.map((stop, index) => ({
-                ...stop,
-                coords: [
-                  preciseLat + (index + 1) * 0.0025,
-                  preciseLng + (index % 2 === 0 ? -0.0022 : 0.0022)
-                ],
-                tags: `${stop.tags} · near your verified location`
-              }))
-            : stops;
+          const smartStops = await fetchSmartPlan(
+            numStops,
+            `${activityContext.defaultQuery} ${currentEnergy} ${budget}`,
+          );
+          const liveStops =
+            smartStops.length >= numStops
+              ? smartStops
+              : await fetchPreciseNearby(numStops);
+          const stops =
+            liveStops.length >= numStops
+              ? liveStops.slice(0, numStops)
+              : pool.slice(0, numStops);
+          const usePreciseBase =
+            Number.isFinite(preciseLat) && Number.isFinite(preciseLng);
+          const preciseStops =
+            usePreciseBase && liveStops.length < numStops
+              ? stops.map((stop, index) => ({
+                  ...stop,
+                  coords: [
+                    preciseLat + (index + 1) * 0.0025,
+                    preciseLng + (index % 2 === 0 ? -0.0022 : 0.0022),
+                  ],
+                  tags: `${stop.tags} · near your verified location`,
+                }))
+              : stops;
 
           // Render stops in chat
           for (let i = 0; i < preciseStops.length; i++) {
@@ -1672,14 +2491,18 @@
               `${stop.tags} · ${budget}`,
               stop.vibe,
               i === 0,
-              stop.detailId
+              stop.detailId,
             );
 
             // Add dashed connecting track if not the last stop
             if (i < preciseStops.length - 1) {
               await delay(300);
-              const minutes = usePreciseBase ? (i + 1) * 5 + 3 : (i + 1) * 6 + 4;
-              const distance = usePreciseBase ? (i + 1) * 350 + 150 : (i + 1) * 450 + 200;
+              const minutes = usePreciseBase
+                ? (i + 1) * 5 + 3
+                : (i + 1) * 6 + 4;
+              const distance = usePreciseBase
+                ? (i + 1) * 350 + 150
+                : (i + 1) * 450 + 200;
               addTrack(`${minutes} min · ${distance}m walk`);
             }
             await delay(400);
@@ -1703,32 +2526,59 @@
           addSeeRouteButton(preciseStops);
           await delay(200);
 
-          addPills(["Make it cheaper", "Show me something else", "Clear route"]);
+          addPills([
+            "Make it cheaper",
+            "Show me something else",
+            "Clear route",
+          ]);
         } else if (text === "Build my plan") {
           removeTyping();
           runConversation(activityContext.defaultQuery);
         } else if (text === "Recommend food") {
           await delay(1000);
           removeTyping();
-          addBubble("ai", `here's a highly recommended spot in ${city} matching your budget:`);
+          addBubble(
+            "ai",
+            `here's a highly recommended spot in ${city} matching your budget:`,
+          );
           const cityDb = curationDb[city] || curationDb["Toronto"];
           const spot = cityDb["chill"][1]; // select dining/food stop
-          addLocationCard(spot.img, spot.img, spot.name, spot.tags, spot.vibe, true);
+          addLocationCard(
+            spot.img,
+            spot.img,
+            spot.name,
+            spot.tags,
+            spot.vibe,
+            true,
+          );
           await delay(400);
           addPills(["Build my plan", "Show movie times"]);
         } else if (text === "Show movie times") {
           await delay(1000);
           removeTyping();
-          addBubble("ai", `TIFF Lightbox in ${city} has screenings available today. Would you like to chain one into a flow?`);
+          addBubble(
+            "ai",
+            `TIFF Lightbox in ${city} has screenings available today. Would you like to chain one into a flow?`,
+          );
           await delay(400);
           addPills(["Build my plan", "Recommend food"]);
         } else if (text === "Make it cheaper") {
           await delay(1000);
           removeTyping();
-          addBubble("ai", `i've adjusted the budget. here's a cheaper alternative that keeps the same vibe:`);
+          addBubble(
+            "ai",
+            `i've adjusted the budget. here's a cheaper alternative that keeps the same vibe:`,
+          );
           const cityDb = curationDb[city] || curationDb["Toronto"];
           const spot = cityDb["chill"][0];
-          addLocationCard(spot.img, spot.img, spot.name, `${spot.tags} · $`, "No cover fee, cheap drinks, cozy entry", false);
+          addLocationCard(
+            spot.img,
+            spot.img,
+            spot.name,
+            `${spot.tags} · $`,
+            "No cover fee, cheap drinks, cozy entry",
+            false,
+          );
           await delay(400);
           addPills(["Build my plan", "Clear route"]);
         } else if (text === "Clear route") {
@@ -1753,11 +2603,23 @@
         addBubble("user", text);
         await delay(500);
         addTyping();
-        await delay(1100);
-        removeTyping();
-        addBubble("ai", "noted. let me pull something that fits that a little better.");
-        await delay(400);
-        addPills(["Build my plan", "Recommend food"]);
+        if (!isEchooSupportedRequest(text)) {
+          await delay(700);
+          removeTyping();
+          addBubble(
+            "ai",
+            "I can only help inside Echoo’s lane: plans, events, food, movies, tickets, date routes, stays, and nearby culture.",
+          );
+          await delay(300);
+          addPills(["Build my plan", "Recommend food", "Show movie times"]);
+          return;
+        }
+        await presentSmartPlan(
+          text,
+          4,
+          /surprise|bored|get out/i.test(text) ? "surprise" : "build_plan",
+          true,
+        );
       }
 
       /* ── Chat input submit ── */
@@ -1770,18 +2632,28 @@
 
       chatSend.addEventListener("click", handleChatSend);
       chatInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") { e.preventDefault(); handleChatSend(); }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleChatSend();
+        }
       });
 
       /* ── Form / button triggers ── */
       document.getElementById("plan-form").addEventListener("submit", (e) => {
         e.preventDefault();
-        const q = document.getElementById("plan-query").value.trim() || activityContext.defaultQuery;
+        const q =
+          document.getElementById("plan-query").value.trim() ||
+          activityContext.defaultQuery;
         openChat(q);
       });
 
       document.getElementById("surprise").addEventListener("click", () => {
-        openChat("honestly just need to get out of the house");
+        overlay.classList.add("open");
+        document.body.classList.add("chat-open");
+        askBudgetBeforeSurprise(
+          "honestly just need to get out of the house",
+          "Surprise me",
+        );
       });
 
       /* ── Nav plan link ── */

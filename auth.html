@@ -215,6 +215,18 @@
         font-weight: 750;
       }
 
+      .auth-status {
+        min-height: 20px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        line-height: 1.4;
+      }
+
+      .auth-status.error {
+        color: #ffb4a8;
+      }
+
       .submit,
       .provider {
         min-height: 58px;
@@ -697,8 +709,10 @@
             <label for="email">Email</label>
             <input
               id="email"
+              type="email"
               autocomplete="email"
               placeholder="name@example.com"
+              required
             />
           </div>
           <div class="field">
@@ -708,12 +722,15 @@
               type="password"
               autocomplete="current-password"
               placeholder="Password"
+              minlength="6"
+              required
             />
           </div>
           <div class="meta">
             <span>Secured by Echoo</span>
             <a href="#">Need help?</a>
           </div>
+          <div class="auth-status" id="auth-status" role="status"></div>
           <button class="submit" type="submit" id="submit-label">
             Open my city
           </button>
@@ -746,6 +763,8 @@
     </main>
 
     <script src="assets/location-platform.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener("beforeunload", () => {
@@ -763,12 +782,25 @@
         );
       });
 
+      const authParams = new URLSearchParams(window.location.search);
+      const redirectTarget = window.EchooAuth
+        ? window.EchooAuth.normalizeNext(authParams.get("next"), "app.html")
+        : "app.html";
+      const redirectParams = new URL(
+        redirectTarget,
+        window.location.href,
+      ).searchParams;
+      const preferredMode = authParams.get("mode");
+      let initialStoredPrefs = {};
+
       // Check stored preference for pre-detected city
       let preDetectedCity = "Toronto";
       try {
         const stored = localStorage.getItem("echoo_preferences");
         if (stored) {
-          preDetectedCity = JSON.parse(stored).city || "Toronto";
+          initialStoredPrefs = JSON.parse(stored);
+          preDetectedCity =
+            redirectParams.get("city") || initialStoredPrefs.city || "Toronto";
         }
       } catch (e) {}
       preDetectedCity =
@@ -787,14 +819,14 @@
         customEventStyle: "",
         customAudience: "",
         customMotivation: "",
-        budget: "$",
-        energy: "chill",
-        city: preDetectedCity,
-        gender: "Prefer not to say",
-        dob: "",
-        tone: "direct",
-        userName: "",
-        userEmail: "",
+        budget: redirectParams.get("budget") || initialStoredPrefs.budget || "$",
+        energy: initialStoredPrefs.energy || "chill",
+        city: redirectParams.get("city") || preDetectedCity,
+        gender: initialStoredPrefs.gender || "Prefer not to say",
+        dob: initialStoredPrefs.dob || "",
+        tone: initialStoredPrefs.tone || "direct",
+        userName: initialStoredPrefs.name || "",
+        userEmail: initialStoredPrefs.email || "",
       };
 
       /* ---- DOM refs ---- */
@@ -805,6 +837,10 @@
       const signInTab = document.getElementById("signin-tab");
       const signUpTab = document.getElementById("signup-tab");
       const submitLabel = document.getElementById("submit-label");
+      const authStatus = document.getElementById("auth-status");
+      const nameInput = document.getElementById("name");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
       const obTitle = document.getElementById("ob-title");
       const obSub = document.getElementById("ob-sub");
       const obNext = document.getElementById("ob-next");
@@ -813,6 +849,47 @@
       let obBars = [];
       let obSteps = [];
       let cityInput;
+
+      if (state.userName) nameInput.value = state.userName;
+      if (state.userEmail) emailInput.value = state.userEmail;
+
+      function setStatus(message = "", isError = false) {
+        authStatus.textContent = message;
+        authStatus.classList.toggle("error", Boolean(isError));
+      }
+
+      function setBusy(isBusy, label) {
+        submitLabel.disabled = isBusy;
+        obNext.disabled = isBusy;
+        document
+          .querySelectorAll("[data-provider]")
+          .forEach((button) => (button.disabled = isBusy));
+        if (label) submitLabel.textContent = label;
+        else submitLabel.textContent =
+          state.mode === "signup" ? COPY.signup.btn : COPY.signin.btn;
+      }
+
+      function authRedirectForProvider() {
+        const url = new URL("auth.html", window.location.href);
+        url.searchParams.set("next", redirectTarget);
+        url.searchParams.set("mode", "signup");
+        return url.toString();
+      }
+
+      function redirectAfterAuth(preferences = {}) {
+        if (preferences && window.EchooAuth) {
+          window.EchooAuth.writeLocalPreferences(preferences);
+        }
+        const target = new URL(redirectTarget, window.location.href);
+        if (preferences.city && !target.searchParams.has("city")) {
+          target.searchParams.set("city", preferences.city);
+        }
+        if (preferences.budget && !target.searchParams.has("budget")) {
+          target.searchParams.set("budget", preferences.budget);
+        }
+        const file = target.pathname.split("/").pop() || "app.html";
+        window.location.href = `${file}${target.search}${target.hash}`;
+      }
 
       /* ---- Copy maps ---- */
       const COPY = {
@@ -1226,6 +1303,10 @@
         title.textContent = c.title;
         copy.textContent = c.sub;
         submitLabel.textContent = c.btn;
+        passwordInput.autocomplete = joining
+          ? "new-password"
+          : "current-password";
+        setStatus("");
       }
 
       signInTab.addEventListener("click", () => setMode("signin"));
@@ -1234,17 +1315,52 @@
       /* ---- Auth submit ---- */
       function captureUser(providerName) {
         state.userName =
-          document.getElementById("name").value.trim() || providerName || "";
-        state.userEmail = document.getElementById("email").value.trim();
+          nameInput.value.trim() ||
+          providerName ||
+          emailInput.value.trim().split("@")[0] ||
+          "";
+        state.userEmail = emailInput.value.trim();
       }
 
-      function finishSignIn(providerName) {
-        const name =
-          document.getElementById("name").value.trim() ||
-          providerName ||
-          "User";
-        const email = document.getElementById("email").value.trim();
-        window.location.href = `app.html?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
+      async function finishSignIn() {
+        if (!window.EchooAuth?.client) {
+          setStatus("Supabase auth is not available on this page.", true);
+          return;
+        }
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        if (!email || !password) {
+          setStatus("Use your email and password to continue.", true);
+          return;
+        }
+
+        setBusy(true, "Opening...");
+        setStatus("Checking your Echoo account...");
+        try {
+          const { data, error } =
+            await window.EchooAuth.client.auth.signInWithPassword({
+              email,
+              password,
+            });
+          if (error) throw error;
+          state.userName =
+            data.user?.user_metadata?.display_name ||
+            email.split("@")[0] ||
+            "User";
+          state.userEmail = data.user?.email || email;
+
+          const profileState = await window.EchooAuth.loadOnboardingProfile();
+          if (profileState.ok) {
+            redirectAfterAuth(profileState.preferences);
+            return;
+          }
+          setStatus("Finish your Echoo personality once, then it stays with your account.");
+          startOnboarding("");
+        } catch (error) {
+          setStatus(error.message || "Could not sign in.", true);
+        } finally {
+          setBusy(false);
+        }
       }
 
       function startOnboarding(providerName) {
@@ -1257,23 +1373,81 @@
         }, 240);
       }
 
+      async function startSignup() {
+        if (!window.EchooAuth?.client) {
+          setStatus("Supabase auth is not available on this page.", true);
+          return;
+        }
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const displayName =
+          nameInput.value.trim() || email.split("@")[0] || "Echoo User";
+        if (!email || !password) {
+          setStatus("Add an email and password to create your free account.", true);
+          return;
+        }
+
+        setBusy(true, "Creating...");
+        setStatus("Creating your free Echoo account...");
+        try {
+          const { data, error } = await window.EchooAuth.client.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { display_name: displayName },
+              emailRedirectTo: authRedirectForProvider(),
+            },
+          });
+          if (error) throw error;
+
+          let session = data.session;
+          if (!session) {
+            const signIn = await window.EchooAuth.client.auth.signInWithPassword(
+              { email, password },
+            );
+            if (signIn.error) {
+              throw new Error(
+                "The account was created, but Supabase email confirmation is still enabled for this project. Disable email confirmations so signup opens immediately.",
+              );
+            }
+            session = signIn.data.session;
+          }
+
+          state.userName = displayName;
+          state.userEmail = data.user?.email || email;
+          setStatus("Account ready. Now choose the signals Echoo should remember.");
+          startOnboarding("");
+        } catch (error) {
+          setStatus(error.message || "Could not create your account.", true);
+        } finally {
+          setBusy(false);
+        }
+      }
+
       document.getElementById("auth-form").addEventListener("submit", (e) => {
         e.preventDefault();
         if (state.mode === "signup") {
-          startOnboarding("");
+          startSignup();
         } else {
-          finishSignIn("");
+          finishSignIn();
         }
       });
 
       document.querySelectorAll("[data-provider]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const prov = btn.dataset.provider + " User";
-          if (state.mode === "signup") {
-            startOnboarding(prov);
-          } else {
-            finishSignIn(prov);
+        btn.addEventListener("click", async () => {
+          if (!window.EchooAuth?.client) {
+            setStatus("Supabase auth is not available on this page.", true);
+            return;
           }
+          const provider = btn.dataset.provider.toLowerCase();
+          setStatus(`Opening ${btn.dataset.provider} sign in...`);
+          const { error } = await window.EchooAuth.client.auth.signInWithOAuth({
+            provider,
+            options: {
+              redirectTo: authRedirectForProvider(),
+            },
+          });
+          if (error) setStatus(error.message, true);
         });
       });
 
@@ -1394,7 +1568,7 @@
       renderOnboardingUI();
 
       /* ---- Finish onboarding ---- */
-      function finishOnboarding() {
+      async function finishOnboarding() {
         const name = state.userName || "User";
         const email = state.userEmail;
         const customInterest = state.customInterest
@@ -1456,17 +1630,57 @@
         };
         localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
 
-        const params = new URLSearchParams({
-          name,
-          email,
-          vibes,
-          budget,
-          energy,
-          city,
-          tone,
-        });
-        window.location.href = `app.html?${params.toString()}`;
+        setStatus("Saving your Echoo personality...");
+        obNext.disabled = true;
+        try {
+          const saved = await window.EchooAuth.saveOnboardingProfile({
+            ...prefs,
+            source: "web_onboarding",
+          });
+          redirectAfterAuth(saved.preferences || prefs);
+        } catch (error) {
+          obNext.disabled = false;
+          setStatus(
+            error.message ||
+              "Could not save onboarding. Please try again so Echoo can remember this profile.",
+            true,
+          );
+        }
       }
+
+      async function bootAuthPage() {
+        if (preferredMode === "signup" || authParams.has("next")) {
+          setMode("signup");
+        } else {
+          setMode("signin");
+        }
+        if (!window.EchooAuth?.client) {
+          setStatus("Supabase auth is not available on this page.", true);
+          return;
+        }
+        const profileState = await window.EchooAuth.loadOnboardingProfile();
+        if (!profileState.session?.user) return;
+
+        state.userName =
+          profileState.preferences?.name ||
+          profileState.user.user_metadata?.display_name ||
+          profileState.user.email?.split("@")[0] ||
+          "User";
+        state.userEmail =
+          profileState.preferences?.email || profileState.user.email || "";
+        if (state.userName) nameInput.value = state.userName;
+        if (state.userEmail) emailInput.value = state.userEmail;
+
+        if (profileState.ok) {
+          setStatus("You are signed in. Opening Echoo...");
+          redirectAfterAuth(profileState.preferences);
+          return;
+        }
+        setStatus("Finish onboarding to unlock Echoo planning.");
+        startOnboarding("");
+      }
+
+      bootAuthPage();
     </script>
   </body>
 </html>

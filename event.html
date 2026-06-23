@@ -149,6 +149,8 @@
     <main>
       <section id="event-root" class="grid"><div class="empty">Loading event...</div></section>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
     <script>
       const CONFIG = {
         anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
@@ -178,6 +180,12 @@
         return { "Content-Type": "application/json", "Authorization": `Bearer ${CONFIG.anonKey}`, "apikey": CONFIG.anonKey };
       }
 
+      async function plannerHeaders() {
+        return window.EchooAuth
+          ? await window.EchooAuth.authHeaders({ "Content-Type": "application/json" })
+          : headers();
+      }
+
       function escapeHtml(value) {
         return String(value ?? "").replace(/[&<>"']/g, (character) => ({
           "&": "&amp;",
@@ -202,9 +210,19 @@
         const box = document.getElementById("related-plans");
         if (!box || !Number.isFinite(Number(event.latitude)) || !Number.isFinite(Number(event.longitude))) return;
         try {
+          const authState = window.EchooAuth
+            ? await window.EchooAuth.requireOnboarding({ redirect: false })
+            : { ok: true };
+          if (authState && authState.ok === false) {
+            const next = window.EchooAuth
+              ? encodeURIComponent(window.EchooAuth.currentRelativeUrl())
+              : "app.html";
+            box.innerHTML = `<div class="empty"><a href="auth.html?next=${next}&mode=signup">Sign up to see AI-matched nearby plans.</a></div>`;
+            return;
+          }
           const response = await fetch(CONFIG.planEngineUrl, {
             method: "POST",
-            headers: headers(),
+            headers: await plannerHeaders(),
             body: JSON.stringify({ lat: Number(event.latitude), lng: Number(event.longitude), query: `before or after ${event.category} near ${event.venue_name}`, limit: 3 })
           });
           const json = await response.json();
