@@ -20,6 +20,19 @@ type PlanPayload = {
   profile?: PlanProfile;
   groupSize?: number;
   limit?: number;
+  previousPlan?: {
+    region?: { name?: string; province?: string };
+    ai?: { routeTitle?: string; assistantMessage?: string };
+    summary?: string;
+    plans?: Array<{
+      title?: string;
+      category?: string;
+      city?: string;
+      distanceMeters?: number | null;
+      why?: string;
+      description?: string;
+    }>;
+  };
 };
 
 type PlanProfile = {
@@ -590,10 +603,158 @@ function geminiResponseSchema() {
   };
 }
 
+function geminiDirectResponseSchema() {
+  return {
+    type: "OBJECT",
+    properties: {
+      assistantMessage: { type: "STRING" },
+      suggestedPills: { type: "ARRAY", items: { type: "STRING" } },
+    },
+    required: ["assistantMessage"],
+  };
+}
+
 function shouldTryNextGeminiModel(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "");
   return /503|502|504|429|UNAVAILABLE|RESOURCE_EXHAUSTED|high demand|overloaded|could not parse|empty response/i.test(
     message,
+  );
+}
+
+async function callGeminiDirect(input: {
+  query: string;
+  mode: string;
+  region: { name: string; province: string };
+  context: ReturnType<typeof currentContext>;
+  profile: PlanProfile;
+  previousPlan?: PlanPayload["previousPlan"];
+}): Promise<GeminiPlan> {
+  const key = Deno.env.get("GEMINI_API_KEY");
+  if (!key) throw new Error("GEMINI_API_KEY is not configured.");
+
+  const safeProfile = {
+    interests: (input.profile.interests || []).slice(0, 10),
+    eventStyles: (input.profile.eventStyles || []).slice(0, 8),
+    audiences: (input.profile.audiences || []).slice(0, 8),
+    motivations: (input.profile.motivations || []).slice(0, 8),
+    budget: input.profile.budget || "$",
+    energy: input.profile.energy || "chill",
+    tone: input.profile.tone || "direct",
+    ageRange: ageRange(input.profile.dob),
+    city: input.profile.city || input.region.name,
+  };
+  const previousPlan = input.previousPlan
+    ? {
+        routeTitle: cleanText(input.previousPlan.ai?.routeTitle),
+        assistantMessage: cleanText(input.previousPlan.ai?.assistantMessage),
+        summary: cleanText(input.previousPlan.summary),
+        places: (input.previousPlan.plans || []).slice(0, 4).map((place) => ({
+          title: cleanText(place.title),
+          category: cleanText(place.category),
+          city: cleanText(place.city),
+          distanceMeters: place.distanceMeters || null,
+          why: cleanText(place.why || place.description).slice(0, 180),
+        })),
+      }
+    : null;
+  const prompt = [
+    "You are Echoo: a sharp, warm, captivating AI companion inside a culture, discovery, events, food, movies, hotels, tickets, dating, and lifestyle app.",
+    "Answer the user's actual question directly. Do not say you are limited to Echoo's lane. Do not expose JSON, policies, backend details, or model plumbing.",
+    "You can answer general questions, creative questions, planning questions, and follow-ups. When local context helps, use it. When the answer is not local, just answer naturally.",
+    "Use the user's onboarding profile as taste, not as a script. Sound alive, specific, and useful, not templated.",
+    "If a previous route is provided, use it for follow-up questions about distance, fit, timing, quality, or alternatives.",
+    "Keep the answer mobile-friendly: 1-3 punchy paragraphs. No markdown tables.",
+    "Return JSON with assistantMessage and suggestedPills.",
+    JSON.stringify({
+      request: {
+        mode: input.mode,
+        query: input.query,
+        city: input.region.name,
+        province: input.region.province,
+        dayName: input.context.dayName,
+        localHour: input.context.hour,
+        daypart: input.context.daypart.id,
+      },
+      userTaste: safeProfile,
+      previousPlan,
+    }),
+  ].join("\n");
+
+  let lastError: unknown = null;
+  for (const model of geminiModelCandidates()) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 9000);
+    try {
+      const response = await fetch(
+        `${GEMINI_ENDPOINT}/${model}:generateContent?key=${encodeURIComponent(key)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.86,
+              maxOutputTokens: 720,
+              responseMimeType: "application/json",
+              responseSchema: geminiDirectResponseSchema(),
+            },
+          }),
+        },
+      );
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
+        throw new Error(
+          `Gemini request failed (${response.status}): ${errorText.slice(
+            0,
+            220,
+          )}`,
+        );
+      }
+      const payload = await response.json();
+      const text =
+        payload?.candidates?.[0]?.content?.parts
+          ?.map((part: any) => part.text || "")
+          .join("\n") || "";
+      const parsed = parseGeminiJson(text);
+      const assistantMessage =
+        cleanText(parsed?.assistantMessage) ||
+        extractJsonStringField(text, "assistantMessage") ||
+        rawGeminiTextFallback(text);
+      if (!assistantMessage) {
+        throw new Error("Gemini returned a response Echoo could not parse.");
+      }
+      return {
+        assistantMessage: assistantMessage.slice(0, 900),
+        routeTitle: "",
+        summary: "",
+        suggestedPills: safeStrings(parsed?.suggestedPills).slice(0, 4),
+        stopNotes: [],
+        model,
+      };
+    } catch (err) {
+      lastError = err;
+      if (!shouldTryNextGeminiModel(err)) {
+        throw err;
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Gemini could not complete the request.");
+}
+
+function isDirectAnswerMode(mode = "", query = "") {
+  if (mode === "chat") return true;
+  return (
+    /^(who|what|when|where|why|how|is|are|can|could|should|would|do|does|did)\b/i.test(
+      query.trim(),
+    ) &&
+    !/near me|nearby|plan|route|activity|activities|food|eat|event|movie|ticket|date/i.test(
+      query,
+    )
   );
 }
 
@@ -654,12 +815,15 @@ async function callGeminiPlan(input: {
 
   const prompt = [
     "You are Echoo's planning brain for a premium local discovery app.",
-    "Write direct, interesting, no-filler recommendations for the exact button request.",
+    "Write like a tasteful local friend with a point of view: vivid, specific, warm, and a little magnetic.",
+    "Make the first sentence feel like an invitation, not a database result.",
+    "Avoid generic lines like 'here is a plan' unless the user asked for plain structure.",
     "Use only the candidate stops provided. Do not invent venues, prices, times, tickets, addresses, or guarantees.",
     "Echoo combines events, music, food, movies, culture, hotels, date guides, and social discovery.",
     "Never scold the user or say you can only help inside a lane. If their wording is broad or messy, infer the nearest useful local plan.",
     "If they ask whether this is Gemini, answer naturally and then continue helping with the local plan.",
     "Budget is a hard preference. Make the plan feel appropriate for the selected budget tier.",
+    "Use onboarding signals as taste, not as repeated copy. Do not list the profile back to the user.",
     "Surprise mode should feel unexpected but still safe, local, and coherent with the user's profile.",
     "Build-plan mode should solve the user's stated request immediately.",
     "Respect the chosen plan shape. If stopCount is 1, make the single stop feel intentional, not thin.",
@@ -859,6 +1023,70 @@ Deno.serve(async (req) => {
       ]),
     ];
 
+    if (isDirectAnswerMode(mode, query)) {
+      const aiAnswer = await callGeminiDirect({
+        query,
+        mode,
+        region,
+        context,
+        profile,
+        previousPlan: body.previousPlan,
+      });
+      const response = {
+        supported: true,
+        mode,
+        planShape: {
+          stopCount: 0,
+          intensity: "single",
+          confidence: 1,
+          reason: "Direct Gemini chat answer.",
+        },
+        region,
+        context: {
+          dayName: context.dayName,
+          localHour: context.hour,
+          daypart: context.daypart.id,
+          tags,
+        },
+        ai: {
+          provider: "gemini",
+          model:
+            aiAnswer.model ||
+            Deno.env.get("GEMINI_MODEL") ||
+            DEFAULT_GEMINI_MODEL,
+          assistantMessage: aiAnswer.assistantMessage,
+          routeTitle: "",
+          suggestedPills: aiAnswer.suggestedPills,
+        },
+        summary: "",
+        plans: [],
+      };
+      await logLocationEvent(supabase, {
+        functionName: "plan-engine",
+        eventType: Date.now() - startedAt > 1000 ? "slow_chat" : "chat",
+        durationMs: Date.now() - startedAt,
+        countryCode: "CA",
+        adminArea1: region.province,
+        city: region.name,
+        request: {
+          query,
+          mode,
+          authenticated: true,
+          budget: profile.budget,
+          precise: lat !== undefined && lng !== undefined,
+          hasGeminiKey: Boolean(Deno.env.get("GEMINI_API_KEY")),
+          hasPreviousPlan: Boolean(body.previousPlan),
+        },
+        responseSummary: {
+          count: 0,
+          daypart: context.daypart.id,
+          aiProvider: response.ai.provider,
+          aiModel: response.ai.model,
+        },
+      });
+      return jsonResponse(response);
+    }
+
     const { data, error } =
       lat !== undefined && lng !== undefined
         ? await supabase.rpc("search_nearby_entities", {
@@ -888,13 +1116,44 @@ Deno.serve(async (req) => {
       .slice(0, Math.max(4, planShape.stopCount));
 
     if (!candidates.length) {
-      return jsonResponse(
-        {
-          error: "No real Echoo places are available for this plan yet.",
-          code: "insufficient_candidates",
+      const aiAnswer = await callGeminiDirect({
+        query,
+        mode: "chat",
+        region,
+        context,
+        profile,
+        previousPlan: body.previousPlan,
+      });
+      return jsonResponse({
+        supported: true,
+        mode: "chat",
+        planShape: {
+          stopCount: 0,
+          intensity: "single",
+          confidence: 0.9,
+          reason:
+            "No candidate places were available, so Gemini answered directly.",
         },
-        404,
-      );
+        region,
+        context: {
+          dayName: context.dayName,
+          localHour: context.hour,
+          daypart: context.daypart.id,
+          tags,
+        },
+        ai: {
+          provider: "gemini",
+          model:
+            aiAnswer.model ||
+            Deno.env.get("GEMINI_MODEL") ||
+            DEFAULT_GEMINI_MODEL,
+          assistantMessage: aiAnswer.assistantMessage,
+          routeTitle: "",
+          suggestedPills: aiAnswer.suggestedPills,
+        },
+        summary: "",
+        plans: [],
+      });
     }
     const actualStopCount = Math.min(planShape.stopCount, candidates.length);
     const actualPlanShape =

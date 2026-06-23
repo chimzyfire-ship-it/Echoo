@@ -1899,10 +1899,7 @@
           const parsed = JSON.parse(objectText);
           if (typeof parsed === "string") return parsePossibleAiJson(parsed);
           return (
-            parsed.assistantMessage ||
-            parsed.summary ||
-            parsed.routeTitle ||
-            ""
+            parsed.assistantMessage || parsed.summary || parsed.routeTitle || ""
           );
         } catch (error) {
           const match = source.match(
@@ -2069,6 +2066,16 @@
           budget,
           limit,
           profile: personalizationProfile,
+          previousPlan: lastPlanEnginePayload
+            ? {
+                region: lastPlanEnginePayload.region,
+                ai: lastPlanEnginePayload.ai,
+                summary: lastPlanEnginePayload.summary,
+                plans: Array.isArray(lastPlanEnginePayload.plans)
+                  ? lastPlanEnginePayload.plans.slice(0, 4)
+                  : [],
+              }
+            : null,
         };
         const resolved =
           Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
@@ -2123,7 +2130,7 @@
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
                   apikey: CONFIG.supabaseAnonKey,
-            },
+                },
             body: JSON.stringify(planRequestBody(limit, queryText, mode)),
           });
           const payload = await response.json();
@@ -2157,10 +2164,7 @@
           const stops = mapPlanStops(payload);
           return { payload, stops };
         } catch (error) {
-          console.warn(
-            "Echoo: smart plan engine failed.",
-            error,
-          );
+          console.warn("Echoo: smart plan engine failed.", error);
           return {
             payload: null,
             stops: [],
@@ -2284,13 +2288,19 @@
           planResult.payload?.planShape?.stopCount ||
           Math.min(maxStops, Math.max(1, planResult.stops.length));
         const preciseStops = planResult.stops.slice(0, desiredStops);
+        const ai = planResult.payload?.ai;
         if (!preciseStops.length) {
           removeTyping();
           addBubble(
             "ai",
-            "Echoo AI answered, but there were no real places attached. Try a nearby food, event, movie, or date request.",
+            ai?.assistantMessage ||
+              "I can answer that, but I need one more detail to make it useful.",
           );
-          addPills(["Try food nearby", "Try events tonight", "Start over"]);
+          addPills(
+            ai?.suggestedPills?.length
+              ? ai.suggestedPills
+              : ["Ask another question", "Build a plan", "Surprise me"],
+          );
           return;
         }
         const usePreciseBase =
@@ -2298,7 +2308,6 @@
 
         removeTyping();
 
-        const ai = planResult.payload?.ai;
         addBubble("ai", ai.assistantMessage);
         await delay(350);
 
@@ -2470,7 +2479,7 @@
         await presentSmartPlan(
           text,
           4,
-          /surprise|bored|get out/i.test(text) ? "surprise" : "build_plan",
+          /surprise|bored|get out/i.test(text) ? "surprise" : "chat",
           true,
         );
       }
