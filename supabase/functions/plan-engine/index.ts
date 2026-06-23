@@ -475,6 +475,15 @@ function parseGeminiJson(text: string): GeminiPlan | null {
   }
 }
 
+function titleFromGeminiText(text: string, fallback: string) {
+  const firstLine =
+    text
+      .split(/\n+/)
+      .map((line) => cleanText(line.replace(/^["'{\[]+|[,"'}\]]+$/g, "")))
+      .find(Boolean) || fallback;
+  return firstLine.slice(0, 120);
+}
+
 async function callGeminiPlan(input: {
   query: string;
   mode: string;
@@ -524,7 +533,7 @@ async function callGeminiPlan(input: {
     "Surprise mode should feel unexpected but still safe, local, and coherent with the user's profile.",
     "Build-plan mode should solve the user's stated request immediately.",
     "Respect the chosen plan shape. If stopCount is 1, make the single stop feel intentional, not thin.",
-    "Return strict JSON only with: assistantMessage, routeTitle, summary, suggestedPills, stopNotes.",
+    "Return JSON with: assistantMessage, routeTitle, summary, suggestedPills, stopNotes.",
     "Each stopNotes item must include the candidate id and a why sentence under 120 characters.",
     JSON.stringify({
       request: {
@@ -543,7 +552,7 @@ async function callGeminiPlan(input: {
   ].join("\n");
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 6500);
+  const timeout = setTimeout(() => controller.abort(), 9000);
   try {
     const response = await fetch(
       `${GEMINI_ENDPOINT}/${model}:generateContent?key=${encodeURIComponent(key)}`,
@@ -556,7 +565,6 @@ async function callGeminiPlan(input: {
           generationConfig: {
             temperature: input.mode === "surprise" ? 0.82 : 0.62,
             maxOutputTokens: 900,
-            responseMimeType: "application/json",
           },
         }),
       },
@@ -573,15 +581,25 @@ async function callGeminiPlan(input: {
         ?.map((part: any) => part.text || "")
         .join("\n") || "";
     const parsed = parseGeminiJson(text);
-    if (!parsed || typeof parsed !== "object") {
-      throw new Error("Gemini returned a response Echoo could not parse.");
-    }
+    const assistantFallback = parsed
+      ? cleanText(parsed.summary || parsed.routeTitle || text).slice(0, 520)
+      : cleanText(text).slice(0, 520);
+    if (!assistantFallback) throw new Error("Gemini returned an empty response.");
     const result = {
-      assistantMessage: cleanText(parsed.assistantMessage).slice(0, 520),
-      routeTitle: cleanText(parsed.routeTitle).slice(0, 120),
-      summary: cleanText(parsed.summary).slice(0, 220),
-      suggestedPills: safeStrings(parsed.suggestedPills).slice(0, 4),
-      stopNotes: Array.isArray(parsed.stopNotes)
+      assistantMessage: cleanText(
+        parsed?.assistantMessage,
+        assistantFallback,
+      ).slice(0, 520),
+      routeTitle: cleanText(
+        parsed?.routeTitle,
+        titleFromGeminiText(
+          assistantFallback,
+          `${input.region.name} plan`,
+        ),
+      ).slice(0, 120),
+      summary: cleanText(parsed?.summary, assistantFallback).slice(0, 220),
+      suggestedPills: safeStrings(parsed?.suggestedPills).slice(0, 4),
+      stopNotes: Array.isArray(parsed?.stopNotes)
         ? parsed.stopNotes.slice(0, 6).map((note) => ({
             id: cleanText(note.id),
             title: cleanText(note.title),
@@ -590,12 +608,6 @@ async function callGeminiPlan(input: {
           }))
         : [],
     };
-    if (!result.assistantMessage || !result.routeTitle || !result.summary) {
-      throw new Error("Gemini response was missing required plan copy.");
-    }
-    if (!result.suggestedPills.length) {
-      throw new Error("Gemini response was missing suggested actions.");
-    }
     return result;
   } catch (_err) {
     throw _err;
@@ -827,9 +839,7 @@ Deno.serve(async (req) => {
     const message =
       err instanceof Error ? err.message : "Unknown plan engine error";
     const isGeminiError =
-      /Gemini|GEMINI_API_KEY|response Echoo could not parse|required plan copy|suggested actions/i.test(
-        message,
-      );
+      /Gemini|GEMINI_API_KEY|empty response|request failed/i.test(message);
     await logLocationEvent(supabase, {
       functionName: "plan-engine",
       eventType: isGeminiError ? "gemini_failed" : "plan_failed",
@@ -840,7 +850,7 @@ Deno.serve(async (req) => {
     return jsonResponse(
       {
         error: isGeminiError
-          ? "Echoo AI is not connected cleanly yet."
+          ? "Echoo AI had trouble answering that. Try again in a moment."
           : message,
         code: isGeminiError ? "ai_unavailable" : "plan_failed",
       },

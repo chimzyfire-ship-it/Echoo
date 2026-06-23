@@ -1196,15 +1196,10 @@
             );
             if (!resolved.supported) {
               console.warn(resolved.message);
-              window.EchooLocationPlatform.writeLocationState({
-                city: resolved.fallbackCity.name,
-                countryCode: "outside_ca",
-                locationSupported: false,
-                locationReason: resolved.reason,
-              });
+              updatePageCity(resolved.fallbackCity?.name || "Toronto");
               showCanadaPreviewModal(
-                "Canada launch only",
-                "You can preview Echoo, but live discovery, routing, booking, and checkout are available only in Canada during MVP.",
+                "Using Toronto",
+                "Echoo will use Toronto as your launch city until you choose another Canadian city.",
               );
               return;
             }
@@ -1220,9 +1215,10 @@
           },
           (error) => {
             console.warn("Geolocation failed or denied:", error);
+            updatePageCity("Toronto");
             showCanadaPreviewModal(
-              "Location access needed",
-              "Echoo uses device location to unlock live Canada discovery. You can still choose a launch city manually.",
+              "Using Toronto",
+              "Echoo will use Toronto as your launch city until you choose another Canadian city.",
             );
           },
           { timeout: 8000 },

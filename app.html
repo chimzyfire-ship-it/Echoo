@@ -2105,7 +2105,9 @@
             return {
               payload,
               stops: [],
-              error: "Echoo AI did not return a Gemini response.",
+              error:
+                payload?.error ||
+                "Echoo AI had trouble answering that. Try again in a moment.",
             };
           }
           const stops = mapPlanStops(payload);
@@ -2179,10 +2181,15 @@
               lng,
             );
             if (!resolved.supported) {
+              preciseLat = undefined;
+              preciseLng = undefined;
+              city = resolved.fallbackCity?.name || "Toronto";
+              activityContext = getActivityContext();
               window.EchooLocationPlatform.writeLocationState({
-                city: "Toronto",
-                countryCode: "outside_ca",
-                locationSupported: false,
+                city,
+                countryCode: "CA",
+                locationSupported: true,
+                locationPrecision: "manual_city",
                 locationReason: resolved.reason,
               });
               return;
