@@ -563,7 +563,12 @@ function extractJsonStringField(text: string, field: string) {
 
 function geminiModelCandidates() {
   const configured = Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL;
-  return uniqueStrings([configured]);
+  return uniqueStrings([
+    configured,
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+  ]);
 }
 
 function geminiResponseSchema() {
@@ -745,6 +750,10 @@ async function callGeminiDirect(input: {
         model,
       };
     } catch (err) {
+      console.warn(
+        `Gemini direct model ${model} failed, trying fallback:`,
+        err,
+      );
       lastError = err;
       if (!shouldTryNextGeminiModel(err)) {
         throw err;
@@ -945,6 +954,7 @@ async function callGeminiPlan(input: {
       };
       return result;
     } catch (err) {
+      console.warn(`Gemini plan model ${model} failed, trying fallback:`, err);
       lastError = err;
       if (!shouldTryNextGeminiModel(err)) {
         throw err;
@@ -1316,9 +1326,7 @@ Deno.serve(async (req) => {
     });
     return jsonResponse(
       {
-        error: isGeminiError
-          ? "Echoo AI had trouble answering that. Try again in a moment."
-          : message,
+        error: `Echoo AI had trouble: ${message}`,
         code: isGeminiError ? "ai_unavailable" : "plan_failed",
       },
       isGeminiError ? 502 : 500,
