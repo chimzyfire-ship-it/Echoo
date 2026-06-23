@@ -454,24 +454,90 @@ function scoreCandidate(item: any, tags: string[], profile: PlanProfile) {
   );
 }
 
-function parseGeminiJson(text: string): GeminiPlan | null {
-  const cleaned = text
-    .replace(/^```(?:json)?/i, "")
-    .replace(/```$/i, "")
+function stripGeminiFences(text: string) {
+  return String(text || "")
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
     .trim();
-  try {
-    return JSON.parse(cleaned) as GeminiPlan;
-  } catch (_err) {
-    const first = cleaned.indexOf("{");
-    const last = cleaned.lastIndexOf("}");
-    if (first >= 0 && last > first) {
-      try {
-        return JSON.parse(cleaned.slice(first, last + 1)) as GeminiPlan;
-      } catch (_nestedErr) {
-        return null;
+}
+
+function firstJsonObject(text: string) {
+  let start = -1;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = 0; index < text.length; index++) {
+    const char = text[index];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
       }
+      continue;
     }
-    return null;
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+    if (char === "{") {
+      if (depth === 0) start = index;
+      depth++;
+    } else if (char === "}") {
+      depth--;
+      if (depth === 0 && start >= 0) return text.slice(start, index + 1);
+    }
+  }
+  return "";
+}
+
+function coerceGeminiPlan(value: unknown): GeminiPlan | null {
+  if (!value) return null;
+  if (typeof value === "string") return parseGeminiJson(value);
+  if (typeof value === "object") return value as GeminiPlan;
+  return null;
+}
+
+function parseGeminiJson(text: string): GeminiPlan | null {
+  const source = String(text || "");
+  const fenced =
+    source.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)?.[1] || "";
+  const candidates = [
+    stripGeminiFences(source),
+    stripGeminiFences(fenced),
+    firstJsonObject(source),
+    firstJsonObject(stripGeminiFences(source)),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const cleaned = stripGeminiFences(candidate);
+    if (!cleaned) continue;
+    try {
+      const parsed = JSON.parse(cleaned);
+      const plan = coerceGeminiPlan(parsed);
+      if (plan) return plan;
+    } catch (_err) {
+      continue;
+    }
+  }
+  return null;
+}
+
+function extractJsonStringField(text: string, field: string) {
+  const source = stripGeminiFences(text);
+  const pattern = new RegExp(
+    `"${field}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`,
+    "i",
+  );
+  const match = source.match(pattern);
+  if (!match) return "";
+  try {
+    return cleanText(JSON.parse(`"${match[1]}"`));
+  } catch (_err) {
+    return cleanText(match[1].replace(/\\"/g, '"'));
   }
 }
 
@@ -565,6 +631,7 @@ async function callGeminiPlan(input: {
           generationConfig: {
             temperature: input.mode === "surprise" ? 0.82 : 0.62,
             maxOutputTokens: 900,
+            responseMimeType: "application/json",
           },
         }),
       },
@@ -581,23 +648,32 @@ async function callGeminiPlan(input: {
         ?.map((part: any) => part.text || "")
         .join("\n") || "";
     const parsed = parseGeminiJson(text);
-    const assistantFallback = parsed
-      ? cleanText(parsed.summary || parsed.routeTitle || text).slice(0, 520)
-      : cleanText(text).slice(0, 520);
-    if (!assistantFallback) throw new Error("Gemini returned an empty response.");
+    const assistantMessage =
+      cleanText(parsed?.assistantMessage) ||
+      extractJsonStringField(text, "assistantMessage");
+    const routeTitle =
+      cleanText(parsed?.routeTitle) || extractJsonStringField(text, "routeTitle");
+    const summary =
+      cleanText(parsed?.summary) || extractJsonStringField(text, "summary");
+    const assistantFallback = cleanText(
+      assistantMessage || summary || routeTitle,
+    ).slice(0, 520);
+    if (!assistantFallback) {
+      throw new Error("Gemini returned a response Echoo could not parse.");
+    }
     const result = {
-      assistantMessage: cleanText(
-        parsed?.assistantMessage,
-        assistantFallback,
-      ).slice(0, 520),
+      assistantMessage: cleanText(assistantMessage, assistantFallback).slice(
+        0,
+        520,
+      ),
       routeTitle: cleanText(
-        parsed?.routeTitle,
+        routeTitle,
         titleFromGeminiText(
           assistantFallback,
           `${input.region.name} plan`,
         ),
       ).slice(0, 120),
-      summary: cleanText(parsed?.summary, assistantFallback).slice(0, 220),
+      summary: cleanText(summary, assistantFallback).slice(0, 220),
       suggestedPills: safeStrings(parsed?.suggestedPills).slice(0, 4),
       stopNotes: Array.isArray(parsed?.stopNotes)
         ? parsed.stopNotes.slice(0, 6).map((note) => ({

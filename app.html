@@ -1884,10 +1884,54 @@
         chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
       }
 
+      function parsePossibleAiJson(text) {
+        const value = String(text || "").trim();
+        if (!value) return "";
+        const fenced = value.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+        const source = (fenced ? fenced[1] : value)
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
+        const objectText = source.includes("{")
+          ? source.slice(source.indexOf("{"), source.lastIndexOf("}") + 1)
+          : source;
+        try {
+          const parsed = JSON.parse(objectText);
+          if (typeof parsed === "string") return parsePossibleAiJson(parsed);
+          return (
+            parsed.assistantMessage ||
+            parsed.summary ||
+            parsed.routeTitle ||
+            ""
+          );
+        } catch (error) {
+          const match = source.match(
+            /"assistantMessage"\s*:\s*"((?:\\.|[^"\\])*)"/i,
+          );
+          if (!match) return value;
+          try {
+            return JSON.parse(`"${match[1]}"`);
+          } catch (innerError) {
+            return match[1].replace(/\\"/g, '"');
+          }
+        }
+      }
+
+      function displayAiCopy(text) {
+        const value = parsePossibleAiJson(text).replace(/\s+/g, " ").trim();
+        if (/^```|^\{/.test(value) || /"assistantMessage"\s*:/.test(value)) {
+          return "";
+        }
+        return value;
+      }
+
       function addBubble(type, text) {
+        const displayText =
+          type === "ai" ? displayAiCopy(text) : String(text || "").trim();
+        if (!displayText) return null;
         const el = document.createElement("div");
         el.className = `bubble ${type}`;
-        el.textContent = text;
+        el.textContent = displayText;
         chatBody.appendChild(el);
         scrollChat();
         return el;
@@ -2281,8 +2325,9 @@
           await delay(360);
         }
 
-        const summary = planResult.payload?.summary;
-        if (summary) {
+        const summary = displayAiCopy(planResult.payload?.summary);
+        const assistantCopy = displayAiCopy(ai.assistantMessage);
+        if (summary && summary !== assistantCopy) {
           addBubble("ai", summary);
           await delay(180);
         }
