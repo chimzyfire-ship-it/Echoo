@@ -80,13 +80,38 @@ user query
 
 ## Next Recommended Work
 
-1. Review and apply `supabase/migrations/202606260001_ontario_intelligence.sql`.
-2. Add a small Markham/Toronto seed set for validation.
-3. Build `place-detail`.
-4. Build `ontario-search`.
-5. Build `ontario-plan`.
-6. Modify planner/chat so local/place questions use retrieval first.
-7. Extend `admin-locations.html` for AI profile review and confidence cleanup.
+1. Review/apply `supabase/migrations/202606260001_ontario_intelligence.sql`.
+2. Review/apply `supabase/migrations/202606260002_ontario_scope_and_place_foundation.sql`.
+3. Add a small Markham/Toronto seed set for validation.
+4. Build `place-detail`.
+5. Build `ontario-search`.
+6. Build `ontario-plan`.
+7. Modify planner/chat so local/place questions use retrieval first.
+8. Extend `admin-locations.html` for AI profile review and confidence cleanup.
+
+## Ontario Intelligence Phase Status
+
+Phase 0/1 has started.
+
+Implemented in `202606260001_ontario_intelligence.sql`:
+
+- `place_profiles`
+- `place_sources`
+- `place_hours`
+- `ontario_events`
+- `ai_enrichment_jobs`
+- `zero_result_queries`
+- baseline indexes and public read policies
+
+Implemented in `202606260002_ontario_scope_and_place_foundation.sql`:
+
+- Ontario province-wide active support row
+- Tier 1 Ontario launch-density city rows
+- `places`, `lunch`, and `nightlife` feature flags
+- richer `canonical_places` columns for name, category, municipality, source, website, phone, and freshness
+- canonical place normalization trigger
+- Ontario support helper function
+- first `search_ontario_places` database function
 
 ## Worktree Warning
 
