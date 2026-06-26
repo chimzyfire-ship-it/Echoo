@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Echoo Event</title>
     <style>
       :root {
@@ -15,12 +15,32 @@
         --line: rgba(245, 241, 232, 0.14);
         --signal: #e7c98e;
         --rose: #d8a2d9;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
       }
-      * { box-sizing: border-box; }
-      body { margin: 0; background: var(--bg); color: var(--ink); }
-      a { color: inherit; text-decoration: none; }
-      button, input, select { font: inherit; }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
       .topbar {
         display: flex;
         justify-content: space-between;
@@ -29,9 +49,22 @@
         border-bottom: 1px solid var(--line);
         background: rgba(8, 9, 7, 0.94);
       }
-      .brand { font-size: 25px; font-weight: 950; letter-spacing: -0.05em; }
-      .topbar nav { display: flex; gap: 10px; color: var(--muted); font-weight: 850; }
-      main { width: min(1120px, 100%); margin: 0 auto; padding: 18px 16px 80px; }
+      .brand {
+        font-size: 25px;
+        font-weight: 950;
+        letter-spacing: -0.05em;
+      }
+      .topbar nav {
+        display: flex;
+        gap: 10px;
+        color: var(--muted);
+        font-weight: 850;
+      }
+      main {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        padding: 18px 16px 80px;
+      }
       .hero {
         display: grid;
         gap: 18px;
@@ -50,7 +83,10 @@
         line-height: 0.88;
         letter-spacing: -0.075em;
       }
-      p { color: var(--muted); line-height: 1.5; }
+      p {
+        color: var(--muted);
+        line-height: 1.5;
+      }
       .kicker {
         color: var(--signal);
         font-size: 12px;
@@ -58,15 +94,27 @@
         letter-spacing: 0.15em;
         text-transform: uppercase;
       }
-      .grid { display: grid; gap: 14px; }
-      .content { display: grid; gap: 16px; }
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+      .content {
+        display: grid;
+        gap: 16px;
+      }
       .panel {
         border: 1px solid var(--line);
         background: rgba(17, 19, 15, 0.92);
         padding: 16px;
       }
-      .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-      .meta span, .pill {
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .meta span,
+      .pill {
         border: 1px solid var(--line);
         color: var(--muted);
         padding: 7px 10px;
@@ -81,7 +129,9 @@
         padding: 12px;
         background: var(--panel-2);
       }
-      .ticket-row strong { display: block; }
+      .ticket-row strong {
+        display: block;
+      }
       label {
         display: grid;
         gap: 7px;
@@ -91,7 +141,8 @@
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
-      input, select {
+      input,
+      select {
         min-height: 46px;
         border: 1px solid var(--line);
         border-radius: 0;
@@ -105,11 +156,19 @@
         border: 1px solid transparent;
         border-radius: 0;
         color: #151311;
-        background: linear-gradient(135deg, #e4bd78 0%, #f2ddb0 42%, var(--rose) 100%);
+        background: linear-gradient(
+          135deg,
+          #e4bd78 0%,
+          #f2ddb0 42%,
+          var(--rose) 100%
+        );
         cursor: pointer;
         font-weight: 950;
       }
-      button:disabled { opacity: 0.55; cursor: not-allowed; }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
       .route-card {
         border: 1px solid var(--line);
         padding: 12px;
@@ -129,35 +188,56 @@
         border: 1px solid var(--line);
         filter: saturate(0.72) contrast(1.04);
       }
-      .stay-card strong { display: block; }
+      .stay-card strong {
+        display: block;
+      }
       .stay-price {
         color: var(--signal);
         font-weight: 950;
       }
-      .empty { border: 1px dashed var(--line); color: var(--muted); padding: 16px; }
+      .empty {
+        border: 1px dashed var(--line);
+        color: var(--muted);
+        padding: 16px;
+      }
       @media (min-width: 900px) {
-        .hero { grid-template-columns: minmax(0, 1fr) 420px; align-items: end; padding: 42px 0 24px; }
-        .content { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
+        .hero {
+          grid-template-columns: minmax(0, 1fr) 420px;
+          align-items: end;
+          padding: 42px 0 24px;
+        }
+        .content {
+          grid-template-columns: minmax(0, 1fr) 380px;
+          align-items: start;
+        }
       }
     </style>
   </head>
   <body>
     <header class="topbar">
       <a class="brand" href="index.html">echoo</a>
-      <nav><a href="events.html">Discover</a><a href="tickets.html">My Tickets</a></nav>
+      <nav>
+        <a href="events.html">Discover</a><a href="tickets.html">My Tickets</a>
+      </nav>
     </header>
     <main>
-      <section id="event-root" class="grid"><div class="empty">Loading event...</div></section>
+      <section id="event-root" class="grid">
+        <div class="empty">Loading event...</div>
+      </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
     <script>
       const CONFIG = {
         anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        eventDetailUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-detail",
-        eventStaysUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-stays",
-        ticketReserveUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-reserve",
-        planEngineUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine"
+        eventDetailUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-detail",
+        eventStaysUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-stays",
+        ticketReserveUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-reserve",
+        planEngineUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine",
       };
       const params = new URLSearchParams(window.location.search);
       const eventId = params.get("id");
@@ -166,34 +246,49 @@
       function sessionId() {
         let id = localStorage.getItem("echoo_ticket_session_id");
         if (!id) {
-          id = crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          id = crypto.randomUUID
+            ? crypto.randomUUID()
+            : `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
           localStorage.setItem("echoo_ticket_session_id", id);
         }
         return id;
       }
 
       function money(cents, currency = "CAD") {
-        return new Intl.NumberFormat("en-CA", { style: "currency", currency }).format((Number(cents) || 0) / 100);
+        return new Intl.NumberFormat("en-CA", {
+          style: "currency",
+          currency,
+        }).format((Number(cents) || 0) / 100);
       }
 
       function headers() {
-        return { "Content-Type": "application/json", "Authorization": `Bearer ${CONFIG.anonKey}`, "apikey": CONFIG.anonKey };
+        return {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${CONFIG.anonKey}`,
+          apikey: CONFIG.anonKey,
+        };
       }
 
       async function plannerHeaders() {
         return window.EchooAuth
-          ? await window.EchooAuth.authHeaders({ "Content-Type": "application/json" })
+          ? await window.EchooAuth.authHeaders({
+              "Content-Type": "application/json",
+            })
           : headers();
       }
 
       function escapeHtml(value) {
-        return String(value ?? "").replace(/[&<>"']/g, (character) => ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;"
-        })[character]);
+        return String(value ?? "").replace(
+          /[&<>"']/g,
+          (character) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[character],
+        );
       }
 
       function safeAssetUrl(value, fallback) {
@@ -208,7 +303,12 @@
 
       async function loadRelated(event) {
         const box = document.getElementById("related-plans");
-        if (!box || !Number.isFinite(Number(event.latitude)) || !Number.isFinite(Number(event.longitude))) return;
+        if (
+          !box ||
+          !Number.isFinite(Number(event.latitude)) ||
+          !Number.isFinite(Number(event.longitude))
+        )
+          return;
         try {
           const authState = window.EchooAuth
             ? await window.EchooAuth.requireOnboarding({ redirect: false })
@@ -223,18 +323,34 @@
           const response = await fetch(CONFIG.planEngineUrl, {
             method: "POST",
             headers: await plannerHeaders(),
-            body: JSON.stringify({ lat: Number(event.latitude), lng: Number(event.longitude), query: `before or after ${event.category} near ${event.venue_name}`, limit: 3 })
+            body: JSON.stringify({
+              lat: Number(event.latitude),
+              lng: Number(event.longitude),
+              query: `before or after ${event.category} near ${event.venue_name}`,
+              limit: 3,
+            }),
           });
           const json = await response.json();
-          const plans = Array.isArray(json.plans) ? json.plans.filter((plan) => plan.id !== event.location_entity_id).slice(0, 3) : [];
-          box.innerHTML = plans.length ? plans.map((plan) => `
+          const plans = Array.isArray(json.plans)
+            ? json.plans
+                .filter((plan) => plan.id !== event.location_entity_id)
+                .slice(0, 3)
+            : [];
+          box.innerHTML = plans.length
+            ? plans
+                .map(
+                  (plan) => `
             <article class="route-card">
               <strong>${escapeHtml(plan.title)}</strong>
               <p>${escapeHtml(plan.description || plan.why || "A nearby Echoo suggestion.")}</p>
             </article>
-          `).join("") : '<div class="empty">Related nearby ideas will appear here as more events are added.</div>';
+          `,
+                )
+                .join("")
+            : '<div class="empty">Related nearby ideas will appear here as more events are added.</div>';
         } catch (error) {
-          box.innerHTML = '<div class="empty">Related nearby ideas are unavailable right now.</div>';
+          box.innerHTML =
+            '<div class="empty">Related nearby ideas are unavailable right now.</div>';
         }
       }
 
@@ -242,12 +358,19 @@
         const box = document.getElementById("event-stays");
         if (!box) return;
         try {
-          const response = await fetch(`${CONFIG.eventStaysUrl}?eventId=${encodeURIComponent(event.id)}`, { headers: headers() });
+          const response = await fetch(
+            `${CONFIG.eventStaysUrl}?eventId=${encodeURIComponent(event.id)}`,
+            { headers: headers() },
+          );
           const json = await response.json();
-          if (!response.ok) throw new Error(json.error || "Stay recommendations unavailable");
+          if (!response.ok)
+            throw new Error(json.error || "Stay recommendations unavailable");
           const stays = Array.isArray(json.stays) ? json.stays : [];
           const fallbackImage = "assets/optimized/news-date-768.jpg";
-          box.innerHTML = stays.length ? stays.map((stay) => `
+          box.innerHTML = stays.length
+            ? stays
+                .map(
+                  (stay) => `
             <article class="stay-card">
               <img src="${escapeHtml(safeAssetUrl(stay.imageUrl, fallbackImage))}" alt="">
               <div>
@@ -262,7 +385,10 @@
                 ${safeExternalUrl(stay.bookingUrl) ? `<a class="pill" href="${escapeHtml(safeExternalUrl(stay.bookingUrl))}" target="_blank" rel="noopener">View stay options</a>` : ""}
               </div>
             </article>
-          `).join("") : '<div class="empty">Stay recommendations will appear here once nearby options are loaded.</div>';
+          `,
+                )
+                .join("")
+            : '<div class="empty">Stay recommendations will appear here once nearby options are loaded.</div>';
         } catch (error) {
           box.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
         }
@@ -284,12 +410,22 @@
           const response = await fetch(CONFIG.ticketReserveUrl, {
             method: "POST",
             headers: headers(),
-            body: JSON.stringify({ eventId: event.id, tierId, quantity, buyerName, buyerEmail, sessionId: sessionId() })
+            body: JSON.stringify({
+              eventId: event.id,
+              tierId,
+              quantity,
+              buyerName,
+              buyerEmail,
+              sessionId: sessionId(),
+            }),
           });
           const json = await response.json();
           if (!response.ok) throw new Error(json.error || "Reservation failed");
           localStorage.setItem("echoo_ticket_buyer_email", buyerEmail);
-          localStorage.setItem("echoo_last_ticket_order_id", json.confirmed?.order?.id || json.order?.id || "");
+          localStorage.setItem(
+            "echoo_last_ticket_order_id",
+            json.confirmed?.order?.id || json.order?.id || "",
+          );
           if (json.confirmed) {
             status.innerHTML = `Ticket confirmed for ${tier.name}. <a href="tickets.html">Open My Tickets</a>`;
           } else {
@@ -301,8 +437,16 @@
       }
 
       function render(event, tiers) {
-        const starts = event.starts_at ? new Date(event.starts_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Date coming soon";
-        const eventImage = safeAssetUrl(event.image_url, "assets/optimized/news-music-768.jpg");
+        const starts = event.starts_at
+          ? new Date(event.starts_at).toLocaleString([], {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })
+          : "Date coming soon";
+        const eventImage = safeAssetUrl(
+          event.image_url,
+          "assets/optimized/news-music-768.jpg",
+        );
         root.innerHTML = `
           <section class="hero">
             <div>
@@ -336,7 +480,9 @@
             </div>
             <aside class="panel grid">
               <h2 style="margin:0;">Tickets</h2>
-              ${tiers.length ? `
+              ${
+                tiers.length
+                  ? `
                 <label>Ticket tier
                   <select id="tier">${tiers.map((tier) => `<option value="${escapeHtml(tier.id)}">${escapeHtml(tier.name)} · ${money(tier.price_cents, tier.currency)} · ${Number(tier.remaining_quantity || 0)} left</option>`).join("")}</select>
                 </label>
@@ -345,13 +491,19 @@
                 <label>Email <input id="buyer-email" autocomplete="email" placeholder="name@example.com"></label>
                 <button id="reserve-btn" type="button">Reserve ticket</button>
                 <p id="reserve-status"></p>
-              ` : '<div class="empty">Ticket tiers are not attached to this listing yet.</div>'}
+              `
+                  : '<div class="empty">Ticket tiers are not attached to this listing yet.</div>'
+              }
             </aside>
           </section>
         `;
         const storedEmail = localStorage.getItem("echoo_ticket_buyer_email");
-        if (storedEmail && document.getElementById("buyer-email")) document.getElementById("buyer-email").value = storedEmail;
-        if (tiers.length) document.getElementById("reserve-btn").addEventListener("click", () => reserve(event, tiers));
+        if (storedEmail && document.getElementById("buyer-email"))
+          document.getElementById("buyer-email").value = storedEmail;
+        if (tiers.length)
+          document
+            .getElementById("reserve-btn")
+            .addEventListener("click", () => reserve(event, tiers));
         loadRelated(event);
         loadStays(event);
       }
@@ -362,7 +514,10 @@
           return;
         }
         try {
-          const response = await fetch(`${CONFIG.eventDetailUrl}?id=${encodeURIComponent(eventId)}`, { headers: headers() });
+          const response = await fetch(
+            `${CONFIG.eventDetailUrl}?id=${encodeURIComponent(eventId)}`,
+            { headers: headers() },
+          );
           const json = await response.json();
           if (!response.ok) throw new Error(json.error || "Event unavailable");
           render(json.event, json.tiers || []);

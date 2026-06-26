@@ -1,5 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
+
 export type SupportedCity = {
   name: string;
   province: string;
@@ -17,21 +19,92 @@ export const CANADA_BOUNDS = {
 };
 
 export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
-  { name: "Toronto", province: "ON", provinceName: "Ontario", timezone: "America/Toronto", lat: 43.6532, lng: -79.3832 },
-  { name: "Vancouver", province: "BC", provinceName: "British Columbia", timezone: "America/Vancouver", lat: 49.2827, lng: -123.1207 },
-  { name: "Montreal", province: "QC", provinceName: "Quebec", timezone: "America/Toronto", lat: 45.5017, lng: -73.5673 },
-  { name: "Calgary", province: "AB", provinceName: "Alberta", timezone: "America/Edmonton", lat: 51.0447, lng: -114.0719 },
-  { name: "Edmonton", province: "AB", provinceName: "Alberta", timezone: "America/Edmonton", lat: 53.5461, lng: -113.4938 },
-  { name: "Ottawa", province: "ON", provinceName: "Ontario", timezone: "America/Toronto", lat: 45.4215, lng: -75.6972 },
-  { name: "Winnipeg", province: "MB", provinceName: "Manitoba", timezone: "America/Winnipeg", lat: 49.8951, lng: -97.1384 },
-  { name: "Quebec City", province: "QC", provinceName: "Quebec", timezone: "America/Toronto", lat: 46.8139, lng: -71.2080 },
-  { name: "Halifax", province: "NS", provinceName: "Nova Scotia", timezone: "America/Halifax", lat: 44.6488, lng: -63.5752 },
-  { name: "Victoria", province: "BC", provinceName: "British Columbia", timezone: "America/Vancouver", lat: 48.4284, lng: -123.3656 },
+  {
+    name: "Toronto",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.6532,
+    lng: -79.3832,
+  },
+  {
+    name: "Vancouver",
+    province: "BC",
+    provinceName: "British Columbia",
+    timezone: "America/Vancouver",
+    lat: 49.2827,
+    lng: -123.1207,
+  },
+  {
+    name: "Montreal",
+    province: "QC",
+    provinceName: "Quebec",
+    timezone: "America/Toronto",
+    lat: 45.5017,
+    lng: -73.5673,
+  },
+  {
+    name: "Calgary",
+    province: "AB",
+    provinceName: "Alberta",
+    timezone: "America/Edmonton",
+    lat: 51.0447,
+    lng: -114.0719,
+  },
+  {
+    name: "Edmonton",
+    province: "AB",
+    provinceName: "Alberta",
+    timezone: "America/Edmonton",
+    lat: 53.5461,
+    lng: -113.4938,
+  },
+  {
+    name: "Ottawa",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 45.4215,
+    lng: -75.6972,
+  },
+  {
+    name: "Winnipeg",
+    province: "MB",
+    provinceName: "Manitoba",
+    timezone: "America/Winnipeg",
+    lat: 49.8951,
+    lng: -97.1384,
+  },
+  {
+    name: "Quebec City",
+    province: "QC",
+    provinceName: "Quebec",
+    timezone: "America/Toronto",
+    lat: 46.8139,
+    lng: -71.208,
+  },
+  {
+    name: "Halifax",
+    province: "NS",
+    provinceName: "Nova Scotia",
+    timezone: "America/Halifax",
+    lat: 44.6488,
+    lng: -63.5752,
+  },
+  {
+    name: "Victoria",
+    province: "BC",
+    provinceName: "British Columbia",
+    timezone: "America/Vancouver",
+    lat: 48.4284,
+    lng: -123.3656,
+  },
 ];
 
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-token",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-admin-token",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
 };
 
@@ -47,7 +120,9 @@ export function getSupabaseAdmin() {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!url || !serviceRoleKey) {
-    throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured.");
+    throw new Error(
+      "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured.",
+    );
   }
 
   return createClient(url, serviceRoleKey, {
@@ -63,8 +138,11 @@ export async function sha256Hex(input: string): Promise<string> {
     .join("");
 }
 
-export async function readLocationCache(supabase: ReturnType<typeof createClient>, cacheKey: string) {
-  const { data, error } = await supabase
+export async function readLocationCache(
+  supabase: SupabaseAdmin,
+  cacheKey: string,
+) {
+  const { data, error } = await (supabase as any)
     .from("location_query_cache")
     .select("payload, expires_at")
     .eq("cache_key", cacheKey)
@@ -76,22 +154,23 @@ export async function readLocationCache(supabase: ReturnType<typeof createClient
 }
 
 export async function writeLocationCache(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseAdmin,
   cacheKey: string,
   payload: unknown,
   ttlSeconds = 120,
 ) {
-  await supabase
-    .from("location_query_cache")
-    .upsert({
+  await (supabase as any).from("location_query_cache").upsert(
+    {
       cache_key: cacheKey,
       payload,
       expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
-    }, { onConflict: "cache_key" });
+    },
+    { onConflict: "cache_key" },
+  );
 }
 
 export async function logLocationEvent(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseAdmin,
   event: {
     functionName: string;
     eventType: string;
@@ -106,7 +185,7 @@ export async function logLocationEvent(
     responseSummary?: Record<string, unknown>;
   },
 ) {
-  await supabase.from("location_request_logs").insert({
+  await (supabase as any).from("location_request_logs").insert({
     function_name: event.functionName,
     event_type: event.eventType,
     status: event.status || "ok",
@@ -132,7 +211,12 @@ export function isInsideCanadaBounds(lat: number, lng: number): boolean {
   );
 }
 
-export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+export function haversineMeters(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+): number {
   const earthRadiusMeters = 6371000;
   const toRad = (value: number) => (value * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
@@ -143,7 +227,10 @@ export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: 
   return earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function nearestSupportedCity(lat: number, lng: number): SupportedCity & { distanceMeters: number } {
+export function nearestSupportedCity(
+  lat: number,
+  lng: number,
+): SupportedCity & { distanceMeters: number } {
   let best = SUPPORTED_CANADA_CITIES[0];
   let bestDistance = Number.POSITIVE_INFINITY;
 
@@ -161,7 +248,11 @@ export function nearestSupportedCity(lat: number, lng: number): SupportedCity & 
 export function normalizeCityName(input?: string | null): SupportedCity | null {
   if (!input) return null;
   const normalized = input.trim().toLowerCase();
-  return SUPPORTED_CANADA_CITIES.find((city) => city.name.toLowerCase() === normalized) || null;
+  return (
+    SUPPORTED_CANADA_CITIES.find(
+      (city) => city.name.toLowerCase() === normalized,
+    ) || null
+  );
 }
 
 export function clampRadiusMeters(value: unknown): number {

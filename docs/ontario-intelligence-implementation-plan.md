@@ -1,0 +1,629 @@
+# Echoo Ontario Intelligence Implementation Plan
+
+Last updated: 2026-06-26
+
+## 1. Decision
+
+Echoo should build an Ontario-first local intelligence system, not a generic AI chat surface and not a Canada-wide scrape project on day one.
+
+The product target is:
+
+> Echoo owns a normalized Ontario place, event, and activity database; keeps it updated through ingestion and review; enriches records with AI; and makes the planner/chat answer only from retrieved local facts.
+
+Ontario-wide coverage is the strategic goal. GTA and Markham should be the first quality bar because they are dense, demo-friendly, and relevant to the current lunch use case.
+
+## 2. Why This Is Necessary
+
+The chat currently feels incoherent because local questions can fall through to raw model behavior. A question like "is JOEY Markville nice?" should not be answered from general model memory. It should resolve the place, fetch Echoo's local facts and profile, check nearby/live context, and then generate a grounded answer.
+
+The existing architecture already points in the right direction:
+
+- `supported_regions` defines Canada/Ontario launch configuration.
+- `canonical_places` stores normalized provider/manual places.
+- `location_entities` stores searchable events, guides, movies, and local plans.
+- PostGIS functions already support nearby and region search.
+- The engineering documentation defines AI planning as retrieval, deterministic scoring, then LLM enrichment.
+
+This plan extends those foundations instead of replacing them.
+
+## 3. Existing Files To Read First
+
+Anyone continuing this work in a new chat thread should read these files before editing:
+
+- `docs/CURRENT_CONTEXT.md`
+- `docs/echoo-engineering-documentation.md`
+- `docs/echoo-project-roadmap.md`
+- `docs/geolocation-mapping-scale-plan.md`
+- `docs/ontario-intelligence-implementation-plan.md`
+- `supabase/migrations/202606200001_location_platform.sql`
+- `supabase/functions/location-search/index.ts`
+- `supabase/functions/plan-engine/index.ts`
+- `supabase/functions/discover-live/index.ts`
+
+## 4. Data Source Strategy
+
+### 4.1 Free/Open Foundation
+
+Use free/open sources for the Ontario base layer:
+
+- OpenStreetMap bulk extracts for restaurants, cafes, bars, parks, venues, cinemas, attractions, malls, community spaces, and other POIs.
+- Ontario GeoHub and Ontario Data Catalogue for official provincial datasets.
+- Statistics Canada boundary/geography files for municipality and region structure.
+- Municipal open data portals for facilities, parks, recreation, cultural spaces, and other local assets.
+- Ticketmaster Discovery API for live events where quota allows.
+
+These are suitable for creating Echoo-owned normalized records, with attribution/licence handling.
+
+### 4.2 Paid/Restricted Sources
+
+Use paid or restricted APIs only as optional enrichment or validation:
+
+- Google Places: useful for on-demand lookup/autocomplete and limited details, but not for copying into a permanent database.
+- Yelp: useful for evaluation or paid/commercial enrichment, not a free production base.
+- Foursquare: useful commercial POI enrichment, not required for the initial base.
+
+Echoo should not depend on a paid places provider to know Ontario. Paid sources can improve quality later.
+
+## 5. Ontario Coverage Model
+
+Support all Ontario, but launch quality in tiers.
+
+### Tier 1: Dense Quality Bar
+
+- Toronto
+- Markham
+- Scarborough
+- North York
+- Vaughan
+- Richmond Hill
+- Mississauga
+- Brampton
+- Oakville
+- Burlington
+- Hamilton
+- Ottawa
+- Waterloo
+- Kitchener
+- London
+- Niagara Falls
+- Kingston
+- Guelph
+- Barrie
+- Windsor
+
+### Tier 2: Province-Wide Coverage
+
+All other Ontario municipalities, towns, and activity areas.
+
+### Tier 3: Sparse Coverage Fallback
+
+Low-density regions where Echoo may have fewer records. The product must answer honestly, show confidence, and suggest nearby supported alternatives.
+
+## 6. Database Implementation
+
+Keep `canonical_places` as the master place table and `location_entities` as the searchable user-facing entity table. Add these tables.
+
+### 6.1 `place_profiles`
+
+Echoo's opinion and utility layer for a place.
+
+Recommended columns:
+
+- `id uuid primary key`
+- `place_id uuid references canonical_places(id)`
+- `vibe_tags text[]`
+- `good_for text[]`
+- `meal_tags text[]`
+- `activity_tags text[]`
+- `noise_level text`
+- `price_band text`
+- `lunch_score numeric`
+- `date_score numeric`
+- `group_score numeric`
+- `solo_score numeric`
+- `family_score numeric`
+- `rainy_day_score numeric`
+- `summary text`
+- `caveats text`
+- `confidence_score numeric`
+- `human_review_status text`
+- `ai_generated_at timestamptz`
+- `reviewed_at timestamptz`
+- `created_at timestamptz`
+- `updated_at timestamptz`
+
+### 6.2 `place_sources`
+
+Provenance and licensing for each imported/enriched record.
+
+Recommended columns:
+
+- `id uuid primary key`
+- `place_id uuid references canonical_places(id)`
+- `source_name text`
+- `source_url text`
+- `source_license text`
+- `source_record_id text`
+- `raw_payload jsonb`
+- `fetched_at timestamptz`
+- `created_at timestamptz`
+
+### 6.3 `place_hours`
+
+Mutable place hours from providers or manual review.
+
+Recommended columns:
+
+- `id uuid primary key`
+- `place_id uuid references canonical_places(id)`
+- `day_of_week int`
+- `opens_at time`
+- `closes_at time`
+- `is_closed boolean`
+- `source text`
+- `confidence_score numeric`
+- `valid_from date`
+- `valid_to date`
+- `updated_at timestamptz`
+
+### 6.4 `ontario_events`
+
+Normalized external and Echoo-owned event layer.
+
+Recommended columns:
+
+- `id uuid primary key`
+- `place_id uuid references canonical_places(id)`
+- `title text`
+- `description text`
+- `starts_at timestamptz`
+- `ends_at timestamptz`
+- `category text`
+- `price_label text`
+- `ticket_url text`
+- `source_provider text`
+- `source_id text`
+- `status text`
+- `last_seen_at timestamptz`
+- `created_at timestamptz`
+- `updated_at timestamptz`
+
+### 6.5 `ai_enrichment_jobs`
+
+Tracks AI-generated enrichment and makes the process resumable.
+
+Recommended columns:
+
+- `id uuid primary key`
+- `entity_type text`
+- `entity_id uuid`
+- `job_type text`
+- `status text`
+- `input_hash text`
+- `model text`
+- `output_json jsonb`
+- `error text`
+- `created_at timestamptz`
+- `started_at timestamptz`
+- `completed_at timestamptz`
+
+### 6.6 `zero_result_queries`
+
+Captures demand where Echoo lacks enough data.
+
+Recommended columns:
+
+- `id uuid primary key`
+- `query text`
+- `city text`
+- `province text default 'ON'`
+- `lat double precision`
+- `lng double precision`
+- `intent text`
+- `result_count int`
+- `created_at timestamptz`
+
+## 7. Ingestion Pipeline
+
+### 7.1 OSM Bulk Import
+
+Do not use Overpass as the bulk source for the whole province. Use an Ontario or Canada OSM extract, then filter locally.
+
+Initial tags:
+
+- `amenity=restaurant`
+- `amenity=cafe`
+- `amenity=bar`
+- `amenity=pub`
+- `amenity=fast_food`
+- `amenity=cinema`
+- `amenity=theatre`
+- `amenity=arts_centre`
+- `amenity=community_centre`
+- `tourism=attraction`
+- `tourism=museum`
+- `leisure=park`
+- `leisure=fitness_centre`
+- `shop=mall`
+- `historic=*`
+
+Normalize each accepted object into `canonical_places`, then create/searchable mirror records where appropriate in `location_entities`.
+
+### 7.2 Official Open Data Import
+
+Import Ontario and municipal public datasets for:
+
+- municipalities and boundaries
+- parks
+- libraries
+- recreation/community centres
+- public facilities
+- trails
+- cultural spaces
+- public attractions
+
+Normalize into `canonical_places` and track each source in `place_sources`.
+
+### 7.3 Live Event Import
+
+Use Ticketmaster and Echoo-owned organizer data.
+
+Schedule:
+
+- Hourly for live events in priority cities.
+- Daily for broader Ontario event refresh.
+- Cleanup stale events nightly.
+
+Events should be stored in `ontario_events` and mirrored into `location_entities` for search/planning.
+
+## 8. Dedupe And Normalization
+
+Duplicates must be handled before AI enrichment.
+
+Candidate match signals:
+
+- normalized name similarity
+- geographic distance within 50 meters
+- same or similar address/postal code
+- same phone or website
+- same provider id
+
+Suggested score:
+
+```text
+duplicate_score =
+  name_similarity * 0.35 +
+  distance_similarity * 0.30 +
+  address_similarity * 0.20 +
+  phone_or_website_match * 0.15
+```
+
+Actions:
+
+- Auto-merge above `0.92`.
+- Queue review between `0.75` and `0.92`.
+- Keep separate below `0.75`.
+
+## 9. AI Enrichment
+
+AI enriches structured records. It does not invent facts.
+
+Input should be structured:
+
+```json
+{
+  "name": "JOEY Markville",
+  "category": "restaurant",
+  "city": "Markham",
+  "province": "ON",
+  "nearby_context": ["CF Markville", "Unionville", "Highway 7"],
+  "source_tags": ["restaurant", "bar", "lunch"]
+}
+```
+
+Output must be strict JSON:
+
+```json
+{
+  "summary": "Polished Echoo description.",
+  "vibe_tags": ["upbeat", "polished", "group-friendly"],
+  "good_for": ["lunch", "after-work drinks", "casual date"],
+  "not_ideal_for": ["quiet work session"],
+  "lunch_score": 0.82,
+  "date_score": 0.74,
+  "group_score": 0.88,
+  "confidence_score": 0.68,
+  "needs_human_review": true
+}
+```
+
+Rules:
+
+- No fabricated hours.
+- No fabricated specials.
+- No fabricated ratings.
+- No fabricated events.
+- Low-confidence records go to admin review.
+- AI outputs are stored with `input_hash`, `model`, and raw output in `ai_enrichment_jobs`.
+
+## 10. Retrieval-First Chat Contract
+
+The planner/chat must stop answering Ontario/place questions from raw model memory.
+
+Target flow:
+
+```text
+user query
+-> intent detection
+-> city/place resolution
+-> Ontario database retrieval
+-> deterministic scoring
+-> grounded AI response
+-> cards/route board
+```
+
+Example for "is it nice chilling at JOEY Markville?":
+
+1. Detect intent: place opinion, chill/lunch, Markham.
+2. Resolve place: search `canonical_places`.
+3. Fetch context: `place_profiles`, hours, nearby events, alternatives.
+4. Generate answer with a prompt that says:
+
+```text
+Only answer using the provided Echoo records.
+If records are missing, say what is missing.
+Do not invent specials, hours, ratings, or events.
+```
+
+5. Return:
+
+- concise answer
+- confidence/source status
+- place card
+- suggested actions such as "Build lunch plan", "Find quieter", "Add dessert", "Nearby events"
+
+## 11. APIs To Build
+
+### 11.1 `ontario-search`
+
+Purpose: Search places/events/activities across Ontario.
+
+Request:
+
+```json
+{
+  "query": "nice lunch in Markham",
+  "city": "Markham",
+  "lat": 43.8561,
+  "lng": -79.3370,
+  "intent": "lunch",
+  "limit": 20
+}
+```
+
+Response:
+
+```json
+{
+  "supported": true,
+  "region": {
+    "province": "ON",
+    "city": "Markham"
+  },
+  "results": []
+}
+```
+
+### 11.2 `place-detail`
+
+Purpose: Return canonical place, Echoo profile, hours, related events, source confidence, and nearby alternatives.
+
+### 11.3 `ontario-plan`
+
+Purpose: Build route/plan from retrieved Ontario records.
+
+Request:
+
+```json
+{
+  "query": "two stop lunch plan in Markham",
+  "city": "Markham",
+  "budget": "$$",
+  "vibe": "chill"
+}
+```
+
+Response:
+
+- route title
+- stops
+- travel labels
+- route explanation
+- confidence
+- missing-data notes when needed
+
+### 11.4 `place-enrich`
+
+Admin/worker-only endpoint for AI profile generation.
+
+## 12. Ranking
+
+Ranking should combine location, intent, quality, and freshness.
+
+Suggested initial formula:
+
+```text
+score =
+  distance_score * 0.20 +
+  category_match * 0.20 +
+  intent_match * 0.20 +
+  profile_quality * 0.15 +
+  popularity_or_event_signal * 0.10 +
+  freshness_verified * 0.10 +
+  editorial_boost * 0.05
+```
+
+Lunch-specific ranking should prefer:
+
+- restaurants and cafes
+- likely-open or hours-confirmed places
+- high `lunch_score`
+- good nearby second stops
+- not nightlife-only venues unless requested
+
+Chill-specific ranking should prefer:
+
+- lower noise
+- better group/date suitability
+- relaxed cafes, restaurants, parks, lounges
+- avoid clubs/party-heavy results unless requested
+
+## 13. Admin Review
+
+Improve or extend `admin-locations.html` into an Ontario operations console.
+
+Required queues:
+
+- new imported places pending review
+- duplicate candidates
+- low-confidence AI profiles
+- missing category
+- missing coordinates
+- zero-result/high-demand queries
+- user-reported incorrect info
+
+Required actions:
+
+- approve
+- edit
+- merge duplicate
+- archive
+- mark verified
+- pin as Echoo pick
+- add vibe tags
+- add lunch/date/group scores
+
+## 14. Update Cadence
+
+Hourly:
+
+- Ticketmaster event refresh in priority cities.
+- Echoo owned event/ticket updates.
+
+Daily:
+
+- stale event cleanup
+- zero-result query review batch
+- missing enrichment job batch
+
+Weekly:
+
+- OSM/open-data refresh or diff import
+- duplicate detection
+- city/category coverage report
+
+Monthly:
+
+- regenerate low-confidence AI summaries
+- data source/licence audit
+- Ontario coverage review
+
+## 15. UI Changes
+
+The chat should render structured local intelligence:
+
+- identified place card
+- confidence/source badge
+- "why this answer" from Echoo facts
+- route board for plans
+- graceful missing-data state
+
+For plans:
+
+- square stop cards
+- SVG connector
+- route explanation
+- optional map
+- "why this order" copy
+
+For missing data:
+
+- say what is missing
+- show closest known alternatives
+- allow "Add this place to Echoo"
+
+## 16. Build Timeline
+
+### Week 1: Schema And Ontario Regions
+
+- Add new migrations for `place_profiles`, `place_sources`, `place_hours`, `ontario_events`, `ai_enrichment_jobs`, and `zero_result_queries`.
+- Expand Ontario `supported_regions` records.
+- Add indexes and RLS policies.
+
+Deliverable: database ready for Ontario ingestion.
+
+### Week 2: OSM And Open Data Import
+
+- Build import scripts.
+- Import Ontario POIs.
+- Normalize into `canonical_places`.
+- Run dedupe pass.
+
+Deliverable: province-wide baseline POI records.
+
+### Week 3: AI Enrichment Worker
+
+- Add enrichment job runner.
+- Generate Echoo profiles.
+- Store scores/tags/summaries.
+- Queue low-confidence records.
+
+Deliverable: first enriched Ontario knowledge layer.
+
+### Week 4: Retrieval APIs
+
+- Build `ontario-search`.
+- Build `place-detail`.
+- Build `ontario-plan`.
+- Update planner/chat to use these before AI.
+
+Deliverable: local questions are grounded in Ontario data.
+
+### Week 5: Admin Review
+
+- Improve review UI.
+- Add duplicate merge and profile review.
+- Add city/category filters.
+
+Deliverable: operators can keep data clean.
+
+### Week 6: Markham/GTA Polish
+
+- Manually review high-demand Markham/GTA places.
+- Improve lunch/chill/date scoring.
+- Add route quality checks.
+- Monitor zero-result queries.
+
+Deliverable: lunch demo is coherent and useful.
+
+## 17. Acceptance Criteria
+
+The Ontario intelligence layer is acceptable when:
+
+- A user can ask about a known Markham/Toronto place and receive a grounded answer.
+- The answer shows no invented hours, ratings, specials, or events.
+- A two-stop Ontario lunch plan returns real stops from the database.
+- Each stop links to a canonical place or event.
+- Low-confidence place profiles appear in admin review.
+- Zero-result searches are logged for future improvement.
+- The planner can gracefully explain when Echoo lacks enough verified data.
+
+## 18. Immediate Next Build Actions
+
+1. Add the Ontario intelligence migrations.
+2. Add a seed/import script structure under `scratch/` or `supabase/functions` worker path.
+3. Build a small Markham/Toronto seed set to validate the schema.
+4. Implement `place-detail`.
+5. Modify planner behavior so local/place questions use retrieval before model generation.
+6. Update `admin-locations.html` for profile/confidence review.
+

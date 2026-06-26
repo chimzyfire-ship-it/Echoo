@@ -608,7 +608,7 @@
           filtered
             .map(
               (event) => `
-          <article class="event" data-id="${event.id}" ${event.detailId ? `data-detail-id="${event.detailId}"` : ""}>
+          <article class="event" data-id="${event.id}" ${event.detailId ? `data-detail-id="${event.detailId}"` : ""} ${event.actionUrl ? `data-action-url="${event.actionUrl}"` : ""}>
             <picture>
               <source srcset="${event.webp}" type="image/webp">
               <img src="${event.img}" alt="" loading="lazy" decoding="async">
@@ -649,9 +649,13 @@
         });
 
       list.addEventListener("click", (event) => {
-        const card = event.target.closest("[data-detail-id]");
+        const card = event.target.closest(
+          "[data-detail-id], [data-action-url]",
+        );
         if (!card) return;
-        window.location.href = `event.html?id=${encodeURIComponent(card.dataset.detailId)}`;
+        window.location.href = card.dataset.actionUrl
+          ? card.dataset.actionUrl
+          : `event.html?id=${encodeURIComponent(card.dataset.detailId)}`;
       });
 
       const params = new URLSearchParams(window.location.search);
@@ -765,6 +769,8 @@
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
         planEngineUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine",
+        discoverLiveUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-live",
       };
 
       const normalizedCity = window.EchooLocationPlatform.cityByName(city);
@@ -865,7 +871,7 @@
         const queryText =
           queryInput.value.trim() || activityContext().defaultQuery;
         try {
-          const response = await fetch(CONFIG.planEngineUrl, {
+          const response = await fetch(CONFIG.discoverLiveUrl, {
             method: "POST",
             headers: window.EchooAuth
               ? await window.EchooAuth.authHeaders({
@@ -882,18 +888,16 @@
                     lat: preciseLat,
                     lng: preciseLng,
                     query: queryText,
-                    mode: params.get("mode") || "build_plan",
                     budget,
                     profile: personalizationProfile,
-                    limit: 4,
+                    limit: 8,
                   }
                 : {
                     city,
                     query: queryText,
-                    mode: params.get("mode") || "build_plan",
                     budget,
                     profile: personalizationProfile,
-                    limit: 4,
+                    limit: 8,
                   },
             ),
           });
@@ -901,30 +905,34 @@
           const payload = await response.json();
           if (
             !payload.supported ||
-            !Array.isArray(payload.plans) ||
-            payload.plans.length === 0
+            !Array.isArray(payload.recommendations) ||
+            payload.recommendations.length === 0
           )
             return false;
 
-          events = payload.plans.map((item, index) => ({
+          events = payload.recommendations.map((item, index) => ({
             id: item.id || index + 1,
-            detailId: item.entityId || item.id,
-            category: item.category || "plan",
+            detailId: item.actionUrl ? "" : item.id,
+            actionUrl: item.actionUrl || "",
+            category: item.category || item.type || "live",
             title: item.title,
             copy:
+              item.reason ||
               item.description ||
-              item.why ||
-              "A smart Echoo pick matched to your current moment.",
+              "A live Echoo pick matched to your current moment.",
             img: item.imageUrl || "assets/optimized/news-music-768.jpg",
             webp: item.imageUrl || "assets/optimized/news-music-768.webp",
             meta: [
-              payload.context?.dayName || "Today",
+              item.source || "Live",
               item.distanceMeters
                 ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away`
                 : item.city || city,
-              index === 0
-                ? `${budget} best fit`
-                : payload.planShape?.intensity || "Backup",
+              item.startsAt
+                ? new Date(item.startsAt).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })
+                : item.priceLabel || item.actionLabel || "Open",
             ],
           }));
           render();

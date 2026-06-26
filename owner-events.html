@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Echoo Owner Events</title>
     <style>
       :root {
@@ -16,19 +16,41 @@
         --line-strong: rgba(245, 241, 232, 0.3);
         --signal: #e7c98e;
         --danger: #ef7777;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
       }
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         min-height: 100vh;
         color: var(--ink);
         background:
-          linear-gradient(90deg, rgba(245,241,232,0.035) 1px, transparent 1px) 0 0 / 34px 34px,
+          linear-gradient(
+              90deg,
+              rgba(245, 241, 232, 0.035) 1px,
+              transparent 1px
+            )
+            0 0 / 34px 34px,
           var(--bg);
       }
-      a { color: inherit; text-decoration: none; }
-      button, input, textarea, select { font: inherit; }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
       main {
         width: min(1180px, 100%);
         margin: 0 auto;
@@ -47,14 +69,22 @@
         line-height: 0.9;
         letter-spacing: -0.07em;
       }
-      p { color: var(--muted); line-height: 1.45; }
+      p {
+        color: var(--muted);
+        line-height: 1.45;
+      }
       .panel {
         border: 1px solid var(--line);
         background: rgba(17, 19, 15, 0.9);
         padding: 16px;
       }
-      .grid { display: grid; gap: 14px; }
-      .two { grid-template-columns: 1fr; }
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+      .two {
+        grid-template-columns: 1fr;
+      }
       label {
         display: grid;
         gap: 7px;
@@ -64,7 +94,9 @@
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
-      input, textarea, select {
+      input,
+      textarea,
+      select {
         width: 100%;
         min-height: 46px;
         border: 1px solid var(--line);
@@ -93,8 +125,11 @@
         border-color: transparent;
         background: var(--signal);
       }
-      button.danger { color: var(--danger); }
-      .toolbar, .row {
+      button.danger {
+        color: var(--danger);
+      }
+      .toolbar,
+      .row {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
@@ -106,7 +141,8 @@
         gap: 8px;
         align-items: end;
       }
-      .event-card, .order-card {
+      .event-card,
+      .order-card {
         display: grid;
         gap: 8px;
         border: 1px solid var(--line);
@@ -118,16 +154,26 @@
         font-size: 13px;
         font-weight: 750;
       }
-      .status { color: var(--signal); }
-      .split { display: grid; gap: 14px; }
+      .status {
+        color: var(--signal);
+      }
+      .split {
+        display: grid;
+        gap: 14px;
+      }
       .empty {
         border: 1px dashed var(--line);
         color: var(--muted);
         padding: 16px;
       }
       @media (min-width: 900px) {
-        .two { grid-template-columns: 1fr 1fr; }
-        .split { grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr); align-items: start; }
+        .two {
+          grid-template-columns: 1fr 1fr;
+        }
+        .split {
+          grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+          align-items: start;
+        }
       }
     </style>
   </head>
@@ -136,17 +182,28 @@
       <header>
         <div>
           <h1>Owner Events</h1>
-          <p>Upload ticketed events, publish them into Echoo discovery, and confirm paid manual orders until a payment provider is connected.</p>
+          <p>
+            Upload ticketed events, publish them into Echoo discovery, and
+            confirm paid manual orders until a payment provider is connected.
+          </p>
         </div>
         <a class="meta" href="events.html">View Discover</a>
       </header>
 
-      <section class="panel grid" style="margin-bottom:14px;">
-        <label>Owner token
-          <input id="admin-token" type="password" autocomplete="off" placeholder="Ticketing admin token">
+      <section class="panel grid" style="margin-bottom: 14px">
+        <label
+          >Owner token
+          <input
+            id="admin-token"
+            type="password"
+            autocomplete="off"
+            placeholder="Ticketing admin token"
+          />
         </label>
         <div class="toolbar">
-          <button class="primary" id="load-events" type="button">Load events</button>
+          <button class="primary" id="load-events" type="button">
+            Load events
+          </button>
           <button id="new-event" type="button">New event</button>
           <button id="load-orders" type="button">Load pending orders</button>
         </div>
@@ -154,34 +211,87 @@
 
       <div class="split">
         <form class="panel grid" id="event-form">
-          <input id="event-id" type="hidden">
+          <input id="event-id" type="hidden" />
           <div class="two grid">
-            <label>Title <input id="title" required placeholder="Toronto rooftop live set"></label>
-            <label>Category <input id="category" value="music" placeholder="music, comedy, sports"></label>
+            <label
+              >Title
+              <input id="title" required placeholder="Toronto rooftop live set"
+            /></label>
+            <label
+              >Category
+              <input
+                id="category"
+                value="music"
+                placeholder="music, comedy, sports"
+            /></label>
           </div>
-          <label>Description <textarea id="description" placeholder="What makes this event worth showing up for?"></textarea></label>
+          <label
+            >Description
+            <textarea
+              id="description"
+              placeholder="What makes this event worth showing up for?"
+            ></textarea>
+          </label>
           <div class="two grid">
-            <label>Image URL <input id="image-url" placeholder="assets/optimized/news-music-768.jpg"></label>
-            <label>Venue name <input id="venue-name" required placeholder="The venue or room name"></label>
+            <label
+              >Image URL
+              <input
+                id="image-url"
+                placeholder="assets/optimized/news-music-768.jpg"
+            /></label>
+            <label
+              >Venue name
+              <input
+                id="venue-name"
+                required
+                placeholder="The venue or room name"
+            /></label>
           </div>
-          <label>Address <input id="address" placeholder="Street address"></label>
+          <label
+            >Address <input id="address" placeholder="Street address"
+          /></label>
           <div class="two grid">
-            <label>City
+            <label
+              >City
               <select id="city">
-                <option>Toronto</option><option>Vancouver</option><option>Montreal</option><option>Calgary</option><option>Edmonton</option><option>Ottawa</option><option>Winnipeg</option><option>Quebec City</option><option>Halifax</option><option>Victoria</option>
+                <option>Toronto</option>
+                <option>Vancouver</option>
+                <option>Montreal</option>
+                <option>Calgary</option>
+                <option>Edmonton</option>
+                <option>Ottawa</option>
+                <option>Winnipeg</option>
+                <option>Quebec City</option>
+                <option>Halifax</option>
+                <option>Victoria</option>
               </select>
             </label>
-            <label>Province <input id="province" value="ON" placeholder="ON"></label>
+            <label
+              >Province <input id="province" value="ON" placeholder="ON"
+            /></label>
           </div>
           <div class="two grid">
-            <label>Latitude <input id="latitude" required inputmode="decimal" value="43.6532"></label>
-            <label>Longitude <input id="longitude" required inputmode="decimal" value="-79.3832"></label>
+            <label
+              >Latitude
+              <input id="latitude" required inputmode="decimal" value="43.6532"
+            /></label>
+            <label
+              >Longitude
+              <input
+                id="longitude"
+                required
+                inputmode="decimal"
+                value="-79.3832"
+            /></label>
           </div>
           <div class="two grid">
-            <label>Starts at <input id="starts-at" required type="datetime-local"></label>
-            <label>Ends at <input id="ends-at" type="datetime-local"></label>
+            <label
+              >Starts at <input id="starts-at" required type="datetime-local"
+            /></label>
+            <label>Ends at <input id="ends-at" type="datetime-local" /></label>
           </div>
-          <label>Status
+          <label
+            >Status
             <select id="status">
               <option value="draft">Draft</option>
               <option value="published">Published</option>
@@ -190,7 +300,10 @@
           </label>
 
           <div>
-            <div class="toolbar" style="justify-content:space-between;margin-bottom:8px;">
+            <div
+              class="toolbar"
+              style="justify-content: space-between; margin-bottom: 8px"
+            >
               <strong>Ticket tiers</strong>
               <button id="add-tier" type="button">Add tier</button>
             </div>
@@ -203,12 +316,18 @@
 
         <aside class="grid">
           <section class="panel grid">
-            <h2 style="margin:0;">Published and draft events</h2>
-            <div class="grid" id="events-list"><div class="empty">Load events to begin.</div></div>
+            <h2 style="margin: 0">Published and draft events</h2>
+            <div class="grid" id="events-list">
+              <div class="empty">Load events to begin.</div>
+            </div>
           </section>
           <section class="panel grid">
-            <h2 style="margin:0;">Pending paid orders</h2>
-            <div class="grid" id="orders-list"><div class="empty">Load pending orders to confirm manual payments.</div></div>
+            <h2 style="margin: 0">Pending paid orders</h2>
+            <div class="grid" id="orders-list">
+              <div class="empty">
+                Load pending orders to confirm manual payments.
+              </div>
+            </div>
           </section>
         </aside>
       </div>
@@ -216,36 +335,61 @@
 
     <script>
       const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
-      const ENDPOINT = "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-manage";
-      const CONFIRM_ENDPOINT = "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-confirm";
+      const ENDPOINT =
+        "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-manage";
+      const CONFIRM_ENDPOINT =
+        "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-confirm";
       const tokenEl = document.getElementById("admin-token");
       const tiersEl = document.getElementById("tiers");
       const eventsList = document.getElementById("events-list");
       const ordersList = document.getElementById("orders-list");
       const formStatus = document.getElementById("form-status");
 
-      tokenEl.value = localStorage.getItem("echoo_ticketing_admin_token") || localStorage.getItem("echoo_location_admin_token") || "";
+      tokenEl.value =
+        localStorage.getItem("echoo_ticketing_admin_token") ||
+        localStorage.getItem("echoo_location_admin_token") ||
+        "";
 
       const cityProvince = {
-        Toronto: "ON", Vancouver: "BC", Montreal: "QC", Calgary: "AB", Edmonton: "AB",
-        Ottawa: "ON", Winnipeg: "MB", "Quebec City": "QC", Halifax: "NS", Victoria: "BC"
+        Toronto: "ON",
+        Vancouver: "BC",
+        Montreal: "QC",
+        Calgary: "AB",
+        Edmonton: "AB",
+        Ottawa: "ON",
+        Winnipeg: "MB",
+        "Quebec City": "QC",
+        Halifax: "NS",
+        Victoria: "BC",
       };
 
       function tokenHeaders() {
         const token = tokenEl.value.trim();
         localStorage.setItem("echoo_ticketing_admin_token", token);
-        return { "Content-Type": "application/json", "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "x-admin-token": token };
+        return {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ANON_KEY}`,
+          apikey: ANON_KEY,
+          "x-admin-token": token,
+        };
       }
 
       async function api(path = "", options = {}) {
-        const response = await fetch(`${ENDPOINT}${path}`, { ...options, headers: { ...tokenHeaders(), ...(options.headers || {}) } });
+        const response = await fetch(`${ENDPOINT}${path}`, {
+          ...options,
+          headers: { ...tokenHeaders(), ...(options.headers || {}) },
+        });
         const json = await response.json();
-        if (!response.ok) throw new Error(json.error || "Owner event request failed");
+        if (!response.ok)
+          throw new Error(json.error || "Owner event request failed");
         return json;
       }
 
       function money(cents, currency = "CAD") {
-        return new Intl.NumberFormat("en-CA", { style: "currency", currency }).format((Number(cents) || 0) / 100);
+        return new Intl.NumberFormat("en-CA", {
+          style: "currency",
+          currency,
+        }).format((Number(cents) || 0) / 100);
       }
 
       function addTier(tier = {}) {
@@ -265,7 +409,8 @@
           </label>
           <button class="danger" type="button" data-remove-tier>Remove</button>
         `;
-        row.querySelector("[data-tier-status]").value = tier.sale_status || tier.saleStatus || "on_sale";
+        row.querySelector("[data-tier-status]").value =
+          tier.sale_status || tier.saleStatus || "on_sale";
         tiersEl.appendChild(row);
       }
 
@@ -276,22 +421,29 @@
         document.getElementById("province").value = "ON";
         document.getElementById("latitude").value = "43.6532";
         document.getElementById("longitude").value = "-79.3832";
-        document.getElementById("image-url").value = "assets/optimized/news-music-768.jpg";
+        document.getElementById("image-url").value =
+          "assets/optimized/news-music-768.jpg";
         tiersEl.innerHTML = "";
         addTier();
         formStatus.textContent = "";
       }
 
       function collectTiers() {
-        return [...tiersEl.querySelectorAll(".tier")].map((row, index) => ({
-          id: row.querySelector("[data-tier-id]").value || undefined,
-          name: row.querySelector("[data-tier-name]").value.trim(),
-          priceCents: Number(row.querySelector("[data-tier-price]").value || 0),
-          currency: "CAD",
-          capacity: Number(row.querySelector("[data-tier-capacity]").value || 0),
-          saleStatus: row.querySelector("[data-tier-status]").value,
-          sortOrder: index
-        })).filter((tier) => tier.name);
+        return [...tiersEl.querySelectorAll(".tier")]
+          .map((row, index) => ({
+            id: row.querySelector("[data-tier-id]").value || undefined,
+            name: row.querySelector("[data-tier-name]").value.trim(),
+            priceCents: Number(
+              row.querySelector("[data-tier-price]").value || 0,
+            ),
+            currency: "CAD",
+            capacity: Number(
+              row.querySelector("[data-tier-capacity]").value || 0,
+            ),
+            saleStatus: row.querySelector("[data-tier-status]").value,
+            sortOrder: index,
+          }))
+          .filter((tier) => tier.name);
       }
 
       function fillForm(event) {
@@ -303,20 +455,30 @@
         document.getElementById("venue-name").value = event.venue_name || "";
         document.getElementById("address").value = event.address || "";
         document.getElementById("city").value = event.city || "Toronto";
-        document.getElementById("province").value = event.province || cityProvince[event.city] || "ON";
+        document.getElementById("province").value =
+          event.province || cityProvince[event.city] || "ON";
         document.getElementById("latitude").value = event.latitude || "";
         document.getElementById("longitude").value = event.longitude || "";
-        document.getElementById("starts-at").value = event.starts_at ? event.starts_at.slice(0, 16) : "";
-        document.getElementById("ends-at").value = event.ends_at ? event.ends_at.slice(0, 16) : "";
+        document.getElementById("starts-at").value = event.starts_at
+          ? event.starts_at.slice(0, 16)
+          : "";
+        document.getElementById("ends-at").value = event.ends_at
+          ? event.ends_at.slice(0, 16)
+          : "";
         document.getElementById("status").value = event.status || "draft";
         tiersEl.innerHTML = "";
-        (event.ticket_tiers || []).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).forEach(addTier);
+        (event.ticket_tiers || [])
+          .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+          .forEach(addTier);
         if (!tiersEl.children.length) addTier();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
       function renderEvents(events) {
-        eventsList.innerHTML = events.length ? events.map((event) => `
+        eventsList.innerHTML = events.length
+          ? events
+              .map(
+                (event) => `
           <article class="event-card">
             <strong>${event.title}</strong>
             <div class="meta">${event.venue_name} · ${event.city}, ${event.province} · <span class="status">${event.status}</span></div>
@@ -328,11 +490,17 @@
               <a class="meta" href="checkin.html?id=${event.id}">Check-in</a>
             </div>
           </article>
-        `).join("") : '<div class="empty">No owner events yet.</div>';
+        `,
+              )
+              .join("")
+          : '<div class="empty">No owner events yet.</div>';
       }
 
       function renderOrders(orders) {
-        ordersList.innerHTML = orders.length ? orders.map((order) => `
+        ordersList.innerHTML = orders.length
+          ? orders
+              .map(
+                (order) => `
           <article class="order-card">
             <strong>${order.ticketed_events?.title || "Untitled event"}</strong>
             <div class="meta">${order.buyer_name || "Buyer"} · ${order.buyer_email || "No email"} · ${order.ticket_tiers?.name || "Ticket"}</div>
@@ -342,7 +510,10 @@
               <span class="meta">Order ${order.id}</span>
             </div>
           </article>
-        `).join("") : '<div class="empty">No pending paid orders.</div>';
+        `,
+              )
+              .join("")
+          : '<div class="empty">No pending paid orders.</div>';
       }
 
       async function loadEvents() {
@@ -358,21 +529,41 @@
       }
 
       document.getElementById("city").addEventListener("change", (event) => {
-        document.getElementById("province").value = cityProvince[event.target.value] || "ON";
+        document.getElementById("province").value =
+          cityProvince[event.target.value] || "ON";
       });
-      document.getElementById("add-tier").addEventListener("click", () => addTier());
+      document
+        .getElementById("add-tier")
+        .addEventListener("click", () => addTier());
       tiersEl.addEventListener("click", (event) => {
-        if (event.target.closest("[data-remove-tier]")) event.target.closest(".tier").remove();
+        if (event.target.closest("[data-remove-tier]"))
+          event.target.closest(".tier").remove();
       });
       document.getElementById("new-event").addEventListener("click", resetForm);
-      document.getElementById("load-events").addEventListener("click", () => loadEvents().catch((error) => eventsList.innerHTML = `<div class="empty">${error.message}</div>`));
-      document.getElementById("load-orders").addEventListener("click", () => loadOrders().catch((error) => ordersList.innerHTML = `<div class="empty">${error.message}</div>`));
+      document
+        .getElementById("load-events")
+        .addEventListener("click", () =>
+          loadEvents().catch(
+            (error) =>
+              (eventsList.innerHTML = `<div class="empty">${error.message}</div>`),
+          ),
+        );
+      document
+        .getElementById("load-orders")
+        .addEventListener("click", () =>
+          loadOrders().catch(
+            (error) =>
+              (ordersList.innerHTML = `<div class="empty">${error.message}</div>`),
+          ),
+        );
 
       eventsList.addEventListener("click", async (event) => {
         const button = event.target.closest("[data-edit]");
         if (!button) return;
         const data = await api("?status=all");
-        const item = (data.events || []).find((entry) => entry.id === button.dataset.edit);
+        const item = (data.events || []).find(
+          (entry) => entry.id === button.dataset.edit,
+        );
         if (item) fillForm(item);
       });
 
@@ -384,10 +575,11 @@
           const response = await fetch(CONFIRM_ENDPOINT, {
             method: "POST",
             headers: tokenHeaders(),
-            body: JSON.stringify({ orderId: button.dataset.confirm })
+            body: JSON.stringify({ orderId: button.dataset.confirm }),
           });
           const json = await response.json();
-          if (!response.ok) throw new Error(json.error || "Confirmation failed");
+          if (!response.ok)
+            throw new Error(json.error || "Confirmation failed");
           await loadOrders();
         } catch (error) {
           alert(error.message);
@@ -395,36 +587,42 @@
         }
       });
 
-      document.getElementById("event-form").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        formStatus.textContent = "Saving...";
-        const payload = {
-          id: document.getElementById("event-id").value || undefined,
-          title: document.getElementById("title").value,
-          category: document.getElementById("category").value,
-          description: document.getElementById("description").value,
-          imageUrl: document.getElementById("image-url").value,
-          venueName: document.getElementById("venue-name").value,
-          address: document.getElementById("address").value,
-          city: document.getElementById("city").value,
-          province: document.getElementById("province").value,
-          countryCode: "CA",
-          latitude: Number(document.getElementById("latitude").value),
-          longitude: Number(document.getElementById("longitude").value),
-          startsAt: document.getElementById("starts-at").value,
-          endsAt: document.getElementById("ends-at").value || undefined,
-          status: document.getElementById("status").value,
-          tiers: collectTiers()
-        };
-        try {
-          const result = await api("", { method: payload.id ? "PATCH" : "POST", body: JSON.stringify(payload) });
-          fillForm(result.event);
-          await loadEvents();
-          formStatus.textContent = "Saved. Published events now appear in Discover, plans, and event detail pages.";
-        } catch (error) {
-          formStatus.textContent = error.message;
-        }
-      });
+      document
+        .getElementById("event-form")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          formStatus.textContent = "Saving...";
+          const payload = {
+            id: document.getElementById("event-id").value || undefined,
+            title: document.getElementById("title").value,
+            category: document.getElementById("category").value,
+            description: document.getElementById("description").value,
+            imageUrl: document.getElementById("image-url").value,
+            venueName: document.getElementById("venue-name").value,
+            address: document.getElementById("address").value,
+            city: document.getElementById("city").value,
+            province: document.getElementById("province").value,
+            countryCode: "CA",
+            latitude: Number(document.getElementById("latitude").value),
+            longitude: Number(document.getElementById("longitude").value),
+            startsAt: document.getElementById("starts-at").value,
+            endsAt: document.getElementById("ends-at").value || undefined,
+            status: document.getElementById("status").value,
+            tiers: collectTiers(),
+          };
+          try {
+            const result = await api("", {
+              method: payload.id ? "PATCH" : "POST",
+              body: JSON.stringify(payload),
+            });
+            fillForm(result.event);
+            await loadEvents();
+            formStatus.textContent =
+              "Saved. Published events now appear in Discover, plans, and event detail pages.";
+          } catch (error) {
+            formStatus.textContent = error.message;
+          }
+        });
 
       resetForm();
     </script>

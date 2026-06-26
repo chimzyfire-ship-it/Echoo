@@ -1,14 +1,22 @@
-import { CORS_HEADERS, getSupabaseAdmin, jsonResponse } from "../_shared/location.ts";
+import {
+  CORS_HEADERS,
+  getSupabaseAdmin,
+  jsonResponse,
+} from "../_shared/location.ts";
 
 function isAuthorized(req: Request): boolean {
-  const expected = Deno.env.get("TICKETING_ADMIN_TOKEN") || Deno.env.get("LOCATION_ADMIN_TOKEN");
+  const expected =
+    Deno.env.get("TICKETING_ADMIN_TOKEN") ||
+    Deno.env.get("LOCATION_ADMIN_TOKEN");
   const provided = req.headers.get("x-admin-token") || "";
   return Boolean(expected && provided && expected === provided);
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
-  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (req.method === "OPTIONS")
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (req.method !== "POST")
+    return jsonResponse({ error: "Method not allowed" }, 405);
 
   const supabase = getSupabaseAdmin();
 
@@ -26,7 +34,10 @@ Deno.serve(async (req) => {
 
     const force = Number(order.total_cents) > 0;
     if (force && !isAuthorized(req)) {
-      return jsonResponse({ error: "Admin confirmation is required for paid manual orders." }, 401);
+      return jsonResponse(
+        { error: "Admin confirmation is required for paid manual orders." },
+        401,
+      );
     }
 
     const { data, error } = await supabase.rpc("confirm_ticket_order", {

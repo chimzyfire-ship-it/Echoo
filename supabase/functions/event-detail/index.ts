@@ -1,8 +1,14 @@
-import { CORS_HEADERS, getSupabaseAdmin, jsonResponse } from "../_shared/location.ts";
+import {
+  CORS_HEADERS,
+  getSupabaseAdmin,
+  jsonResponse,
+} from "../_shared/location.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
-  if (req.method !== "GET") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (req.method === "OPTIONS")
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (req.method !== "GET")
+    return jsonResponse({ error: "Method not allowed" }, 405);
 
   const supabase = getSupabaseAdmin();
 
@@ -39,14 +45,16 @@ Deno.serve(async (req) => {
         .eq("country_code", "CA")
         .maybeSingle();
       if (fallback.error) throw fallback.error;
-      if (!fallback.data) return jsonResponse({ error: "Event not found." }, 404);
+      if (!fallback.data)
+        return jsonResponse({ error: "Event not found." }, 404);
       return jsonResponse({
         event: {
           id: fallback.data.id,
           location_entity_id: fallback.data.id,
           title: fallback.data.title,
           description: fallback.data.description,
-          category: fallback.data.category || fallback.data.entity_type || "event",
+          category:
+            fallback.data.category || fallback.data.entity_type || "event",
           image_url: fallback.data.image_url,
           venue_name: fallback.data.metadata?.venue_name || fallback.data.title,
           city: fallback.data.city,
@@ -65,12 +73,15 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Event not found." }, 404);
     }
 
-    const tiers = (event.ticket_tiers || []).sort((a: any, b: any) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    const tiers = (event.ticket_tiers || []).sort(
+      (a: any, b: any) => Number(a.sort_order || 0) - Number(b.sort_order || 0),
+    );
     delete event.ticket_tiers;
 
     return jsonResponse({ event, tiers });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown event detail error";
+    const message =
+      err instanceof Error ? err.message : "Unknown event detail error";
     return jsonResponse({ error: message }, 500);
   }
 });

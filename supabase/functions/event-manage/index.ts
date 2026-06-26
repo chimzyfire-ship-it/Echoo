@@ -37,7 +37,9 @@ type EventInput = {
 };
 
 function isAuthorized(req: Request): boolean {
-  const expected = Deno.env.get("TICKETING_ADMIN_TOKEN") || Deno.env.get("LOCATION_ADMIN_TOKEN");
+  const expected =
+    Deno.env.get("TICKETING_ADMIN_TOKEN") ||
+    Deno.env.get("LOCATION_ADMIN_TOKEN");
   const provided = req.headers.get("x-admin-token") || "";
   return Boolean(expected && provided && expected === provided);
 }
@@ -48,7 +50,8 @@ function asInt(value: unknown, fallback: number): number {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (req.method === "OPTIONS")
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (!isAuthorized(req)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const supabase = getSupabaseAdmin();
@@ -61,7 +64,9 @@ Deno.serve(async (req) => {
       if (url.searchParams.get("orders") === "pending") {
         const { data, error } = await supabase
           .from("ticket_orders")
-          .select("*, ticketed_events(title,starts_at,venue_name,city), ticket_tiers(name), payment_attempts(*)")
+          .select(
+            "*, ticketed_events(title,starts_at,venue_name,city), ticket_tiers(name), payment_attempts(*)",
+          )
           .eq("status", "pending")
           .order("created_at", { ascending: false })
           .limit(80);
@@ -84,20 +89,36 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Method not allowed" }, 405);
     }
 
-    const body = await req.json().catch(() => ({})) as EventInput;
+    const body = (await req.json().catch(() => ({}))) as EventInput;
     const city = normalizeCityName(body.city);
     const latitude = Number(body.latitude);
     const longitude = Number(body.longitude);
     const status = body.status || "draft";
 
-    if (!body.title || !body.venueName || !city || !Number.isFinite(latitude) || !Number.isFinite(longitude) || !body.startsAt) {
-      return jsonResponse({ error: "title, venueName, supported city, latitude, longitude, and startsAt are required." }, 422);
+    if (
+      !body.title ||
+      !body.venueName ||
+      !city ||
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      !body.startsAt
+    ) {
+      return jsonResponse(
+        {
+          error:
+            "title, venueName, supported city, latitude, longitude, and startsAt are required.",
+        },
+        422,
+      );
     }
     if (!["draft", "published", "archived"].includes(status)) {
       return jsonResponse({ error: "Invalid event status." }, 422);
     }
     if (!isInsideCanadaBounds(latitude, longitude)) {
-      return jsonResponse({ error: "Ticketed events are Canada-first for launch." }, 422);
+      return jsonResponse(
+        { error: "Ticketed events are Canada-first for launch." },
+        422,
+      );
     }
 
     const eventPayload = {
@@ -118,8 +139,17 @@ Deno.serve(async (req) => {
     };
 
     const { data: savedEvent, error: eventError } = body.id
-      ? await supabase.from("ticketed_events").update(eventPayload).eq("id", body.id).select("*").single()
-      : await supabase.from("ticketed_events").insert(eventPayload).select("*").single();
+      ? await supabase
+          .from("ticketed_events")
+          .update(eventPayload)
+          .eq("id", body.id)
+          .select("*")
+          .single()
+      : await supabase
+          .from("ticketed_events")
+          .insert(eventPayload)
+          .select("*")
+          .single();
     if (eventError) throw eventError;
 
     let locationEntityId = savedEvent.location_entity_id;
@@ -136,20 +166,35 @@ Deno.serve(async (req) => {
       availability_score: 0.88,
       editorial_boost: status === "published" ? 0.2 : 0,
       trust_score: 0.9,
-      status: status === "published" ? "published" : status === "archived" ? "archived" : "draft",
+      status:
+        status === "published"
+          ? "published"
+          : status === "archived"
+            ? "archived"
+            : "draft",
       country_code: "CA",
       admin_area_1: savedEvent.province,
       city: savedEvent.city,
       latitude: savedEvent.latitude,
       longitude: savedEvent.longitude,
-      metadata: { ticketed_event_id: savedEvent.id, venue_name: savedEvent.venue_name },
+      metadata: {
+        ticketed_event_id: savedEvent.id,
+        venue_name: savedEvent.venue_name,
+      },
     };
 
     if (locationEntityId) {
-      const { error } = await supabase.from("location_entities").update(locationPayload).eq("id", locationEntityId);
+      const { error } = await supabase
+        .from("location_entities")
+        .update(locationPayload)
+        .eq("id", locationEntityId);
       if (error) throw error;
     } else {
-      const { data, error } = await supabase.from("location_entities").insert(locationPayload).select("id").single();
+      const { data, error } = await supabase
+        .from("location_entities")
+        .insert(locationPayload)
+        .select("id")
+        .single();
       if (error) throw error;
       locationEntityId = data.id;
       const { error: linkError } = await supabase
@@ -182,20 +227,29 @@ Deno.serve(async (req) => {
           .eq("event_id", savedEvent.id)
           .single();
         if (tierReadError) throw tierReadError;
-        const sold = Number(existing.capacity) - Number(existing.remaining_quantity);
+        const sold =
+          Number(existing.capacity) - Number(existing.remaining_quantity);
         if (capacity < sold) {
-          return jsonResponse({ error: `${tier.name} capacity cannot be below tickets already sold or held.` }, 422);
+          return jsonResponse(
+            {
+              error: `${tier.name} capacity cannot be below tickets already sold or held.`,
+            },
+            422,
+          );
         }
-        const { error } = await supabase.from("ticket_tiers").update({
-          name: tier.name,
-          description: tier.description || null,
-          price_cents: priceCents,
-          currency: tier.currency || "CAD",
-          capacity,
-          remaining_quantity: capacity - sold,
-          sale_status: tier.saleStatus || "on_sale",
-          sort_order: tier.sortOrder ?? index,
-        }).eq("id", tier.id);
+        const { error } = await supabase
+          .from("ticket_tiers")
+          .update({
+            name: tier.name,
+            description: tier.description || null,
+            price_cents: priceCents,
+            currency: tier.currency || "CAD",
+            capacity,
+            remaining_quantity: capacity - sold,
+            sale_status: tier.saleStatus || "on_sale",
+            sort_order: tier.sortOrder ?? index,
+          })
+          .eq("id", tier.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("ticket_tiers").insert({
@@ -222,7 +276,8 @@ Deno.serve(async (req) => {
 
     return jsonResponse({ event: result });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown event management error";
+    const message =
+      err instanceof Error ? err.message : "Unknown event management error";
     return jsonResponse({ error: message }, 500);
   }
 });

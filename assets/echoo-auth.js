@@ -11,13 +11,17 @@
   const client =
     window.echooSupabaseClient ||
     (window.supabase
-      ? window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true,
+      ? window.supabase.createClient(
+          CONFIG.supabaseUrl,
+          CONFIG.supabaseAnonKey,
+          {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true,
+            },
           },
-        })
+        )
       : null);
 
   if (client) window.echooSupabaseClient = client;
@@ -195,7 +199,8 @@
   }
 
   async function getSession() {
-    if (!client) return { session: null, error: new Error("Supabase is not loaded.") };
+    if (!client)
+      return { session: null, error: new Error("Supabase is not loaded.") };
     const { data, error } = await client.auth.getSession();
     return { session: data?.session || null, error };
   }
@@ -249,7 +254,10 @@
   async function requireOnboarding(options = {}) {
     const state = await loadOnboardingProfile();
     if (!state.ok && options.redirect !== false) {
-      redirectToAuth(options.next || currentRelativeUrl(), options.mode || "signup");
+      redirectToAuth(
+        options.next || currentRelativeUrl(),
+        options.mode || "signup",
+      );
     }
     return state;
   }

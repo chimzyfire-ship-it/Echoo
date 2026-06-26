@@ -41,13 +41,17 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const body =
+      req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const payload: SearchPayload = {
       lat: optionalNumber(body.lat ?? url.searchParams.get("lat")),
       lng: optionalNumber(body.lng ?? url.searchParams.get("lng")),
       city: body.city ?? url.searchParams.get("city") ?? undefined,
-      radiusMeters: optionalNumber(body.radiusMeters ?? url.searchParams.get("radiusMeters")),
-      entityType: body.entityType ?? url.searchParams.get("entityType") ?? undefined,
+      radiusMeters: optionalNumber(
+        body.radiusMeters ?? url.searchParams.get("radiusMeters"),
+      ),
+      entityType:
+        body.entityType ?? url.searchParams.get("entityType") ?? undefined,
       category: body.category ?? url.searchParams.get("category") ?? undefined,
       limit: optionalNumber(body.limit ?? url.searchParams.get("limit")),
     };
@@ -55,16 +59,18 @@ Deno.serve(async (req) => {
     const radiusMeters = clampRadiusMeters(payload.radiusMeters);
     const limit = clampLimit(payload.limit);
     const supabase = getSupabaseAdmin();
-    const cacheKey = await sha256Hex(JSON.stringify({
-      v: 1,
-      lat: payload.lat ? Number(payload.lat).toFixed(4) : null,
-      lng: payload.lng ? Number(payload.lng).toFixed(4) : null,
-      city: payload.city || null,
-      radiusMeters,
-      entityType: payload.entityType || null,
-      category: payload.category || null,
-      limit,
-    }));
+    const cacheKey = await sha256Hex(
+      JSON.stringify({
+        v: 1,
+        lat: payload.lat ? Number(payload.lat).toFixed(4) : null,
+        lng: payload.lng ? Number(payload.lng).toFixed(4) : null,
+        city: payload.city || null,
+        radiusMeters,
+        entityType: payload.entityType || null,
+        category: payload.category || null,
+        limit,
+      }),
+    );
     const cached = await readLocationCache(supabase, cacheKey);
     if (cached) {
       await logLocationEvent(supabase, {
@@ -73,7 +79,13 @@ Deno.serve(async (req) => {
         cacheHit: true,
         durationMs: Date.now() - startedAt,
         city: typeof payload.city === "string" ? payload.city : null,
-        request: { city: payload.city, radiusMeters, entityType: payload.entityType, category: payload.category, limit },
+        request: {
+          city: payload.city,
+          radiusMeters,
+          entityType: payload.entityType,
+          category: payload.category,
+          limit,
+        },
         responseSummary: { cached: true },
       });
       return jsonResponse(cached);
@@ -129,7 +141,14 @@ Deno.serve(async (req) => {
         countryCode: "CA",
         adminArea1: region.province,
         city: region.name,
-        request: { lat, lng, radiusMeters, entityType: payload.entityType, category: payload.category, limit },
+        request: {
+          lat,
+          lng,
+          radiusMeters,
+          entityType: payload.entityType,
+          category: payload.category,
+          limit,
+        },
         responseSummary: { count: response.results.length },
       });
       return jsonResponse(response);
@@ -140,7 +159,8 @@ Deno.serve(async (req) => {
       const response = {
         supported: false,
         reason: "unsupported_city",
-        message: "Echoo is active across Canada first. Choose a supported Canadian launch city.",
+        message:
+          "Echoo is active across Canada first. Choose a supported Canadian launch city.",
         results: [],
       };
       await logLocationEvent(supabase, {
@@ -180,12 +200,18 @@ Deno.serve(async (req) => {
       countryCode: "CA",
       adminArea1: city.province,
       city: city.name,
-      request: { city: payload.city, entityType: payload.entityType, category: payload.category, limit },
+      request: {
+        city: payload.city,
+        entityType: payload.entityType,
+        category: payload.category,
+        limit,
+      },
       responseSummary: { count: response.results.length },
     });
     return jsonResponse(response);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown location search error";
+    const message =
+      err instanceof Error ? err.message : "Unknown location search error";
     return jsonResponse({ error: message }, 500);
   }
 });
