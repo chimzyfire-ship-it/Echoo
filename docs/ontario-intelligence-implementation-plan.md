@@ -1,6 +1,6 @@
 # Echoo Ontario Intelligence Implementation Plan
 
-Last updated: 2026-06-26
+Last updated: 2026-06-27
 
 ## 1. Decision
 
@@ -102,6 +102,25 @@ Low-density regions where Echoo may have fewer records. The product must answer 
 ## 6. Database Implementation
 
 Keep `canonical_places` as the master place table and `location_entities` as the searchable user-facing entity table. Add these tables.
+
+Verification status as of 2026-06-27:
+
+- Phase 0/1 migrations `202606260001` and `202606260002` are applied on the
+  linked Supabase project `Echoo` (`dlezregdjpdqmooubwvl`).
+- Linked database lint passes with `--fail-on warning`.
+- Linked database security/performance advisors report no issues.
+- A rollback-only smoke test verified canonical place normalization and
+  `search_ontario_places`.
+- `202606260004_verification_hardening.sql` fixes unrelated advisory noise in
+  older auth RLS policies and the ticket confirmation function.
+- Phase 1 foundation APIs `ontario-search` and `place-detail` are deployed with
+  server-side Supabase bundling (`--use-api`) and remote smoke-tested.
+- Public-schema lint currently reports `No schema errors found`.
+- Supabase security/performance advisors currently report `No issues found`.
+- All Ontario Edge Functions are active remotely:
+  `ontario-search`, `place-detail`, `ontario-osm-import`,
+  `ontario-open-data-import`, `echoo-partner-import`,
+  `ticketmaster-ontario-ingest`, `ontario-plan`, and `plan-engine`.
 
 ### 6.1 `place_profiles`
 
@@ -276,6 +295,57 @@ Schedule:
 
 Events should be stored in `ontario_events` and mirrored into `location_entities` for search/planning.
 
+### 7.4 Phase 2 Repository Implementation
+
+Phase 2 ingestion workers are implemented as non-user-facing Supabase Edge
+Functions. They should be called by scheduled jobs, admin tooling, or one-off
+imports only.
+
+Implemented workers:
+
+- `ontario-osm-import`: accepts Ontario/Canada OSM extract records already
+  converted to JSON, NDJSON, or GeoJSON. It filters locally for the approved
+  POI tags and does not use Overpass as the province-wide bulk source.
+- `ontario-open-data-import`: imports official Ontario/municipal open data
+  records for parks, libraries, recreation/community centres, trails, cultural
+  spaces, public facilities, and similar datasets. Payloads can provide field
+  mappings per source.
+- `ticketmaster-ontario-ingest`: runs Ontario city buckets against category
+  buckets for music, sports, theatre, arts, family, and comedy, then stores
+  normalized rows in `ontario_events` and mirrors cards into
+  `location_entities`.
+- `echoo-partner-import`: imports Echoo manual/partner records with higher
+  confidence and editorial ranking signals.
+
+Shared behavior lives in `supabase/functions/_shared/ontario-ingestion.ts`.
+Worker runs are tracked in `ontario_ingestion_runs`, created by
+`supabase/migrations/202606260003_ontario_ingestion_workers.sql`.
+
+Deployment status as of 2026-06-27:
+
+- all four ingestion workers are deployed and active on the linked Supabase
+  project
+- workers were deployed with `--use-api`, avoiding local Docker
+- `ONTARIO_INGESTION_SECRET` is configured
+- `TICKETMASTER_API_KEY` is configured
+- OSM, open-data, and partner workers passed one-record remote smoke tests and
+  mirrored records into `location_entities`
+- Ticketmaster passed a remote API smoke test; stale/package-style records are
+  filtered before import
+
+Validation seed status as of 2026-06-27:
+
+- `supabase/seed-data/ontario-validation-places.json` contains 20 validation
+  records for Markham and Toronto
+- records were imported through `echoo-partner-import` as
+  `echoo_validation_seed`
+- all records are present in `canonical_places`, mirrored into
+  `location_entities`, and have approved baseline `place_profiles`
+- `ontario-search` was redeployed with intent/category bucket handling for
+  broad queries such as `lunch Markham` and `museum Toronto`
+- remote smoke tests confirmed `ontario-search` and `place-detail` can retrieve
+  the validation records with profile data
+
 ## 8. Dedupe And Normalization
 
 Duplicates must be handled before AI enrichment.
@@ -388,6 +458,9 @@ Do not invent specials, hours, ratings, or events.
 
 Purpose: Search places/events/activities across Ontario.
 
+Status: implemented and deployed as
+`supabase/functions/ontario-search/index.ts`.
+
 Request:
 
 ```json
@@ -418,9 +491,65 @@ Response:
 
 Purpose: Return canonical place, Echoo profile, hours, related events, source confidence, and nearby alternatives.
 
+Status: implemented and deployed as
+`supabase/functions/place-detail/index.ts`.
+
 ### 11.3 `ontario-plan`
 
 Purpose: Build route/plan from retrieved Ontario records.
+
+Status: implemented and deployed as
+`supabase/functions/ontario-plan/index.ts`.
+
+The first version is deterministic and retrieval-first. It uses
+`search_ontario_places`, `canonical_places`, and `place_profiles`; it does not
+call an LLM or invent local facts. It returns both the newer
+`{ data, error, meta }` response envelope and a compatibility payload under
+`data.compatibility` for the existing planner UI shape.
+
+Remote smoke tests verified:
+
+- a two-stop Markham lunch route using validation records
+- a three-stop Toronto date/culture route using validation records
+- an honest sparse fallback for Thunder Bay
+
+Planner integration status as of 2026-06-27:
+
+- `plan-engine` now routes Ontario local planning/place queries to
+  `ontario-plan` before Gemini
+- Ontario responses use `ai.provider = "echoo-retrieval"` and the existing
+  frontend-compatible `plans` shape
+- general non-local chat still falls back to Gemini
+- `app.html` now routes Ontario planning prompts to `plan-engine`; explicit
+  live/event prompts can still use `discover-live`
+
+Scale-up ingestion status as of 2026-06-27:
+
+- Broader Ticketmaster ingestion has run for priority Ontario city/category
+  buckets. The first larger batch imported 134 event records; one bucket hit a
+  provider 429. Partial-success behavior was tightened so imported records are
+  not marked as a hard failed run.
+- Official City of Toronto Open Data parks/recreation facilities were imported
+  from CKAN GeoJSON in chunks after an all-at-once run hit Edge Function compute
+  limits.
+- Toronto parks/recreation import currently has 1,832 unique canonical places,
+  1,832 searchable mirrors in `location_entities`, and 1,832 `place_sources`
+  provenance rows.
+- Current canonical Ontario place inventory is 1,852 records: 20 approved
+  Markham/Toronto validation places plus the 1,832 official Toronto open-data
+  parks/recreation records before the next official-dataset batch.
+- After the library/cultural/DineSafe batch, current canonical Ontario place
+  inventory is 20,709 records: the 1,852 earlier records plus 101 Toronto
+  library branches, 895 Toronto Cultural Hotspot points of interest, and
+  17,861 Toronto DineSafe food-premise records. The verified canonical place
+  layer is fully scoped to `admin_area_1 = 'ON'`.
+- Deployed API smoke tests verify `park Toronto` search, High Park
+  `place-detail`, direct `ontario-plan`, and `plan-engine` retrieval-first
+  routing for Markham lunch planning.
+- Quality checks for the validation + Toronto open-data place layers show no
+  duplicate source IDs, no missing mirrors, and no bad Ontario coordinates.
+- OSM province-scale import is not yet run. It needs a repeatable `.osm.pbf`
+  extract conversion path; do not use Overpass as the bulk Ontario source.
 
 Request:
 
@@ -620,10 +749,59 @@ The Ontario intelligence layer is acceptable when:
 
 ## 18. Immediate Next Build Actions
 
-1. Add the Ontario intelligence migrations.
-2. Add a seed/import script structure under `scratch/` or `supabase/functions` worker path.
-3. Build a small Markham/Toronto seed set to validate the schema.
-4. Implement `place-detail`.
-5. Modify planner behavior so local/place questions use retrieval before model generation.
-6. Update `admin-locations.html` for profile/confidence review.
+Completed:
 
+1. Add the Ontario intelligence migrations.
+2. Build non-user-facing ingestion workers under `supabase/functions`.
+3. Build and import a small Markham/Toronto validation set.
+4. Implement and deploy `ontario-search`, `place-detail`, and `ontario-plan`.
+5. Modify planner/chat behavior so Ontario local planning uses retrieval before
+   model generation.
+6. Run initial scale-up ingestion for Ticketmaster and official Toronto
+   open-data parks/recreation records.
+
+Remaining:
+
+1. Add a repeatable OSM `.osm.pbf` conversion pipeline and run province-scale
+   OSM imports in chunks.
+   - Implemented repository path:
+     `.github/workflows/ontario-osm-convert.yml` installs `osmium-tool` on
+     Ubuntu, downloads the Geofabrik Ontario extract by default, converts it
+     into an NDJSON artifact, and can import the artifact into Supabase chunks.
+   - Local upload path:
+     `scripts/import-ontario-osm-chunks.mjs` uploads converted NDJSON to
+     `ontario-osm-import` in chunks using Node. It defaults to 1,000-record
+     chunks and retries transient failures.
+   - `scripts/osm-pbf-to-ndjson.sh` can run on any non-Mac/local machine where
+     `osmium` exists.
+   - The intended province-scale path is GitHub Actions, not local conversion
+     on the 2015 MacBook Pro. Set repository secret
+     `ONTARIO_INGESTION_SECRET`, then run the workflow with
+     `import_to_supabase = true`. Do not use Overpass for this.
+2. Import additional official municipal/provincial datasets: libraries,
+   community centres, recreation centres, trails, public facilities, cultural
+   spaces, and inspected/licensed food premises where available.
+   - Implemented presets: `toronto_libraries`,
+     `toronto_cultural_hotspots`, and `toronto_dinesafe_food_premises`.
+   - DineSafe uses CKAN datastore paging, not a full-file JSON fetch, so large
+     food-premises imports can run in real chunks.
+   - Verified import run completed for Toronto libraries, Cultural Hotspot, and
+     DineSafe. DineSafe used 1,000-row chunks after a 5,000-row Edge compute
+     limit and completed the 104,619-row source feed.
+   - Remaining expansion: add more municipal presets for community centres,
+     recreation centres, trails, public facilities, and additional Ontario
+     cities.
+3. Add more Echoo partner/manual/editorial records and give that source
+   priority in ranking.
+4. Build duplicate review/merge and profile-confidence queues in
+   `admin-locations.html`.
+   - Implemented queues: place review, duplicate candidates,
+     low-confidence/profile review, and worker schedules.
+   - Admin queue smoke after imports returned schedules, duplicate candidates,
+     and no pending low-confidence profiles.
+5. Schedule recurring Ticketmaster refreshes and stale-event cleanup.
+   - Implemented schedule registry plus `ontario-maintenance` actions for
+     Ticketmaster priority refresh and stale-event cleanup.
+   - Admin/worker functions are deployed with Supabase JWT verification
+     disabled and rely on the configured admin/ingestion secret headers.
+   - Stale cleanup smoke ran successfully and archived zero stale records.
