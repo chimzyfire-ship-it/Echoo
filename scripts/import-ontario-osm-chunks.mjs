@@ -13,8 +13,12 @@ const [
 const secret = process.env.ONTARIO_INGESTION_SECRET ||
   process.env.ADMIN_TOKEN ||
   "";
-const chunkSize = Math.max(1, Number(process.env.OSM_CHUNK_SIZE || 1000));
+const chunkSize = Math.max(1, Number(process.env.OSM_CHUNK_SIZE || 100));
 const maxRetries = Math.max(1, Number(process.env.OSM_IMPORT_RETRIES || 4));
+const startOffset = Math.max(
+  0,
+  Number(process.env.OSM_IMPORT_START_OFFSET || 0),
+);
 
 if (!inputPath || !endpoint || !secret) {
   console.error(
@@ -39,7 +43,7 @@ async function postChunk(records, offset) {
         body: JSON.stringify({
           sourceName: "openstreetmap",
           records,
-          offset: 0,
+          offset,
           maxRecords: records.length,
         }),
       });
@@ -61,7 +65,7 @@ async function postChunk(records, offset) {
   }
 }
 
-let offset = 0;
+let offset = startOffset;
 let records = [];
 let seen = 0;
 let imported = 0;
@@ -74,6 +78,11 @@ const stream = readline.createInterface({
 for await (const line of stream) {
   const trimmed = line.trim().replace(/^\u001e/, "");
   if (!trimmed) continue;
+  if (seen < startOffset) {
+    seen += 1;
+    skipped += 1;
+    continue;
+  }
   records.push(JSON.parse(trimmed));
   seen += 1;
   if (records.length >= chunkSize) {
@@ -95,4 +104,5 @@ console.log(JSON.stringify({
   sourceRecordsSubmitted: imported,
   sourceRecordsSkippedBeforeSubmit: skipped,
   chunkSize,
+  startOffset,
 }));

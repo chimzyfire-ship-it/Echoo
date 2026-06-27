@@ -16,7 +16,12 @@ on:
       osm_chunk_size:
         description: Records per Supabase import request
         required: true
-        default: "1000"
+        default: "100"
+        type: string
+      osm_start_offset:
+        description: Source record offset to resume from
+        required: true
+        default: "0"
         type: string
       import_endpoint:
         description: Supabase ontario-osm-import endpoint
@@ -55,6 +60,7 @@ jobs:
           ONTARIO_INGESTION_SECRET: ${{ secrets.ONTARIO_INGESTION_SECRET }}
           ONTARIO_OSM_IMPORT_URL: ${{ inputs.import_endpoint }}
           OSM_CHUNK_SIZE: ${{ inputs.osm_chunk_size }}
+          OSM_IMPORT_START_OFFSET: ${{ inputs.osm_start_offset }}
           OSM_IMPORT_RETRIES: "5"
         run: |
           if [ -z "$ONTARIO_INGESTION_SECRET" ]; then
