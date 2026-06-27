@@ -213,6 +213,46 @@ Phase 2 validation dataset status as of 2026-06-27:
   broad intent/query text instead of treating phrases like `lunch Markham` as
   literal name searches
 
+Province-scale OSM import status as of 2026-06-27:
+
+- GitHub Actions workflow `Ontario OSM Convert And Import` is live on `main`.
+- Repository secret `ONTARIO_INGESTION_SECRET` is configured for GitHub Actions
+  and matches the linked Supabase project secret.
+- Workflow run `28301745467` completed successfully against the real Geofabrik
+  Ontario extract after the importer was made smaller-chunk and resumable.
+- The workflow downloaded a 922 MB Ontario `.osm.pbf`, converted it to a
+  37,610-line OSM POI artifact, and submitted the converted records to
+  `ontario-osm-import`.
+- First run imported offset `0` before the original 1,000-record chunks hit Edge
+  Function resource limits. The resumed successful run used 100-record chunks
+  with `OSM_IMPORT_START_OFFSET=1000` and processed through source record
+  `37,610`.
+- `scripts/import-ontario-osm-chunks.mjs` now supports GeoJSON text sequence
+  record separators, true offset forwarding, `OSM_IMPORT_START_OFFSET`, and
+  defaults to 100-record chunks.
+
+Phase 3 enrichment status as of 2026-06-27:
+
+- `supabase/functions/place-enrich` is implemented and deployed as a secured
+  worker/admin endpoint with `verify_jwt = false` and
+  `ONTARIO_INGESTION_SECRET`/`x-ingestion-secret` authorization.
+- The first version is deterministic/profile-rule based rather than generative:
+  it builds Echoo `place_profiles` from verified place category, source,
+  municipality, address, website, and confidence signals.
+- It writes `ai_enrichment_jobs` audit rows with input hashes, status, model
+  label `echoo-deterministic-profile-v1`, output JSON, and completion/error
+  state.
+- It supports `placeId`, `municipality`, `category`, `limit`,
+  `includeExisting`, and `dryRun` payload controls.
+- Smoke tests on the deployed function verified:
+  - Markham dry-run profile generation returned category-aware tags and scores.
+  - A real Markham batch enriched 5 places and wrote approved profiles for Smash
+    Kitchen and Bar, Inspire Restaurant, Folco's Ristorante, Platform Espresso
+    Bar, and JOEY Markville.
+  - A real `historic` category batch enriched 2 OSM places with lower
+    confidence and `needs_update` review status, proving the profile review
+    queue path has live records.
+
 `ontario-plan` status as of 2026-06-27:
 
 - implemented in `supabase/functions/ontario-plan`
@@ -310,13 +350,13 @@ OSM note:
   - `scripts/osm-pbf-to-ndjson.sh` performs the same conversion on any machine
     that has `osmium`.
   - `scripts/import-ontario-osm-chunks.mjs` uploads the NDJSON artifact to
-    `ontario-osm-import` in chunks using Node. It now defaults to 1,000-record
-    chunks and retries transient import failures.
+    `ontario-osm-import` in chunks using Node. It now defaults to 100-record
+    chunks, supports resume offsets, and retries transient import failures.
 - `ontario-osm-import` now supports `offset` + `maxRecords` and reads GeoJSON
   point geometry from converted OSM records.
-- Province-scale OSM should be run through GitHub Actions, not on the 2015
-  MacBook Pro. The repository secret `ONTARIO_INGESTION_SECRET` must be set in
-  GitHub Actions before enabling `import_to_supabase`.
+- Province-scale OSM should continue to run through GitHub Actions, not on the
+  2015 MacBook Pro. The first real Ontario import path has been verified
+  end-to-end with workflow run `28301745467`.
 
 Ontario operations additions:
 

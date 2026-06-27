@@ -548,8 +548,10 @@ Scale-up ingestion status as of 2026-06-27:
   routing for Markham lunch planning.
 - Quality checks for the validation + Toronto open-data place layers show no
   duplicate source IDs, no missing mirrors, and no bad Ontario coordinates.
-- OSM province-scale import is not yet run. It needs a repeatable `.osm.pbf`
-  extract conversion path; do not use Overpass as the bulk Ontario source.
+- Province-scale OSM import is now verified through GitHub Actions, not local
+  Mac conversion and not Overpass. Workflow run `28301745467` completed
+  successfully against the real Geofabrik Ontario extract after the importer
+  was switched to resumable 100-record chunks.
 
 Request:
 
@@ -574,6 +576,18 @@ Response:
 ### 11.4 `place-enrich`
 
 Admin/worker-only endpoint for AI profile generation.
+
+Implementation status as of 2026-06-27:
+
+- `supabase/functions/place-enrich` is deployed as a secured worker endpoint.
+- It generates initial Echoo place profiles from verified canonical place data
+  using deterministic category/source rules before any free-form model layer is
+  introduced.
+- It upserts `place_profiles`, writes `ai_enrichment_jobs`, supports dry runs
+  and scoped batches, and routes lower-confidence category profiles to
+  `needs_update` for admin review.
+- Deployed smoke tests enriched 5 Markham food/cafe places as approved profiles
+  and 2 OSM historic places as `needs_update`.
 
 ## 12. Ranking
 
@@ -707,6 +721,10 @@ Deliverable: province-wide baseline POI records.
 - Store scores/tags/summaries.
 - Queue low-confidence records.
 
+Status: first worker slice complete/verified on 2026-06-27 with deployed
+`place-enrich`, job audit writes, approved profile writes, and live
+low-confidence review records.
+
 Deliverable: first enriched Ontario knowledge layer.
 
 ### Week 4: Retrieval APIs
@@ -764,20 +782,24 @@ Remaining:
 
 1. Add a repeatable OSM `.osm.pbf` conversion pipeline and run province-scale
    OSM imports in chunks.
+   - Status: complete/verified on 2026-06-27.
    - Implemented repository path:
      `.github/workflows/ontario-osm-convert.yml` installs `osmium-tool` on
      Ubuntu, downloads the Geofabrik Ontario extract by default, converts it
      into an NDJSON artifact, and can import the artifact into Supabase chunks.
    - Local upload path:
      `scripts/import-ontario-osm-chunks.mjs` uploads converted NDJSON to
-     `ontario-osm-import` in chunks using Node. It defaults to 1,000-record
-     chunks and retries transient failures.
+     `ontario-osm-import` in chunks using Node. It defaults to 100-record
+     chunks, supports `OSM_IMPORT_START_OFFSET`, forwards true chunk offsets,
+     accepts GeoJSON text sequence separators, and retries transient failures.
    - `scripts/osm-pbf-to-ndjson.sh` can run on any non-Mac/local machine where
      `osmium` exists.
-   - The intended province-scale path is GitHub Actions, not local conversion
-     on the 2015 MacBook Pro. Set repository secret
-     `ONTARIO_INGESTION_SECRET`, then run the workflow with
-     `import_to_supabase = true`. Do not use Overpass for this.
+   - The province-scale path is GitHub Actions, not local conversion on the
+     2015 MacBook Pro. Repository secret `ONTARIO_INGESTION_SECRET` is set.
+     Workflow run `28301745467` downloaded the 922 MB Ontario extract,
+     converted 37,610 OSM POI source records, and completed the resumed import
+     from offset `1000` through the end after the first run imported offset
+     `0`. Do not use Overpass for this.
 2. Import additional official municipal/provincial datasets: libraries,
    community centres, recreation centres, trails, public facilities, cultural
    spaces, and inspected/licensed food premises where available.
