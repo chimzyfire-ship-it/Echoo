@@ -1,0 +1,64 @@
+name: Ontario OSM Convert And Import
+
+on:
+  workflow_dispatch:
+    inputs:
+      extract_url:
+        description: URL for an Ontario or Canada .osm.pbf extract
+        required: true
+        default: https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf
+        type: string
+      import_to_supabase:
+        description: Import converted chunks into Supabase after conversion
+        required: true
+        default: true
+        type: boolean
+      osm_chunk_size:
+        description: Records per Supabase import request
+        required: true
+        default: "1000"
+        type: string
+      import_endpoint:
+        description: Supabase ontario-osm-import endpoint
+        required: true
+        default: https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ontario-osm-import
+        type: string
+
+jobs:
+  convert-and-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install osmium
+        run: sudo apt-get update && sudo apt-get install -y osmium-tool
+      - name: Download extract
+        run: |
+          curl --fail --location --retry 4 --retry-delay 10 \
+            "${{ inputs.extract_url }}" \
+            --output extract.osm.pbf
+          ls -lh extract.osm.pbf
+      - name: Convert POIs to NDJSON
+        run: |
+          scripts/osm-pbf-to-ndjson.sh extract.osm.pbf ontario-osm-pois.ndjson
+          wc -l ontario-osm-pois.ndjson
+          ls -lh ontario-osm-pois.ndjson
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ontario-osm-pois-ndjson
+          path: ontario-osm-pois.ndjson
+          retention-days: 7
+      - name: Import chunks to Supabase
+        if: ${{ inputs.import_to_supabase }}
+        env:
+          ONTARIO_INGESTION_SECRET: ${{ secrets.ONTARIO_INGESTION_SECRET }}
+          ONTARIO_OSM_IMPORT_URL: ${{ inputs.import_endpoint }}
+          OSM_CHUNK_SIZE: ${{ inputs.osm_chunk_size }}
+          OSM_IMPORT_RETRIES: "5"
+        run: |
+          if [ -z "$ONTARIO_INGESTION_SECRET" ]; then
+            echo "GitHub secret ONTARIO_INGESTION_SECRET is required for import." >&2
+            exit 1
+          fi
+          node scripts/import-ontario-osm-chunks.mjs ontario-osm-pois.ndjson
