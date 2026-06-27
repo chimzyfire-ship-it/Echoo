@@ -72,7 +72,7 @@ const stream = readline.createInterface({
 });
 
 for await (const line of stream) {
-  const trimmed = line.trim();
+  const trimmed = line.trim().replace(/^\u001e/, "");
   if (!trimmed) continue;
   records.push(JSON.parse(trimmed));
   seen += 1;
