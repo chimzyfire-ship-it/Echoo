@@ -1377,6 +1377,8 @@
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine",
         discoverLiveUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-live",
+        placeDetailUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
       };
 
       /* ── Preferences retrieval ── */
@@ -2269,6 +2271,53 @@
         scrollChat();
       }
 
+      async function addPlaceDetailBubble(placeId) {
+        if (!placeId) return;
+        const loading = addBubble("ai", "Opening verified place details...");
+        try {
+          const headers = window.EchooAuth
+            ? await window.EchooAuth.authHeaders({
+                "Content-Type": "application/json",
+              })
+            : {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                apikey: CONFIG.supabaseAnonKey,
+              };
+          const response = await fetch(
+            `${CONFIG.placeDetailUrl}?id=${encodeURIComponent(placeId)}`,
+            { headers },
+          );
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(payload?.error || "Place detail failed");
+          }
+          const detail = payload?.data || {};
+          const place = detail.place || {};
+          const profile = detail.profile || {};
+          const sources = Array.isArray(detail.sources) ? detail.sources : [];
+          const sourceNames = sources
+            .map((source) => source.source_name)
+            .filter(Boolean)
+            .slice(0, 2)
+            .join(", ");
+          const bits = [
+            place.name || place.formatted_address || "Verified place",
+            place.address || place.city || "",
+            profile.summary || place.metadata?.description || "",
+            sourceNames ? `Source: ${sourceNames}` : "",
+          ].filter(Boolean);
+          if (loading) loading.textContent = bits.join(" · ");
+        } catch (error) {
+          console.warn("Echoo: place detail failed.", error);
+          if (loading) {
+            loading.textContent =
+              "This is a verified Ontario place stop, but Echoo could not open its detail panel yet.";
+          }
+        }
+        scrollChat();
+      }
+
       let routeBoardSequence = 0;
       function addRouteBoard(stops, usePreciseBase) {
         if (!Array.isArray(stops) || !stops.length) return;
@@ -2291,6 +2340,7 @@
             const detailId = String(stop.detailId || "");
             const isExternal = /^https?:\/\//i.test(detailId);
             const clickable = Boolean(detailId);
+            const detailType = stop.detailType || (isExternal ? "external" : "event");
             const timing = stop.timing ? ` ${stop.timing}` : "";
             const vibe = `${stop.vibe || "A matched stop for this plan."}${timing}`;
             return `
@@ -2299,7 +2349,8 @@
                 data-clickable="${clickable ? "true" : "false"}"
                 data-detail-id="${escapeHtml(detailId)}"
                 data-external="${isExternal ? "true" : "false"}"
-                title="${clickable ? escapeHtml(isExternal ? "Open live listing" : "Open event details") : ""}"
+                data-detail-type="${escapeHtml(detailType)}"
+                title="${clickable ? escapeHtml(detailType === "place" ? "Open place details" : isExternal ? "Open live listing" : "Open event details") : ""}"
               >
                 <div class="route-stop-media">
                   <img src="${escapeHtml(stop.img || "assets/optimized/news-music-768.jpg")}" alt="${escapeHtml(stop.name)}" loading="lazy" decoding="async">
@@ -2335,6 +2386,10 @@
           card.addEventListener("click", () => {
             const detailId = card.dataset.detailId;
             if (!detailId) return;
+            if (card.dataset.detailType === "place") {
+              addPlaceDetailBubble(detailId);
+              return;
+            }
             window.location.href =
               card.dataset.external === "true"
                 ? detailId
@@ -2473,6 +2528,7 @@
         "Waterloo",
         "Kitchener",
         "London",
+        "Thunder Bay",
         "Winnipeg",
         "Halifax",
         "Victoria",
@@ -2494,7 +2550,25 @@
         );
       }
 
+      function isOntarioPlannerQuery(queryText = "") {
+        const cityName = cityFromQuery(queryText) || city;
+        const hasOntarioCity =
+          /^(Toronto|Markham|Scarborough|North York|Vaughan|Richmond Hill|Mississauga|Brampton|Oakville|Burlington|Hamilton|Ottawa|Waterloo|Kitchener|London|Niagara Falls|Kingston|Guelph|Barrie|Windsor|Thunder Bay)$/i.test(
+            cityName || "",
+          ) || /\bontario\b/i.test(queryText || "");
+        const wantsPlan =
+          /\b(plan|route|lunch|dinner|restaurant|restaurants|cafe|coffee|date|park|museum|gallery|culture|things to do|activity|activities|bar|pub|mall)\b/i.test(
+            queryText || "",
+          );
+        const wantsLive =
+          /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|tonight|today|tomorrow|this week|weekend)\b/i.test(
+            queryText || "",
+          );
+        return hasOntarioCity && wantsPlan && !wantsLive;
+      }
+
       function shouldUseLiveDiscovery(queryText, mode = "build_plan") {
+        if (isOntarioPlannerQuery(queryText)) return false;
         if (mode !== "chat") return true;
         return (
           LIVE_DISCOVERY_PATTERN.test(queryText || "") ||
@@ -2538,31 +2612,51 @@
             ? payload.plans
             : [];
         return items
-          .map((item) => ({
-            detailId: item.actionUrl || item.entityId || item.id,
-            name: item.title,
-            tags: `${item.category || item.type || "Echoo"} · ${item.distanceMeters || item.distance_meters ? Math.max(1, Math.round((item.distanceMeters || item.distance_meters) / 1000)) + " km away" : item.city || city}`,
-            coords: [item.latitude, item.longitude],
-            img:
-              item.imageUrl ||
-              item.image_url ||
-              "assets/optimized/news-music-768.jpg",
-            vibe:
-              item.reason ||
-              item.why ||
-              item.description ||
-              "A real nearby option Echoo found for this moment.",
-            timing:
-              item.timing ||
-              (item.startsAt
-                ? new Date(item.startsAt).toLocaleString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })
-                : ""),
-          }))
+          .map((item) => {
+            const actionUrl = item.actionUrl || item.action_url || "";
+            const isExternal = /^https?:\/\//i.test(String(actionUrl));
+            const isOntarioPlace =
+              Boolean(item.placeId || item.place_id) ||
+              payload?.ai?.provider === "echoo-retrieval" ||
+              payload?.mode === "ontario_plan";
+            const isEvent =
+              !isOntarioPlace &&
+              (item.type === "event" || item.entityType === "event" || item.startsAt);
+            const detailType = isExternal ? "external" : isOntarioPlace ? "place" : isEvent ? "event" : "";
+            return {
+              detailId:
+                actionUrl ||
+                item.placeId ||
+                item.place_id ||
+                item.entityId ||
+                item.id ||
+                "",
+              detailType,
+              name: item.title,
+              tags: `${item.category || item.type || "Echoo"} · ${item.distanceMeters || item.distance_meters ? Math.max(1, Math.round((item.distanceMeters || item.distance_meters) / 1000)) + " km away" : item.city || city}`,
+              coords: [item.latitude, item.longitude],
+              img:
+                item.imageUrl ||
+                item.image_url ||
+                "assets/optimized/news-music-768.jpg",
+              vibe:
+                item.reason ||
+                item.why ||
+                item.description ||
+                item.vibe ||
+                "A real nearby option Echoo found for this moment.",
+              timing:
+                item.timing ||
+                (item.startsAt
+                  ? new Date(item.startsAt).toLocaleString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })
+                  : ""),
+            };
+          })
           .filter(
             (item) =>
               Number.isFinite(item.coords[0]) &&
