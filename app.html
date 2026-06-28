@@ -493,21 +493,21 @@
         flex: 1 1 0;
         min-height: 0;
         overflow-y: auto;
-        width: min(920px, 100%);
+        width: min(1040px, 100%);
         margin: 0 auto;
-        padding: 28px 18px 34px;
+        padding: 28px 18px 140px;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 18px;
         -webkit-overflow-scrolling: touch;
-        scroll-padding-bottom: 96px;
+        scroll-padding-bottom: 160px;
       }
 
       .route-board {
         position: relative;
         align-self: flex-start;
-        width: min(860px, 100%);
-        padding: 28px;
+        width: min(940px, 100%);
+        padding: 18px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background:
@@ -515,7 +515,7 @@
           linear-gradient(315deg, rgba(224, 168, 207, 0.09), transparent 42%),
           rgba(13, 16, 12, 0.94);
         box-shadow: var(--shadow);
-        overflow: hidden;
+        overflow: visible;
         animation: bubbleIn 300ms ease both;
       }
 
@@ -529,13 +529,7 @@
       }
 
       .route-link-svg {
-        position: absolute;
-        inset: 22px;
-        width: calc(100% - 44px);
-        height: calc(100% - 44px);
-        z-index: 0;
-        pointer-events: none;
-        opacity: 0.95;
+        display: none;
       }
 
       .route-link-svg path {
@@ -555,16 +549,15 @@
         position: relative;
         z-index: 1;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-        gap: 18px;
+        grid-template-columns: 1fr;
+        gap: 14px;
       }
 
       .route-stop {
         position: relative;
         display: grid;
-        grid-template-rows: 42% 1fr;
-        min-height: 236px;
-        aspect-ratio: 1 / 1;
+        grid-template-columns: minmax(150px, 34%) 1fr;
+        min-height: 196px;
         border: 1px solid rgba(251, 246, 236, 0.16);
         border-radius: 8px;
         overflow: hidden;
@@ -588,6 +581,7 @@
 
       .route-stop-media {
         position: relative;
+        min-height: 196px;
         overflow: hidden;
         background: var(--panel-2);
       }
@@ -626,8 +620,8 @@
       .route-stop-body {
         display: grid;
         align-content: start;
-        gap: 8px;
-        padding: 14px;
+        gap: 10px;
+        padding: 18px;
       }
 
       .route-stop-kicker {
@@ -644,8 +638,8 @@
       .route-stop-title {
         margin: 0;
         color: var(--ink);
-        font-size: clamp(18px, 2vw, 23px);
-        line-height: 1.02;
+        font-size: clamp(20px, 2.4vw, 28px);
+        line-height: 1.04;
         font-weight: 950;
       }
 
@@ -653,12 +647,8 @@
         margin: 0;
         color: var(--muted);
         font-size: 12px;
-        line-height: 1.36;
+        line-height: 1.45;
         font-weight: 650;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
       }
 
       .route-hop {
@@ -673,6 +663,92 @@
         font-weight: 950;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+      }
+
+      .route-actions,
+      .detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .route-action,
+      .detail-action {
+        min-height: 36px;
+        padding: 0 13px;
+        border: 1px solid rgba(251, 246, 236, 0.16);
+        border-radius: 6px;
+        background: rgba(251, 246, 236, 0.045);
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      .route-action.primary,
+      .detail-action.primary {
+        border-color: rgba(240, 197, 109, 0.46);
+        background: rgba(240, 197, 109, 0.12);
+        color: var(--signal);
+      }
+
+      .detail-card {
+        align-self: flex-start;
+        width: min(820px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background:
+          linear-gradient(145deg, rgba(240, 197, 109, 0.08), transparent 38%),
+          rgba(13, 16, 12, 0.96);
+        box-shadow: var(--shadow);
+        animation: bubbleIn 260ms ease both;
+      }
+
+      .detail-card-media {
+        height: clamp(180px, 26vw, 280px);
+        background: var(--panel-2);
+      }
+
+      .detail-card-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(1.08) contrast(1.04);
+      }
+
+      .detail-card-body {
+        display: grid;
+        gap: 10px;
+        padding: 18px 20px 20px;
+      }
+
+      .detail-kicker {
+        color: var(--mint);
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .detail-title {
+        margin: 0;
+        color: var(--ink);
+        font-size: clamp(24px, 3vw, 34px);
+        line-height: 1.04;
+        font-weight: 950;
+      }
+
+      .detail-copy {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+        font-weight: 650;
       }
 
       /* Bubbles */
@@ -896,11 +972,12 @@
       /* Quick action pills */
       .pills {
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
-        overflow-x: auto;
-        width: min(720px, 100%);
+        overflow: visible;
+        width: min(820px, 100%);
         align-self: flex-start;
-        padding-bottom: 6px;
+        padding: 2px 0 8px;
         -webkit-overflow-scrolling: touch;
         animation: bubbleIn 200ms ease both;
       }
@@ -910,7 +987,8 @@
       }
 
       .pill {
-        flex: 0 0 auto;
+        flex: 0 1 auto;
+        max-width: 100%;
         padding: 11px 16px;
         border: 1px solid var(--line);
         border-radius: 999px;
@@ -920,7 +998,9 @@
         font-weight: 850;
         letter-spacing: 0;
         cursor: pointer;
-        white-space: nowrap;
+        white-space: normal;
+        text-align: left;
+        line-height: 1.2;
         transition:
           border-color 180ms ease,
           color 180ms ease,
@@ -944,15 +1024,15 @@
         flex: 0 0 auto;
         display: flex;
         gap: 8px;
-        width: min(920px, calc(100% - 32px));
-        margin: 0 auto 16px;
+        width: min(1040px, calc(100% - 32px));
+        margin: 0 auto max(16px, env(safe-area-inset-bottom));
         padding: 10px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: rgba(10, 13, 10, 0.92);
         box-shadow: var(--shadow);
         position: relative;
-        z-index: 2;
+        z-index: 4;
       }
 
       .chat-input-bar input {
@@ -1012,7 +1092,7 @@
         }
 
         .chat-body {
-          padding: 38px 32px 26px;
+          padding: 38px 32px 150px;
         }
         .chat-input-bar {
           margin-bottom: 22px;
@@ -1027,7 +1107,7 @@
           max-width: 720px;
         }
         .route-board {
-          max-width: 860px;
+          max-width: 940px;
         }
         .bubble.user {
           max-width: 560px;
@@ -1036,19 +1116,17 @@
 
       @media (max-width: 620px) {
         .route-board {
-          padding: 18px;
-        }
-        .route-link-svg {
-          inset: 18px;
-          width: calc(100% - 36px);
-          height: calc(100% - 36px);
+          padding: 12px;
         }
         .route-grid {
           grid-template-columns: 1fr;
         }
         .route-stop {
-          aspect-ratio: auto;
-          min-height: 236px;
+          grid-template-columns: 1fr;
+          min-height: 0;
+        }
+        .route-stop-media {
+          min-height: 170px;
         }
         .chat-input-bar {
           width: min(920px, calc(100% - 20px));
@@ -2122,7 +2200,7 @@
       function addSeeRouteButton(stops) {
         const card = document.createElement("div");
         card.className = "see-route-card";
-        card.innerHTML = "🗺️ See Route on Map";
+        card.innerHTML = "<span>View Route Map</span>";
         card.addEventListener("click", () => {
           mapOverlay.classList.add("open");
           // Initialize map after overlay opens and has physical dimensions
@@ -2134,6 +2212,11 @@
         });
         chatBody.appendChild(card);
         scrollChat();
+      }
+
+      function openExternalListing(url) {
+        if (!url) return;
+        window.open(url, "_blank", "noopener,noreferrer");
       }
 
       // Close map overlay handler
@@ -2301,13 +2384,19 @@
             .filter(Boolean)
             .slice(0, 2)
             .join(", ");
-          const bits = [
-            place.name || place.formatted_address || "Verified place",
-            place.address || place.city || "",
-            profile.summary || place.metadata?.description || "",
-            sourceNames ? `Source: ${sourceNames}` : "",
-          ].filter(Boolean);
-          if (loading) loading.textContent = bits.join(" · ");
+          if (loading) loading.remove();
+          addDetailCard({
+            title: place.name || place.formatted_address || "Verified place",
+            kicker: [place.category || "Place", place.municipality || place.city || "Ontario"]
+              .filter(Boolean)
+              .join(" · "),
+            copy:
+              profile.summary ||
+              place.metadata?.description ||
+              "Echoo has this as a verified Ontario place record.",
+            meta: sourceNames ? `Source: ${sourceNames}` : "Verified place record",
+            image: "assets/optimized/news-date-768.jpg",
+          });
         } catch (error) {
           console.warn("Echoo: place detail failed.", error);
           if (loading) {
@@ -2315,6 +2404,33 @@
               "This is a verified Ontario place stop, but Echoo could not open its detail panel yet.";
           }
         }
+        scrollChat();
+      }
+
+      function addDetailCard({ title, kicker, copy, meta, image, url }) {
+        const card = document.createElement("article");
+        card.className = "detail-card";
+        const imageUrl = image || "assets/optimized/news-music-768.jpg";
+        card.innerHTML = `
+          <div class="detail-card-media">
+            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" loading="lazy" decoding="async">
+          </div>
+          <div class="detail-card-body">
+            <div class="detail-kicker">${escapeHtml(kicker || "Echoo detail")}</div>
+            <h3 class="detail-title">${escapeHtml(title || "Untitled stop")}</h3>
+            <p class="detail-copy">${escapeHtml(copy || "A matched stop from Echoo's current results.")}</p>
+            ${meta ? `<p class="detail-copy">${escapeHtml(meta)}</p>` : ""}
+            <div class="detail-actions">
+              ${url ? `<button class="detail-action primary" type="button" data-url="${escapeHtml(url)}">Open listing</button>` : ""}
+            </div>
+          </div>`;
+        const openButton = card.querySelector("[data-url]");
+        if (openButton) {
+          openButton.addEventListener("click", () =>
+            openExternalListing(openButton.dataset.url || ""),
+          );
+        }
+        chatBody.appendChild(card);
         scrollChat();
       }
 
@@ -2347,6 +2463,7 @@
               <article
                 class="route-stop"
                 data-clickable="${clickable ? "true" : "false"}"
+                data-stop-index="${index}"
                 data-detail-id="${escapeHtml(detailId)}"
                 data-external="${isExternal ? "true" : "false"}"
                 data-detail-type="${escapeHtml(detailType)}"
@@ -2361,6 +2478,10 @@
                   <h3 class="route-stop-title">${escapeHtml(stop.name)}</h3>
                   <p class="route-stop-copy">${escapeHtml(vibe)}</p>
                   <div class="route-hop">${escapeHtml(routeTravelLabel(index, usePreciseBase))}</div>
+                  <div class="route-actions">
+                    <button class="route-action primary" type="button" data-route-action="details">${escapeHtml(detailType === "external" ? "Preview" : "Details")}</button>
+                    ${isExternal ? '<button class="route-action" type="button" data-route-action="open">Open listing</button>' : ""}
+                  </div>
                 </div>
               </article>`;
           })
@@ -2383,17 +2504,38 @@
           <div class="route-grid">${cards}</div>`;
 
         board.querySelectorAll(".route-stop[data-clickable='true']").forEach((card) => {
-          card.addEventListener("click", () => {
+          card.addEventListener("click", (event) => {
             const detailId = card.dataset.detailId;
             if (!detailId) return;
+            const stop = stops[Number(card.dataset.stopIndex)] || {};
+            const routeAction = event.target.closest("[data-route-action]");
+            if (routeAction?.dataset.routeAction === "open") {
+              openExternalListing(detailId);
+              return;
+            }
             if (card.dataset.detailType === "place") {
               addPlaceDetailBubble(detailId);
               return;
             }
-            window.location.href =
-              card.dataset.external === "true"
-                ? detailId
-                : `event.html?id=${encodeURIComponent(detailId)}`;
+            if (card.dataset.external === "true") {
+              addDetailCard({
+                title: stop.name || "Live listing",
+                kicker: stop.tags || "Ticketmaster live event",
+                copy: stop.vibe || "Echoo found this live listing for the current plan.",
+                meta: stop.timing || "Open the listing only when you want to leave Echoo.",
+                image: stop.img,
+                url: detailId,
+              });
+              return;
+            }
+            addDetailCard({
+              title: stop.name || "Event detail",
+              kicker: stop.tags || "Echoo event",
+              copy: stop.vibe || "Echoo found this event for the current plan.",
+              meta: stop.timing || "",
+              image: stop.img,
+              url: `event.html?id=${encodeURIComponent(detailId)}`,
+            });
           });
         });
         chatBody.appendChild(board);
