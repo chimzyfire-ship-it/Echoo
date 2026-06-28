@@ -253,6 +253,28 @@ Phase 3 enrichment status as of 2026-06-27:
     confidence and `needs_update` review status, proving the profile review
     queue path has live records.
 
+Phase 3A enrichment runner hardening as of 2026-06-28:
+
+- `place-enrich` now has broader deterministic category templates for imported
+  Ontario records, including `fast_food`, `pub`, `cinema`, `arts_centre`,
+  `attraction`, `historic`, `mall`, `fitness_centre`, and `nature_reserve`.
+- `place-enrich` now supports batch pagination and filters:
+  `categories`, `sourceProvider`, `offset`, `limit`, `includeExisting`, and
+  `dryRun`.
+- Profile job auditing now writes `place_profile_v2` jobs with model label
+  `echoo-deterministic-profile-v2` so the richer template pass is distinct from
+  earlier v1 smoke runs.
+- `ontario-maintenance` now supports `action = "place_enrichment"` and invokes
+  `place-enrich` through the canonical Supabase Functions URL.
+- Migration `202606280001_place_enrichment_schedule.sql` adds the
+  `ontario_place_enrichment` schedule row for small batch enrichment while Phase
+  3 backfill is active.
+- Deployed smoke tests verified:
+  - direct `place-enrich` dry run for `cinema`, `arts_centre`, `historic`, and
+    `mall` categories returned richer tags/scores.
+  - `ontario-maintenance` successfully invoked `place-enrich` for a tiny real
+    batch and enriched CF Markville plus a historic OSM record.
+
 `ontario-plan` status as of 2026-06-27:
 
 - implemented in `supabase/functions/ontario-plan`

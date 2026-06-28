@@ -43,6 +43,9 @@ type Payload = {
   placeId?: string;
   municipality?: string;
   category?: string;
+  categories?: string[];
+  sourceProvider?: string;
+  offset?: number;
   limit?: number;
   includeExisting?: boolean;
   dryRun?: boolean;
@@ -61,6 +64,19 @@ const CATEGORY_PROFILES: Record<string, Partial<ProfileDraft>> = {
     solo_score: 0.54,
     family_score: 0.62,
     rainy_day_score: 0.76,
+  },
+  fast_food: {
+    vibe_tags: ["quick", "casual", "food"],
+    good_for: ["lunch", "solo", "group"],
+    meal_tags: ["lunch", "quick_bite"],
+    noise_level: "medium",
+    price_band: "$",
+    lunch_score: 0.72,
+    date_score: 0.18,
+    group_score: 0.48,
+    solo_score: 0.7,
+    family_score: 0.58,
+    rainy_day_score: 0.62,
   },
   cafe: {
     vibe_tags: ["cozy", "casual", "low-key"],
@@ -166,6 +182,110 @@ const CATEGORY_PROFILES: Record<string, Partial<ProfileDraft>> = {
     family_score: 0.08,
     rainy_day_score: 0.62,
   },
+  pub: {
+    vibe_tags: ["social", "casual", "lively"],
+    good_for: ["group", "date"],
+    meal_tags: ["drinks", "dinner"],
+    noise_level: "medium-high",
+    price_band: "$$",
+    lunch_score: 0.38,
+    date_score: 0.58,
+    group_score: 0.78,
+    solo_score: 0.38,
+    family_score: 0.22,
+    rainy_day_score: 0.68,
+  },
+  cinema: {
+    vibe_tags: ["movie", "indoor", "easy-plan"],
+    good_for: ["date", "group", "family", "rainy_day"],
+    activity_tags: ["film", "screening", "entertainment"],
+    noise_level: "low-medium",
+    price_band: "$$",
+    lunch_score: 0.08,
+    date_score: 0.78,
+    group_score: 0.66,
+    solo_score: 0.58,
+    family_score: 0.72,
+    rainy_day_score: 0.92,
+  },
+  arts_centre: {
+    vibe_tags: ["creative", "cultural", "indoor"],
+    good_for: ["date", "solo", "group", "rainy_day"],
+    activity_tags: ["arts", "culture", "community"],
+    noise_level: "low-medium",
+    price_band: "$$",
+    lunch_score: 0.1,
+    date_score: 0.8,
+    group_score: 0.64,
+    solo_score: 0.76,
+    family_score: 0.58,
+    rainy_day_score: 0.9,
+  },
+  attraction: {
+    vibe_tags: ["local-interest", "explore", "sightseeing"],
+    good_for: ["date", "family", "group", "solo"],
+    activity_tags: ["sightseeing", "explore", "photos"],
+    noise_level: "variable",
+    price_band: "$$",
+    lunch_score: 0.18,
+    date_score: 0.68,
+    group_score: 0.72,
+    solo_score: 0.62,
+    family_score: 0.76,
+    rainy_day_score: 0.42,
+  },
+  historic: {
+    vibe_tags: ["historic", "reflective", "local-interest"],
+    good_for: ["solo", "date", "family"],
+    activity_tags: ["history", "walking", "learning"],
+    noise_level: "low",
+    price_band: "free",
+    lunch_score: 0.08,
+    date_score: 0.44,
+    group_score: 0.38,
+    solo_score: 0.66,
+    family_score: 0.54,
+    rainy_day_score: 0.22,
+  },
+  mall: {
+    vibe_tags: ["shopping", "indoor", "practical"],
+    good_for: ["family", "group", "rainy_day"],
+    activity_tags: ["shopping", "food_court", "errands"],
+    noise_level: "medium-high",
+    price_band: "$$",
+    lunch_score: 0.56,
+    date_score: 0.22,
+    group_score: 0.58,
+    solo_score: 0.54,
+    family_score: 0.72,
+    rainy_day_score: 0.88,
+  },
+  fitness_centre: {
+    vibe_tags: ["active", "wellness", "indoor"],
+    good_for: ["solo", "rainy_day"],
+    activity_tags: ["fitness", "wellness", "workout"],
+    noise_level: "medium",
+    price_band: "$$",
+    lunch_score: 0.02,
+    date_score: 0.08,
+    group_score: 0.32,
+    solo_score: 0.78,
+    family_score: 0.18,
+    rainy_day_score: 0.8,
+  },
+  nature_reserve: {
+    vibe_tags: ["outdoors", "quiet", "nature"],
+    good_for: ["solo", "date", "family", "group"],
+    activity_tags: ["walking", "nature", "fresh_air"],
+    noise_level: "low",
+    price_band: "free",
+    lunch_score: 0.12,
+    date_score: 0.72,
+    group_score: 0.58,
+    solo_score: 0.84,
+    family_score: 0.76,
+    rainy_day_score: 0.08,
+  },
 };
 
 const DEFAULT_PROFILE: Partial<ProfileDraft> = {
@@ -254,13 +374,35 @@ function buildProfile(place: CanonicalPlace): ProfileDraft {
 function limit(value: unknown) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return 50;
-  return Math.max(1, Math.min(Math.round(parsed), 250));
+  return Math.max(1, Math.min(Math.round(parsed), 500));
+}
+
+function offset(value: unknown) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.round(parsed));
+}
+
+function categoriesFromPayload(payload: Payload) {
+  return Array.from(
+    new Set(
+      [
+        payload.category,
+        ...(Array.isArray(payload.categories) ? payload.categories : []),
+      ]
+        .map((category) => cleanText(category).toLowerCase())
+        .filter(Boolean),
+    ),
+  );
 }
 
 async function selectPlaces(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   payload: Payload,
 ) {
+  const requestedLimit = limit(payload.limit);
+  const requestedOffset = offset(payload.offset);
+  const categories = categoriesFromPayload(payload);
   let query = supabase
     .from("canonical_places")
     .select(
@@ -270,11 +412,14 @@ async function selectPlaces(
     .eq("admin_area_1", "ON")
     .neq("location_status", "archived")
     .order("confidence_score", { ascending: false })
-    .limit(limit(payload.limit));
+    .order("id", { ascending: true })
+    .range(requestedOffset, requestedOffset + requestedLimit - 1);
 
   if (payload.placeId) query = query.eq("id", payload.placeId);
   if (payload.municipality) query = query.ilike("municipality", payload.municipality);
-  if (payload.category) query = query.eq("category", payload.category);
+  if (categories.length === 1) query = query.eq("category", categories[0]);
+  if (categories.length > 1) query = query.in("category", categories);
+  if (payload.sourceProvider) query = query.eq("source_provider", payload.sourceProvider);
   if (!payload.includeExisting) query = query.is("place_profiles.id", null);
 
   const { data, error } = await query;
@@ -311,7 +456,7 @@ Deno.serve(async (req) => {
         municipality: place.municipality,
         sourceProvider: place.source_provider,
         confidenceScore: place.confidence_score,
-        profileVersion: 1,
+        profileVersion: 2,
       }));
 
       if (dryRun) {
@@ -325,10 +470,10 @@ Deno.serve(async (req) => {
           {
             entity_type: "place",
             entity_id: place.id,
-            job_type: "place_profile_v1",
+            job_type: "place_profile_v2",
             status: "running",
             input_hash: inputHash,
-            model: "echoo-deterministic-profile-v1",
+            model: "echoo-deterministic-profile-v2",
             started_at: new Date().toISOString(),
             error: null,
           },
@@ -388,6 +533,10 @@ Deno.serve(async (req) => {
     return jsonResponse({
       success: true,
       dryRun,
+      offset: offset(payload.offset),
+      limit: limit(payload.limit),
+      categories: categoriesFromPayload(payload),
+      sourceProvider: payload.sourceProvider || null,
       scanned: places.length,
       enriched: dryRun ? 0 : results.length,
       queuedForReview: results.filter((result: any) =>

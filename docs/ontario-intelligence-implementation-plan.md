@@ -577,7 +577,7 @@ Response:
 
 Admin/worker-only endpoint for AI profile generation.
 
-Implementation status as of 2026-06-27:
+Implementation status as of 2026-06-28:
 
 - `supabase/functions/place-enrich` is deployed as a secured worker endpoint.
 - It generates initial Echoo place profiles from verified canonical place data
@@ -588,6 +588,18 @@ Implementation status as of 2026-06-27:
   `needs_update` for admin review.
 - Deployed smoke tests enriched 5 Markham food/cafe places as approved profiles
   and 2 OSM historic places as `needs_update`.
+- Phase 3A hardening added broader category templates for imported Ontario
+  records (`fast_food`, `pub`, `cinema`, `arts_centre`, `attraction`,
+  `historic`, `mall`, `fitness_centre`, and `nature_reserve`), batch
+  pagination, multi-category filters, `sourceProvider` filters, and v2 job
+  auditing (`place_profile_v2`, `echoo-deterministic-profile-v2`).
+- `ontario-maintenance` can now invoke `place-enrich` through
+  `action = "place_enrichment"` or the broader `scheduled` action, and the
+  `ontario_place_enrichment` schedule row exists for small recurring batches
+  while the Phase 3 backfill is active.
+- Deployed smoke tests verified both direct `place-enrich` dry runs and an
+  `ontario-maintenance` real batch that enriched CF Markville plus a historic
+  OSM record.
 
 ## 12. Ranking
 
@@ -721,9 +733,10 @@ Deliverable: province-wide baseline POI records.
 - Store scores/tags/summaries.
 - Queue low-confidence records.
 
-Status: first worker slice complete/verified on 2026-06-27 with deployed
-`place-enrich`, job audit writes, approved profile writes, and live
-low-confidence review records.
+Status: worker slice complete/verified on 2026-06-27, then Phase 3A runner
+hardening completed on 2026-06-28 with pagination, broader templates,
+`place_profile_v2` audit rows, and a maintenance/schedule path for recurring
+small-batch enrichment.
 
 Deliverable: first enriched Ontario knowledge layer.
 
@@ -827,3 +840,13 @@ Remaining:
    - Admin/worker functions are deployed with Supabase JWT verification
      disabled and rely on the configured admin/ingestion secret headers.
    - Stale cleanup smoke ran successfully and archived zero stale records.
+6. Harden Phase 3 profile enrichment into a resumable runner.
+   - Status: complete/verified on 2026-06-28 for Phase 3A.
+   - `place-enrich` supports `categories`, `sourceProvider`, `offset`, `limit`,
+     `includeExisting`, and `dryRun`, with a 500-record batch cap.
+   - Category templates now cover core imported food, culture, shopping,
+     historic, indoor, and nature records.
+   - `ontario-maintenance` supports `action = "place_enrichment"` and the
+     `ontario_place_enrichment` schedule row is installed.
+   - Smoke tests verified direct dry-run scoring and a real maintenance-driven
+     enrichment batch.
