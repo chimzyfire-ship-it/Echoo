@@ -654,45 +654,58 @@
       .route-hop {
         align-self: end;
         justify-self: start;
-        padding: 6px 9px;
-        border: 1px solid rgba(240, 197, 109, 0.34);
-        border-radius: 999px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
         color: var(--signal);
-        background: rgba(240, 197, 109, 0.08);
+        background: transparent;
         font-size: 10px;
         font-weight: 950;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+        cursor: pointer;
+        text-align: left;
+        text-decoration: none;
+        text-underline-offset: 4px;
+      }
+
+      .route-hop:hover {
+        text-decoration: underline;
       }
 
       .route-actions,
       .detail-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 14px;
         margin-top: 4px;
       }
 
       .route-action,
       .detail-action {
-        min-height: 36px;
-        padding: 0 13px;
-        border: 1px solid rgba(251, 246, 236, 0.16);
-        border-radius: 6px;
-        background: rgba(251, 246, 236, 0.045);
+        min-height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
         color: var(--ink);
         font-size: 11px;
         font-weight: 950;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         cursor: pointer;
+        text-decoration: none;
+        text-underline-offset: 4px;
       }
 
       .route-action.primary,
       .detail-action.primary {
-        border-color: rgba(240, 197, 109, 0.46);
-        background: rgba(240, 197, 109, 0.12);
         color: var(--signal);
+      }
+
+      .route-action:hover,
+      .detail-action:hover {
+        text-decoration: underline;
       }
 
       .detail-card {
@@ -2202,12 +2215,13 @@
         card.className = "see-route-card";
         card.innerHTML = "<span>View Route Map</span>";
         card.addEventListener("click", () => {
+          const mapStops = activeRouteStops.length ? activeRouteStops : stops;
           mapOverlay.classList.add("open");
           // Initialize map after overlay opens and has physical dimensions
           setTimeout(() => {
-            const midIndex = Math.floor(stops.length / 2);
-            EchooMap.init("map-container", stops[midIndex].coords);
-            EchooMap.drawRoute(stops);
+            const midIndex = Math.floor(mapStops.length / 2);
+            EchooMap.init("map-container", mapStops[midIndex].coords);
+            EchooMap.drawRoute(mapStops);
           }, 450);
         });
         chatBody.appendChild(card);
@@ -2218,6 +2232,8 @@
         if (!url) return;
         window.open(url, "_blank", "noopener,noreferrer");
       }
+
+      let activeRouteStops = [];
 
       // Close map overlay handler
       mapClose.addEventListener("click", () => {
@@ -2304,11 +2320,19 @@
           .replace(/'/g, "&#039;");
       }
 
-      function routeTravelLabel(index, usePreciseBase) {
-        if (index === 0) return "Start here";
+      function routeTravelLabel(index, usePreciseBase, isSelectedStart = false) {
+        if (index === 0) return isSelectedStart ? "Starting here" : "Start here";
         const minutes = usePreciseBase ? index * 5 + 3 : index * 6 + 4;
         const distance = usePreciseBase ? index * 350 + 150 : index * 450 + 200;
-        return `${minutes} min · ${distance}m walk`;
+        return `Start from here · ${minutes} min · ${distance}m walk`;
+      }
+
+      function rotateStops(stops, startIndex) {
+        const safeIndex = Math.max(
+          0,
+          Math.min(Number(startIndex) || 0, stops.length - 1),
+        );
+        return stops.slice(safeIndex).concat(stops.slice(0, safeIndex));
       }
 
       function addLocationCard(
@@ -2435,8 +2459,9 @@
       }
 
       let routeBoardSequence = 0;
-      function addRouteBoard(stops, usePreciseBase) {
+      function addRouteBoard(stops, usePreciseBase, replaceNode = null) {
         if (!Array.isArray(stops) || !stops.length) return;
+        activeRouteStops = stops.slice();
         routeBoardSequence += 1;
         const gradientId = `routeLineGradient-${routeBoardSequence}`;
         const count = stops.length;
@@ -2459,6 +2484,7 @@
             const detailType = stop.detailType || (isExternal ? "external" : "event");
             const timing = stop.timing ? ` ${stop.timing}` : "";
             const vibe = `${stop.vibe || "A matched stop for this plan."}${timing}`;
+            const isSelectedStart = stop.selectedStart === true;
             return `
               <article
                 class="route-stop"
@@ -2477,7 +2503,7 @@
                   <div class="route-stop-kicker">${escapeHtml(`${stop.tags || "Echoo"} · ${budget}`)}</div>
                   <h3 class="route-stop-title">${escapeHtml(stop.name)}</h3>
                   <p class="route-stop-copy">${escapeHtml(vibe)}</p>
-                  <div class="route-hop">${escapeHtml(routeTravelLabel(index, usePreciseBase))}</div>
+                  <button class="route-hop" type="button" data-route-action="start">${escapeHtml(routeTravelLabel(index, usePreciseBase, isSelectedStart))}</button>
                   <div class="route-actions">
                     <button class="route-action primary" type="button" data-route-action="details">${escapeHtml(detailType === "external" ? "Preview" : "Details")}</button>
                     ${isExternal ? '<button class="route-action" type="button" data-route-action="open">Open listing</button>' : ""}
@@ -2503,12 +2529,26 @@
           </svg>
           <div class="route-grid">${cards}</div>`;
 
-        board.querySelectorAll(".route-stop[data-clickable='true']").forEach((card) => {
+        board.querySelectorAll(".route-stop").forEach((card) => {
           card.addEventListener("click", (event) => {
             const detailId = card.dataset.detailId;
-            if (!detailId) return;
-            const stop = stops[Number(card.dataset.stopIndex)] || {};
+            const stopIndex = Number(card.dataset.stopIndex) || 0;
+            const stop = stops[stopIndex] || {};
             const routeAction = event.target.closest("[data-route-action]");
+            if (routeAction?.dataset.routeAction === "start") {
+              const reordered = rotateStops(stops, stopIndex).map((item, index) => ({
+                ...item,
+                selectedStart: index === 0,
+              }));
+              activeRouteStops = reordered;
+              addRouteBoard(reordered, usePreciseBase, board);
+              addBubble(
+                "ai",
+                `Route updated to start at ${stop.name || "that stop"}. I reordered the linked stops from there.`,
+              );
+              return;
+            }
+            if (!detailId) return;
             if (routeAction?.dataset.routeAction === "open") {
               openExternalListing(detailId);
               return;
@@ -2538,7 +2578,12 @@
             });
           });
         });
-        chatBody.appendChild(board);
+        if (replaceNode) {
+          chatBody.insertBefore(board, replaceNode);
+          replaceNode.remove();
+        } else {
+          chatBody.appendChild(board);
+        }
         scrollChat();
       }
 
