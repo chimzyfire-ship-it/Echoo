@@ -33,6 +33,29 @@
       * {
         box-sizing: border-box;
       }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
       body {
         margin: 0;
         min-height: 100svh;
@@ -792,18 +815,18 @@
       let initialStoredPrefs = {};
 
       // Check stored preference for pre-detected city
-      let preDetectedCity = "Toronto";
+      let preDetectedCity = "Ontario";
       try {
         const stored = localStorage.getItem("echoo_preferences");
         if (stored) {
           initialStoredPrefs = JSON.parse(stored);
           preDetectedCity =
-            redirectParams.get("city") || initialStoredPrefs.city || "Toronto";
+            redirectParams.get("city") || initialStoredPrefs.city || "Ontario";
         }
       } catch (e) {}
       preDetectedCity =
         window.EchooLocationPlatform.cityByName(preDetectedCity)?.name ||
-        "Toronto";
+        "Ontario";
 
       /* ---- State ---- */
       const state = {
@@ -1604,7 +1627,7 @@
         );
         const city = selectedCity
           ? selectedCity.name
-          : (state.city || cityInput?.value || "Toronto").trim();
+          : (state.city || cityInput?.value || "Ontario").trim();
         const tone = state.tone || "direct";
         const gender = state.gender || "Prefer not to say";
         const dob = state.dob || "";

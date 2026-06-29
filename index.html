@@ -32,6 +32,29 @@
       * {
         box-sizing: border-box;
       }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
       html,
       body {
         min-height: 100%;
@@ -266,23 +289,27 @@
       .city-pill {
         display: inline-flex;
         align-items: center;
-        gap: 9px;
+        position: relative;
+        gap: 8px;
         width: fit-content;
-        min-height: 38px;
-        padding: 0 14px;
+        min-height: 28px;
+        padding: 0 2px 5px;
         margin: 4px auto 0;
-        border: 1px solid rgba(246, 240, 230, 0.16);
-        border-radius: 999px;
-        background: rgba(16, 17, 18, 0.85);
-        color: var(--muted);
-        font-size: 13px;
-        font-weight: 750;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(246, 240, 230, 0.82);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
+
       .location-proof {
         display: block;
         min-height: 18px;
         margin-top: 8px;
-        color: rgba(246, 240, 230, 0.72);
+        color: rgba(246, 240, 230, 0.58);
         font-size: 11px;
         font-weight: 750;
         letter-spacing: 0.02em;
@@ -293,8 +320,19 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--gold), var(--rose));
-        box-shadow: 0 0 14px rgba(231, 201, 142, 0.5);
+        background: var(--gold);
+        box-shadow: 0 0 16px rgba(231, 201, 142, 0.72);
+      }
+
+      .city-pill::after {
+        position: absolute;
+        right: 2px;
+        bottom: 0;
+        left: 18px;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--gold), transparent);
+        content: "";
       }
 
       .control-stack {
@@ -512,7 +550,7 @@
         transform-origin: left center;
       }
 
-      .glyph.weekend::before {
+      .glyph.today::before {
         position: absolute;
         inset: 5px 3px 3px;
         content: "";
@@ -520,7 +558,7 @@
         border-radius: 3px;
       }
 
-      .glyph.weekend::after {
+      .glyph.today::after {
         position: absolute;
         left: 6px;
         right: 6px;
@@ -686,14 +724,14 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%) scale(0.95);
-        width: calc(100% - 40px);
-        max-width: 380px;
-        background: #0d0d0d;
-        border: 1px solid var(--signal);
-        border-radius: 6px;
-        padding: 28px;
+        width: min(390px, calc(100% - 34px));
+        background: rgba(16, 17, 18, 0.9);
+        border: 0;
+        border-radius: 28px;
+        padding: 22px;
         z-index: 20000;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(24px);
         opacity: 0;
         pointer-events: none;
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -705,23 +743,22 @@
         pointer-events: auto;
       }
       .location-modal h2 {
-        font-size: 16px;
-        margin-bottom: 12px;
-        text-transform: uppercase;
-        color: var(--signal);
-        letter-spacing: 0.05em;
+        margin: 0 0 10px;
+        color: var(--ink);
+        font-size: 30px;
+        line-height: 0.95;
+        letter-spacing: -0.055em;
         font-weight: 900;
       }
       .location-modal p {
-        font-size: 13px;
-        line-height: 1.5;
-        margin-bottom: 20px;
-        color: var(--dim);
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.42;
+        font-weight: 700;
       }
       .instruction-section {
-        border-top: 1px solid var(--line);
-        padding-top: 16px;
-        margin-bottom: 20px;
+        display: none;
       }
       .instruction-title {
         font-size: 12px;
@@ -732,7 +769,7 @@
       }
       .instruction-list {
         font-size: 12px;
-        color: var(--dim);
+        color: rgba(246, 240, 230, 0.62);
         padding-left: 16px;
         margin: 0 0 16px 0;
       }
@@ -740,36 +777,39 @@
         margin-bottom: 6px;
       }
       .location-modal-buttons {
-        display: flex;
-        gap: 12px;
-        justify-content: flex-end;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
       }
       .location-modal-btn {
-        padding: 10px 20px;
+        min-height: 50px;
+        padding: 0 14px;
         font-size: 12px;
-        font-weight: bold;
-        border: 1px solid var(--line);
-        background: var(--panel-2);
+        font-weight: 950;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(246, 240, 230, 0.08);
+        color: var(--ink);
         cursor: pointer;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
       }
       .location-modal-btn.primary {
-        border-color: var(--signal);
-        color: var(--signal);
+        color: #151311;
+        background: linear-gradient(135deg, #e4bd78, #d8a2d9);
       }
       .location-modal-btn:hover {
-        background: var(--panel);
+        background: rgba(246, 240, 230, 0.12);
       }
       .location-modal .preview-link {
         display: inline-flex;
-        margin-top: 8px;
-        color: var(--signal);
+        margin-top: 14px;
+        color: var(--gold);
         font-size: 12px;
-        font-weight: 850;
+        font-weight: 950;
         text-decoration: none;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
       }
       /* Blurred overlay behind modal */
       .modal-backdrop {
@@ -778,8 +818,8 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(4px);
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(8px);
         z-index: 19000;
         opacity: 0;
         pointer-events: none;
@@ -829,7 +869,7 @@
           </div>
           <h1 id="landing-title">Discover your city, your way.</h1>
           <p class="tagline">Find the plans people will actually say yes to.</p>
-          <span class="city-pill">Toronto today</span>
+          <span class="city-pill">Ontario today</span>
           <span class="location-proof" id="location-proof"
             >Detecting your location...</span
           >
@@ -856,7 +896,7 @@
             <input
               id="city-search"
               autocomplete="off"
-              placeholder="What’s happening in Toronto today?"
+              placeholder="What’s happening in Ontario today?"
             />
             <button
               class="send"
@@ -882,7 +922,7 @@
         ><span class="glyph discover"></span><span>Discover</span></a
       >
       <a class="nav-link" href="events.html?query=today"
-        ><span class="glyph weekend"></span><span>Today</span></a
+        ><span class="glyph today"></span><span>Today</span></a
       >
       <a class="nav-link" href="app.html"
         ><span class="glyph people"></span><span>Friends</span></a
@@ -908,7 +948,7 @@
         <button type="button" data-budget="$$$">Special</button>
       </div>
       <div class="sheet-actions">
-        <a id="sheet-link" href="events.html?query=weekend">Show the plan</a>
+        <a id="sheet-link" href="events.html?query=today">Show the plan</a>
         <button id="sheet-close" type="button">Close</button>
       </div>
     </aside>
@@ -916,10 +956,10 @@
     <div class="modal-backdrop" id="location-backdrop"></div>
 
     <div class="location-modal" id="location-settings-modal">
-      <h2 id="location-modal-title">Canada launch access</h2>
+      <h2 id="location-modal-title">Use your location?</h2>
       <p id="location-modal-copy">
-        Echoo needs your location to unlock live Canadian discovery, routing,
-        showtimes, and local date itineraries.
+        Echoo uses it to find better Ontario plans near you. You can keep
+        browsing with Ontario anytime.
       </p>
 
       <div class="instruction-section" id="location-instructions">
@@ -947,10 +987,10 @@
 
       <div class="location-modal-buttons">
         <button class="location-modal-btn" id="location-dismiss">
-          Use Toronto
+          Use Ontario
         </button>
         <button class="location-modal-btn primary" id="location-try-again">
-          Try Again
+          Allow location
         </button>
       </div>
       <a class="preview-link" href="events.html?preview=1">Preview Echoo</a>
@@ -1075,7 +1115,7 @@
         .getElementById("search-form")
         .addEventListener("submit", async (event) => {
           event.preventDefault();
-          const query = searchInput.value.trim() || "Toronto today";
+          const query = searchInput.value.trim() || "Ontario today";
           await openProtectedRoute(
             `events.html?query=${encodeURIComponent(query)}`,
           );
@@ -1141,14 +1181,20 @@
           ...prefs,
           city: cityName,
           countryCode: "CA",
+          adminArea1: "ON",
+          province: "Ontario",
           locationSupported: true,
         };
         if (coords) {
           locationState.lastLat = coords.lat;
           locationState.lastLng = coords.lng;
           locationState.locationPrecision = "gps";
-        } else if (!locationState.locationPrecision) {
-          locationState.locationPrecision = "manual_city";
+          locationState.locationReason = "device_ontario";
+        } else {
+          locationState.lastLat = undefined;
+          locationState.lastLng = undefined;
+          locationState.locationPrecision = "manual_region";
+          locationState.locationReason = "ontario_fallback";
         }
         window.EchooLocationPlatform.writeLocationState(locationState);
 
@@ -1156,8 +1202,8 @@
         if (cityPill) cityPill.textContent = `${cityName} today`;
         if (locationProof) {
           locationProof.textContent = coords
-            ? `Precise location on · ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${coords.accuracy ? ` · ±${Math.round(coords.accuracy)}m` : ""}`
-            : `Using ${cityName} as your city base`;
+            ? `Ontario precise location on · ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${coords.accuracy ? ` · ±${Math.round(coords.accuracy)}m` : ""}`
+            : `Using ${cityName} as your location base`;
         }
         const context = setDayPlanCopy(cityName);
 
@@ -1175,9 +1221,9 @@
           console.warn("Geolocation not supported by browser.");
           showCanadaPreviewModal(
             "Location is off",
-            "Choose a Canadian launch city manually, or continue previewing Echoo until location is available.",
+            "Use Ontario for now, or turn location on for nearby plans.",
           );
-          updatePageCity("Toronto");
+          updatePageCity("Ontario");
           return;
         }
 
@@ -1196,16 +1242,16 @@
             );
             if (!resolved.supported) {
               console.warn(resolved.message);
-              updatePageCity(resolved.fallbackCity?.name || "Toronto");
+              updatePageCity(resolved.fallbackRegion?.name || "Ontario");
               showCanadaPreviewModal(
-                "Using Toronto",
-                "Echoo will use Toronto as your launch city until you choose another Canadian city.",
+                "Using Ontario",
+                "We’ll show Ontario picks until precise location is available.",
               );
               return;
             }
 
             console.log(
-              `Resolved location to closest city: ${resolved.city.name} (Distance: ${resolved.city.distanceKm.toFixed(1)} km)`,
+              `Resolved Ontario location to closest city: ${resolved.city.name} (Distance: ${resolved.city.distanceKm.toFixed(1)} km)`,
             );
             updatePageCity(resolved.city.name, {
               lat,
@@ -1215,10 +1261,10 @@
           },
           (error) => {
             console.warn("Geolocation failed or denied:", error);
-            updatePageCity("Toronto");
+            updatePageCity("Ontario");
             showCanadaPreviewModal(
-              "Using Toronto",
-              "Echoo will use Toronto as your launch city until you choose another Canadian city.",
+              "Using Ontario",
+              "We’ll show Ontario picks until precise location is available.",
             );
           },
           { timeout: 8000 },
@@ -1229,7 +1275,7 @@
         if (modalTitle) modalTitle.textContent = title;
         if (modalCopy) modalCopy.textContent = copy;
         if (modalInstructions)
-          modalInstructions.hidden = title === "Canada launch only";
+          modalInstructions.hidden = title === "Ontario launch only";
         locationModal.classList.add("active");
         locationBackdrop.classList.add("active");
       }
@@ -1239,21 +1285,24 @@
         detectUserLocation();
       });
 
-      // Dismiss triggers default fallback (Toronto)
+      // Dismiss triggers default Ontario fallback.
       dismissBtn.addEventListener("click", () => {
         locationModal.classList.remove("active");
         locationBackdrop.classList.remove("active");
         window.EchooLocationPlatform.writeLocationState({
-          city: "Toronto",
+          city: "Ontario",
           countryCode: "CA",
+          adminArea1: "ON",
+          province: "Ontario",
           locationSupported: true,
-          locationPrecision: "manual_city",
+          locationPrecision: "manual_region",
+          locationReason: "ontario_fallback",
         });
-        updatePageCity("Toronto");
+        updatePageCity("Ontario");
       });
 
       detectUserLocation();
-      setDayPlanCopy("Toronto");
+      setDayPlanCopy("Ontario");
     </script>
   </body>
 </html>

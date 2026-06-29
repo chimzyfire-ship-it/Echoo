@@ -263,7 +263,7 @@ as $$
   with origin as (
     select case
       when p_lat is not null and p_lng is not null
-        then st_setsrid(st_makepoint(p_lng, p_lat), 4326)::extensions.geography
+        then extensions.st_setsrid(extensions.st_makepoint(p_lng, p_lat), 4326)::extensions.geography
       else null
     end as geo
   ),
@@ -278,14 +278,14 @@ as $$
       cp.address,
       cp.latitude,
       cp.longitude,
-      case when origin.geo is not null then st_distance(cp.location, origin.geo) else null end as distance_meters,
+      case when origin.geo is not null then extensions.st_distance(cp.location, origin.geo) else null end as distance_meters,
       pp.lunch_score,
       pp.date_score,
       pp.group_score,
       greatest(cp.confidence_score, coalesce(pp.confidence_score, 0)) as confidence_score,
       (
         case
-          when p_query is not null and cp.normalized_name % public.normalize_place_name(p_query) then 0.30
+          when p_query is not null and cp.normalized_name operator(extensions.%) public.normalize_place_name(p_query) then 0.30
           when p_query is not null and cp.normalized_name ilike '%' || public.normalize_place_name(p_query) || '%' then 0.20
           else 0
         end
@@ -296,7 +296,7 @@ as $$
           end
         + case
             when origin.geo is null then 0.08
-            else greatest(0, 1 - (st_distance(cp.location, origin.geo) / greatest(p_radius_meters, 1))) * 0.18
+            else greatest(0, 1 - (extensions.st_distance(cp.location, origin.geo) / greatest(p_radius_meters, 1))) * 0.18
           end
         + coalesce(pp.lunch_score, 0.35) * 0.12
         + coalesce(pp.date_score, 0.35) * 0.07
@@ -314,11 +314,11 @@ as $$
       and (p_city is null or lower(coalesce(cp.municipality, cp.city, '')) = lower(trim(p_city)))
       and (
         origin.geo is null
-        or st_dwithin(cp.location, origin.geo, least(greatest(p_radius_meters, 1000), 100000))
+        or extensions.st_dwithin(cp.location, origin.geo, least(greatest(p_radius_meters, 1000), 100000))
       )
       and (
         p_query is null
-        or cp.normalized_name % public.normalize_place_name(p_query)
+        or cp.normalized_name operator(extensions.%) public.normalize_place_name(p_query)
         or cp.normalized_name ilike '%' || public.normalize_place_name(p_query) || '%'
         or cp.category ilike '%' || trim(p_query) || '%'
         or cp.subcategory ilike '%' || trim(p_query) || '%'
@@ -329,4 +329,3 @@ as $$
   order by rank_score desc, distance_meters asc nulls last, name asc
   limit least(greatest(p_limit, 1), 100);
 $$;
-

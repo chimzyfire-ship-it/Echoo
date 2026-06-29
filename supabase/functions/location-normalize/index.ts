@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
         eventType: "unsupported_region",
         status: "blocked",
         durationMs: Date.now() - startedAt,
-        reason: "outside_canada",
+        reason: "outside_ontario",
         request: { title: payload.title, lat, lng, city: payload.city },
         responseSummary: { supported: false },
       });
@@ -138,9 +138,9 @@ Deno.serve(async (req) => {
         {
           supported: false,
           locationStatus: "needs_review",
-          reason: "outside_canada",
+          reason: "outside_ontario",
           message:
-            "Echoo is normalizing and publishing Canadian locations first.",
+            "Echoo is normalizing and publishing Ontario locations first.",
         },
         200,
       );

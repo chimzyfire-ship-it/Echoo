@@ -98,8 +98,8 @@ Deno.serve(async (req) => {
       if (!isInsideCanadaBounds(lat, lng)) {
         const response = {
           supported: false,
-          reason: "outside_canada",
-          message: "Echoo is launching location discovery in Canada first.",
+          reason: "outside_ontario",
+          message: "Echoo is focused on Ontario and the GTA first.",
           results: [],
         };
         await logLocationEvent(supabase, {
@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
           eventType: "unsupported_region",
           status: "blocked",
           durationMs: Date.now() - startedAt,
-          reason: "outside_canada",
+          reason: "outside_ontario",
           request: { lat, lng, radiusMeters, limit },
           responseSummary: { supported: false },
         });
@@ -154,13 +154,13 @@ Deno.serve(async (req) => {
       return jsonResponse(response);
     }
 
-    const city = normalizeCityName(payload.city || "Toronto");
+    const city = normalizeCityName(payload.city || "Ontario");
     if (!city) {
       const response = {
         supported: false,
         reason: "unsupported_city",
         message:
-          "Echoo is active across Canada first. Choose a supported Canadian launch city.",
+          "Echoo is active across Ontario first. Choose Ontario or a supported Ontario city.",
         results: [],
       };
       await logLocationEvent(supabase, {
@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
     const { data, error } = await supabase.rpc("search_region_entities", {
       p_country_code: "CA",
       p_admin_area_1: city.province,
-      p_city: city.name,
+      p_city: city.coverageLevel === "province" ? null : city.name,
       p_entity_type: payload.entityType || null,
       p_category: payload.category || null,
       p_limit: limit,

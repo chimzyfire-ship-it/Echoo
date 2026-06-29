@@ -12,6 +12,11 @@ const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
 type PlanPayload = {
   query?: string;
   mode?: string;
+  city?: string;
+  lat?: number;
+  lng?: number;
+  intent?: string;
+  limit?: number;
   previousPlan?: {
     ai?: { assistantMessage?: string };
     summary?: string;
@@ -47,6 +52,115 @@ function safeStrings(value: unknown) {
 
 function uniqueStrings(values: string[]) {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
+function optionalNumber(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+const ONTARIO_CITY_NAMES = [
+  "Toronto",
+  "Markham",
+  "Scarborough",
+  "North York",
+  "Vaughan",
+  "Richmond Hill",
+  "Mississauga",
+  "Brampton",
+  "Oakville",
+  "Burlington",
+  "Hamilton",
+  "Ottawa",
+  "Waterloo",
+  "Kitchener",
+  "London",
+  "Niagara Falls",
+  "Kingston",
+  "Guelph",
+  "Barrie",
+  "Windsor",
+  "Thunder Bay",
+];
+
+function cityFromQuery(query = "") {
+  const directCity = ONTARIO_CITY_NAMES.find((cityName) => {
+    const pattern = new RegExp(
+      `\\b${cityName.replace(/\s+/g, "\\s+")}\\b`,
+      "i",
+    );
+    return pattern.test(query);
+  });
+  if (directCity) return directCity;
+
+  const text = query.toLowerCase();
+  if (/\b(markville|cf markville|unionville|main street unionville)\b/.test(text)) {
+    return "Markham";
+  }
+  if (/\b(ago|art gallery of ontario|rom|royal ontario museum|high park|trinity bellwoods)\b/.test(text)) {
+    return "Toronto";
+  }
+  return "";
+}
+
+function isOntarioLocalQuery(query: string, city = "") {
+  const text = `${query} ${city}`.toLowerCase();
+  const hasOntarioCity = Boolean(cityFromQuery(text)) || /\bontario\b/.test(text);
+  const hasLocalIntent =
+    /\b(plan|route|near|nearby|nice|good|worth|vibe|chill|chilling|quiet|cozy|lunch|dinner|restaurant|restaurants|cafe|coffee|date|night|park|museum|gallery|culture|things to do|activity|activities|bar|pub|mall)\b/.test(
+      text,
+    );
+  return hasOntarioCity && hasLocalIntent;
+}
+
+async function callOntarioPlan(input: {
+  req: Request;
+  body: PlanPayload;
+  query: string;
+}) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  if (!supabaseUrl) throw new Error("SUPABASE_URL is not configured.");
+
+  const city = cleanText(input.body.city) || cityFromQuery(input.query);
+  const response = await fetch(`${supabaseUrl}/functions/v1/ontario-plan`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: input.req.headers.get("Authorization") || "",
+      apikey: input.req.headers.get("apikey") || "",
+    },
+    body: JSON.stringify({
+      query: input.query,
+      city: city || undefined,
+      lat: optionalNumber(input.body.lat),
+      lng: optionalNumber(input.body.lng),
+      intent: input.body.intent || input.body.mode,
+      limit: input.body.limit,
+      mode: input.body.mode,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.error || "Ontario plan request failed.");
+  }
+
+  const compatibility = payload?.data?.compatibility;
+  if (!compatibility) {
+    throw new Error("Ontario plan returned an incompatible response.");
+  }
+
+  return {
+    ...compatibility,
+    supported: payload?.data?.supported ?? true,
+    region: payload?.data?.region,
+    ontario: {
+      plan: payload?.data?.plan,
+      sourceStatus: payload?.data?.sourceStatus,
+      meta: payload?.meta,
+    },
+  };
 }
 
 function geminiModelCandidates() {
@@ -214,6 +328,15 @@ Deno.serve(async (req) => {
     const query = cleanText(body.query);
     if (!query) {
       return jsonResponse({ error: "Ask Gemini something first." }, 400);
+    }
+
+    if (isOntarioLocalQuery(query, cleanText(body.city))) {
+      try {
+        const ontarioPlan = await callOntarioPlan({ req, body, query });
+        return jsonResponse(ontarioPlan);
+      } catch (err) {
+        console.warn("Ontario retrieval plan failed, falling back to Gemini:", err);
+      }
     }
 
     const aiAnswer = await callGemini({

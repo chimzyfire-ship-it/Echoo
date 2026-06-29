@@ -293,7 +293,7 @@ async function loadEchooCandidates(input: {
   query: string;
   limit: number;
 }): Promise<Candidate[]> {
-  const cityRecord = normalizeCityName(input.city || "Toronto");
+  const cityRecord = normalizeCityName(input.city || "Ontario");
   const hasCoordinates =
     Number.isFinite(input.lat) && Number.isFinite(input.lng);
   const { data, error } = hasCoordinates
@@ -308,7 +308,10 @@ async function loadEchooCandidates(input: {
     : await input.supabase.rpc("search_region_entities", {
         p_country_code: "CA",
         p_admin_area_1: cityRecord?.province || null,
-        p_city: cityRecord?.name || input.city || null,
+        p_city:
+          cityRecord?.coverageLevel === "province"
+            ? null
+            : cityRecord?.name || input.city || null,
         p_entity_type: null,
         p_category: null,
         p_limit: input.limit,

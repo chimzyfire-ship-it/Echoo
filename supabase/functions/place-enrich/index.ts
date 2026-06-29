@@ -117,6 +117,19 @@ const CATEGORY_PROFILES: Record<string, Partial<ProfileDraft>> = {
     family_score: 0.84,
     rainy_day_score: 0.18,
   },
+  trail: {
+    vibe_tags: ["outdoors", "walkable", "active", "quiet"],
+    good_for: ["solo", "date", "family", "group"],
+    activity_tags: ["walking", "hiking", "fresh_air"],
+    noise_level: "low",
+    price_band: "free",
+    lunch_score: 0.08,
+    date_score: 0.68,
+    group_score: 0.56,
+    solo_score: 0.86,
+    family_score: 0.7,
+    rainy_day_score: 0.08,
+  },
   museum: {
     vibe_tags: ["cultural", "curious", "indoor"],
     good_for: ["date", "solo", "family", "rainy_day"],
@@ -221,6 +234,19 @@ const CATEGORY_PROFILES: Record<string, Partial<ProfileDraft>> = {
     family_score: 0.58,
     rainy_day_score: 0.9,
   },
+  cultural_space: {
+    vibe_tags: ["cultural", "local-interest", "explore"],
+    good_for: ["date", "solo", "family", "group"],
+    activity_tags: ["culture", "learning", "explore"],
+    noise_level: "variable",
+    price_band: "$",
+    lunch_score: 0.14,
+    date_score: 0.7,
+    group_score: 0.62,
+    solo_score: 0.68,
+    family_score: 0.62,
+    rainy_day_score: 0.58,
+  },
   attraction: {
     vibe_tags: ["local-interest", "explore", "sightseeing"],
     good_for: ["date", "family", "group", "solo"],
@@ -273,6 +299,32 @@ const CATEGORY_PROFILES: Record<string, Partial<ProfileDraft>> = {
     family_score: 0.18,
     rainy_day_score: 0.8,
   },
+  public_facility: {
+    vibe_tags: ["civic", "practical", "local"],
+    good_for: ["solo", "family"],
+    activity_tags: ["community", "services"],
+    noise_level: "variable",
+    price_band: "free",
+    lunch_score: 0.06,
+    date_score: 0.08,
+    group_score: 0.34,
+    solo_score: 0.42,
+    family_score: 0.54,
+    rainy_day_score: 0.6,
+  },
+  food_premise: {
+    vibe_tags: ["food", "local", "casual"],
+    good_for: ["lunch", "solo", "group"],
+    meal_tags: ["lunch", "dinner"],
+    noise_level: "unknown",
+    price_band: null,
+    lunch_score: 0.64,
+    date_score: 0.38,
+    group_score: 0.52,
+    solo_score: 0.56,
+    family_score: 0.5,
+    rainy_day_score: 0.58,
+  },
   nature_reserve: {
     vibe_tags: ["outdoors", "quiet", "nature"],
     good_for: ["solo", "date", "family", "group"],
@@ -310,12 +362,16 @@ function clamp01(value: unknown, fallback = 0.5) {
 }
 
 function cleanText(value: unknown) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function uniq(values: Array<string | undefined | null>) {
   return Array.from(
-    new Set(values.map((value) => cleanText(value).toLowerCase()).filter(Boolean)),
+    new Set(
+      values.map((value) => cleanText(value).toLowerCase()).filter(Boolean),
+    ),
   );
 }
 
@@ -342,9 +398,8 @@ function buildProfile(place: CanonicalPlace): ProfileDraft {
   const template = profileTemplate(category);
   const name = cleanText(place.name) || "This place";
   const city = cleanText(place.municipality) || "Ontario";
-  const readableCategory = cleanText(place.subcategory) ||
-    cleanText(place.category) ||
-    "local place";
+  const readableCategory =
+    cleanText(place.subcategory) || cleanText(place.category) || "local place";
   const confidence = confidenceFor(place, templateKnown);
   const reviewStatus = confidence >= 0.78 ? "approved" : "needs_update";
 
@@ -361,8 +416,7 @@ function buildProfile(place: CanonicalPlace): ProfileDraft {
     solo_score: clamp01(template.solo_score, 0.48),
     family_score: clamp01(template.family_score, 0.38),
     rainy_day_score: clamp01(template.rainy_day_score, 0.42),
-    summary:
-      `${name} is a ${readableCategory} in ${city}. Echoo's initial profile is based on verified place data and category signals, so it should be treated as directional until reviewed.`,
+    summary: `${name} is a ${readableCategory} in ${city}. Echoo's initial profile is based on verified place data and category signals, so it should be treated as directional until reviewed.`,
     caveats: templateKnown
       ? "Generated from category, source, and location metadata; confirm hours, pricing, and current vibe before featuring."
       : "Low-specificity category profile; needs editorial review before strong recommendations.",
@@ -416,15 +470,19 @@ async function selectPlaces(
     .range(requestedOffset, requestedOffset + requestedLimit - 1);
 
   if (payload.placeId) query = query.eq("id", payload.placeId);
-  if (payload.municipality) query = query.ilike("municipality", payload.municipality);
+  if (payload.municipality)
+    query = query.ilike("municipality", payload.municipality);
   if (categories.length === 1) query = query.eq("category", categories[0]);
   if (categories.length > 1) query = query.in("category", categories);
-  if (payload.sourceProvider) query = query.eq("source_provider", payload.sourceProvider);
+  if (payload.sourceProvider)
+    query = query.eq("source_provider", payload.sourceProvider);
   if (!payload.includeExisting) query = query.is("place_profiles.id", null);
 
   const { data, error } = await query;
   if (error) throw error;
-  return (data || []) as unknown as Array<CanonicalPlace & { place_profiles?: unknown[] }>;
+  return (data || []) as unknown as Array<
+    CanonicalPlace & { place_profiles?: unknown[] }
+  >;
 }
 
 Deno.serve(async (req) => {
@@ -448,16 +506,18 @@ Deno.serve(async (req) => {
 
     for (const place of places) {
       const profile = buildProfile(place);
-      const inputHash = await sha256Hex(JSON.stringify({
-        placeId: place.id,
-        name: place.name,
-        category: place.category,
-        subcategory: place.subcategory,
-        municipality: place.municipality,
-        sourceProvider: place.source_provider,
-        confidenceScore: place.confidence_score,
-        profileVersion: 2,
-      }));
+      const inputHash = await sha256Hex(
+        JSON.stringify({
+          placeId: place.id,
+          name: place.name,
+          category: place.category,
+          subcategory: place.subcategory,
+          municipality: place.municipality,
+          sourceProvider: place.source_provider,
+          confidenceScore: place.confidence_score,
+          profileVersion: 2,
+        }),
+      );
 
       if (dryRun) {
         results.push({ placeId: place.id, name: place.name, profile, dryRun });
@@ -492,9 +552,10 @@ Deno.serve(async (req) => {
             place_id: place.id,
             ...profile,
             ai_generated_at: new Date().toISOString(),
-            reviewed_at: profile.human_review_status === "approved"
-              ? new Date().toISOString()
-              : null,
+            reviewed_at:
+              profile.human_review_status === "approved"
+                ? new Date().toISOString()
+                : null,
           },
           { onConflict: "place_id" },
         )
@@ -539,15 +600,14 @@ Deno.serve(async (req) => {
       sourceProvider: payload.sourceProvider || null,
       scanned: places.length,
       enriched: dryRun ? 0 : results.length,
-      queuedForReview: results.filter((result: any) =>
-        result.reviewStatus === "needs_update"
+      queuedForReview: results.filter(
+        (result: any) => result.reviewStatus === "needs_update",
       ).length,
       results,
     });
   } catch (error) {
-    const message = error instanceof Error
-      ? error.message
-      : "Unknown place enrichment error";
+    const message =
+      error instanceof Error ? error.message : "Unknown place enrichment error";
     return jsonResponse({ error: message }, 500);
   }
 });

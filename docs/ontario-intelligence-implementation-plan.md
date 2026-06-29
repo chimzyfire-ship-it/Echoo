@@ -1,6 +1,6 @@
 # Echoo Ontario Intelligence Implementation Plan
 
-Last updated: 2026-06-27
+Last updated: 2026-06-29
 
 ## 1. Decision
 
@@ -633,6 +633,85 @@ Chill-specific ranking should prefer:
 - relaxed cafes, restaurants, parks, lounges
 - avoid clubs/party-heavy results unless requested
 
+Phase 3B implementation status as of 2026-06-29:
+
+- Migration `202606290001_ontario_ranking_profile_treatment.sql` upgrades
+  `search_ontario_places` to expose the ranking inputs needed by search, plan,
+  and chat: vibe tags, good-for tags, solo/family/rainy-day scores, profile
+  review status, source provider, profile quality, source quality, popularity,
+  trust, and editorial boost.
+- `ontario-search` and `ontario-plan` now apply a shared treatment score:
+
+```text
+treatment =
+  base_rank * 0.30 +
+  intent_match * 0.22 +
+  vibe_match * 0.16 +
+  profile_quality * 0.14 +
+  source_quality * 0.08 +
+  editorial_boost * 0.06 +
+  trust_score * 0.04
+
+final_score = treatment * confidence_safety_multiplier
+```
+
+- Results now include ranking/source-safety metadata so the UI can explain why
+  a place appeared without inventing ratings, hours, specials, or events.
+- `plan-engine` routes more Ontario local/place-opinion prompts to
+  retrieval-first planning before Gemini, including Markville/Unionville
+  aliases and chill/nice/worth/vibe/quiet/cozy phrasing.
+- Place-opinion prompts are treated as focused one-place retrieval answers;
+  route/planning prompts still produce multi-stop route boards.
+- Live verification passed after deployment:
+  - `ontario-search` for `chill lunch Markham` returned approved Echoo-profile
+    results with `profile_vibe_editorial_confidence_v1` metadata.
+  - `ontario-plan` for `two stop lunch plan in Markham` returned JOEY Markville
+    and Platform Espresso Bar.
+  - `plan-engine` for `is JOEY Markville nice for chilling?` returned
+    `ai.provider = "echoo-retrieval"` with one JOEY Markville stop.
+
+Immediate post-Phase 3B implementation direction:
+
+- Phase 3B ranking/profile treatment is considered solidly built; the next
+  implementation step is Ontario/GTA data depth, beginning with Markham and
+  reusable municipal open-data ingestion.
+- Toronto was the first municipal dataset scaffold. It should remain supported,
+  but new ingestion and ranking work should treat Ontario as the province scope
+  and GTA/Markham as the current quality bar.
+- `ontario-open-data-import` now supports a GTA preset registry, preset-level
+  `municipality`, configurable CKAN base URLs, and ArcGIS FeatureServer paging.
+- First GTA expansion presets:
+  - `markham_parks`
+  - `markham_trails`
+- The importer uses public ArcGIS utility FeatureServer URLs for Markham,
+  requests GeoJSON with paging, and normalizes polygon/line geometries into
+  coordinates suitable for `canonical_places`.
+- Deterministic enrichment now covers `trail`, `cultural_space`,
+  `public_facility`, and `food_premise`.
+- Retrieval category buckets now include trail/outdoor/walk/hike and
+  civic/community/recreation/facility intents.
+- Migration `202606290002_gta_open_data_enrichment_schedule.sql` updates the
+  recurring enrichment schedule for the expanded Ontario/GTA categories.
+- Remote verification completed on 2026-06-29:
+  - migration `202606290002_gta_open_data_enrichment_schedule.sql` applied to
+    the linked Supabase project
+  - `ontario-open-data-import`, `place-enrich`, `ontario-search`, and
+    `ontario-plan` redeployed with `--use-api`
+  - live Markham ArcGIS GeoJSON source checks returned Snowdon Park and Markham
+    Civic Centre Trail
+  - secured worker auth was confirmed because `ontario-open-data-import`
+    returned 401 without `ONTARIO_INGESTION_SECRET`; the secret value is
+    configured remotely but not locally readable
+  - two tiny remote smoke records from real Markham source data were added with
+    `metadata.phase3c_remote_smoke = true`
+  - each smoke record has canonical/source/mirror/profile rows
+  - deployed `ontario-search` returns Snowdon Park for `park Markham Snowdon`
+    and Markham Civic Centre Trail for `trail walk Markham Civic Centre`
+  - deployed `ontario-plan` returns Markham Civic Centre Trail in explicit
+    park/trail route prompts
+  - `ontario-plan` outdoor category buckets were tightened so explicit
+    park/trail/walk/hike prompts do not drift to restaurant/cafe fallbacks
+
 ## 13. Admin Review
 
 Improve or extend `admin-locations.html` into an Ontario operations console.
@@ -823,9 +902,13 @@ Remaining:
    - Verified import run completed for Toronto libraries, Cultural Hotspot, and
      DineSafe. DineSafe used 1,000-row chunks after a 5,000-row Edge compute
      limit and completed the 104,619-row source feed.
+   - GTA expansion started after Phase 3B with reusable ArcGIS FeatureServer
+     support and Markham presets for parks and trails.
+   - Phase 3C Markham park/trail retrieval is remotely verified with two tiny
+     smoke records from real City of Markham open-data sources.
    - Remaining expansion: add more municipal presets for community centres,
-     recreation centres, trails, public facilities, and additional Ontario
-     cities.
+     recreation centres, trails, public facilities, libraries, and additional
+     GTA/Ontario cities.
 3. Add more Echoo partner/manual/editorial records and give that source
    priority in ranking.
 4. Build duplicate review/merge and profile-confidence queues in
@@ -842,6 +925,8 @@ Remaining:
    - Stale cleanup smoke ran successfully and archived zero stale records.
 6. Harden Phase 3 profile enrichment into a resumable runner.
    - Status: complete/verified on 2026-06-28 for Phase 3A.
+7. Implement Phase 3B ranking/profile treatment.
+   - Status: complete/verified on 2026-06-29.
    - `place-enrich` supports `categories`, `sourceProvider`, `offset`, `limit`,
      `includeExisting`, and `dryRun`, with a 500-record batch cap.
    - Category templates now cover core imported food, culture, shopping,

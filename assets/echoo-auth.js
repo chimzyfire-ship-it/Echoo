@@ -120,7 +120,7 @@
     const email = clean(row.email) || clean(user?.email);
     const budget = safeBudget(row.budget);
     const energy = safeEnergy(row.energy);
-    const city = clean(row.home_city, "Toronto");
+    const city = clean(row.home_city, "Ontario");
     const gender = clean(row.gender, "Prefer not to say");
     const dob = row.date_of_birth || "";
     const tone = safeTone(row.tone);
@@ -177,7 +177,7 @@
       motivations,
       budget,
       energy,
-      home_city: clean(profile.city || profile.home_city, "Toronto"),
+      home_city: clean(profile.city || profile.home_city, "Ontario"),
       gender: clean(profile.gender, "Prefer not to say"),
       date_of_birth: safeDate(profile.dob || profile.date_of_birth),
       tone,
@@ -286,7 +286,7 @@
     if (patch.budget) update.budget = safeBudget(patch.budget);
     if (patch.energy) update.energy = safeEnergy(patch.energy);
     if (patch.tone) update.tone = safeTone(patch.tone);
-    if (patch.city) update.home_city = clean(patch.city, "Toronto");
+    if (patch.city) update.home_city = clean(patch.city, "Ontario");
     if (!Object.keys(update).length) return null;
     const { error: updateError } = await client
       .from(PROFILE_TABLE)

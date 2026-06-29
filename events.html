@@ -7,17 +7,17 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg: #080907;
-        --panel: #11130f;
-        --panel-2: #191b15;
-        --ink: #f5f1e8;
-        --muted: #a8a397;
-        --dim: #706c62;
-        --line: rgba(245, 241, 232, 0.13);
-        --line-strong: rgba(245, 241, 232, 0.28);
-        --signal: #e7c98e;
-        --rose: #d8a2d9;
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+        --bg: #0c0e0d;
+        --panel: rgba(248, 242, 231, 0.075);
+        --panel-strong: rgba(248, 242, 231, 0.12);
+        --ink: #f8f2e7;
+        --muted: #b9afa0;
+        --dim: #81786e;
+        --gold: #e7c98e;
+        --rose: #d9a0c8;
+        --mint: #9fd8bc;
+        --ember: #f0a36c;
+        --shadow: 0 22px 64px rgba(0, 0, 0, 0.36);
         font-family:
           Inter,
           ui-sans-serif,
@@ -31,32 +31,86 @@
       * {
         box-sizing: border-box;
       }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+      }
+
       body {
         margin: 0;
-        min-height: 100vh;
         color: var(--ink);
+        background: #090b0c;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        content: "";
+        background-image:
+          linear-gradient(180deg, rgba(9, 11, 12, 0.24), #090b0c 72%),
+          url("assets/optimized/background-1400.jpg");
+        background-size: cover;
+        background-position: center top;
+        opacity: 0.52;
+      }
+
+      body::after {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        content: "";
         background:
-          linear-gradient(
-              90deg,
-              rgba(245, 241, 232, 0.035) 1px,
-              transparent 1px
-            )
-            0 0 / 34px 34px,
-          radial-gradient(
-            circle at 78% 4%,
-            rgba(216, 255, 95, 0.1),
-            transparent 25rem
-          ),
-          var(--bg);
+          linear-gradient(180deg, rgba(9, 11, 12, 0.18), #090b0c 58%),
+          linear-gradient(90deg, rgba(231, 201, 142, 0.08), transparent 42%),
+          linear-gradient(270deg, rgba(159, 216, 188, 0.08), transparent 46%);
+        pointer-events: none;
       }
 
       a {
         color: inherit;
         text-decoration: none;
       }
+
       button,
       input {
         font: inherit;
+      }
+
+      button {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .app-shell {
+        width: min(430px, 100%);
+        min-height: 100svh;
+        margin: 0 auto;
+        position: relative;
       }
 
       .topbar {
@@ -67,135 +121,424 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 14px 18px;
-        border-bottom: 1px solid var(--line);
-        background: rgba(8, 9, 7, 0.94);
+        padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+        background: rgba(9, 11, 12, 0.78);
+        backdrop-filter: blur(22px);
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
         gap: 10px;
+        font-size: 24px;
         font-weight: 950;
-        font-size: 26px;
-        letter-spacing: -0.05em;
       }
 
       .brand img {
-        width: 44px;
-        height: 44px;
-        border: 1px solid var(--line);
+        width: 42px;
+        height: 42px;
         border-radius: 18px;
         object-fit: cover;
         object-position: 50% 0%;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
       }
 
       .topbar a:last-child {
-        min-height: 42px;
-        padding: 0 15px;
         display: inline-flex;
         align-items: center;
-        border: 1px solid var(--line);
-        color: var(--muted);
-        font-weight: 850;
+        min-height: 42px;
+        color: rgba(248, 242, 231, 0.72);
+        font-size: 13px;
+        font-weight: 900;
       }
 
       .shell {
-        width: min(1160px, 100%);
-        margin: 0 auto;
-        padding: 18px 18px 106px;
+        padding: 14px 16px calc(96px + env(safe-area-inset-bottom));
       }
 
       .hero {
         display: grid;
-        gap: 16px;
-        padding: 22px 0;
+        gap: 18px;
+        padding: 10px 0 20px;
       }
 
       .kicker {
-        color: var(--signal);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        color: rgba(248, 242, 231, 0.72);
         font-size: 12px;
         font-weight: 950;
-        letter-spacing: 0.15em;
         text-transform: uppercase;
       }
 
+      .kicker::before {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--mint);
+        box-shadow: 0 0 18px rgba(159, 216, 188, 0.74);
+        content: "";
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
       h1 {
+        margin-bottom: 0;
+        max-width: 11ch;
+        font-size: clamp(42px, 13vw, 56px);
+        line-height: 0.9;
+        font-weight: 950;
+        text-wrap: balance;
+      }
+
+      .hero-copy {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero-copy p {
         margin: 0;
-        font-size: clamp(48px, 14vw, 94px);
-        line-height: 0.86;
-        letter-spacing: -0.075em;
+        max-width: 31ch;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.42;
+        font-weight: 700;
       }
 
       .search {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr 48px;
+        align-items: center;
         gap: 8px;
-        padding: 8px;
-        border: 1px solid var(--line);
-        background: rgba(17, 19, 15, 0.88);
+        min-height: 60px;
+        padding: 6px;
+        border-radius: 999px;
+        background: rgba(248, 242, 231, 0.095);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 18px 46px rgba(0, 0, 0, 0.26);
       }
 
       input {
+        width: 100%;
         min-width: 0;
-        min-height: 54px;
+        min-height: 48px;
         border: 0;
         outline: 0;
         color: var(--ink);
         background: transparent;
-        padding: 0 8px;
-        font-weight: 750;
+        padding: 0 6px 0 12px;
+        font-size: 15px;
+        font-weight: 800;
       }
 
-      .primary,
-      .filter {
-        min-height: 54px;
-        border: 1px solid var(--line);
-        border-radius: 0;
-        cursor: pointer;
-        font-weight: 950;
-        transition:
-          transform 180ms ease,
-          border-color 180ms ease,
-          background 180ms ease;
+      input::placeholder {
+        color: rgba(248, 242, 231, 0.58);
       }
 
       .primary {
-        border-color: transparent;
-        color: #151311;
-        background: linear-gradient(
-          135deg,
-          #e4bd78 0%,
-          #f2ddb0 42%,
-          var(--rose) 100%
-        );
-        padding: 0 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0 16px;
+        color: #11110f;
+        background: linear-gradient(135deg, var(--gold), var(--rose));
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 950;
+        transition:
+          transform 180ms ease,
+          filter 180ms ease;
       }
 
-      .filter {
-        flex: 0 0 auto;
-        padding: 0 15px;
-        color: var(--muted);
-        background: rgba(245, 241, 232, 0.04);
+      .search .primary {
+        width: 48px;
+        padding: 0;
+        color: transparent;
+        font-size: 0;
       }
 
-      .filter.active {
-        color: #10110e;
-        background: var(--ink);
+      .search .primary::before {
+        width: 15px;
+        height: 2px;
+        border-radius: 999px;
+        background: #11110f;
+        content: "";
+      }
+
+      .search .primary::after {
+        width: 9px;
+        height: 9px;
+        margin-left: -4px;
+        border-top: 2px solid #11110f;
+        border-right: 2px solid #11110f;
+        transform: rotate(45deg);
+        content: "";
       }
 
       .primary:hover,
-      .filter:hover {
+      .primary:focus-visible {
         transform: translateY(-2px);
-        border-color: var(--line-strong);
+        filter: brightness(1.04);
+        outline: 0;
       }
 
-      /* ── News Bubble Slider ── */
-      .news-carousel-wrap {
-        margin: 8px 0 20px;
-        overflow: hidden;
+      .filters {
+        display: flex;
+        gap: 18px;
+        overflow-x: auto;
+        padding: 2px 0 16px;
+        scrollbar-width: none;
+      }
+
+      .filters::-webkit-scrollbar,
+      .rail::-webkit-scrollbar,
+      .news-slider::-webkit-scrollbar {
+        display: none;
+      }
+
+      .filter {
         position: relative;
+        flex: 0 0 auto;
+        min-height: 34px;
+        padding: 0;
+        border: 0;
+        color: rgba(248, 242, 231, 0.52);
+        background: transparent;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 950;
+      }
+
+      .filter.active {
+        color: var(--ink);
+      }
+
+      .filter.active::after {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 1px;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--gold), var(--mint));
+        content: "";
+      }
+
+      .filter:hover,
+      .filter:focus-visible {
+        color: var(--gold);
+        outline: 0;
+      }
+
+      .section {
+        display: grid;
+        gap: 12px;
+        margin: 0 0 28px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1;
+        font-weight: 950;
+      }
+
+      .section-head span {
+        color: rgba(248, 242, 231, 0.48);
+        font-size: 12px;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .rail {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(245px, 78%);
+        gap: 12px;
+        overflow-x: auto;
+        margin: 0 -16px;
+        padding: 0 16px 4px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+      }
+
+      .feature-card {
+        position: relative;
+        min-height: 292px;
+        overflow: hidden;
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        isolation: isolate;
+        scroll-snap-align: start;
+      }
+
+      .feature-card img {
+        position: absolute;
+        inset: 0;
+        z-index: -2;
         width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.95) contrast(1.03);
+      }
+
+      .feature-card::after {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background:
+          linear-gradient(180deg, rgba(8, 10, 10, 0.1), transparent 32%),
+          linear-gradient(0deg, rgba(8, 10, 10, 0.9), transparent 72%);
+        content: "";
+      }
+
+      .feature-card a {
+        display: grid;
+        align-content: space-between;
+        min-height: 292px;
+        padding: 14px;
+      }
+
+      .soft-labels {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: rgba(248, 242, 231, 0.86);
+        font-size: 11px;
+        font-weight: 950;
+        text-transform: uppercase;
+      }
+
+      .feature-card h3 {
+        margin: 0 0 8px;
+        font-size: 25px;
+        line-height: 1;
+        font-weight: 950;
+        text-wrap: balance;
+      }
+
+      .feature-card p {
+        margin: 0;
+        color: rgba(248, 242, 231, 0.74);
+        font-size: 13px;
+        line-height: 1.32;
+        font-weight: 750;
+      }
+
+      .sound-rail {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sound-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+        min-height: 62px;
+        color: var(--ink);
+      }
+
+      .sound-mark {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background:
+          linear-gradient(135deg, rgba(231, 201, 142, 0.88), rgba(217, 160, 200, 0.88)),
+          rgba(248, 242, 231, 0.08);
+        color: #11110f;
+        font-size: 14px;
+        font-weight: 950;
+      }
+
+      .sound-card strong {
+        display: block;
+        font-size: 16px;
+        line-height: 1.1;
+        font-weight: 950;
+      }
+
+      .sound-card span span {
+        display: block;
+        margin-top: 4px;
+        color: rgba(248, 242, 231, 0.54);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .sound-card em {
+        color: var(--mint);
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 950;
+        white-space: nowrap;
+      }
+
+      .place-stack {
+        display: grid;
+        gap: 4px;
+      }
+
+      .place-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        min-height: 72px;
+        color: var(--ink);
+      }
+
+      .place-row strong {
+        display: block;
+        font-size: 17px;
+        line-height: 1.1;
+        font-weight: 950;
+      }
+
+      .place-row span {
+        display: block;
+        margin-top: 5px;
+        color: rgba(248, 242, 231, 0.54);
+        font-size: 12px;
+        line-height: 1.28;
+        font-weight: 750;
+      }
+
+      .place-row em {
+        color: var(--gold);
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 950;
+        white-space: nowrap;
+      }
+
+      .news-carousel-wrap {
+        position: relative;
+        width: auto;
+        overflow: hidden;
+        margin: 0 -16px;
       }
 
       .news-carousel-wrap::before,
@@ -203,33 +546,31 @@
         position: absolute;
         top: 0;
         bottom: 0;
-        width: 30px;
         z-index: 2;
+        width: 18px;
         content: "";
         pointer-events: none;
       }
+
       .news-carousel-wrap::before {
         left: 0;
-        background: linear-gradient(90deg, var(--bg) 0%, transparent 100%);
+        background: linear-gradient(90deg, #090b0c, transparent);
       }
+
       .news-carousel-wrap::after {
         right: 0;
-        background: linear-gradient(-90deg, var(--bg) 0%, transparent 100%);
+        background: linear-gradient(270deg, #090b0c, transparent);
       }
 
       .news-slider {
         display: flex;
         overflow-x: auto;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
         cursor: grab;
         user-select: none;
         touch-action: pan-x;
-        scroll-behavior: auto;
+        scrollbar-width: none;
       }
-      .news-slider::-webkit-scrollbar {
-        display: none;
-      }
+
       .news-slider:active {
         cursor: grabbing;
       }
@@ -237,147 +578,139 @@
       .news-track {
         display: flex;
         gap: 10px;
-        padding: 4px 8px;
+        padding: 2px 16px 6px;
       }
 
       .news-card {
-        flex: 0 0 auto;
-        height: 60px;
-        padding: 6px 12px 6px 6px;
         display: inline-flex;
         align-items: center;
+        flex: 0 0 258px;
         gap: 10px;
-        border-radius: 4px;
-        border: 1px solid var(--line);
-        background: var(--panel);
-        transition:
-          border-color 180ms ease,
-          background-color 180ms ease;
-      }
-
-      .news-card:hover {
-        border-color: var(--signal);
-        background-color: var(--panel-2);
+        min-height: 72px;
+        padding: 8px;
+        border-radius: 8px;
+        background: rgba(248, 242, 231, 0.075);
       }
 
       .news-card img {
-        width: 48px;
-        height: 48px;
+        flex: 0 0 auto;
+        width: 56px;
+        height: 56px;
+        border-radius: 7px;
         object-fit: cover;
-        border-radius: 2px;
-        flex-shrink: 0;
       }
 
       .news-card .news-info {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 2px;
-        text-align: left;
+        display: grid;
+        gap: 4px;
+        min-width: 0;
       }
 
       .news-card .tag {
-        color: var(--signal);
+        color: var(--mint);
         font-size: 10px;
         font-weight: 950;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
       }
 
       .news-card .headline {
-        color: var(--muted);
-        font-size: 13px;
-        font-weight: 750;
-        white-space: nowrap;
+        max-width: 172px;
         overflow: hidden;
+        color: rgba(248, 242, 231, 0.78);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.18;
         text-overflow: ellipsis;
-        max-width: 260px;
-        transition: color 180ms ease;
-      }
-
-      .news-card:hover .headline {
-        color: var(--ink);
-      }
-
-      .filters {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        scrollbar-width: none;
-        padding-bottom: 4px;
-      }
-
-      .filters::-webkit-scrollbar {
-        display: none;
+        white-space: nowrap;
       }
 
       .content {
         display: grid;
-        gap: 14px;
+        gap: 12px;
+      }
+
+      .events-list {
+        display: grid;
+        gap: 12px;
       }
 
       .event {
         display: grid;
-        grid-template-columns: 104px 1fr;
-        gap: 14px;
-        padding: 12px;
-        border: 1px solid var(--line);
-        background: rgba(17, 19, 15, 0.84);
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 12px;
+        min-height: 126px;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(248, 242, 231, 0.075);
         cursor: pointer;
+        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.18);
         transition:
           transform 180ms ease,
-          border-color 180ms ease,
           background 180ms ease;
       }
 
-      .event:hover {
-        transform: translateX(4px);
-        border-color: var(--line-strong);
-        background: rgba(25, 27, 21, 0.94);
+      .event:hover,
+      .event:focus-within {
+        transform: translateY(-2px);
+        background: rgba(248, 242, 231, 0.105);
+      }
+
+      .event picture,
+      .event img {
+        width: 96px;
+        height: 112px;
       }
 
       .event img {
-        width: 104px;
-        height: 132px;
+        display: block;
+        border-radius: 7px;
         object-fit: cover;
-        filter: saturate(0.58) contrast(1.08);
+        filter: saturate(0.86) contrast(1.03);
+      }
+
+      .event div {
+        min-width: 0;
       }
 
       .event small {
-        color: var(--signal);
-        font-size: 11px;
+        display: inline-flex;
+        color: var(--gold);
+        font-size: 10px;
         font-weight: 950;
-        letter-spacing: 0.13em;
         text-transform: uppercase;
       }
 
       .event h2 {
-        margin: 8px 0;
-        font-size: 24px;
-        line-height: 0.98;
-        letter-spacing: -0.055em;
+        margin: 6px 0 7px;
+        color: var(--ink);
+        font-size: 20px;
+        line-height: 1;
+        font-weight: 950;
+        text-wrap: balance;
       }
 
       .event p {
-        margin: 0 0 12px;
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.38;
-        font-weight: 650;
+        display: -webkit-box;
+        margin: 0 0 9px;
+        overflow: hidden;
+        color: rgba(248, 242, 231, 0.62);
+        font-size: 12px;
+        line-height: 1.28;
+        font-weight: 700;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
       }
 
       .meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 7px;
+        gap: 8px;
       }
 
       .meta span {
-        padding: 6px 9px;
-        border: 1px solid var(--line);
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 850;
+        color: rgba(248, 242, 231, 0.52);
+        font-size: 11px;
+        font-weight: 900;
       }
 
       .side {
@@ -387,140 +720,279 @@
 
       .brief {
         padding: 16px;
-        border: 1px solid var(--line);
-        background: rgba(245, 241, 232, 0.035);
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(231, 201, 142, 0.16), transparent),
+          rgba(248, 242, 231, 0.075);
       }
 
       .brief h3 {
         margin: 0 0 8px;
-        font-size: 25px;
-        letter-spacing: -0.055em;
+        font-size: 22px;
+        line-height: 1;
+        font-weight: 950;
       }
 
       .brief p {
         margin: 0 0 14px;
-        color: var(--muted);
-        line-height: 1.42;
-        font-weight: 650;
+        color: rgba(248, 242, 231, 0.66);
+        font-size: 13px;
+        line-height: 1.38;
+        font-weight: 700;
       }
 
       .bottom-nav {
         position: fixed;
-        left: 0;
-        right: 0;
+        left: 50%;
         bottom: 0;
         z-index: 30;
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        border-top: 1px solid var(--line);
-        background: rgba(8, 9, 7, 0.96);
+        grid-template-columns: repeat(5, 1fr);
+        width: min(430px, 100%);
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        background: rgba(9, 11, 12, 0.82);
+        backdrop-filter: blur(22px);
+        box-shadow: 0 -18px 54px rgba(0, 0, 0, 0.32);
       }
 
       .bottom-nav a {
         display: grid;
         place-items: center;
-        min-height: 68px;
-        color: var(--muted);
+        min-height: 52px;
+        color: rgba(248, 242, 231, 0.48);
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .bottom-nav a.active {
+        color: var(--gold);
+      }
+
+      .location-note {
+        display: inline-flex;
+        width: fit-content;
+        color: rgba(248, 242, 231, 0.58);
         font-size: 12px;
         font-weight: 850;
       }
 
-      .bottom-nav a.active {
-        color: var(--signal);
-      }
-
-      @media (min-width: 860px) {
-        .shell {
-          padding: 34px 28px 70px;
-        }
-        .hero {
-          grid-template-columns: 1fr 480px;
-          align-items: end;
-          padding: 54px 0 26px;
-        }
-        .content {
-          grid-template-columns: 1fr 340px;
-          align-items: start;
-        }
-        .event {
-          grid-template-columns: 190px 1fr;
-        }
-        .event img {
-          width: 190px;
-          height: 210px;
-        }
-        .bottom-nav {
-          display: none;
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
         }
       }
     </style>
   </head>
   <body>
-    <header class="topbar">
-      <a class="brand" href="index.html">
-        <img src="assets/echoo-new-logo.jpg" alt="" />
-        <span>echoo</span>
-      </a>
-      <a href="auth.html">Sign in</a>
-    </header>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="index.html">
+          <img src="assets/echoo-new-logo.jpg" alt="" />
+          <span>echoo</span>
+        </a>
+        <a href="auth.html">Sign in</a>
+      </header>
 
-    <main class="shell">
-      <section class="hero">
-        <div>
-          <div class="kicker">Discover</div>
-          <h1>Find the plan people answer yes to.</h1>
-        </div>
-        <form class="search" id="search-form">
-          <input id="query" placeholder="What sounds good right now?" />
-          <button class="primary" type="submit">Search</button>
-        </form>
-      </section>
-
-      <!-- News Carousel Section -->
-      <div class="news-carousel-wrap">
-        <div class="news-slider" id="news-slider">
-          <div class="news-track" id="news-track"></div>
-        </div>
-      </div>
-
-      <div class="filters" id="filters">
-        <button class="filter active" data-filter="all">All</button>
-        <button class="filter" data-filter="music">Music</button>
-        <button class="filter" data-filter="dates">Dates</button>
-        <button class="filter" data-filter="movies">Films</button>
-        <button class="filter" data-filter="food">Food</button>
-      </div>
-
-      <section class="content" style="margin-top: 16px">
-        <div id="events-list"></div>
-        <aside class="side">
-          <div class="brief">
-            <h3 id="brief-title">A few good starts</h3>
-            <p id="brief-copy">
-              One easy plan, one interesting plan, and one backup for when the
-              group changes its mind.
+      <main class="shell">
+        <section class="hero">
+          <div class="hero-copy">
+            <div class="kicker">Ontario live</div>
+            <h1>What is worth doing right now?</h1>
+            <p>
+              Shows, chill spots, music heat, and easy plans in one calm flow.
             </p>
-            <a
-              class="primary"
-              style="
-                display: inline-flex;
-                align-items: center;
-                text-decoration: none;
-              "
-              href="app.html"
-              >Plan with friends</a
-            >
+            <span class="location-note" id="location-note">Using Ontario</span>
           </div>
-        </aside>
-      </section>
-    </main>
+          <form class="search" id="search-form">
+            <input id="query" placeholder="Search Ontario tonight" />
+            <button class="primary" type="submit">Search</button>
+          </form>
+        </section>
 
-    <nav class="bottom-nav" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a class="active" href="events.html">Discover</a>
-      <a href="app.html">Plan</a>
-      <a href="auth.html">Sign in</a>
-    </nav>
+        <div class="filters" id="filters" aria-label="Discovery filters">
+          <button class="filter active" data-filter="all">All</button>
+          <button class="filter" data-filter="music">Music</button>
+          <button class="filter" data-filter="dates">Dates</button>
+          <a class="filter" href="films.html">Films</a>
+          <button class="filter" data-filter="food">Food</button>
+        </div>
+
+        <section class="section" aria-labelledby="shows-title">
+          <div class="section-head">
+            <h2 id="shows-title">Live shows</h2>
+            <span>Updated today</span>
+          </div>
+          <div class="rail">
+            <article class="feature-card">
+              <img
+                src="assets/optimized/news-music-768.jpg"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+              <a href="events.html?query=concerts%20tonight%20ontario">
+                <span class="soft-labels">
+                  <span>Selling now</span>
+                  <span>Ontario</span>
+                </span>
+                <span>
+                  <h3>Live rooms still moving</h3>
+                  <p>Concerts, DJs, intimate sets, and the places nearby.</p>
+                </span>
+              </a>
+            </article>
+            <article class="feature-card">
+              <img
+                src="assets/optimized/news-date-768.jpg"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+              <a href="events.html?query=date%20night%20ontario">
+                <span class="soft-labels">
+                  <span>Open</span>
+                  <span>GTA</span>
+                </span>
+                <span>
+                  <h3>Date plans that feel effortless</h3>
+                  <p>One anchor, one food stop, one softer place after.</p>
+                </span>
+              </a>
+            </article>
+            <article class="feature-card">
+              <img
+                src="assets/optimized/news-movie-768.jpg"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+              <a href="films.html">
+                <span class="soft-labels">
+                  <span>Films</span>
+                  <span>This week</span>
+                </span>
+                <span>
+                  <h3>Screenings with somewhere good after</h3>
+                  <p>Film nights paired with food, dessert, and late spots.</p>
+                </span>
+              </a>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="music-title">
+          <div class="section-head">
+            <h2 id="music-title">Music moving</h2>
+            <span>Ontario signals</span>
+          </div>
+          <div class="sound-rail">
+            <a class="sound-card" href="events.html?query=trending%20artists%20with%20ontario%20shows">
+              <span class="sound-mark">01</span>
+              <span>
+                <strong>Trending artists with Ontario shows</strong>
+                <span>Music buzz that connects to real listings.</span>
+              </span>
+              <em>Live</em>
+            </a>
+            <a class="sound-card" href="events.html?query=canada%20music%20trends%20ontario%20shows">
+              <span class="sound-mark">02</span>
+              <span>
+                <strong>Tracks turning into Ontario plans</strong>
+                <span>Signals from charts, events, venues, and saves.</span>
+              </span>
+              <em>Trend</em>
+            </a>
+            <a class="sound-card" href="events.html?query=concerts%20ontario">
+              <span class="sound-mark">03</span>
+              <span>
+                <strong>Concert energy</strong>
+                <span>Useful music discovery, not decorative charts.</span>
+              </span>
+              <em>Fresh</em>
+            </a>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="places-title">
+          <div class="section-head">
+            <h2 id="places-title">Hot places to chill</h2>
+            <span>Ontario picks</span>
+          </div>
+          <div class="place-stack">
+            <a
+              class="place-row"
+              href="events.html?query=food%20before%20the%20show%20ontario"
+            >
+              <span>
+                <strong>Food before the show</strong>
+                <span>Quick tables, warm rooms, easy group energy.</span>
+              </span>
+              <em>Nearby</em>
+            </a>
+            <a class="place-row" href="events.html?query=late%20night%20ontario">
+              <span>
+                <strong>Late-night picks</strong>
+                <span>Places that keep the night alive after the main plan.</span>
+              </span>
+              <em>Open late</em>
+            </a>
+            <a
+              class="place-row"
+              href="events.html?query=date%20night%20restaurants%20ontario"
+            >
+              <span>
+                <strong>Date-night energy</strong>
+                <span>Comfortable, not stiff, actually good for talking.</span>
+              </span>
+              <em>Curated</em>
+            </a>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="pulse-title">
+          <div class="section-head">
+            <h2 id="pulse-title">Entertainment pulse</h2>
+            <span>Fresh picks</span>
+          </div>
+          <div class="news-carousel-wrap">
+            <div class="news-slider" id="news-slider">
+              <div class="news-track" id="news-track"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="content" aria-labelledby="live-picks-title">
+          <div class="section-head">
+            <h2 id="live-picks-title">Near your mood</h2>
+            <span>Live picks</span>
+          </div>
+          <div class="events-list" id="events-list"></div>
+          <aside class="side">
+            <div class="brief">
+              <h3 id="brief-title">A few good starts</h3>
+              <p id="brief-copy">
+                One easy plan, one interesting plan, and one backup for when the
+                group changes its mind.
+              </p>
+              <a class="primary" href="app.html">Plan with friends</a>
+            </div>
+          </aside>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a class="active" href="events.html">Discover</a>
+        <a href="events.html?query=today">Today</a>
+        <a href="app.html">Plan</a>
+        <a href="auth.html">Profile</a>
+      </nav>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
@@ -584,6 +1056,7 @@
 
       const list = document.getElementById("events-list");
       const queryInput = document.getElementById("query");
+      const locationNote = document.getElementById("location-note");
       let activeFilter = "all";
 
       function render() {
@@ -642,7 +1115,7 @@
           event.preventDefault();
           const q = queryInput.value.trim();
           if (q) {
-            window.location.href = `app.html?q=${encodeURIComponent(q)}`;
+            window.location.href = `events.html?query=${encodeURIComponent(q)}`;
           } else {
             render();
           }
@@ -701,8 +1174,14 @@
         preciseLat = Number(storedPrefs.lastLat);
         preciseLng = Number(storedPrefs.lastLng);
       }
-      city = city || "Toronto";
+      city = city || "Ontario";
       budget = budget || storedPrefs.budget || "$";
+      if (locationNote) {
+        locationNote.textContent =
+          Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+            ? `Near you in ${city}`
+            : `Using ${city || "Ontario"}`;
+      }
       const personalizationProfile = {
         interests: Array.isArray(storedPrefs.interests)
           ? storedPrefs.interests
@@ -731,6 +1210,12 @@
         budget = params.get("budget") || prefs.budget || budget;
         preciseLat = Number(prefs.lastLat ?? preciseLat);
         preciseLng = Number(prefs.lastLng ?? preciseLng);
+        if (locationNote) {
+          locationNote.textContent =
+            Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+              ? `Near you in ${city}`
+              : `Using ${city || "Ontario"}`;
+        }
         Object.assign(personalizationProfile, {
           interests: Array.isArray(prefs.interests)
             ? prefs.interests
@@ -775,7 +1260,7 @@
 
       const normalizedCity = window.EchooLocationPlatform.cityByName(city);
       if (!normalizedCity) {
-        city = "Toronto";
+        city = "Ontario";
       }
 
       function activityContext() {
@@ -795,7 +1280,7 @@
         if (authState && authState.ok === false) return;
         if (previewMode) {
           console.info(
-            "Echoo: preview mode active; live Canada location search is paused.",
+            "Echoo: preview mode active; live Ontario location search is paused.",
           );
           return;
         }
@@ -846,7 +1331,7 @@
               item.city || city,
               item.distance_meters
                 ? `${Math.max(1, Math.round(item.distance_meters / 1000))} km away`
-                : "Canada",
+                : "Ontario",
               item.starts_at
                 ? new Date(item.starts_at).toLocaleDateString(undefined, {
                     month: "short",
@@ -955,7 +1440,7 @@
           },
           {
             tag: "Patio",
-            text: "Kensington Market tests weekend pedestrian-only zones",
+            text: "Kensington Market tests pedestrian-only zones",
             img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80",
           },
           {
@@ -982,7 +1467,7 @@
         Vancouver: [
           {
             tag: "Beach",
-            text: "Kitsilano beach bonfire permits extended for summer weekends",
+            text: "Kitsilano beach bonfire permits extended for summer",
             img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80",
           },
           {

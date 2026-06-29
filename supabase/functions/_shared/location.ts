@@ -9,13 +9,24 @@ export type SupportedCity = {
   timezone: string;
   lat: number;
   lng: number;
+  coverageLevel?: "province" | "municipality";
 };
 
-export const CANADA_BOUNDS = {
-  minLat: 41.6,
-  maxLat: 83.2,
-  minLng: -141.1,
-  maxLng: -52.5,
+export const ONTARIO_REGION: SupportedCity = {
+  name: "Ontario",
+  province: "ON",
+  provinceName: "Ontario",
+  timezone: "America/Toronto",
+  lat: 44.0,
+  lng: -79.5,
+  coverageLevel: "province",
+};
+
+export const ONTARIO_BOUNDS = {
+  minLat: 41.64,
+  maxLat: 56.9,
+  minLng: -95.2,
+  maxLng: -74.25,
 };
 
 export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
@@ -26,6 +37,97 @@ export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
     timezone: "America/Toronto",
     lat: 43.6532,
     lng: -79.3832,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Markham",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.8561,
+    lng: -79.337,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Scarborough",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.7764,
+    lng: -79.2318,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "North York",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.7615,
+    lng: -79.4111,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Vaughan",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.8563,
+    lng: -79.5085,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Richmond Hill",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.8828,
+    lng: -79.4403,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Mississauga",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.589,
+    lng: -79.6441,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Brampton",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.7315,
+    lng: -79.7624,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Oakville",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.4675,
+    lng: -79.6877,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Burlington",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.3255,
+    lng: -79.799,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Hamilton",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.2557,
+    lng: -79.8711,
+    coverageLevel: "municipality",
   },
   {
     name: "Vancouver",
@@ -66,6 +168,88 @@ export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
     timezone: "America/Toronto",
     lat: 45.4215,
     lng: -75.6972,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Waterloo",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.4643,
+    lng: -80.5204,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Kitchener",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.4516,
+    lng: -80.4925,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "London",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 42.9849,
+    lng: -81.2453,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Niagara Falls",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.0896,
+    lng: -79.0849,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Kingston",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.2312,
+    lng: -76.486,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Guelph",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.5448,
+    lng: -80.2482,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Barrie",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.3894,
+    lng: -79.6903,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Windsor",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 42.3149,
+    lng: -83.0364,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Thunder Bay",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 48.3809,
+    lng: -89.2477,
+    coverageLevel: "municipality",
   },
   {
     name: "Winnipeg",
@@ -201,13 +385,17 @@ export async function logLocationEvent(
 }
 
 export function isInsideCanadaBounds(lat: number, lng: number): boolean {
+  return isInsideOntarioBounds(lat, lng);
+}
+
+export function isInsideOntarioBounds(lat: number, lng: number): boolean {
   return (
     Number.isFinite(lat) &&
     Number.isFinite(lng) &&
-    lat >= CANADA_BOUNDS.minLat &&
-    lat <= CANADA_BOUNDS.maxLat &&
-    lng >= CANADA_BOUNDS.minLng &&
-    lng <= CANADA_BOUNDS.maxLng
+    lat >= ONTARIO_BOUNDS.minLat &&
+    lat <= ONTARIO_BOUNDS.maxLat &&
+    lng >= ONTARIO_BOUNDS.minLng &&
+    lng <= ONTARIO_BOUNDS.maxLng
   );
 }
 
@@ -231,10 +419,13 @@ export function nearestSupportedCity(
   lat: number,
   lng: number,
 ): SupportedCity & { distanceMeters: number } {
-  let best = SUPPORTED_CANADA_CITIES[0];
+  const ontarioCities = SUPPORTED_CANADA_CITIES.filter(
+    (city) => city.province === "ON",
+  );
+  let best = ontarioCities[0] || ONTARIO_REGION;
   let bestDistance = Number.POSITIVE_INFINITY;
 
-  for (const city of SUPPORTED_CANADA_CITIES) {
+  for (const city of ontarioCities) {
     const distance = haversineMeters(lat, lng, city.lat, city.lng);
     if (distance < bestDistance) {
       best = city;
@@ -248,6 +439,7 @@ export function nearestSupportedCity(
 export function normalizeCityName(input?: string | null): SupportedCity | null {
   if (!input) return null;
   const normalized = input.trim().toLowerCase();
+  if (normalized === "ontario" || normalized === "on") return ONTARIO_REGION;
   return (
     SUPPORTED_CANADA_CITIES.find(
       (city) => city.name.toLowerCase() === normalized,

@@ -35,6 +35,29 @@
       * {
         box-sizing: border-box;
       }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
       body {
         margin: 0;
         min-height: 100vh;
@@ -1392,11 +1415,6 @@
             Dinner, an experience, and a backup spot — all connected and timed.
           </p>
         </button>
-        <button class="module" data-action="tickets">
-          <small>Tickets</small>
-          <strong>Lock in the good seats</strong>
-          <p>Events, shows, and screenings with availability right now.</p>
-        </button>
         <button class="module" data-action="crew">
           <small>Group plan</small>
           <strong>Get everyone to say yes</strong>
@@ -1508,7 +1526,7 @@
       }
 
       name = name || "Preview User";
-      city = city || "Toronto";
+      city = city || "Ontario";
       vibes = vibes ? vibes.split(",") : [];
       budget = budget || "$";
       energy = energy || "chill";
@@ -1657,7 +1675,7 @@
 
       // Customize Grid Cards based on onboarding preferences
       const cards = document.querySelectorAll(".grid .module");
-      if (cards.length >= 4) {
+      if (cards.length >= 3) {
         // Card 1: Nearby
         const nearbyStrong = cards[0].querySelector("strong");
         const nearbyP = cards[0].querySelector("p");
@@ -1679,22 +1697,8 @@
           }
         }
 
-        // Card 3: Tickets
-        const ticketsStrong = cards[2].querySelector("strong");
-        const ticketsP = cards[2].querySelector("p");
-        if (ticketsStrong && ticketsP) {
-          let ticketTopic = "live concerts";
-          if (vibes.includes("Late cinema")) ticketTopic = "cinema screenings";
-          else if (vibes.includes("Sports")) ticketTopic = "sports events";
-          else if (vibes.includes("Art & galleries"))
-            ticketTopic = "gallery exhibitions";
-
-          ticketsStrong.textContent = `Available slots in ${city}`;
-          ticketsP.textContent = `Lock in tickets for nearby ${ticketTopic} that fit your budget.`;
-        }
-
-        // Card 4: Group plan
-        const crewStrong = cards[3].querySelector("strong");
+        // Card 3: Group plan
+        const crewStrong = cards[2].querySelector("strong");
         if (crewStrong) {
           crewStrong.textContent = `Group invite for ${city}`;
         }
@@ -1710,7 +1714,7 @@
           },
           {
             tag: "Patio",
-            text: "Kensington Market tests weekend pedestrian-only zones",
+            text: "Kensington Market tests pedestrian-only zones",
             img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80",
           },
           {
@@ -1737,7 +1741,7 @@
         Vancouver: [
           {
             tag: "Beach",
-            text: "Kitsilano beach bonfire permits extended for summer weekends",
+            text: "Kitsilano beach bonfire permits extended for summer",
             img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80",
           },
           {
@@ -2365,7 +2369,7 @@
             <div class="loc-card-tags">${tags}</div>
             <div class="loc-card-name">${placeName}</div>
             <div class="loc-card-vibe">${vibe}</div>
-            ${detailId ? `<div class="loc-card-tags" style="margin-top:8px;">${isExternal ? "Open live listing" : "Open details and tickets"}</div>` : ""}
+            ${detailId ? `<div class="loc-card-tags" style="margin-top:8px;">${isExternal ? "Open live listing" : "Open details"}</div>` : ""}
           </div>`;
         if (detailId) {
           card.addEventListener("click", () => {
@@ -2905,7 +2909,7 @@
               payload,
               stops: [],
               error:
-                "Echoo AI needs a Canadian launch city for live planning. I can use Toronto, Vancouver, Montreal, Calgary, Ottawa, or another supported Canadian city.",
+                "Echoo AI needs an Ontario launch location for live planning. I can use Ontario, Toronto, Markham, Mississauga, Ottawa, or another supported Ontario city.",
             };
           }
           if (payload?.ai?.assistantMessage) {
@@ -2992,14 +2996,18 @@
             if (!resolved.supported) {
               preciseLat = undefined;
               preciseLng = undefined;
-              city = resolved.fallbackCity?.name || "Toronto";
+              city = resolved.fallbackRegion?.name || resolved.fallbackCity?.name || "Ontario";
               activityContext = getActivityContext();
               window.EchooLocationPlatform.writeLocationState({
                 city,
                 countryCode: "CA",
+                adminArea1: "ON",
+                province: "Ontario",
                 locationSupported: true,
-                locationPrecision: "manual_city",
+                locationPrecision: "manual_region",
                 locationReason: resolved.reason,
+                lastLat: undefined,
+                lastLng: undefined,
               });
               return;
             }
@@ -3011,6 +3019,8 @@
             window.EchooLocationPlatform.writeLocationState({
               city,
               countryCode: "CA",
+              adminArea1: "ON",
+              province: "Ontario",
               locationSupported: true,
               locationPrecision: "gps",
               lastLat: lat,
@@ -3273,8 +3283,6 @@
             openChat("what's good and open near me right now");
           } else if (action === "date") {
             openChat("plan a date route worth remembering");
-          } else if (action === "tickets") {
-            openChat("any good shows or events with seats available");
           } else if (action === "crew") {
             openChat("need a plan my friends will actually agree on");
           }

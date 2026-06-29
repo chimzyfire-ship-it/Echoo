@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
     }
     if (!isInsideCanadaBounds(latitude, longitude)) {
       return jsonResponse(
-        { error: "Ticketed events are Canada-first for launch." },
+        { error: "Ticketed events are Ontario-first for launch." },
         422,
       );
     }

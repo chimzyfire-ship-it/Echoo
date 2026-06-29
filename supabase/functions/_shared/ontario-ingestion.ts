@@ -3,11 +3,7 @@ import { getSupabaseAdmin, jsonResponse, sha256Hex } from "./location.ts";
 export type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
 
 export type IngestionSource =
-  | "osm"
-  | "open_data"
-  | "ticketmaster"
-  | "echoo_partner"
-  | "echoo_manual";
+  "osm" | "open_data" | "ticketmaster" | "echoo_partner" | "echoo_manual";
 
 export type PlaceInput = {
   source: IngestionSource;
@@ -130,8 +126,8 @@ function clamp01(value: unknown, fallback: number) {
 }
 
 export function assertIngestionAuthorized(req: Request) {
-  const configuredSecret = Deno.env.get("ONTARIO_INGESTION_SECRET") ||
-    Deno.env.get("ADMIN_TOKEN");
+  const configuredSecret =
+    Deno.env.get("ONTARIO_INGESTION_SECRET") || Deno.env.get("ADMIN_TOKEN");
   if (!configuredSecret) {
     return jsonResponse(
       { error: "ONTARIO_INGESTION_SECRET is not configured." },
@@ -139,7 +135,8 @@ export function assertIngestionAuthorized(req: Request) {
     );
   }
 
-  const submittedSecret = req.headers.get("x-ingestion-secret") ||
+  const submittedSecret =
+    req.headers.get("x-ingestion-secret") ||
     req.headers.get("x-admin-token") ||
     "";
   if (submittedSecret !== configuredSecret) {
@@ -175,26 +172,33 @@ export function inferOsmCategory(tags: Record<string, unknown>) {
 }
 
 function addressFromTags(tags: Record<string, unknown>) {
-  return [
-    tags["addr:housenumber"],
-    tags["addr:street"],
-    tags["addr:city"],
-    tags["addr:province"],
-    tags["addr:postcode"],
-  ]
-    .map(optionalText)
-    .filter(Boolean)
-    .join(", ") || undefined;
+  return (
+    [
+      tags["addr:housenumber"],
+      tags["addr:street"],
+      tags["addr:city"],
+      tags["addr:province"],
+      tags["addr:postcode"],
+    ]
+      .map(optionalText)
+      .filter(Boolean)
+      .join(", ") || undefined
+  );
 }
 
 function osmIdentity(element: any) {
   const rawId = cleanText(
-    element.id || element.properties?.id || element.properties?.["@id"] ||
-      element.properties?.type_id || element.raw_feature?.id,
+    element.id ||
+      element.properties?.id ||
+      element.properties?.["@id"] ||
+      element.properties?.type_id ||
+      element.raw_feature?.id,
   );
   const typedMatch = rawId.match(/^(node|way|relation)[/:_](.+)$/i);
-  const rawType = cleanText(element.type || element.properties?.type, "node")
-    .toLowerCase();
+  const rawType = cleanText(
+    element.type || element.properties?.type,
+    "node",
+  ).toLowerCase();
   return {
     type: typedMatch?.[1]?.toLowerCase() || rawType || "node",
     id: typedMatch?.[2] || rawId,
@@ -216,18 +220,20 @@ function pointFromGeometry(geometry: any) {
 }
 
 export function osmElementToPlace(element: any): PlaceInput | null {
-  const tags = element?.tags || element?.properties?.tags ||
-    element?.properties || {};
+  const tags =
+    element?.tags || element?.properties?.tags || element?.properties || {};
   const category = inferOsmCategory(tags);
   if (!category) return null;
 
   const geometryPoint = pointFromGeometry(element.geometry);
   const lat = optionalNumber(
-    element.lat ?? element.latitude ?? element.center?.lat ??
-      geometryPoint.lat,
+    element.lat ?? element.latitude ?? element.center?.lat ?? geometryPoint.lat,
   );
   const lng = optionalNumber(
-    element.lon ?? element.lng ?? element.longitude ?? element.center?.lon ??
+    element.lon ??
+      element.lng ??
+      element.longitude ??
+      element.center?.lon ??
       geometryPoint.lng,
   );
   if (lat === undefined || lng === undefined || !isInsideOntario(lat, lng)) {
@@ -247,8 +253,12 @@ export function osmElementToPlace(element: any): PlaceInput | null {
     name,
     category,
     subcategory: optionalText(
-      tags.amenity || tags.tourism || tags.leisure || tags.shop ||
-        tags.club || tags.historic,
+      tags.amenity ||
+        tags.tourism ||
+        tags.leisure ||
+        tags.shop ||
+        tags.club ||
+        tags.historic,
     ),
     latitude: lat,
     longitude: lng,
@@ -276,10 +286,11 @@ export function openDataRecordToPlace(
   if (!isInsideOntario(lat, lng)) return null;
 
   const sourceName = cleanText(config.sourceName, "ontario_open_data");
-  const sourceId = optionalText(get("sourceId") || get("id")) ||
+  const sourceId =
+    optionalText(get("sourceId") || get("id")) ||
     `${sourceName}:${name}:${lat.toFixed(6)},${lng.toFixed(6)}`;
-  const category = optionalText(config.category || get("category")) ||
-    "public_facility";
+  const category =
+    optionalText(config.category || get("category")) || "public_facility";
 
   return {
     source: "open_data",
@@ -292,7 +303,9 @@ export function openDataRecordToPlace(
     subcategory: optionalText(config.subcategory || get("subcategory")),
     latitude: lat,
     longitude: lng,
-    municipality: optionalText(get("municipality") || get("city")),
+    municipality: optionalText(
+      get("municipality") || get("city") || config.municipality,
+    ),
     address: optionalText(get("address")),
     website: optionalText(get("website") || get("url")),
     phone: optionalText(get("phone")),
@@ -313,11 +326,11 @@ export function partnerRecordToPlace(
   if (!name || lat === undefined || lng === undefined) return null;
   if (!isInsideOntario(lat, lng)) return null;
 
-  const source = record.source === "echoo_manual"
-    ? "echoo_manual"
-    : "echoo_partner";
+  const source =
+    record.source === "echoo_manual" ? "echoo_manual" : "echoo_partner";
   const sourceName = cleanText(record.sourceName, source);
-  const sourceId = optionalText(record.sourceId || record.id) ||
+  const sourceId =
+    optionalText(record.sourceId || record.id) ||
     `${sourceName}:${name}:${lat.toFixed(6)},${lng.toFixed(6)}`;
 
   return {
@@ -566,35 +579,33 @@ function coordinatesFromGeometry(geometry: any) {
       latitude: geometry.coordinates[1],
     };
   }
-  if (geometry.type === "MultiPoint" && Array.isArray(geometry.coordinates)) {
-    const first = geometry.coordinates.find((point: unknown) =>
-      Array.isArray(point) && point.length >= 2
-    );
-    if (first) {
-      return {
-        longitude: first[0],
-        latitude: first[1],
-      };
+  const points: number[][] = [];
+  const collect = (value: unknown) => {
+    if (!Array.isArray(value)) return;
+    if (
+      value.length >= 2 &&
+      typeof value[0] === "number" &&
+      typeof value[1] === "number"
+    ) {
+      points.push(value as number[]);
+      return;
     }
-  }
-  if (geometry.type === "Polygon" && Array.isArray(geometry.coordinates)) {
-    const ring = geometry.coordinates[0] || [];
-    const points = ring.filter((point: unknown) =>
-      Array.isArray(point) && point.length >= 2
+    for (const child of value) collect(child);
+  };
+  collect(geometry.coordinates);
+
+  if (points.length) {
+    const totals = points.reduce(
+      (acc: { lng: number; lat: number }, point: number[]) => ({
+        lng: acc.lng + Number(point[0]),
+        lat: acc.lat + Number(point[1]),
+      }),
+      { lng: 0, lat: 0 },
     );
-    if (points.length) {
-      const totals = points.reduce(
-        (acc: { lng: number; lat: number }, point: number[]) => ({
-          lng: acc.lng + Number(point[0]),
-          lat: acc.lat + Number(point[1]),
-        }),
-        { lng: 0, lat: 0 },
-      );
-      return {
-        longitude: totals.lng / points.length,
-        latitude: totals.lat / points.length,
-      };
-    }
+    return {
+      longitude: totals.lng / points.length,
+      latitude: totals.lat / points.length,
+    };
   }
   return {};
 }
