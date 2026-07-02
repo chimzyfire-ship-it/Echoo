@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>echoo food</title>
+    <link rel="stylesheet" href="assets/lifestyle-live.css" />
+  </head>
+  <body
+    data-page="food"
+    data-query="restaurants bakeries small plates dessert late food beautiful tables Ontario"
+  >
+    <div class="app-shell">
+      <header class="topbar" aria-label="Echoo">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
+        </a>
+        <a class="profile-link" href="auth.html" aria-label="Open your profile"></a>
+      </header>
+
+      <main>
+        <section class="hero" data-echoo-hero="food">
+          <h1 data-echoo-hero-title>Good tables, simply.</h1>
+          <p data-echoo-hero-copy>
+            Restaurants, bakeries, and late bites chosen for taste, atmosphere,
+            and an easy next move.
+          </p>
+          <div class="live-state" id="live-state">Finding live Ontario picks...</div>
+        </section>
+
+        <div class="live-feed" id="live-feed" aria-live="polite"></div>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <a class="nav-link" href="index.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <span>Home</span>
+        </a>
+        <a class="nav-link active" href="events.html" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <span>Discover</span>
+        </a>
+        <a class="nav-link" href="tickets.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" /><path d="M13 6v12" /></svg>
+          <span>Tickets</span>
+        </a>
+        <a class="nav-link" href="auth.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <span>Profile</span>
+        </a>
+      </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
+    <script src="assets/hero-copy.js"></script>
+    <script src="assets/lifestyle-live.js"></script>
+  </body>
+</html>

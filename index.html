@@ -4,21 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Echoo</title>
-    <link rel="preload" as="image" href="assets/landing-page-logo-3d.png" />
+    <link rel="preload" as="image" href="assets/echoo-wordmark.png" />
     <style>
       :root {
         color-scheme: dark;
-        --ink: #f6f0e6;
-        --muted: #c7bdb0;
-        --quiet: #91887f;
-        --line: rgba(246, 240, 230, 0.2);
-        --line-soft: rgba(246, 240, 230, 0.1);
-        --glass: rgba(31, 32, 31, 0.52);
-        --gold: #e7c98e;
-        --rose: #d8a2d9;
-        --violet: #a68cdb;
-        --deep: #101112;
-        --shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
+        --ink: #f8f5ef;
+        --muted: #aaa29a;
+        --soft: rgba(248, 245, 239, 0.72);
+        --line: rgba(248, 245, 239, 0.12);
+        --line-strong: rgba(248, 245, 239, 0.2);
+        --glass: rgba(30, 30, 29, 0.72);
+        --peach: #f7d5b2;
+        --black: #050505;
+        --panel: #131313;
         font-family:
           Inter,
           ui-sans-serif,
@@ -33,603 +31,485 @@
         box-sizing: border-box;
       }
 
-      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
-      html,
-      body {
-        max-width: 100%;
-        overflow-x: hidden;
-        overflow-x: clip; /* modern: clips without breaking position:sticky */
-        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
-        -webkit-text-size-adjust: 100%;
-        -webkit-tap-highlight-color: transparent;
-      }
-      body {
-        position: relative;
-        overflow-wrap: break-word;
-      }
-      img,
-      video,
-      svg,
-      canvas,
-      iframe,
-      table {
-        max-width: 100%;
-      }
       html,
       body {
         min-height: 100%;
-      }
-      body {
         margin: 0;
-        color: var(--ink);
-        background: #161819;
         overflow-x: hidden;
+        background: #000;
+        color: var(--ink);
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
       }
 
-      body::before {
-        position: fixed;
-        inset: 0;
-        z-index: -3;
-        content: "";
-        background-image: url("assets/optimized/echoo-mobile-bg-768.jpg");
-        background-image: url("assets/optimized/echoo-mobile-bg-768.webp");
-        background-position: center;
-        background-size: cover;
-        background-repeat: no-repeat;
-        transform: scale(1.015);
+      body {
+        min-height: 100svh;
+        display: grid;
+        justify-items: center;
+        align-items: start;
+        padding: 0;
       }
 
-      body::after {
-        position: fixed;
-        inset: 0;
-        z-index: -2;
-        content: "";
-        background:
-          linear-gradient(
-            180deg,
-            rgba(13, 14, 15, 0.56) 0%,
-            rgba(13, 14, 15, 0.2) 30%,
-            rgba(13, 14, 15, 0.18) 58%,
-            rgba(13, 14, 15, 0.92) 100%
-          ),
-          radial-gradient(
-            circle at 50% 5%,
-            rgba(231, 201, 142, 0.16),
-            transparent 18rem
-          );
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
       }
 
       a {
         color: inherit;
         text-decoration: none;
       }
-      button,
-      input {
-        font: inherit;
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
-      button {
-        -webkit-tap-highlight-color: transparent;
+
+      .app-shell {
+        width: min(100vw, 430px);
+        min-height: 100svh;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% -4%, rgba(255, 255, 255, 0.14), transparent 18rem),
+          radial-gradient(circle at 16% 46%, rgba(255, 212, 166, 0.08), transparent 14rem),
+          linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
+      }
+
+      .app-shell::before {
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        content: "";
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 24%),
+          url("assets/optimized/echoo-mobile-bg-768.webp");
+        background-size: cover;
+        background-position: center;
+        opacity: 0.1;
+        filter: saturate(0.2) contrast(1.2);
+      }
+
+      .app-shell::after {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.028)),
+          radial-gradient(ellipse at center, transparent 48%, rgba(0, 0, 0, 0.62) 100%);
+        pointer-events: none;
       }
 
       .page {
         min-height: 100svh;
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        width: min(480px, 100%);
-        margin: 0 auto;
-        padding: 16px 18px 84px;
+        display: flex;
+        flex-direction: column;
+        padding: calc(28px + env(safe-area-inset-top)) 27px calc(94px + env(safe-area-inset-bottom));
       }
 
       .topbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding-top: max(2px, env(safe-area-inset-top));
+        margin-bottom: clamp(42px, 8svh, 66px);
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        min-height: 44px;
-      }
-
-      .brand-mark {
-        width: 42px;
-        height: 42px;
-        border-radius: 18px;
-        background: rgba(246, 240, 230, 0.08);
+        width: 96px;
+        height: 34px;
         overflow: hidden;
-        border: 1px solid rgba(246, 240, 230, 0.12);
       }
 
-      .brand-mark img {
-        width: 122px;
-        height: 88px;
-        object-fit: cover;
-        object-position: 50% 0%;
-        transform: translate(-40px, -7px);
-        filter: saturate(0.9) contrast(1.05);
+      .brand img {
+        display: block;
+        width: 96px;
+        height: auto;
+        filter: brightness(1.2) contrast(1.05);
       }
 
-      .brand-name {
-        font-size: 26px;
-        font-weight: 850;
-        letter-spacing: -0.035em;
-      }
-
-      .top-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .round-action {
+      .profile-link {
+        width: 34px;
+        height: 34px;
+        border: 2px solid rgba(248, 245, 239, 0.7);
+        border-radius: 50%;
         position: relative;
-        width: 44px;
-        height: 44px;
-        border: 1px solid rgba(246, 240, 230, 0.14);
-        border-radius: 50%;
-        background: rgba(15, 16, 17, 0.85);
-        color: var(--ink);
-        cursor: pointer;
-        transition:
-          transform 180ms ease,
-          border-color 180ms ease,
-          background 180ms ease;
+        opacity: 0.9;
       }
 
-      .round-action:hover,
-      .round-action:focus-visible {
-        transform: translateY(-2px);
-        border-color: rgba(246, 240, 230, 0.36);
-        background: rgba(246, 240, 230, 0.08);
-        outline: 0;
-      }
-
-      .round-action.search::before {
+      .profile-link::before {
         position: absolute;
-        inset: 12px;
-        content: "";
+        top: 6px;
+        left: 50%;
+        width: 8px;
+        height: 8px;
         border: 2px solid currentColor;
         border-radius: 50%;
+        content: "";
+        transform: translateX(-50%);
       }
 
-      .round-action.search::after {
+      .profile-link::after {
         position: absolute;
-        right: 11px;
-        bottom: 11px;
-        width: 9px;
-        height: 2px;
-        content: "";
-        background: currentColor;
-        border-radius: 999px;
-        transform: rotate(45deg);
-      }
-
-      .round-action.person::before {
-        position: absolute;
-        top: 10px;
-        left: 16px;
-        width: 9px;
-        height: 9px;
-        content: "";
-        border: 2px solid currentColor;
-        border-radius: 50%;
-      }
-
-      .round-action.person::after {
-        position: absolute;
-        left: 12px;
-        bottom: 10px;
-        width: 18px;
-        height: 12px;
-        content: "";
+        left: 7px;
+        right: 7px;
+        bottom: 6px;
+        height: 10px;
         border: 2px solid currentColor;
         border-bottom: 0;
         border-radius: 14px 14px 0 0;
+        content: "";
       }
 
       .hero {
         display: grid;
-        align-content: end;
-        gap: 18px;
-        min-height: calc(100svh - 196px);
-        padding: 34px 0 12px;
+        gap: 24px;
       }
 
-      .hero-center {
-        display: grid;
-        justify-items: center;
-        text-align: center;
-        gap: 10px;
-        margin-bottom: auto;
-        padding-top: clamp(40px, 11svh, 86px);
-      }
-
-      .hero-logo {
-        width: clamp(154px, 45vw, 218px);
-        aspect-ratio: 760 / 629;
-        display: grid;
-        place-items: center;
-        perspective: 720px;
-        isolation: isolate;
-      }
-
-      .hero-logo img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
-        transform: rotateX(7deg) rotateY(-8deg) translateY(2px);
-        filter: drop-shadow(0 20px 24px rgba(0, 0, 0, 0.52))
-          drop-shadow(0 5px 8px rgba(255, 204, 150, 0.16));
-        backface-visibility: hidden;
-      }
-
-      h1 {
+      .hero h1 {
+        max-width: 376px;
         margin: 0;
-        font-size: clamp(47px, 15vw, 72px);
-        line-height: 0.9;
-        letter-spacing: -0.075em;
-        text-wrap: balance;
-        text-shadow: 0 18px 40px rgba(0, 0, 0, 0.52);
+        font-size: clamp(45px, 13.2vw, 58px);
+        line-height: 1.02;
+        font-weight: 820;
+        letter-spacing: 0;
       }
 
       .tagline {
-        margin: 0;
-        color: var(--muted);
-        font-size: 16px;
-        line-height: 1.35;
-        font-weight: 650;
-        text-shadow: 0 12px 24px rgba(0, 0, 0, 0.64);
-      }
-
-      .city-pill {
-        display: inline-flex;
-        align-items: center;
-        position: relative;
-        gap: 8px;
-        width: fit-content;
-        min-height: 28px;
-        padding: 0 2px 5px;
-        margin: 4px auto 0;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-        color: rgba(246, 240, 230, 0.82);
-        font-size: 12px;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .location-proof {
-        display: block;
-        min-height: 18px;
-        margin-top: 8px;
-        color: rgba(246, 240, 230, 0.58);
-        font-size: 11px;
-        font-weight: 750;
-        letter-spacing: 0.02em;
-      }
-
-      .city-pill::before {
-        content: "";
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--gold);
-        box-shadow: 0 0 16px rgba(231, 201, 142, 0.72);
-      }
-
-      .city-pill::after {
-        position: absolute;
-        right: 2px;
-        bottom: 0;
-        left: 18px;
-        height: 2px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, var(--gold), transparent);
-        content: "";
-      }
-
-      .control-stack {
-        display: grid;
-        gap: 12px;
+        max-width: 294px;
+        margin: -11px 0 0;
+        color: #aaa39d;
+        font-size: clamp(18px, 5vw, 23px);
+        line-height: 1.24;
+        font-weight: 520;
+        letter-spacing: 0;
       }
 
       .prompt {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        gap: 10px;
         min-height: 60px;
-        padding: 7px 8px 7px 18px;
-        border: 1px solid rgba(246, 240, 230, 0.16);
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 14px;
+        margin-top: 10px;
+        padding: 9px 9px 9px 19px;
+        border: 1px solid rgba(248, 245, 239, 0.08);
         border-radius: 999px;
-        background: rgba(28, 29, 30, 0.88);
+        background: linear-gradient(180deg, rgba(42, 42, 41, 0.78), rgba(29, 29, 28, 0.76));
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.08),
-          0 16px 48px rgba(0, 0, 0, 0.28);
+          inset 0 1px 0 rgba(255, 255, 255, 0.06),
+          0 20px 55px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(22px);
       }
 
       .prompt:focus-within {
-        border-color: rgba(231, 201, 142, 0.72);
+        border-color: rgba(247, 213, 178, 0.45);
         box-shadow:
-          0 0 0 4px rgba(231, 201, 142, 0.12),
-          0 16px 48px rgba(0, 0, 0, 0.28);
+          inset 0 1px 0 rgba(255, 255, 255, 0.07),
+          0 0 0 4px rgba(247, 213, 178, 0.08),
+          0 20px 55px rgba(0, 0, 0, 0.28);
+      }
+
+      .search-glyph {
+        width: 24px;
+        height: 24px;
+        border: 2.5px solid var(--ink);
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.96;
+      }
+
+      .search-glyph::after {
+        position: absolute;
+        right: -6px;
+        bottom: -4px;
+        width: 10px;
+        height: 2.5px;
+        border-radius: 999px;
+        background: var(--ink);
+        content: "";
+        transform: rotate(45deg);
       }
 
       .prompt input {
-        width: 100%;
         min-width: 0;
+        width: 100%;
         border: 0;
         outline: 0;
         color: var(--ink);
         background: transparent;
-        font-size: 15px;
-        font-weight: 700;
+        font-size: clamp(15px, 4.1vw, 18px);
+        font-weight: 520;
+        letter-spacing: 0;
       }
 
       .prompt input::placeholder {
-        color: #cfc6ba;
-        opacity: 0.92;
+        color: rgba(248, 245, 239, 0.68);
+        opacity: 1;
       }
 
       .send {
-        position: relative;
-        width: 46px;
-        height: 46px;
+        width: 50px;
+        height: 50px;
         border: 0;
         border-radius: 50%;
-        color: #161514;
-        background: linear-gradient(135deg, #f1d391, #d8a2d9 62%, #a992e5);
-        cursor: pointer;
-        transition:
-          transform 180ms ease,
-          filter 180ms ease;
+        background: var(--peach);
+        color: #111;
+        position: relative;
+        flex: 0 0 auto;
       }
 
       .send::before {
         position: absolute;
-        top: 15px;
-        left: 13px;
-        width: 16px;
-        height: 2px;
-        content: "";
-        background: currentColor;
+        top: 24px;
+        left: 14px;
+        width: 21px;
+        height: 3px;
         border-radius: 999px;
+        background: currentColor;
+        content: "";
       }
 
       .send::after {
         position: absolute;
-        top: 11px;
-        left: 21px;
-        width: 10px;
-        height: 10px;
+        top: 17px;
+        right: 15px;
+        width: 14px;
+        height: 14px;
+        border-top: 3px solid currentColor;
+        border-right: 3px solid currentColor;
         content: "";
-        border-top: 2px solid currentColor;
-        border-right: 2px solid currentColor;
         transform: rotate(45deg);
       }
 
-      .send:hover,
-      .send:focus-visible {
-        transform: translateY(-2px) scale(1.02);
-        filter: brightness(1.04);
-        outline: 0;
+      .content {
+        display: grid;
+        gap: 8px;
+        margin-top: 20px;
       }
 
-      .main-cta,
-      .bored-cta {
-        width: 100%;
-        min-height: 58px;
-        border: 1px solid transparent;
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-size: 21px;
+        line-height: 1;
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+
+      .see-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--peach);
+        font-size: 13px;
+        font-weight: 610;
+        white-space: nowrap;
+      }
+
+      .see-all::after {
+        width: 9px;
+        height: 9px;
+        border-top: 2px solid currentColor;
+        border-right: 2px solid currentColor;
+        content: "";
+        transform: rotate(45deg);
+      }
+
+      .pick-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .pick-card {
+        min-height: 156px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        overflow: hidden;
+        position: relative;
+        padding: 11px;
+        border: 0;
+        border-radius: 14px;
+        background: #151515;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
+      }
+
+      .pick-card::before {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background-image: var(--image);
+        background-size: cover;
+        background-position: center;
+        opacity: 1;
+        content: "";
+      }
+
+      .pick-card::after {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: linear-gradient(180deg, transparent 52%, rgba(0, 0, 0, 0.54));
+        content: "";
+      }
+
+      .pick-card > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .meta {
+        width: fit-content;
+        min-height: 22px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 8px;
         border-radius: 999px;
-        cursor: pointer;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-        transition:
-          transform 180ms ease,
-          filter 180ms ease,
-          border-color 180ms ease,
-          background 180ms ease;
+        background: rgba(4, 4, 4, 0.46);
+        color: rgba(248, 245, 239, 0.84);
+        font-size: 9px;
+        font-weight: 650;
+        white-space: nowrap;
+        backdrop-filter: blur(14px);
       }
 
-      .main-cta {
-        color: #151311;
-        background: linear-gradient(
-          135deg,
-          #e4bd78 0%,
-          #f2ddb0 40%,
-          #d8a2d9 100%
-        );
-        box-shadow: 0 16px 46px rgba(216, 162, 217, 0.18);
-        text-transform: uppercase;
+      .meta-dot {
+        opacity: 0.56;
+      }
+
+      .vibe-row {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .vibe {
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        min-width: 0;
+        color: #fff;
         font-size: 14px;
+        font-weight: 540;
       }
 
-      .bored-cta {
-        color: var(--ink);
-        background: rgba(16, 17, 18, 0.82);
-        border-color: rgba(246, 240, 230, 0.15);
-        font-size: 15px;
+      .vibe-icon {
+        width: clamp(54px, 15vw, 66px);
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.055);
+        color: var(--peach);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
 
-      .main-cta:hover,
-      .main-cta:focus-visible,
-      .bored-cta:hover,
-      .bored-cta:focus-visible {
-        transform: translateY(-2px);
-        outline: 0;
-      }
-
-      .bored-cta:hover,
-      .bored-cta:focus-visible {
-        border-color: rgba(246, 240, 230, 0.34);
-        background: rgba(246, 240, 230, 0.08);
+      .vibe svg {
+        width: 30px;
+        height: 30px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .bottom-nav {
         position: fixed;
         left: 50%;
-        bottom: 0;
+        bottom: 12px;
         z-index: 30;
-        width: min(480px, 100%);
-        transform: translateX(-50%);
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        padding: 9px 10px calc(8px + env(safe-area-inset-bottom));
-        border-top: 1px solid rgba(246, 240, 230, 0.12);
-        background: rgba(16, 17, 18, 0.78);
-        backdrop-filter: blur(20px);
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
+        background: rgba(25, 25, 24, 0.82);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
+        transform: translateX(-50%);
       }
 
       .nav-link {
+        min-width: 0;
         display: grid;
         justify-items: center;
+        align-content: center;
         gap: 5px;
-        min-height: 54px;
-        color: var(--quiet);
-        font-size: 10px;
-        font-weight: 850;
-        letter-spacing: 0.02em;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
       }
 
       .nav-link.active {
-        color: var(--gold);
+        color: var(--peach);
       }
 
-      .glyph {
-        position: relative;
-        width: 23px;
-        height: 23px;
-        color: currentColor;
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
-      .glyph.home::before {
-        position: absolute;
-        inset: 8px 3px 2px;
-        content: "";
-        border: 2px solid currentColor;
-        border-top: 0;
-        border-radius: 2px;
+      .nav-link.active svg {
+        fill: currentColor;
+        stroke-width: 0;
       }
 
-      .glyph.home::after {
-        position: absolute;
-        left: 4px;
-        top: 3px;
-        width: 14px;
-        height: 14px;
-        content: "";
-        border-left: 2px solid currentColor;
-        border-top: 2px solid currentColor;
-        transform: rotate(45deg);
-      }
-
-      .glyph.discover::before {
-        position: absolute;
-        inset: 3px;
-        content: "";
-        border: 2px solid currentColor;
-        border-radius: 50%;
-      }
-
-      .glyph.discover::after {
-        position: absolute;
-        left: 10px;
-        top: 10px;
-        width: 8px;
-        height: 2px;
-        content: "";
-        background: currentColor;
-        transform: rotate(-35deg);
-        transform-origin: left center;
-      }
-
-      .glyph.today::before {
-        position: absolute;
-        inset: 5px 3px 3px;
-        content: "";
-        border: 2px solid currentColor;
-        border-radius: 3px;
-      }
-
-      .glyph.today::after {
-        position: absolute;
-        left: 6px;
-        right: 6px;
-        top: 10px;
-        height: 2px;
-        content: "";
-        background: currentColor;
-        box-shadow: 0 -6px 0 -1px currentColor;
-      }
-
-      .glyph.people::before {
-        position: absolute;
-        content: "";
-        left: 1px;
-        top: 4px;
-        width: 12px;
-        height: 12px;
-        border: 2px solid currentColor;
-        border-radius: 50%;
-      }
-
-      .glyph.people::after {
-        position: absolute;
-        content: "";
-        right: 1px;
-        bottom: 4px;
-        width: 12px;
-        height: 12px;
-        border: 2px solid currentColor;
-        border-radius: 50%;
-      }
-
-      .glyph.profile::before {
-        position: absolute;
-        left: 8px;
-        top: 4px;
-        width: 7px;
-        height: 7px;
-        content: "";
-        border: 2px solid currentColor;
-        border-radius: 50%;
-      }
-
-      .glyph.profile::after {
-        position: absolute;
-        left: 5px;
-        bottom: 4px;
-        width: 13px;
-        height: 8px;
-        content: "";
-        border: 2px solid currentColor;
-        border-bottom: 0;
-        border-radius: 12px 12px 0 0;
+      .sheet,
+      .location-modal {
+        position: fixed;
+        left: 50%;
+        z-index: 60;
+        width: min(374px, calc(100% - 34px));
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        border-radius: 24px;
+        background: rgba(21, 21, 20, 0.92);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58);
+        backdrop-filter: blur(24px);
+        color: var(--ink);
       }
 
       .sheet {
-        position: fixed;
-        left: 50%;
-        right: auto;
-        bottom: 92px;
-        z-index: 50;
-        width: min(440px, calc(100% - 28px));
-        transform: translate(-50%, 18px);
+        bottom: 96px;
+        padding: 20px;
         opacity: 0;
         pointer-events: none;
-        padding: 18px;
-        border: 1px solid rgba(246, 240, 230, 0.18);
-        border-radius: 28px;
-        background: rgba(22, 23, 24, 0.86);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(22px);
+        transform: translate(-50%, 18px);
         transition:
           opacity 180ms ease,
           transform 180ms ease;
@@ -641,47 +521,51 @@
         transform: translate(-50%, 0);
       }
 
-      .sheet h2 {
-        margin: 0 0 8px;
-        font-size: 27px;
+      .sheet h2,
+      .location-modal h2 {
+        margin: 0 0 9px;
+        font-size: 29px;
         line-height: 1;
-        letter-spacing: -0.045em;
+        font-weight: 760;
+        letter-spacing: 0;
       }
 
-      .sheet p {
-        margin: 0 0 16px;
+      .sheet p,
+      .location-modal p {
+        margin: 0 0 17px;
         color: var(--muted);
-        line-height: 1.45;
-        font-weight: 650;
+        font-size: 15px;
+        line-height: 1.42;
+        font-weight: 520;
       }
 
-      .sheet-actions {
+      .sheet-actions,
+      .location-modal-buttons {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr 1fr;
         gap: 10px;
       }
 
       .sheet-actions a,
-      .sheet-actions button {
+      .sheet-actions button,
+      .location-modal-btn,
+      .sheet-budget-actions button {
         min-height: 48px;
+        border: 1px solid rgba(248, 245, 239, 0.12);
         border-radius: 999px;
+        background: rgba(248, 245, 239, 0.06);
+        color: var(--ink);
+        font-weight: 680;
+      }
+
+      .sheet-actions a,
+      .location-modal-btn.primary {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid rgba(246, 240, 230, 0.14);
-        font-weight: 850;
-        cursor: pointer;
-      }
-
-      .sheet-actions a {
-        color: #151311;
-        background: linear-gradient(135deg, #e4bd78, #d8a2d9);
         border-color: transparent;
-      }
-
-      .sheet-actions button {
-        color: var(--ink);
-        background: rgba(246, 240, 230, 0.06);
+        background: var(--peach);
+        color: #111;
       }
 
       .sheet-budget-actions {
@@ -695,254 +579,210 @@
         display: grid;
       }
 
-      .sheet-budget-actions button {
-        min-height: 44px;
-        border: 1px solid rgba(246, 240, 230, 0.16);
-        border-radius: 999px;
-        background: rgba(246, 240, 230, 0.06);
-        color: var(--ink);
-        font-weight: 900;
-        cursor: pointer;
-      }
-
-      @media (min-width: 760px) {
-        body::before {
-          background-size: min(883px, 58vw) auto;
-          background-color: #161819;
-        }
-        .page {
-          width: min(560px, 100%);
-        }
-        .bottom-nav {
-          width: min(560px, 100%);
-        }
-      }
-
-      /* Custom Location Permission & Settings Redirect Modal */
-      .location-modal {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.95);
-        width: min(390px, calc(100% - 34px));
-        background: rgba(16, 17, 18, 0.9);
-        border: 0;
-        border-radius: 28px;
-        padding: 22px;
-        z-index: 20000;
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(24px);
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        color: var(--ink);
-      }
-      .location-modal.active {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-        pointer-events: auto;
-      }
-      .location-modal h2 {
-        margin: 0 0 10px;
-        color: var(--ink);
-        font-size: 30px;
-        line-height: 0.95;
-        letter-spacing: -0.055em;
-        font-weight: 900;
-      }
-      .location-modal p {
-        margin: 0 0 18px;
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.42;
-        font-weight: 700;
-      }
-      .instruction-section {
-        display: none;
-      }
-      .instruction-title {
-        font-size: 12px;
-        font-weight: 850;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-        color: var(--ink);
-      }
-      .instruction-list {
-        font-size: 12px;
-        color: rgba(246, 240, 230, 0.62);
-        padding-left: 16px;
-        margin: 0 0 16px 0;
-      }
-      .instruction-list li {
-        margin-bottom: 6px;
-      }
-      .location-modal-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .location-modal-btn {
-        min-height: 50px;
-        padding: 0 14px;
-        font-size: 12px;
-        font-weight: 950;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(246, 240, 230, 0.08);
-        color: var(--ink);
-        cursor: pointer;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .location-modal-btn.primary {
-        color: #151311;
-        background: linear-gradient(135deg, #e4bd78, #d8a2d9);
-      }
-      .location-modal-btn:hover {
-        background: rgba(246, 240, 230, 0.12);
-      }
-      .location-modal .preview-link {
-        display: inline-flex;
-        margin-top: 14px;
-        color: var(--gold);
-        font-size: 12px;
-        font-weight: 950;
-        text-decoration: none;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
-      /* Blurred overlay behind modal */
       .modal-backdrop {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.62);
-        backdrop-filter: blur(8px);
-        z-index: 19000;
+        inset: 0;
+        z-index: 50;
+        background: rgba(0, 0, 0, 0.64);
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.3s ease;
+        transition: opacity 200ms ease;
+        backdrop-filter: blur(10px);
       }
+
       .modal-backdrop.active {
         opacity: 1;
         pointer-events: auto;
       }
+
+      .location-modal {
+        top: 50%;
+        padding: 22px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -48%) scale(0.97);
+        transition:
+          opacity 200ms ease,
+          transform 200ms ease;
+      }
+
+      .location-modal.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .instruction-section {
+        display: none;
+      }
+
+      .preview-link {
+        display: inline-flex;
+        margin-top: 14px;
+        color: var(--peach);
+        font-size: 13px;
+        font-weight: 680;
+      }
+
+      .location-proof,
+      .city-pill,
+      #day-plan,
+      #bored-plan {
+        display: none;
+      }
+
+      @media (min-width: 520px) {
+        body {
+          background: #000;
+        }
+      }
+
+      @media (max-width: 374px) {
+        .page {
+          padding-inline: 20px;
+        }
+
+        .pick-grid {
+          gap: 10px;
+        }
+
+        .pick-card {
+          min-height: 200px;
+        }
+
+        .vibe-row {
+          gap: 7px;
+        }
+
+        .vibe {
+          font-size: 12px;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="page">
-      <header class="topbar" aria-label="Echoo">
-        <a class="brand" href="index.html" aria-label="Echoo home">
-          <span class="brand-mark" aria-hidden="true"
-            ><img src="assets/echoo-new-logo.jpg" alt=""
-          /></span>
-          <span class="brand-name">Echoo</span>
+    <div class="app-shell">
+      <div class="page">
+        <header class="topbar" aria-label="Echoo">
+          <a class="brand" href="index.html" aria-label="Echoo home">
+            <img src="assets/echoo-wordmark.png" alt="echoo" />
+          </a>
+          <a class="profile-link" href="auth.html" aria-label="Open your profile"></a>
+        </header>
+
+        <main>
+          <section class="hero" aria-labelledby="landing-title">
+            <h1 id="landing-title">Pick a lane. Make it lovely.</h1>
+            <p class="tagline">Shows, tables, and places that make tonight worth it.</p>
+            <span class="city-pill">Ontario today</span>
+            <span class="location-proof" id="location-proof">Detecting your location...</span>
+
+            <form class="prompt" id="search-form" aria-label="Ask Echoo">
+              <span class="search-glyph" aria-hidden="true"></span>
+              <label for="city-search" class="sr-only">Search shows, places, dates</label>
+              <input id="city-search" autocomplete="off" placeholder="Search shows, places, dates..." />
+              <button class="send" type="submit" aria-label="Ask Echoo AI"></button>
+            </form>
+          </section>
+
+          <section class="content" aria-label="Tonight on Echoo">
+            <div>
+              <div class="section-head">
+                <h2>Tonight's picks</h2>
+                <a class="see-all" href="events.html">See all</a>
+              </div>
+              <div class="pick-grid">
+                <a
+                  class="pick-card"
+                  href="music.html"
+                  style="--image: url('assets/news-music.png')"
+                  aria-label="Nearby live rooms, 12 spots"
+                >
+                  <span class="meta">Nearby <span class="meta-dot">·</span> 12 spots</span>
+                </a>
+                <a
+                  class="pick-card"
+                  href="dates.html"
+                  style="--image: url('assets/news-date.png')"
+                  aria-label="Nearby date plans, 8 spots"
+                >
+                  <span class="meta">Nearby <span class="meta-dot">·</span> 8 spots</span>
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <div class="section-head">
+                <h2>For your vibe</h2>
+                <a class="see-all" href="events.html">See all</a>
+              </div>
+              <div class="vibe-row" aria-label="Browse by vibe">
+                <a class="vibe" href="music.html">
+                  <span class="vibe-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l10-2v13" /><path d="M9 18a3 3 0 1 1-2-2.83" /><path d="M19 16a3 3 0 1 1-2-2.83" /></svg>
+                  </span>
+                  <span>Music</span>
+                </a>
+                <a class="vibe" href="events.html?query=comedy">
+                  <span class="vibe-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8.5 15a5 5 0 0 0 7 0" /></svg>
+                  </span>
+                  <span>Comedy</span>
+                </a>
+                <a class="vibe" href="food.html">
+                  <span class="vibe-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v8" /><path d="M10 3v8" /><path d="M8 3v18" /><path d="M17 3v18" /><path d="M14 3v8a3 3 0 0 0 6 0V3" /></svg>
+                  </span>
+                  <span>Food</span>
+                </a>
+                <a class="vibe" href="dates.html">
+                  <span class="vibe-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" /></svg>
+                  </span>
+                  <span>Dates</span>
+                </a>
+                <a class="vibe" href="events.html">
+                  <span class="vibe-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h.01" /><path d="M12 12h.01" /><path d="M19 12h.01" /></svg>
+                  </span>
+                  <span>More</span>
+                </a>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <a class="nav-link active" href="index.html" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <span>Home</span>
         </a>
-        <div class="top-actions">
-          <button
-            class="round-action search"
-            id="focus-search"
-            type="button"
-            aria-label="Search Echoo"
-          ></button>
-          <a
-            class="round-action person"
-            href="auth.html"
-            aria-label="Open your profile"
-          ></a>
-        </div>
-      </header>
-
-      <main class="hero">
-        <section class="hero-center" aria-labelledby="landing-title">
-          <div class="hero-logo" aria-hidden="true">
-            <img
-              src="assets/landing-page-logo-3d.png"
-              width="760"
-              height="629"
-              alt=""
-              decoding="async"
-              fetchpriority="high"
-            />
-          </div>
-          <h1 id="landing-title">Discover your city, your way.</h1>
-          <p class="tagline">Find the plans people will actually say yes to.</p>
-          <span class="city-pill">Ontario today</span>
-          <span class="location-proof" id="location-proof"
-            >Detecting your location...</span
-          >
-        </section>
-
-        <section class="control-stack" aria-label="Plan your day">
-          <form class="prompt" id="search-form">
-            <label
-              for="city-search"
-              class="sr-only"
-              style="
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                padding: 0;
-                margin: -1px;
-                overflow: hidden;
-                clip: rect(0, 0, 0, 0);
-                white-space: nowrap;
-                border: 0;
-              "
-              >What do you want to do?</label
-            >
-            <input
-              id="city-search"
-              autocomplete="off"
-              placeholder="What’s happening in Ontario today?"
-            />
-            <button
-              class="send"
-              type="submit"
-              aria-label="Search plans"
-            ></button>
-          </form>
-          <button class="main-cta" id="day-plan" type="button">
-            Plan what’s next
-          </button>
-          <button class="bored-cta" id="bored-plan" type="button">
-            I’m bored. Surprise me.
-          </button>
-        </section>
-      </main>
+        <a class="nav-link" href="events.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <span>Discover</span>
+        </a>
+        <a class="nav-link" href="tickets.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" /><path d="M13 6v12" /></svg>
+          <span>Tickets</span>
+        </a>
+        <a class="nav-link" href="auth.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <span>Profile</span>
+        </a>
+      </nav>
     </div>
 
-    <nav class="bottom-nav" aria-label="Main navigation">
-      <a class="nav-link active" href="index.html" aria-current="page"
-        ><span class="glyph home"></span><span>Home</span></a
-      >
-      <a class="nav-link" href="events.html"
-        ><span class="glyph discover"></span><span>Discover</span></a
-      >
-      <a class="nav-link" href="events.html?query=today"
-        ><span class="glyph today"></span><span>Today</span></a
-      >
-      <a class="nav-link" href="app.html"
-        ><span class="glyph people"></span><span>Friends</span></a
-      >
-      <a class="nav-link" href="auth.html"
-        ><span class="glyph profile"></span><span>Profile</span></a
-      >
-    </nav>
+    <button class="main-cta" id="day-plan" type="button">Plan what's next</button>
+    <button class="bored-cta" id="bored-plan" type="button">I'm bored. Surprise me.</button>
 
     <aside class="sheet" id="plan-sheet" aria-hidden="true" aria-live="polite">
       <h2 id="sheet-title">Your plan is ready.</h2>
       <p id="sheet-copy">
-        We’ll start with a simple city plan: one anchor, one food stop, one easy
+        We will start with a simple city plan: one anchor, one food stop, one easy
         backup if the group changes its mind.
       </p>
-      <div
-        class="sheet-budget-actions"
-        id="sheet-budget-actions"
-        aria-label="Choose budget"
-      >
+      <div class="sheet-budget-actions" id="sheet-budget-actions" aria-label="Choose budget">
         <button type="button" data-budget="$">Low</button>
         <button type="button" data-budget="$$">Mid</button>
         <button type="button" data-budget="$$$">Special</button>
@@ -967,31 +807,14 @@
         <ol class="instruction-list">
           <li>Open your iPhone <b>Settings</b>.</li>
           <li>Tap <b>Privacy & Security</b> &gt; <b>Location Services</b>.</li>
-          <li>
-            Scroll and tap your browser (e.g. <b>Safari</b> or <b>Chrome</b>).
-          </li>
-          <li>
-            Select <b>"While Using the App"</b> and ensure
-            <b>Precise Location</b> is on.
-          </li>
-        </ol>
-
-        <div class="instruction-title">Android Directions:</div>
-        <ol class="instruction-list">
-          <li>Open your phone <b>Settings</b>.</li>
-          <li>Tap <b>Apps</b> &gt; <b>Chrome</b> (or your browser app).</li>
-          <li>Tap <b>Permissions</b> &gt; <b>Location</b>.</li>
-          <li>Choose <b>"Allow only while using the app"</b>.</li>
+          <li>Scroll and tap your browser.</li>
+          <li>Select <b>While Using the App</b> and ensure <b>Precise Location</b> is on.</li>
         </ol>
       </div>
 
       <div class="location-modal-buttons">
-        <button class="location-modal-btn" id="location-dismiss">
-          Use Ontario
-        </button>
-        <button class="location-modal-btn primary" id="location-try-again">
-          Allow location
-        </button>
+        <button class="location-modal-btn" id="location-dismiss">Use Ontario</button>
+        <button class="location-modal-btn primary" id="location-try-again">Allow location</button>
       </div>
       <a class="preview-link" href="events.html?preview=1">Preview Echoo</a>
     </div>
@@ -1001,20 +824,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
     <script>
-      /* Diagnostic logger for redirects */
       window.addEventListener("beforeunload", () => {
-        const history = JSON.parse(
-          sessionStorage.getItem("echoo_unload_log") || "[]",
-        );
+        const history = JSON.parse(sessionStorage.getItem("echoo_unload_log") || "[]");
         history.push({
           time: new Date().toISOString(),
           url: window.location.href,
           stack: new Error().stack,
         });
-        sessionStorage.setItem(
-          "echoo_unload_log",
-          JSON.stringify(history.slice(-10)),
-        );
+        sessionStorage.setItem("echoo_unload_log", JSON.stringify(history.slice(-10)));
       });
 
       const searchInput = document.getElementById("city-search");
@@ -1022,18 +839,14 @@
       const sheetTitle = document.getElementById("sheet-title");
       const sheetCopy = document.getElementById("sheet-copy");
       const sheetLink = document.getElementById("sheet-link");
-      const sheetBudgetActions = document.getElementById(
-        "sheet-budget-actions",
-      );
+      const sheetBudgetActions = document.getElementById("sheet-budget-actions");
       const locationProof = document.getElementById("location-proof");
       const dayPlanBtn = document.getElementById("day-plan");
       let pendingBudgetHref = "";
 
       async function hasOnboardedProfile() {
         if (!window.EchooAuth) return true;
-        const state = await window.EchooAuth.requireOnboarding({
-          redirect: false,
-        });
+        const state = await window.EchooAuth.requireOnboarding({ redirect: false });
         return Boolean(state.ok);
       }
 
@@ -1068,21 +881,14 @@
       function setDayPlanCopy(cityName) {
         const context = activityContext(cityName);
         if (dayPlanBtn) dayPlanBtn.textContent = context.planCta;
-        if (sheetLink)
-          sheetLink.href = `events.html?query=${encodeURIComponent(planQuery(cityName))}`;
-        if (searchInput) searchInput.placeholder = context.searchPlaceholder;
+        if (sheetLink) sheetLink.href = `events.html?query=${encodeURIComponent(planQuery(cityName))}`;
         return context;
       }
 
       function saveBudgetPreference(nextBudget) {
         try {
-          const prefs = JSON.parse(
-            localStorage.getItem("echoo_preferences") || "{}",
-          );
-          localStorage.setItem(
-            "echoo_preferences",
-            JSON.stringify({ ...prefs, budget: nextBudget }),
-          );
+          const prefs = JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
+          localStorage.setItem("echoo_preferences", JSON.stringify({ ...prefs, budget: nextBudget }));
         } catch (e) {}
       }
 
@@ -1097,29 +903,11 @@
         sheet.setAttribute("aria-hidden", "false");
       }
 
-      document
-        .getElementById("focus-search")
-        .addEventListener("click", async () => {
-          const query = searchInput.value.trim();
-          if (query) {
-            await openProtectedRoute(
-              `events.html?query=${encodeURIComponent(query)}`,
-            );
-            return;
-          }
-          searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
-          searchInput.focus({ preventScroll: true });
-        });
-
-      document
-        .getElementById("search-form")
-        .addEventListener("submit", async (event) => {
-          event.preventDefault();
-          const query = searchInput.value.trim() || "Ontario today";
-          await openProtectedRoute(
-            `events.html?query=${encodeURIComponent(query)}`,
-          );
-        });
+      document.getElementById("search-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const query = searchInput.value.trim() || "tonight near me";
+        await openProtectedRoute(`app.html?q=${encodeURIComponent(query)}`);
+      });
 
       dayPlanBtn.addEventListener("click", async () => {
         const context = activityContext("Toronto");
@@ -1146,9 +934,7 @@
         const nextBudget = button.dataset.budget;
         saveBudgetPreference(nextBudget);
         const separator = pendingBudgetHref.includes("?") ? "&" : "?";
-        openProtectedRoute(
-          `${pendingBudgetHref}${separator}budget=${encodeURIComponent(nextBudget)}`,
-        );
+        openProtectedRoute(`${pendingBudgetHref}${separator}budget=${encodeURIComponent(nextBudget)}`);
       });
 
       document.getElementById("sheet-close").addEventListener("click", () => {
@@ -1158,20 +944,16 @@
         sheetLink.style.display = "inline-flex";
       });
 
-      /* ── Geolocation & City Resolution ── */
       const locationModal = document.getElementById("location-settings-modal");
       const locationBackdrop = document.getElementById("location-backdrop");
       const tryAgainBtn = document.getElementById("location-try-again");
       const dismissBtn = document.getElementById("location-dismiss");
       const modalTitle = document.getElementById("location-modal-title");
       const modalCopy = document.getElementById("location-modal-copy");
-      const modalInstructions = document.getElementById(
-        "location-instructions",
-      );
+      const modalInstructions = document.getElementById("location-instructions");
       const cityPill = document.querySelector(".city-pill");
 
       function updatePageCity(cityName, coords) {
-        // Update local preferences
         let prefs = {};
         try {
           const stored = localStorage.getItem("echoo_preferences");
@@ -1198,11 +980,10 @@
         }
         window.EchooLocationPlatform.writeLocationState(locationState);
 
-        // Update DOM elements
         if (cityPill) cityPill.textContent = `${cityName} today`;
         if (locationProof) {
           locationProof.textContent = coords
-            ? `Ontario precise location on · ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${coords.accuracy ? ` · ±${Math.round(coords.accuracy)}m` : ""}`
+            ? `Ontario precise location on - ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${coords.accuracy ? ` - +/-${Math.round(coords.accuracy)}m` : ""}`
             : `Using ${cityName} as your location base`;
         }
         const context = setDayPlanCopy(cityName);
@@ -1216,76 +997,49 @@
         };
       }
 
+      function showCanadaPreviewModal(title, copy) {
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalCopy) modalCopy.textContent = copy;
+        if (modalInstructions) modalInstructions.hidden = title === "Ontario launch only";
+        locationModal.classList.add("active");
+        locationBackdrop.classList.add("active");
+      }
+
       function detectUserLocation() {
         if (!navigator.geolocation) {
-          console.warn("Geolocation not supported by browser.");
-          showCanadaPreviewModal(
-            "Location is off",
-            "Use Ontario for now, or turn location on for nearby plans.",
-          );
           updatePageCity("Ontario");
           return;
         }
 
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            // Success: Close modals if open
             locationModal.classList.remove("active");
             locationBackdrop.classList.remove("active");
 
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-
-            const resolved = window.EchooLocationPlatform.resolveCoordinates(
-              lat,
-              lng,
-            );
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
             if (!resolved.supported) {
-              console.warn(resolved.message);
               updatePageCity(resolved.fallbackRegion?.name || "Ontario");
-              showCanadaPreviewModal(
-                "Using Ontario",
-                "We’ll show Ontario picks until precise location is available.",
-              );
               return;
             }
-
-            console.log(
-              `Resolved Ontario location to closest city: ${resolved.city.name} (Distance: ${resolved.city.distanceKm.toFixed(1)} km)`,
-            );
             updatePageCity(resolved.city.name, {
               lat,
               lng,
               accuracy: position.coords.accuracy,
             });
           },
-          (error) => {
-            console.warn("Geolocation failed or denied:", error);
+          () => {
             updatePageCity("Ontario");
-            showCanadaPreviewModal(
-              "Using Ontario",
-              "We’ll show Ontario picks until precise location is available.",
-            );
           },
           { timeout: 8000 },
         );
       }
 
-      function showCanadaPreviewModal(title, copy) {
-        if (modalTitle) modalTitle.textContent = title;
-        if (modalCopy) modalCopy.textContent = copy;
-        if (modalInstructions)
-          modalInstructions.hidden = title === "Ontario launch only";
-        locationModal.classList.add("active");
-        locationBackdrop.classList.add("active");
-      }
-
-      // Try again triggers detection again
       tryAgainBtn.addEventListener("click", () => {
         detectUserLocation();
       });
 
-      // Dismiss triggers default Ontario fallback.
       dismissBtn.addEventListener("click", () => {
         locationModal.classList.remove("active");
         locationBackdrop.classList.remove("active");
