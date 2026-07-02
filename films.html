@@ -3,18 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Echoo Films</title>
+    <title>echoo films</title>
     <style>
       :root {
         color-scheme: dark;
-        --bg: #090b0c;
-        --ink: #f8f2e7;
-        --muted: #b9afa0;
-        --soft: rgba(248, 242, 231, 0.1);
-        --gold: #e7c98e;
-        --rose: #d9a0c8;
-        --mint: #9fd8bc;
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+        --ink: #f8f5ef;
+        --muted: #aaa29a;
+        --soft: rgba(248, 245, 239, 0.72);
+        --line: rgba(248, 245, 239, 0.12);
+        --line-strong: rgba(248, 245, 239, 0.2);
+        --glass: rgba(30, 30, 29, 0.72);
+        --peach: #f7d5b2;
+        --black: #050505;
+        --panel: #131313;
         font-family:
           Inter,
           ui-sans-serif,
@@ -29,13 +30,13 @@
         box-sizing: border-box;
       }
 
-      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      /* ── Viewport stability ── */
       html,
       body {
         max-width: 100%;
         overflow-x: hidden;
-        overflow-x: clip; /* modern: clips without breaking position:sticky */
-        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        overflow-x: clip;
+        overscroll-behavior-y: none;
         -webkit-text-size-adjust: 100%;
         -webkit-tap-highlight-color: transparent;
       }
@@ -52,26 +53,19 @@
         max-width: 100%;
       }
 
+      html,
       body {
-        min-height: 100svh;
+        min-height: 100%;
         margin: 0;
+        background: #000;
         color: var(--ink);
-        background:
-          linear-gradient(180deg, rgba(9, 11, 12, 0.1), #090b0c 56%),
-          url("assets/optimized/news-movie-768.jpg") center top / cover fixed,
-          var(--bg);
-        overflow-x: hidden;
       }
 
-      body::before {
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        background:
-          linear-gradient(180deg, rgba(9, 11, 12, 0.32), #090b0c 72%),
-          linear-gradient(110deg, rgba(231, 201, 142, 0.16), transparent 38%),
-          linear-gradient(250deg, rgba(159, 216, 188, 0.12), transparent 44%);
-        content: "";
+      body {
+        min-height: 100svh;
+        display: grid;
+        justify-items: center;
+        align-items: start;
       }
 
       a {
@@ -82,15 +76,43 @@
       button {
         font: inherit;
         -webkit-tap-highlight-color: transparent;
+        cursor: pointer;
       }
 
       .app-shell {
-        width: min(430px, 100%);
+        width: min(100vw, 430px);
         min-height: 100svh;
-        margin: 0 auto;
         position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% -4%, rgba(255, 255, 255, 0.14), transparent 18rem),
+          radial-gradient(circle at 16% 46%, rgba(255, 212, 166, 0.08), transparent 14rem),
+          linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
       }
 
+      .app-shell::after {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        background:
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.035),
+            transparent 18%,
+            transparent 82%,
+            rgba(255, 255, 255, 0.028)
+          ),
+          radial-gradient(
+            ellipse at center,
+            transparent 48%,
+            rgba(0, 0, 0, 0.62) 100%
+          );
+        pointer-events: none;
+      }
+
+      /* ── Topbar ── */
       .topbar {
         position: sticky;
         top: 0;
@@ -99,89 +121,99 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-        background: rgba(9, 11, 12, 0.78);
+        padding: calc(14px + env(safe-area-inset-top)) 27px 12px;
+        background: rgba(8, 8, 8, 0.6);
         backdrop-filter: blur(22px);
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        font-size: 24px;
-        font-weight: 950;
+        width: 96px;
+        height: 34px;
+        overflow: hidden;
       }
 
       .brand img {
-        width: 42px;
-        height: 42px;
-        border-radius: 18px;
-        object-fit: cover;
-        object-position: 50% 0%;
+        display: block;
+        width: 96px;
+        height: auto;
+        filter: brightness(1.2) contrast(1.05);
       }
 
-      .topbar a:last-child {
-        color: rgba(248, 242, 231, 0.72);
-        font-size: 13px;
-        font-weight: 900;
+      .profile-link {
+        width: 34px;
+        height: 34px;
+        border: 2px solid rgba(248, 245, 239, 0.7);
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.9;
       }
 
-      main {
-        padding: 14px 16px calc(96px + env(safe-area-inset-bottom));
+      .profile-link::before {
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        content: "";
+        transform: translateX(-50%);
       }
 
-      .hero {
-        display: grid;
-        gap: 13px;
-        padding: 8px 0 18px;
-      }
-
-      .kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        width: fit-content;
-        color: rgba(248, 242, 231, 0.72);
-        font-size: 12px;
-        font-weight: 950;
-        text-transform: uppercase;
-      }
-
-      .kicker::before {
-        width: 7px;
-        height: 7px;
-        border-radius: 999px;
-        background: var(--rose);
-        box-shadow: 0 0 18px rgba(217, 160, 200, 0.76);
+      .profile-link::after {
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        bottom: 6px;
+        height: 10px;
+        border: 2px solid currentColor;
+        border-bottom: 0;
+        border-radius: 14px 14px 0 0;
         content: "";
       }
 
-      h1 {
-        max-width: 10ch;
+      /* ── Main ── */
+      main {
+        display: grid;
+        gap: 18px;
+        padding: 18px 27px calc(110px + env(safe-area-inset-bottom));
+      }
+
+      /* ── Hero ── */
+      .hero {
+        display: grid;
+        gap: 12px;
+        padding: 10px 0 4px;
+      }
+
+      .hero h1 {
         margin: 0;
-        font-size: clamp(44px, 13vw, 58px);
-        line-height: 0.9;
-        font-weight: 950;
+        font-size: clamp(38px, 11vw, 52px);
+        line-height: 1.02;
+        font-weight: 820;
+        letter-spacing: -0.02em;
       }
 
       .hero p {
-        max-width: 32ch;
-        margin: 0;
+        margin: 8px 0 0;
         color: var(--muted);
         font-size: 15px;
         line-height: 1.42;
-        font-weight: 700;
+        font-weight: 520;
       }
 
+      /* ── Screen ── */
       .screen {
         display: grid;
         gap: 14px;
         opacity: 0;
-        transform: translateY(16px) scale(0.985);
+        transform: translateY(12px) scale(0.985);
         pointer-events: none;
         transition:
-          opacity 360ms cubic-bezier(0.2, 0.8, 0.2, 1),
-          transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+          opacity 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
       }
 
       .screen.active {
@@ -190,20 +222,13 @@
         pointer-events: auto;
       }
 
-      .screen + .screen {
-        display: none;
-      }
-
-      .screen.active + .screen {
-        display: none;
-      }
-
       .trailer-stage {
         position: relative;
         overflow: hidden;
-        border-radius: 10px;
-        background: #111;
-        box-shadow: var(--shadow);
+        border-radius: 14px;
+        background: #000;
+        border: 1px solid var(--line);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
       }
 
       .trailer-frame {
@@ -222,29 +247,30 @@
 
       .film-copy {
         display: grid;
-        gap: 8px;
+        gap: 6px;
       }
 
       .film-copy span {
-        color: var(--gold);
-        font-size: 11px;
-        font-weight: 950;
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 650;
         text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
 
       .film-copy h2 {
         margin: 0;
-        font-size: 31px;
-        line-height: 0.95;
-        font-weight: 950;
+        font-size: 24px;
+        line-height: 1.1;
+        font-weight: 680;
       }
 
       .film-copy p {
         margin: 0;
-        color: rgba(248, 242, 231, 0.68);
+        color: var(--muted);
         font-size: 14px;
-        line-height: 1.38;
-        font-weight: 700;
+        line-height: 1.42;
+        font-weight: 520;
       }
 
       .actions {
@@ -254,138 +280,187 @@
       }
 
       .action {
-        min-height: 50px;
-        border: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        border: 1px solid var(--line);
         border-radius: 999px;
-        padding: 0 16px;
+        padding: 0 20px;
         color: var(--ink);
-        background: rgba(248, 242, 231, 0.1);
+        background: rgba(248, 245, 239, 0.04);
         cursor: pointer;
         font-size: 13px;
-        font-weight: 950;
+        font-weight: 650;
+        transition:
+          border-color 180ms ease,
+          background 180ms ease,
+          transform 180ms ease;
+      }
+
+      .action:hover {
+        border-color: var(--line-strong);
+        background: rgba(248, 245, 239, 0.08);
+        transform: translateY(-1px);
       }
 
       .action.primary {
-        color: #11110f;
-        background: linear-gradient(135deg, var(--gold), var(--rose));
+        color: #111;
+        background: var(--peach);
+        border-color: transparent;
+        font-weight: 680;
       }
 
+      .action.primary:hover {
+        background: #f5cf7e;
+      }
+
+      /* ── Queue ── */
       .queue {
         display: grid;
         gap: 8px;
-        margin-top: 18px;
+        margin-top: 10px;
       }
 
       .queue-title {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        color: rgba(248, 242, 231, 0.52);
-        font-size: 12px;
-        font-weight: 950;
+        color: rgba(248, 245, 239, 0.48);
+        font-size: 10px;
+        font-weight: 650;
         text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
 
       .film-row {
         display: grid;
-        grid-template-columns: 52px 1fr auto;
+        grid-template-columns: 56px 1fr;
         align-items: center;
         gap: 12px;
-        min-height: 66px;
-        border: 0;
-        padding: 0;
+        min-height: 72px;
+        border: 1px solid transparent;
+        border-radius: 14px;
+        padding: 8px;
         color: var(--ink);
-        background: transparent;
+        background: rgba(248, 245, 239, 0.03);
         text-align: left;
         cursor: pointer;
+        transition:
+          transform 180ms ease,
+          background 180ms ease,
+          border-color 180ms ease;
+      }
+
+      .film-row:hover {
+        transform: translateY(-1px);
+        background: rgba(248, 245, 239, 0.06);
+      }
+
+      .film-row.active {
+        border-color: var(--line-strong);
+        background: rgba(248, 245, 239, 0.07);
       }
 
       .film-row img {
-        width: 52px;
-        height: 58px;
-        border-radius: 8px;
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
         object-fit: cover;
       }
 
       .film-row strong {
         display: block;
         font-size: 16px;
-        line-height: 1.1;
-        font-weight: 950;
+        line-height: 1.15;
+        font-weight: 620;
       }
 
       .film-row span span {
         display: block;
         margin-top: 4px;
-        color: rgba(248, 242, 231, 0.54);
-        font-size: 12px;
-        font-weight: 750;
+        color: rgba(248, 245, 239, 0.48);
+        font-size: 11px;
+        font-weight: 520;
       }
 
-      .film-row em {
-        color: var(--mint);
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 950;
-      }
-
-      .film-row.active em {
-        color: var(--gold);
-      }
-
+      /* ── Bottom navigation ── */
       .bottom-nav {
         position: fixed;
         left: 50%;
-        bottom: 0;
+        bottom: 12px;
         z-index: 30;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        width: min(430px, 100%);
-        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
+        background: rgba(25, 25, 24, 0.82);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
         transform: translateX(-50%);
-        background: rgba(9, 11, 12, 0.82);
-        backdrop-filter: blur(22px);
-        box-shadow: 0 -18px 54px rgba(0, 0, 0, 0.32);
       }
 
-      .bottom-nav a {
+      .nav-link {
+        min-width: 0;
         display: grid;
-        place-items: center;
-        min-height: 52px;
-        color: rgba(248, 242, 231, 0.48);
-        font-size: 11px;
-        font-weight: 900;
+        justify-items: center;
+        align-content: center;
+        gap: 5px;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
       }
 
-      .bottom-nav a.active {
-        color: var(--gold);
+      .nav-link.active {
+        color: var(--peach);
+      }
+
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .nav-link.active svg {
+        fill: currentColor;
+        stroke-width: 0;
       }
 
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
         *::after {
+          scroll-behavior: auto !important;
           transition-duration: 0.01ms !important;
           animation-duration: 0.01ms !important;
+          animation: none !important;
         }
       }
     </style>
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="index.html">
-          <img src="assets/echoo-new-logo.jpg" alt="" />
-          <span>echoo</span>
+      <header class="topbar" aria-label="Echoo">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
-        <a href="events.html">Discover</a>
+        <a class="profile-link" href="auth.html" aria-label="Open your profile"></a>
       </header>
 
       <main>
-        <section class="hero">
-          <div class="kicker">Films</div>
-          <h1>Trailers worth a night out.</h1>
-          <p>
+        <section class="hero" data-echoo-hero="films">
+          <h1 data-echoo-hero-title>Trailers worth a night out.</h1>
+          <p data-echoo-hero-copy>
             A compact cinema room for beautiful trailers, date-night films, and
             movies that feel worth planning around.
           </p>
@@ -417,15 +492,27 @@
         </section>
       </main>
 
-      <nav class="bottom-nav" aria-label="Primary">
-        <a href="index.html">Home</a>
-        <a href="events.html">Discover</a>
-        <a class="active" href="films.html">Films</a>
-        <a href="app.html">Plan</a>
-        <a href="auth.html">Profile</a>
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <a class="nav-link" href="index.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <span>Home</span>
+        </a>
+        <a class="nav-link active" href="events.html" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <span>Discover</span>
+        </a>
+        <a class="nav-link" href="tickets.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" /><path d="M13 6v12" /></svg>
+          <span>Tickets</span>
+        </a>
+        <a class="nav-link" href="auth.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <span>Profile</span>
+        </a>
       </nav>
     </div>
 
+    <script src="assets/hero-copy.js"></script>
     <script>
       const films = [
         {
@@ -485,7 +572,6 @@
                   <strong>${film.title}</strong>
                   <span>${film.mood}</span>
                 </span>
-                <em>${index === activeIndex ? "Playing" : "Watch"}</em>
               </button>
             `,
           )
