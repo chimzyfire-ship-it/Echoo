@@ -7,17 +7,15 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg: #0c0e0d;
-        --panel: rgba(248, 242, 231, 0.075);
-        --panel-strong: rgba(248, 242, 231, 0.12);
-        --ink: #f8f2e7;
-        --muted: #b9afa0;
-        --dim: #81786e;
-        --gold: #e7c98e;
-        --rose: #d9a0c8;
-        --mint: #9fd8bc;
-        --ember: #f0a36c;
-        --shadow: 0 22px 64px rgba(0, 0, 0, 0.36);
+        --ink: #f8f5ef;
+        --muted: #aaa29a;
+        --soft: rgba(248, 245, 239, 0.72);
+        --line: rgba(248, 245, 239, 0.12);
+        --line-strong: rgba(248, 245, 239, 0.2);
+        --glass: rgba(30, 30, 29, 0.72);
+        --peach: #f7d5b2;
+        --black: #050505;
+        --panel: #131313;
         font-family:
           Inter,
           ui-sans-serif,
@@ -58,38 +56,16 @@
       html,
       body {
         min-height: 100%;
+        margin: 0;
+        background: #000;
+        color: var(--ink);
       }
 
       body {
-        margin: 0;
-        color: var(--ink);
-        background: #090b0c;
-        overflow-x: hidden;
-      }
-
-      body::before {
-        position: fixed;
-        inset: 0;
-        z-index: -2;
-        content: "";
-        background-image:
-          linear-gradient(180deg, rgba(9, 11, 12, 0.24), #090b0c 72%),
-          url("assets/optimized/background-1400.jpg");
-        background-size: cover;
-        background-position: center top;
-        opacity: 0.52;
-      }
-
-      body::after {
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        content: "";
-        background:
-          linear-gradient(180deg, rgba(9, 11, 12, 0.18), #090b0c 58%),
-          linear-gradient(90deg, rgba(231, 201, 142, 0.08), transparent 42%),
-          linear-gradient(270deg, rgba(159, 216, 188, 0.08), transparent 46%);
-        pointer-events: none;
+        min-height: 100svh;
+        display: grid;
+        justify-items: center;
+        align-items: start;
       }
 
       a {
@@ -107,10 +83,44 @@
       }
 
       .app-shell {
-        width: min(430px, 100%);
+        width: min(100vw, 430px);
         min-height: 100svh;
-        margin: 0 auto;
         position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            circle at 50% -4%,
+            rgba(255, 255, 255, 0.14),
+            transparent 18rem
+          ),
+          radial-gradient(
+            circle at 16% 46%,
+            rgba(255, 212, 166, 0.08),
+            transparent 14rem
+          ),
+          linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
+      }
+
+      .app-shell::after {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        background:
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.035),
+            transparent 18%,
+            transparent 82%,
+            rgba(255, 255, 255, 0.028)
+          ),
+          radial-gradient(
+            ellipse at center,
+            transparent 48%,
+            rgba(0, 0, 0, 0.62) 100%
+          );
+        pointer-events: none;
       }
 
       .topbar {
@@ -121,65 +131,67 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-        background: rgba(9, 11, 12, 0.78);
+        padding: calc(14px + env(safe-area-inset-top)) 27px 12px;
+        background: rgba(8, 8, 8, 0.6);
         backdrop-filter: blur(22px);
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        font-size: 24px;
-        font-weight: 950;
+        width: 96px;
+        height: 34px;
+        overflow: hidden;
       }
 
       .brand img {
-        width: 42px;
-        height: 42px;
-        border-radius: 18px;
-        object-fit: cover;
-        object-position: 50% 0%;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+        display: block;
+        width: 96px;
+        height: auto;
+        filter: brightness(1.2) contrast(1.05);
       }
 
-      .topbar a:last-child {
-        display: inline-flex;
-        align-items: center;
-        min-height: 42px;
-        color: rgba(248, 242, 231, 0.72);
-        font-size: 13px;
-        font-weight: 900;
+      .profile-link {
+        width: 34px;
+        height: 34px;
+        border: 2px solid rgba(248, 245, 239, 0.7);
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.9;
+      }
+
+      .profile-link::before {
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        content: "";
+        transform: translateX(-50%);
+      }
+
+      .profile-link::after {
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        bottom: 6px;
+        height: 10px;
+        border: 2px solid currentColor;
+        border-bottom: 0;
+        border-radius: 14px 14px 0 0;
+        content: "";
       }
 
       .shell {
-        padding: 14px 16px calc(96px + env(safe-area-inset-bottom));
+        padding: 18px 27px calc(110px + env(safe-area-inset-bottom));
       }
 
       .hero {
         display: grid;
         gap: 18px;
         padding: 10px 0 20px;
-      }
-
-      .kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        width: fit-content;
-        color: rgba(248, 242, 231, 0.72);
-        font-size: 12px;
-        font-weight: 950;
-        text-transform: uppercase;
-      }
-
-      .kicker::before {
-        width: 7px;
-        height: 7px;
-        border-radius: 999px;
-        background: var(--mint);
-        box-shadow: 0 0 18px rgba(159, 216, 188, 0.74);
-        content: "";
       }
 
       h1,
@@ -193,8 +205,9 @@
         margin-bottom: 0;
         max-width: 11ch;
         font-size: clamp(42px, 13vw, 56px);
-        line-height: 0.9;
-        font-weight: 950;
+        line-height: 1.02;
+        font-weight: 820;
+        letter-spacing: 0;
         text-wrap: balance;
       }
 
@@ -209,21 +222,57 @@
         color: var(--muted);
         font-size: 15px;
         line-height: 1.42;
-        font-weight: 700;
+        font-weight: 520;
       }
 
       .search {
         display: grid;
-        grid-template-columns: 1fr 48px;
+        grid-template-columns: auto 1fr auto;
         align-items: center;
-        gap: 8px;
+        gap: 14px;
         min-height: 60px;
-        padding: 6px;
+        margin-top: 4px;
+        padding: 9px 9px 9px 19px;
+        border: 1px solid rgba(248, 245, 239, 0.08);
         border-radius: 999px;
-        background: rgba(248, 242, 231, 0.095);
+        background: linear-gradient(
+          180deg,
+          rgba(42, 42, 41, 0.78),
+          rgba(29, 29, 28, 0.76)
+        );
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.08),
-          0 18px 46px rgba(0, 0, 0, 0.26);
+          inset 0 1px 0 rgba(255, 255, 255, 0.06),
+          0 20px 55px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(22px);
+      }
+
+      .search:focus-within {
+        border-color: rgba(247, 213, 178, 0.45);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.07),
+          0 0 0 4px rgba(247, 213, 178, 0.08),
+          0 20px 55px rgba(0, 0, 0, 0.28);
+      }
+
+      .search-glyph {
+        width: 24px;
+        height: 24px;
+        border: 2.5px solid var(--ink);
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.96;
+      }
+
+      .search-glyph::after {
+        position: absolute;
+        right: -6px;
+        bottom: -4px;
+        width: 10px;
+        height: 2.5px;
+        border-radius: 999px;
+        background: var(--ink);
+        content: "";
+        transform: rotate(45deg);
       }
 
       input {
@@ -234,62 +283,74 @@
         outline: 0;
         color: var(--ink);
         background: transparent;
-        padding: 0 6px 0 12px;
-        font-size: 15px;
-        font-weight: 800;
+        padding: 0;
+        font-size: clamp(15px, 4.1vw, 18px);
+        font-weight: 520;
+        letter-spacing: 0;
       }
 
       input::placeholder {
-        color: rgba(248, 242, 231, 0.58);
+        color: rgba(248, 245, 239, 0.68);
+        opacity: 1;
       }
 
       .primary {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 48px;
+        width: 50px;
+        height: 50px;
         border: 0;
-        border-radius: 999px;
-        padding: 0 16px;
-        color: #11110f;
-        background: linear-gradient(135deg, var(--gold), var(--rose));
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 950;
-        transition:
-          transform 180ms ease,
-          filter 180ms ease;
-      }
-
-      .search .primary {
-        width: 48px;
+        border-radius: 50%;
         padding: 0;
-        color: transparent;
+        color: #111;
+        background: var(--peach);
+        cursor: pointer;
+        flex: 0 0 auto;
+        position: relative;
         font-size: 0;
       }
 
-      .search .primary::before {
-        width: 15px;
-        height: 2px;
+      .primary::before {
+        position: absolute;
+        top: 24px;
+        left: 14px;
+        width: 21px;
+        height: 3px;
         border-radius: 999px;
-        background: #11110f;
+        background: currentColor;
         content: "";
       }
 
-      .search .primary::after {
-        width: 9px;
-        height: 9px;
-        margin-left: -4px;
-        border-top: 2px solid #11110f;
-        border-right: 2px solid #11110f;
-        transform: rotate(45deg);
+      .primary::after {
+        position: absolute;
+        top: 17px;
+        right: 15px;
+        width: 14px;
+        height: 14px;
+        border-top: 3px solid currentColor;
+        border-right: 3px solid currentColor;
         content: "";
+        transform: rotate(45deg);
+      }
+
+      /* Text CTA variant (e.g. inside the brief) */
+      .brief .primary {
+        width: auto;
+        height: 46px;
+        padding: 0 18px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 680;
+      }
+
+      .brief .primary::before,
+      .brief .primary::after {
+        content: none;
       }
 
       .primary:hover,
       .primary:focus-visible {
-        transform: translateY(-2px);
-        filter: brightness(1.04);
         outline: 0;
       }
 
@@ -313,11 +374,11 @@
         min-height: 34px;
         padding: 0;
         border: 0;
-        color: rgba(248, 242, 231, 0.52);
+        color: rgba(248, 245, 239, 0.52);
         background: transparent;
         cursor: pointer;
         font-size: 15px;
-        font-weight: 950;
+        font-weight: 560;
       }
 
       .filter.active {
@@ -331,13 +392,13 @@
         bottom: 1px;
         height: 2px;
         border-radius: 999px;
-        background: linear-gradient(90deg, var(--gold), var(--mint));
+        background: var(--peach);
         content: "";
       }
 
       .filter:hover,
       .filter:focus-visible {
-        color: var(--gold);
+        color: var(--peach);
         outline: 0;
       }
 
@@ -356,15 +417,15 @@
 
       .section-head h2 {
         margin: 0;
-        font-size: 22px;
+        font-size: 21px;
         line-height: 1;
-        font-weight: 950;
+        font-weight: 650;
       }
 
       .section-head span {
-        color: rgba(248, 242, 231, 0.48);
-        font-size: 12px;
-        font-weight: 900;
+        color: rgba(248, 245, 239, 0.42);
+        font-size: 11px;
+        font-weight: 520;
         white-space: nowrap;
       }
 
@@ -384,9 +445,9 @@
         position: relative;
         min-height: 292px;
         overflow: hidden;
-        border-radius: 8px;
+        border-radius: 14px;
         background: var(--panel);
-        box-shadow: var(--shadow);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
         isolation: isolate;
         scroll-snap-align: start;
       }
@@ -418,31 +479,20 @@
         padding: 14px;
       }
 
-      .soft-labels {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        color: rgba(248, 242, 231, 0.86);
-        font-size: 11px;
-        font-weight: 950;
-        text-transform: uppercase;
-      }
-
       .feature-card h3 {
         margin: 0 0 8px;
-        font-size: 25px;
+        font-size: 24px;
         line-height: 1;
-        font-weight: 950;
+        font-weight: 680;
         text-wrap: balance;
       }
 
       .feature-card p {
         margin: 0;
-        color: rgba(248, 242, 231, 0.74);
+        color: rgba(248, 245, 239, 0.74);
         font-size: 13px;
         line-height: 1.32;
-        font-weight: 750;
+        font-weight: 520;
       }
 
       .sound-rail {
@@ -452,7 +502,7 @@
 
       .sound-card {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: auto 1fr;
         align-items: center;
         gap: 12px;
         min-height: 62px;
@@ -465,35 +515,25 @@
         width: 38px;
         height: 38px;
         border-radius: 50%;
-        background:
-          linear-gradient(135deg, rgba(231, 201, 142, 0.88), rgba(217, 160, 200, 0.88)),
-          rgba(248, 242, 231, 0.08);
-        color: #11110f;
+        background: var(--peach);
+        color: #111;
         font-size: 14px;
-        font-weight: 950;
+        font-weight: 680;
       }
 
       .sound-card strong {
         display: block;
         font-size: 16px;
         line-height: 1.1;
-        font-weight: 950;
+        font-weight: 620;
       }
 
       .sound-card span span {
         display: block;
         margin-top: 4px;
-        color: rgba(248, 242, 231, 0.54);
+        color: rgba(248, 245, 239, 0.54);
         font-size: 12px;
-        font-weight: 750;
-      }
-
-      .sound-card em {
-        color: var(--mint);
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 950;
-        white-space: nowrap;
+        font-weight: 520;
       }
 
       .place-stack {
@@ -503,7 +543,7 @@
 
       .place-row {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr;
         align-items: center;
         gap: 12px;
         min-height: 72px;
@@ -514,24 +554,16 @@
         display: block;
         font-size: 17px;
         line-height: 1.1;
-        font-weight: 950;
+        font-weight: 620;
       }
 
       .place-row span {
         display: block;
         margin-top: 5px;
-        color: rgba(248, 242, 231, 0.54);
+        color: rgba(248, 245, 239, 0.54);
         font-size: 12px;
         line-height: 1.28;
-        font-weight: 750;
-      }
-
-      .place-row em {
-        color: var(--gold);
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 950;
-        white-space: nowrap;
+        font-weight: 520;
       }
 
       .news-carousel-wrap {
@@ -554,12 +586,12 @@
 
       .news-carousel-wrap::before {
         left: 0;
-        background: linear-gradient(90deg, #090b0c, transparent);
+        background: linear-gradient(90deg, #050505, transparent);
       }
 
       .news-carousel-wrap::after {
         right: 0;
-        background: linear-gradient(270deg, #090b0c, transparent);
+        background: linear-gradient(270deg, #050505, transparent);
       }
 
       .news-slider {
@@ -588,15 +620,15 @@
         gap: 10px;
         min-height: 72px;
         padding: 8px;
-        border-radius: 8px;
-        background: rgba(248, 242, 231, 0.075);
+        border-radius: 12px;
+        background: rgba(248, 245, 239, 0.05);
       }
 
       .news-card img {
         flex: 0 0 auto;
         width: 56px;
         height: 56px;
-        border-radius: 7px;
+        border-radius: 10px;
         object-fit: cover;
       }
 
@@ -607,18 +639,19 @@
       }
 
       .news-card .tag {
-        color: var(--mint);
+        color: var(--peach);
         font-size: 10px;
-        font-weight: 950;
+        font-weight: 650;
         text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
 
       .news-card .headline {
         max-width: 172px;
         overflow: hidden;
-        color: rgba(248, 242, 231, 0.78);
+        color: rgba(248, 245, 239, 0.78);
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 540;
         line-height: 1.18;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -640,10 +673,10 @@
         gap: 12px;
         min-height: 126px;
         padding: 10px;
-        border-radius: 8px;
-        background: rgba(248, 242, 231, 0.075);
+        border-radius: 14px;
+        background: rgba(248, 245, 239, 0.05);
         cursor: pointer;
-        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.18);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
         transition:
           transform 180ms ease,
           background 180ms ease;
@@ -652,7 +685,7 @@
       .event:hover,
       .event:focus-within {
         transform: translateY(-2px);
-        background: rgba(248, 242, 231, 0.105);
+        background: rgba(248, 245, 239, 0.08);
       }
 
       .event picture,
@@ -663,9 +696,9 @@
 
       .event img {
         display: block;
-        border-radius: 7px;
+        border-radius: 10px;
         object-fit: cover;
-        filter: saturate(0.86) contrast(1.03);
+        filter: saturate(0.9) contrast(1.02);
       }
 
       .event div {
@@ -674,10 +707,11 @@
 
       .event small {
         display: inline-flex;
-        color: var(--gold);
+        color: var(--peach);
         font-size: 10px;
-        font-weight: 950;
+        font-weight: 650;
         text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
 
       .event h2 {
@@ -685,7 +719,7 @@
         color: var(--ink);
         font-size: 20px;
         line-height: 1;
-        font-weight: 950;
+        font-weight: 620;
         text-wrap: balance;
       }
 
@@ -693,10 +727,10 @@
         display: -webkit-box;
         margin: 0 0 9px;
         overflow: hidden;
-        color: rgba(248, 242, 231, 0.62);
+        color: rgba(248, 245, 239, 0.6);
         font-size: 12px;
         line-height: 1.28;
-        font-weight: 700;
+        font-weight: 520;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
       }
@@ -708,9 +742,9 @@
       }
 
       .meta span {
-        color: rgba(248, 242, 231, 0.52);
+        color: rgba(248, 245, 239, 0.48);
         font-size: 11px;
-        font-weight: 900;
+        font-weight: 520;
       }
 
       .side {
@@ -720,61 +754,97 @@
 
       .brief {
         padding: 16px;
-        border-radius: 8px;
+        border-radius: 14px;
         background:
-          linear-gradient(135deg, rgba(231, 201, 142, 0.16), transparent),
-          rgba(248, 242, 231, 0.075);
+          linear-gradient(135deg, rgba(247, 213, 178, 0.12), transparent),
+          rgba(248, 245, 239, 0.05);
       }
 
       .brief h3 {
         margin: 0 0 8px;
-        font-size: 22px;
+        font-size: 21px;
         line-height: 1;
-        font-weight: 950;
+        font-weight: 650;
       }
 
       .brief p {
         margin: 0 0 14px;
-        color: rgba(248, 242, 231, 0.66);
+        color: rgba(248, 245, 239, 0.66);
         font-size: 13px;
         line-height: 1.38;
-        font-weight: 700;
+        font-weight: 520;
       }
 
       .bottom-nav {
         position: fixed;
         left: 50%;
-        bottom: 0;
+        bottom: 12px;
         z-index: 30;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        width: min(430px, 100%);
-        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
+        background: rgba(25, 25, 24, 0.82);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
         transform: translateX(-50%);
-        background: rgba(9, 11, 12, 0.82);
-        backdrop-filter: blur(22px);
-        box-shadow: 0 -18px 54px rgba(0, 0, 0, 0.32);
       }
 
-      .bottom-nav a {
+      .nav-link {
+        min-width: 0;
         display: grid;
-        place-items: center;
-        min-height: 52px;
-        color: rgba(248, 242, 231, 0.48);
-        font-size: 11px;
-        font-weight: 900;
+        justify-items: center;
+        align-content: center;
+        gap: 5px;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
       }
 
-      .bottom-nav a.active {
-        color: var(--gold);
+      .nav-link.active {
+        color: var(--peach);
+      }
+
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .nav-link.active svg {
+        fill: currentColor;
+        stroke-width: 0;
       }
 
       .location-note {
         display: inline-flex;
+        align-items: center;
+        gap: 8px;
         width: fit-content;
-        color: rgba(248, 242, 231, 0.58);
+        color: rgba(248, 245, 239, 0.5);
         font-size: 12px;
-        font-weight: 850;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .location-note::before {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--peach);
+        box-shadow: 0 0 12px rgba(247, 213, 178, 0.7);
+        content: "";
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -790,36 +860,39 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="index.html">
-          <img src="assets/echoo-new-logo.jpg" alt="" />
-          <span>echoo</span>
+      <header class="topbar" aria-label="Echoo">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
-        <a href="auth.html">Sign in</a>
+        <a
+          class="profile-link"
+          href="auth.html"
+          aria-label="Open your profile"
+        ></a>
       </header>
 
       <main class="shell">
         <section class="hero">
-          <div class="hero-copy">
-            <div class="kicker">Ontario live</div>
-            <h1>What is worth doing right now?</h1>
-            <p>
+          <div class="hero-copy" data-echoo-hero="discover">
+            <h1 data-echoo-hero-title>What is worth doing right now?</h1>
+            <p data-echoo-hero-copy>
               Shows, chill spots, music heat, and easy plans in one calm flow.
             </p>
             <span class="location-note" id="location-note">Using Ontario</span>
           </div>
-          <form class="search" id="search-form">
+          <form class="search" id="search-form" aria-label="Search Echoo">
+            <span class="search-glyph" aria-hidden="true"></span>
             <input id="query" placeholder="Search Ontario tonight" />
-            <button class="primary" type="submit">Search</button>
+            <button class="primary" type="submit" aria-label="Search"></button>
           </form>
         </section>
 
         <div class="filters" id="filters" aria-label="Discovery filters">
           <button class="filter active" data-filter="all">All</button>
-          <button class="filter" data-filter="music">Music</button>
-          <button class="filter" data-filter="dates">Dates</button>
+          <a class="filter" href="music.html">Music</a>
+          <a class="filter" href="dates.html">Dates</a>
           <a class="filter" href="films.html">Films</a>
-          <button class="filter" data-filter="food">Food</button>
+          <a class="filter" href="food.html">Food</a>
         </div>
 
         <section class="section" aria-labelledby="shows-title">
@@ -835,11 +908,7 @@
                 loading="lazy"
                 decoding="async"
               />
-              <a href="events.html?query=concerts%20tonight%20ontario">
-                <span class="soft-labels">
-                  <span>Selling now</span>
-                  <span>Ontario</span>
-                </span>
+              <a href="music.html">
                 <span>
                   <h3>Live rooms still moving</h3>
                   <p>Concerts, DJs, intimate sets, and the places nearby.</p>
@@ -853,11 +922,7 @@
                 loading="lazy"
                 decoding="async"
               />
-              <a href="events.html?query=date%20night%20ontario">
-                <span class="soft-labels">
-                  <span>Open</span>
-                  <span>GTA</span>
-                </span>
+              <a href="dates.html">
                 <span>
                   <h3>Date plans that feel effortless</h3>
                   <p>One anchor, one food stop, one softer place after.</p>
@@ -872,10 +937,6 @@
                 decoding="async"
               />
               <a href="films.html">
-                <span class="soft-labels">
-                  <span>Films</span>
-                  <span>This week</span>
-                </span>
                 <span>
                   <h3>Screenings with somewhere good after</h3>
                   <p>Film nights paired with food, dessert, and late spots.</p>
@@ -891,29 +952,26 @@
             <span>Ontario signals</span>
           </div>
           <div class="sound-rail">
-            <a class="sound-card" href="events.html?query=trending%20artists%20with%20ontario%20shows">
+            <a class="sound-card" href="music.html">
               <span class="sound-mark">01</span>
               <span>
                 <strong>Trending artists with Ontario shows</strong>
                 <span>Music buzz that connects to real listings.</span>
               </span>
-              <em>Live</em>
             </a>
-            <a class="sound-card" href="events.html?query=canada%20music%20trends%20ontario%20shows">
+            <a class="sound-card" href="music.html">
               <span class="sound-mark">02</span>
               <span>
                 <strong>Tracks turning into Ontario plans</strong>
                 <span>Signals from charts, events, venues, and saves.</span>
               </span>
-              <em>Trend</em>
             </a>
-            <a class="sound-card" href="events.html?query=concerts%20ontario">
+            <a class="sound-card" href="music.html">
               <span class="sound-mark">03</span>
               <span>
                 <strong>Concert energy</strong>
                 <span>Useful music discovery, not decorative charts.</span>
               </span>
-              <em>Fresh</em>
             </a>
           </div>
         </section>
@@ -924,32 +982,28 @@
             <span>Ontario picks</span>
           </div>
           <div class="place-stack">
-            <a
-              class="place-row"
-              href="events.html?query=food%20before%20the%20show%20ontario"
-            >
+            <a class="place-row" href="food.html">
               <span>
                 <strong>Food before the show</strong>
                 <span>Quick tables, warm rooms, easy group energy.</span>
               </span>
-              <em>Nearby</em>
-            </a>
-            <a class="place-row" href="events.html?query=late%20night%20ontario">
-              <span>
-                <strong>Late-night picks</strong>
-                <span>Places that keep the night alive after the main plan.</span>
-              </span>
-              <em>Open late</em>
             </a>
             <a
               class="place-row"
-              href="events.html?query=date%20night%20restaurants%20ontario"
+              href="events.html?query=late%20night%20ontario"
             >
+              <span>
+                <strong>Late-night picks</strong>
+                <span
+                  >Places that keep the night alive after the main plan.</span
+                >
+              </span>
+            </a>
+            <a class="place-row" href="dates.html">
               <span>
                 <strong>Date-night energy</strong>
                 <span>Comfortable, not stiff, actually good for talking.</span>
               </span>
-              <em>Curated</em>
             </a>
           </div>
         </section>
@@ -985,12 +1039,34 @@
         </section>
       </main>
 
-      <nav class="bottom-nav" aria-label="Primary">
-        <a href="index.html">Home</a>
-        <a class="active" href="events.html">Discover</a>
-        <a href="events.html?query=today">Today</a>
-        <a href="app.html">Plan</a>
-        <a href="auth.html">Profile</a>
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <a class="nav-link" href="index.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+          </svg>
+          <span>Home</span>
+        </a>
+        <a class="nav-link active" href="events.html" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m16 16 4 4" />
+          </svg>
+          <span>Discover</span>
+        </a>
+        <a class="nav-link" href="tickets.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" />
+            <path d="M13 6v12" />
+          </svg>
+          <span>Tickets</span>
+        </a>
+        <a class="nav-link" href="auth.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
+          <span>Profile</span>
+        </a>
       </nav>
     </div>
 
@@ -998,6 +1074,7 @@
     <script src="assets/echoo-auth.js"></script>
     <script src="assets/location-platform.js"></script>
     <script src="assets/activity-context.js"></script>
+    <script src="assets/hero-copy.js"></script>
     <script>
       /* Diagnostic logger for redirects */
       window.addEventListener("beforeunload", () => {
@@ -1115,7 +1192,7 @@
           event.preventDefault();
           const q = queryInput.value.trim();
           if (q) {
-            window.location.href = `events.html?query=${encodeURIComponent(q)}`;
+            window.location.href = `app.html?q=${encodeURIComponent(q)}`;
           } else {
             render();
           }
