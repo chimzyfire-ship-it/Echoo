@@ -3,16 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Echoo Tickets</title>
+    <title>echoo tickets</title>
     <style>
       :root {
         color-scheme: dark;
-        --bg: #080907;
-        --panel: #11130f;
-        --ink: #f5f1e8;
-        --muted: #a8a397;
-        --line: rgba(245, 241, 232, 0.14);
-        --signal: #e7c98e;
+        --ink: #f8f5ef;
+        --muted: #aaa29a;
+        --soft: rgba(248, 245, 239, 0.72);
+        --line: rgba(248, 245, 239, 0.12);
+        --line-strong: rgba(248, 245, 239, 0.2);
+        --glass: rgba(30, 30, 29, 0.72);
+        --peach: #f7d5b2;
+        --black: #050505;
+        --panel: #131313;
         font-family:
           Inter,
           ui-sans-serif,
@@ -22,6 +25,7 @@
           "Segoe UI",
           sans-serif;
       }
+
       * {
         box-sizing: border-box;
       }
@@ -31,8 +35,8 @@
       body {
         max-width: 100%;
         overflow-x: hidden;
-        overflow-x: clip; /* modern: clips without breaking position:sticky */
-        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        overflow-x: clip;
+        overscroll-behavior-y: none;
         -webkit-text-size-adjust: 100%;
         -webkit-tap-highlight-color: transparent;
       }
@@ -48,143 +52,528 @@
       table {
         max-width: 100%;
       }
+
+      html,
       body {
+        min-height: 100%;
         margin: 0;
-        background: var(--bg);
+        background: #000;
         color: var(--ink);
       }
+
+      body {
+        min-height: 100svh;
+        display: grid;
+        justify-items: center;
+        align-items: start;
+      }
+
       a {
         color: inherit;
         text-decoration: none;
       }
+
       button,
       input {
         font: inherit;
       }
-      main {
-        width: min(980px, 100%);
-        margin: 0 auto;
-        padding: 28px 16px 80px;
+
+      button {
+        -webkit-tap-highlight-color: transparent;
       }
-      header {
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* ── App shell ── */
+      .app-shell {
+        width: min(100vw, 430px);
+        min-height: 100svh;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            circle at 50% -4%,
+            rgba(255, 255, 255, 0.14),
+            transparent 18rem
+          ),
+          radial-gradient(
+            circle at 16% 46%,
+            rgba(255, 212, 166, 0.08),
+            transparent 14rem
+          ),
+          linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
+      }
+
+      .app-shell::after {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        background:
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.035),
+            transparent 18%,
+            transparent 82%,
+            rgba(255, 255, 255, 0.028)
+          ),
+          radial-gradient(
+            ellipse at center,
+            transparent 48%,
+            rgba(0, 0, 0, 0.62) 100%
+          );
+        pointer-events: none;
+      }
+
+      /* ── Topbar ── */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        align-items: end;
-        gap: 14px;
-        margin-bottom: 20px;
+        gap: 12px;
+        padding: calc(14px + env(safe-area-inset-top)) 27px 12px;
+        background: rgba(8, 8, 8, 0.6);
+        backdrop-filter: blur(22px);
       }
-      h1 {
-        margin: 0;
-        font-size: clamp(42px, 12vw, 88px);
-        line-height: 0.88;
-        letter-spacing: -0.075em;
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        width: 96px;
+        height: 34px;
+        overflow: hidden;
       }
+
+      .brand img {
+        display: block;
+        width: 96px;
+        height: auto;
+        filter: brightness(1.2) contrast(1.05);
+      }
+
+      .profile-link {
+        width: 34px;
+        height: 34px;
+        border: 2px solid rgba(248, 245, 239, 0.7);
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.9;
+      }
+
+      .profile-link::before {
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        content: "";
+        transform: translateX(-50%);
+      }
+
+      .profile-link::after {
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        bottom: 6px;
+        height: 10px;
+        border: 2px solid currentColor;
+        border-bottom: 0;
+        border-radius: 14px 14px 0 0;
+        content: "";
+      }
+
+      /* ── Shell ── */
+      .shell {
+        padding: 18px 27px calc(110px + env(safe-area-inset-bottom));
+      }
+
+      /* ── Hero ── */
+      .hero {
+        display: grid;
+        gap: 12px;
+        padding: 10px 0 20px;
+      }
+
+      h1,
+      h2,
+      h3,
       p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 0;
+        font-size: clamp(42px, 13vw, 56px);
+        line-height: 1.02;
+        font-weight: 820;
+        letter-spacing: 0;
+      }
+
+      .hero-copy {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        max-width: 31ch;
         color: var(--muted);
-        line-height: 1.45;
+        font-size: 15px;
+        line-height: 1.42;
+        font-weight: 520;
       }
-      .panel,
-      .ticket {
-        border: 1px solid var(--line);
-        background: rgba(17, 19, 15, 0.92);
-        padding: 16px;
-      }
+
+      /* ── Lookup pill ── */
       .lookup {
         display: grid;
-        gap: 10px;
-        margin-bottom: 16px;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 14px;
+        min-height: 60px;
+        margin-top: 4px;
+        padding: 9px 9px 9px 19px;
+        border: 1px solid rgba(248, 245, 239, 0.08);
+        border-radius: 999px;
+        background: linear-gradient(
+          180deg,
+          rgba(42, 42, 41, 0.78),
+          rgba(29, 29, 28, 0.76)
+        );
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.06),
+          0 20px 55px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(22px);
+        transition:
+          border-color 180ms ease,
+          box-shadow 180ms ease;
       }
-      input {
+
+      .lookup:focus-within {
+        border-color: rgba(247, 213, 178, 0.45);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.07),
+          0 0 0 4px rgba(247, 213, 178, 0.08),
+          0 20px 55px rgba(0, 0, 0, 0.28);
+      }
+
+      .lookup input {
+        width: 100%;
+        min-width: 0;
         min-height: 48px;
-        border: 1px solid var(--line);
-        border-radius: 0;
+        border: 0;
         outline: 0;
         color: var(--ink);
-        background: rgba(8, 9, 7, 0.84);
-        padding: 0 12px;
+        background: transparent;
+        padding: 0;
+        font-size: clamp(15px, 4.1vw, 18px);
+        font-weight: 520;
+        letter-spacing: 0;
       }
-      button {
-        min-height: 48px;
-        border: 1px solid transparent;
-        border-radius: 0;
-        color: #151311;
-        background: var(--signal);
+
+      .lookup input::placeholder {
+        color: rgba(248, 245, 239, 0.68);
+        opacity: 1;
+      }
+
+      .load-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border: 0;
+        border-radius: 50%;
+        padding: 0;
+        color: #111;
+        background: var(--peach);
         cursor: pointer;
-        font-weight: 950;
+        flex: 0 0 auto;
+        position: relative;
+        font-size: 0;
+        transition:
+          transform 180ms ease,
+          opacity 180ms ease;
       }
-      .grid {
+
+      .load-btn:hover {
+        transform: scale(1.04);
+      }
+
+      .load-btn:active {
+        transform: scale(0.96);
+      }
+
+      /* Arrow icon via pseudo-elements */
+      .load-btn::before {
+        position: absolute;
+        top: 24px;
+        left: 14px;
+        width: 21px;
+        height: 3px;
+        border-radius: 999px;
+        background: currentColor;
+        content: "";
+      }
+
+      .load-btn::after {
+        position: absolute;
+        top: 17px;
+        right: 15px;
+        width: 14px;
+        height: 14px;
+        border-top: 3px solid currentColor;
+        border-right: 3px solid currentColor;
+        content: "";
+        transform: rotate(45deg);
+      }
+
+      /* ── Tickets grid ── */
+      .tickets-grid {
         display: grid;
         gap: 12px;
+        margin-top: 20px;
       }
+
       .ticket {
         display: grid;
         gap: 12px;
+        padding: 14px;
+        border-radius: 14px;
+        background: rgba(248, 245, 239, 0.05);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        transition:
+          transform 180ms ease,
+          background 180ms ease;
       }
-      .qr {
+
+      .ticket:hover {
+        transform: translateY(-2px);
+        background: rgba(248, 245, 239, 0.08);
+      }
+
+      .ticket-tag {
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 650;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .ticket h2 {
+        margin: 4px 0 6px;
+        font-size: 20px;
+        line-height: 1;
+        font-weight: 620;
+        text-wrap: balance;
+      }
+
+      .ticket p {
+        margin: 0;
+        color: rgba(248, 245, 239, 0.6);
+        font-size: 13px;
+        line-height: 1.28;
+        font-weight: 520;
+      }
+
+      .ticket-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .ticket-meta span {
+        color: rgba(248, 245, 239, 0.48);
+        font-size: 11px;
+        font-weight: 520;
+      }
+
+      .ticket-code {
         display: grid;
         place-items: center;
-        min-height: 150px;
+        min-height: 72px;
         border: 1px solid var(--line);
-        color: var(--signal);
+        border-radius: 10px;
         background:
-          linear-gradient(90deg, rgba(245, 241, 232, 0.08) 1px, transparent 1px)
+          linear-gradient(
+              90deg,
+              rgba(248, 245, 239, 0.04) 1px,
+              transparent 1px
+            )
             0 0 / 14px 14px,
-          rgba(8, 9, 7, 0.82);
-        font-size: 28px;
-        font-weight: 950;
+          rgba(8, 8, 8, 0.6);
+        color: var(--peach);
+        font-size: 22px;
+        font-weight: 780;
         letter-spacing: 0.08em;
       }
-      .meta {
-        color: var(--muted);
-        font-size: 13px;
-        font-weight: 750;
-      }
+
+      /* ── Empty state ── */
       .empty {
-        border: 1px dashed var(--line);
+        display: grid;
+        place-items: center;
+        min-height: 120px;
+        padding: 24px;
+        border: 1px dashed var(--line-strong);
+        border-radius: 14px;
         color: var(--muted);
-        padding: 16px;
+        font-size: 14px;
+        font-weight: 520;
+        text-align: center;
+        line-height: 1.42;
       }
-      @media (min-width: 760px) {
-        .lookup {
-          grid-template-columns: 1fr auto;
-          align-items: end;
-        }
-        .ticket {
-          grid-template-columns: 1fr 220px;
-          align-items: stretch;
+
+      /* ── Bottom navigation ── */
+      .bottom-nav {
+        position: fixed;
+        left: 50%;
+        bottom: 12px;
+        z-index: 30;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
+        background: rgba(25, 25, 24, 0.82);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
+        transform: translateX(-50%);
+      }
+
+      .nav-link {
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 5px;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
+      }
+
+      .nav-link.active {
+        color: var(--peach);
+      }
+
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .nav-link.active svg {
+        fill: currentColor;
+        stroke-width: 0;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
         }
       }
     </style>
   </head>
   <body>
-    <main>
-      <header>
-        <div>
-          <h1>My Tickets</h1>
-          <p>
-            Confirmed Echoo tickets appear here by this browser session or buyer
-            email.
-          </p>
-        </div>
-        <a class="meta" href="events.html">Discover</a>
+    <div class="app-shell">
+      <header class="topbar" aria-label="Echoo">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
+        </a>
+        <a
+          class="profile-link"
+          href="auth.html"
+          aria-label="Open your profile"
+        ></a>
       </header>
 
-      <section class="panel lookup">
-        <label style="display: grid; gap: 7px"
-          >Buyer email
-          <input
-            id="email"
-            autocomplete="email"
-            placeholder="name@example.com"
-          />
-        </label>
-        <button id="load" type="button">Load tickets</button>
-      </section>
+      <main class="shell">
+        <section class="hero">
+          <div class="hero-copy">
+            <h1>My tickets</h1>
+            <p>
+              Confirmed tickets appear here by browser session or buyer email.
+            </p>
+          </div>
+          <div class="lookup">
+            <label class="sr-only" for="email">Email</label>
+            <input
+              id="email"
+              autocomplete="email"
+              placeholder="name@example.com"
+            />
+            <button
+              class="load-btn"
+              id="load"
+              type="button"
+              aria-label="Load tickets"
+            ></button>
+          </div>
+        </section>
 
-      <section class="grid" id="tickets">
-        <div class="empty">Load tickets to begin.</div>
-      </section>
-    </main>
+        <section class="tickets-grid" id="tickets">
+          <div class="empty">Load tickets to begin.</div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <a class="nav-link" href="index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+        </svg>
+        <span>Home</span>
+      </a>
+      <a class="nav-link" href="events.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m16 16 4 4" />
+        </svg>
+        <span>Discover</span>
+      </a>
+      <a class="nav-link active" href="tickets.html" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" />
+          <path d="M13 6v12" />
+        </svg>
+        <span>Tickets</span>
+      </a>
+      <a class="nav-link" href="auth.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        </svg>
+        <span>Profile</span>
+      </a>
+    </nav>
+
     <script>
       const ENDPOINT =
         "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/my-tickets";
@@ -223,13 +612,13 @@
               : "Date TBA";
             return `
             <article class="ticket">
-              <div>
-                <div class="meta">${tier.name || "Ticket"} · ${starts}</div>
-                <h2 style="margin:8px 0 6px;">${event.title || "Echoo event"}</h2>
-                <p>${event.venue_name || "Venue TBA"} · ${event.city || "Canada"}, ${event.province || ""}</p>
-                <div class="meta">Display code: ${ticket.display_code}</div>
+              <small class="ticket-tag">${tier.name || "Ticket"} · ${starts}</small>
+              <h2>${event.title || "Echoo event"}</h2>
+              <p>${event.venue_name || "Venue TBA"} · ${event.city || "Canada"}${event.province ? ", " + event.province : ""}</p>
+              <div class="ticket-code">${ticket.display_code}</div>
+              <div class="ticket-meta">
+                <span>${ticket.display_code}</span>
               </div>
-              <div class="qr">${ticket.display_code}</div>
             </article>
           `;
           })
@@ -239,7 +628,7 @@
       async function loadTickets() {
         const email = emailEl.value.trim();
         localStorage.setItem("echoo_ticket_buyer_email", email);
-        ticketsEl.innerHTML = '<div class="empty">Loading tickets...</div>';
+        ticketsEl.innerHTML = '<div class="empty">Loading…</div>';
         const query = new URLSearchParams({ sessionId: sessionId() });
         if (email) query.set("email", email);
         try {
