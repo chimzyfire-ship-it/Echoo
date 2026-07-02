@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Echoo Films</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090b0c;
+        --ink: #f8f2e7;
+        --muted: #b9afa0;
+        --soft: rgba(248, 242, 231, 0.1);
+        --gold: #e7c98e;
+        --rose: #d9a0c8;
+        --mint: #9fd8bc;
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
+
+      body {
+        min-height: 100svh;
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(180deg, rgba(9, 11, 12, 0.1), #090b0c 56%),
+          url("assets/optimized/news-movie-768.jpg") center top / cover fixed,
+          var(--bg);
+        overflow-x: hidden;
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+          linear-gradient(180deg, rgba(9, 11, 12, 0.32), #090b0c 72%),
+          linear-gradient(110deg, rgba(231, 201, 142, 0.16), transparent 38%),
+          linear-gradient(250deg, rgba(159, 216, 188, 0.12), transparent 44%);
+        content: "";
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button {
+        font: inherit;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .app-shell {
+        width: min(430px, 100%);
+        min-height: 100svh;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+        background: rgba(9, 11, 12, 0.78);
+        backdrop-filter: blur(22px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 24px;
+        font-weight: 950;
+      }
+
+      .brand img {
+        width: 42px;
+        height: 42px;
+        border-radius: 18px;
+        object-fit: cover;
+        object-position: 50% 0%;
+      }
+
+      .topbar a:last-child {
+        color: rgba(248, 242, 231, 0.72);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      main {
+        padding: 14px 16px calc(96px + env(safe-area-inset-bottom));
+      }
+
+      .hero {
+        display: grid;
+        gap: 13px;
+        padding: 8px 0 18px;
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        color: rgba(248, 242, 231, 0.72);
+        font-size: 12px;
+        font-weight: 950;
+        text-transform: uppercase;
+      }
+
+      .kicker::before {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--rose);
+        box-shadow: 0 0 18px rgba(217, 160, 200, 0.76);
+        content: "";
+      }
+
+      h1 {
+        max-width: 10ch;
+        margin: 0;
+        font-size: clamp(44px, 13vw, 58px);
+        line-height: 0.9;
+        font-weight: 950;
+      }
+
+      .hero p {
+        max-width: 32ch;
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.42;
+        font-weight: 700;
+      }
+
+      .screen {
+        display: grid;
+        gap: 14px;
+        opacity: 0;
+        transform: translateY(16px) scale(0.985);
+        pointer-events: none;
+        transition:
+          opacity 360ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .screen.active {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .screen + .screen {
+        display: none;
+      }
+
+      .screen.active + .screen {
+        display: none;
+      }
+
+      .trailer-stage {
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+        background: #111;
+        box-shadow: var(--shadow);
+      }
+
+      .trailer-frame {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+      }
+
+      .trailer-frame iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      .film-copy {
+        display: grid;
+        gap: 8px;
+      }
+
+      .film-copy span {
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 950;
+        text-transform: uppercase;
+      }
+
+      .film-copy h2 {
+        margin: 0;
+        font-size: 31px;
+        line-height: 0.95;
+        font-weight: 950;
+      }
+
+      .film-copy p {
+        margin: 0;
+        color: rgba(248, 242, 231, 0.68);
+        font-size: 14px;
+        line-height: 1.38;
+        font-weight: 700;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+
+      .action {
+        min-height: 50px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0 16px;
+        color: var(--ink);
+        background: rgba(248, 242, 231, 0.1);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      .action.primary {
+        color: #11110f;
+        background: linear-gradient(135deg, var(--gold), var(--rose));
+      }
+
+      .queue {
+        display: grid;
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .queue-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: rgba(248, 242, 231, 0.52);
+        font-size: 12px;
+        font-weight: 950;
+        text-transform: uppercase;
+      }
+
+      .film-row {
+        display: grid;
+        grid-template-columns: 52px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        min-height: 66px;
+        border: 0;
+        padding: 0;
+        color: var(--ink);
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .film-row img {
+        width: 52px;
+        height: 58px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .film-row strong {
+        display: block;
+        font-size: 16px;
+        line-height: 1.1;
+        font-weight: 950;
+      }
+
+      .film-row span span {
+        display: block;
+        margin-top: 4px;
+        color: rgba(248, 242, 231, 0.54);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .film-row em {
+        color: var(--mint);
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 950;
+      }
+
+      .film-row.active em {
+        color: var(--gold);
+      }
+
+      .bottom-nav {
+        position: fixed;
+        left: 50%;
+        bottom: 0;
+        z-index: 30;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        width: min(430px, 100%);
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        background: rgba(9, 11, 12, 0.82);
+        backdrop-filter: blur(22px);
+        box-shadow: 0 -18px 54px rgba(0, 0, 0, 0.32);
+      }
+
+      .bottom-nav a {
+        display: grid;
+        place-items: center;
+        min-height: 52px;
+        color: rgba(248, 242, 231, 0.48);
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .bottom-nav a.active {
+        color: var(--gold);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="index.html">
+          <img src="assets/echoo-new-logo.jpg" alt="" />
+          <span>echoo</span>
+        </a>
+        <a href="events.html">Discover</a>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="kicker">Films</div>
+          <h1>Trailers worth a night out.</h1>
+          <p>
+            A compact cinema room for beautiful trailers, date-night films, and
+            movies that feel worth planning around.
+          </p>
+        </section>
+
+        <section class="screen active" id="film-screen" aria-live="polite">
+          <div class="trailer-stage">
+            <div class="trailer-frame" id="trailer-frame"></div>
+          </div>
+          <div class="film-copy">
+            <span id="film-meta">Trailer</span>
+            <h2 id="film-title"></h2>
+            <p id="film-copy"></p>
+          </div>
+          <div class="actions">
+            <a class="action primary" id="film-search" href="events.html?query=film%20screenings%20ontario">
+              Find screenings
+            </a>
+            <button class="action" id="next-film" type="button">Next</button>
+          </div>
+        </section>
+
+        <section class="queue" aria-label="Trailer queue">
+          <div class="queue-title">
+            <span>Now screening</span>
+            <span>Swipe energy</span>
+          </div>
+          <div id="film-list"></div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a href="events.html">Discover</a>
+        <a class="active" href="films.html">Films</a>
+        <a href="app.html">Plan</a>
+        <a href="auth.html">Profile</a>
+      </nav>
+    </div>
+
+    <script>
+      const films = [
+        {
+          title: "The Wild Robot",
+          mood: "Tender sci-fi adventure",
+          copy: "A luminous animated survival story with heart, wonder, and the kind of trailer that instantly feels like a shared plan.",
+          video: "67vbA5ZJdKQ",
+          poster: "assets/optimized/news-movie-768.jpg",
+          query: "The Wild Robot screenings Ontario",
+        },
+        {
+          title: "Dune: Part Two",
+          mood: "Epic cinema night",
+          copy: "Huge scale, desert myth, and a trailer built for the biggest screen you can find.",
+          video: "Way9Dexny3w",
+          poster: "assets/optimized/background-1400.jpg",
+          query: "Dune Part Two screenings Ontario",
+        },
+        {
+          title: "Inside Out 2",
+          mood: "Feel-good group pick",
+          copy: "Bright, funny, and easy to say yes to when the group needs something lighter.",
+          video: "LEjhY15eCx0",
+          poster: "assets/optimized/news-date-768.jpg",
+          query: "Inside Out 2 screenings Ontario",
+        },
+        {
+          title: "Wicked",
+          mood: "Musical spectacle",
+          copy: "Big vocals, polished fantasy, and date-night theatrical energy in one trailer.",
+          video: "6COmYeLsz4c",
+          poster: "assets/optimized/news-music-768.jpg",
+          query: "Wicked movie screenings Ontario",
+        },
+      ];
+
+      const screen = document.getElementById("film-screen");
+      const frame = document.getElementById("trailer-frame");
+      const title = document.getElementById("film-title");
+      const copy = document.getElementById("film-copy");
+      const meta = document.getElementById("film-meta");
+      const search = document.getElementById("film-search");
+      const list = document.getElementById("film-list");
+      let activeIndex = 0;
+
+      function trailerMarkup(film) {
+        return `<iframe src="https://www.youtube-nocookie.com/embed/${film.video}?rel=0&modestbranding=1&playsinline=1" title="${film.title} trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`;
+      }
+
+      function renderQueue() {
+        list.innerHTML = films
+          .map(
+            (film, index) => `
+              <button class="film-row ${index === activeIndex ? "active" : ""}" type="button" data-index="${index}">
+                <img src="${film.poster}" alt="" loading="lazy" decoding="async">
+                <span>
+                  <strong>${film.title}</strong>
+                  <span>${film.mood}</span>
+                </span>
+                <em>${index === activeIndex ? "Playing" : "Watch"}</em>
+              </button>
+            `,
+          )
+          .join("");
+      }
+
+      function setFilm(index) {
+        activeIndex = (index + films.length) % films.length;
+        const film = films[activeIndex];
+        screen.classList.remove("active");
+        window.setTimeout(() => {
+          frame.innerHTML = trailerMarkup(film);
+          title.textContent = film.title;
+          copy.textContent = film.copy;
+          meta.textContent = film.mood;
+          search.href = `events.html?query=${encodeURIComponent(film.query)}`;
+          renderQueue();
+          screen.classList.add("active");
+        }, 160);
+      }
+
+      document.getElementById("next-film").addEventListener("click", () => {
+        setFilm(activeIndex + 1);
+      });
+
+      list.addEventListener("click", (event) => {
+        const row = event.target.closest("[data-index]");
+        if (!row) return;
+        setFilm(Number(row.dataset.index));
+      });
+
+      renderQueue();
+      setFilm(0);
+    </script>
+  </body>
+</html>

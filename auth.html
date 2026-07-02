@@ -33,6 +33,29 @@
       * {
         box-sizing: border-box;
       }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
       body {
         margin: 0;
         min-height: 100svh;
@@ -786,26 +809,24 @@
       const redirectTarget = window.EchooAuth
         ? window.EchooAuth.normalizeNext(authParams.get("next"), "app.html")
         : "app.html";
-      const redirectParams = new URL(
-        redirectTarget,
-        window.location.href,
-      ).searchParams;
+      const redirectParams = new URL(redirectTarget, window.location.href)
+        .searchParams;
       const preferredMode = authParams.get("mode");
       let initialStoredPrefs = {};
 
       // Check stored preference for pre-detected city
-      let preDetectedCity = "Toronto";
+      let preDetectedCity = "Ontario";
       try {
         const stored = localStorage.getItem("echoo_preferences");
         if (stored) {
           initialStoredPrefs = JSON.parse(stored);
           preDetectedCity =
-            redirectParams.get("city") || initialStoredPrefs.city || "Toronto";
+            redirectParams.get("city") || initialStoredPrefs.city || "Ontario";
         }
       } catch (e) {}
       preDetectedCity =
         window.EchooLocationPlatform.cityByName(preDetectedCity)?.name ||
-        "Toronto";
+        "Ontario";
 
       /* ---- State ---- */
       const state = {
@@ -819,7 +840,8 @@
         customEventStyle: "",
         customAudience: "",
         customMotivation: "",
-        budget: redirectParams.get("budget") || initialStoredPrefs.budget || "$",
+        budget:
+          redirectParams.get("budget") || initialStoredPrefs.budget || "$",
         energy: initialStoredPrefs.energy || "chill",
         city: redirectParams.get("city") || preDetectedCity,
         gender: initialStoredPrefs.gender || "Prefer not to say",
@@ -865,8 +887,9 @@
           .querySelectorAll("[data-provider]")
           .forEach((button) => (button.disabled = isBusy));
         if (label) submitLabel.textContent = label;
-        else submitLabel.textContent =
-          state.mode === "signup" ? COPY.signup.btn : COPY.signin.btn;
+        else
+          submitLabel.textContent =
+            state.mode === "signup" ? COPY.signup.btn : COPY.signin.btn;
       }
 
       function authRedirectForProvider() {
@@ -1354,7 +1377,9 @@
             redirectAfterAuth(profileState.preferences);
             return;
           }
-          setStatus("Finish your Echoo personality once, then it stays with your account.");
+          setStatus(
+            "Finish your Echoo personality once, then it stays with your account.",
+          );
           startOnboarding("");
         } catch (error) {
           setStatus(error.message || "Could not sign in.", true);
@@ -1383,7 +1408,10 @@
         const displayName =
           nameInput.value.trim() || email.split("@")[0] || "Echoo User";
         if (!email || !password) {
-          setStatus("Add an email and password to create your free account.", true);
+          setStatus(
+            "Add an email and password to create your free account.",
+            true,
+          );
           return;
         }
 
@@ -1402,9 +1430,11 @@
 
           let session = data.session;
           if (!session) {
-            const signIn = await window.EchooAuth.client.auth.signInWithPassword(
-              { email, password },
-            );
+            const signIn =
+              await window.EchooAuth.client.auth.signInWithPassword({
+                email,
+                password,
+              });
             if (signIn.error) {
               throw new Error(
                 "The account was created, but Supabase email confirmation is still enabled for this project. Disable email confirmations so signup opens immediately.",
@@ -1415,7 +1445,9 @@
 
           state.userName = displayName;
           state.userEmail = data.user?.email || email;
-          setStatus("Account ready. Now choose the signals Echoo should remember.");
+          setStatus(
+            "Account ready. Now choose the signals Echoo should remember.",
+          );
           startOnboarding("");
         } catch (error) {
           setStatus(error.message || "Could not create your account.", true);
@@ -1595,7 +1627,7 @@
         );
         const city = selectedCity
           ? selectedCity.name
-          : (state.city || cityInput?.value || "Toronto").trim();
+          : (state.city || cityInput?.value || "Ontario").trim();
         const tone = state.tone || "direct";
         const gender = state.gender || "Prefer not to say";
         const dob = state.dob || "";

@@ -1,15 +1,23 @@
-import { CORS_HEADERS, getSupabaseAdmin, jsonResponse } from "../_shared/location.ts";
+import {
+  CORS_HEADERS,
+  getSupabaseAdmin,
+  jsonResponse,
+} from "../_shared/location.ts";
 
 function isAuthorized(req: Request): boolean {
-  const expected = Deno.env.get("TICKETING_ADMIN_TOKEN") || Deno.env.get("LOCATION_ADMIN_TOKEN");
+  const expected =
+    Deno.env.get("TICKETING_ADMIN_TOKEN") ||
+    Deno.env.get("LOCATION_ADMIN_TOKEN");
   const provided = req.headers.get("x-admin-token") || "";
   return Boolean(expected && provided && expected === provided);
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (req.method === "OPTIONS")
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (!isAuthorized(req)) return jsonResponse({ error: "Unauthorized" }, 401);
-  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (req.method !== "POST")
+    return jsonResponse({ error: "Method not allowed" }, 405);
 
   const supabase = getSupabaseAdmin();
 
@@ -18,11 +26,14 @@ Deno.serve(async (req) => {
     const eventId = body.eventId;
     const code = String(body.code || "").trim();
     const operatorLabel = body.operatorLabel || null;
-    if (!eventId || !code) return jsonResponse({ error: "eventId and code are required." }, 422);
+    if (!eventId || !code)
+      return jsonResponse({ error: "eventId and code are required." }, 422);
 
     const { data: ticket, error } = await supabase
       .from("ticket_items")
-      .select("*, ticket_orders(buyer_name,buyer_email,status), ticketed_events(title), ticket_tiers(name)")
+      .select(
+        "*, ticket_orders(buyer_name,buyer_email,status), ticketed_events(title), ticket_tiers(name)",
+      )
       .or(`display_code.eq.${code.toUpperCase()},qr_token.eq.${code}`)
       .maybeSingle();
     if (error) throw error;
@@ -34,7 +45,10 @@ Deno.serve(async (req) => {
         status: "invalid",
         operator_label: operatorLabel,
       });
-      return jsonResponse({ status: "invalid", message: "Ticket not found." }, 404);
+      return jsonResponse(
+        { status: "invalid", message: "Ticket not found." },
+        404,
+      );
     }
 
     if (ticket.event_id !== eventId) {
@@ -45,7 +59,14 @@ Deno.serve(async (req) => {
         status: "wrong_event",
         operator_label: operatorLabel,
       });
-      return jsonResponse({ status: "wrong_event", message: "Ticket belongs to a different event.", ticket }, 409);
+      return jsonResponse(
+        {
+          status: "wrong_event",
+          message: "Ticket belongs to a different event.",
+          ticket,
+        },
+        409,
+      );
     }
 
     if (ticket.checked_in_at) {
@@ -57,7 +78,14 @@ Deno.serve(async (req) => {
         checked_in_at: ticket.checked_in_at,
         operator_label: operatorLabel,
       });
-      return jsonResponse({ status: "already_used", message: "Ticket was already checked in.", ticket }, 409);
+      return jsonResponse(
+        {
+          status: "already_used",
+          message: "Ticket was already checked in.",
+          ticket,
+        },
+        409,
+      );
     }
 
     const checkedInAt = new Date().toISOString();
@@ -65,7 +93,9 @@ Deno.serve(async (req) => {
       .from("ticket_items")
       .update({ checked_in_at: checkedInAt })
       .eq("id", ticket.id)
-      .select("*, ticket_orders(buyer_name,buyer_email,status), ticketed_events(title), ticket_tiers(name)")
+      .select(
+        "*, ticket_orders(buyer_name,buyer_email,status), ticketed_events(title), ticket_tiers(name)",
+      )
       .single();
     if (updateError) throw updateError;
 
@@ -78,7 +108,11 @@ Deno.serve(async (req) => {
       operator_label: operatorLabel,
     });
 
-    return jsonResponse({ status: "valid", message: "Ticket checked in.", ticket: updated });
+    return jsonResponse({
+      status: "valid",
+      message: "Ticket checked in.",
+      ticket: updated,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);
     return jsonResponse({ error: message }, 500);

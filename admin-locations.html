@@ -1,29 +1,62 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Echoo Location Review</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Echoo Ontario Operations</title>
     <style>
       :root {
         color-scheme: dark;
         --bg: #090a0c;
         --panel: #121417;
-        --line: rgba(255,255,255,0.12);
+        --line: rgba(255, 255, 255, 0.12);
         --text: #f4efe7;
-        --muted: rgba(244,239,231,0.68);
+        --muted: rgba(244, 239, 231, 0.68);
         --gold: #e7c98e;
+        --green: #91d8a5;
         --danger: #ef7777;
       }
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
         background: var(--bg);
         color: var(--text);
       }
       main {
-        max-width: 1040px;
+        max-width: 1180px;
         margin: 0 auto;
         padding: 32px 18px 80px;
       }
@@ -34,15 +67,29 @@
         align-items: end;
         margin-bottom: 24px;
       }
-      h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
-      p { color: var(--muted); line-height: 1.5; }
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 5vw, 42px);
+        letter-spacing: 0;
+      }
+      p {
+        color: var(--muted);
+        line-height: 1.5;
+      }
       .controls {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 10px;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
       }
-      input, button {
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 0 18px;
+      }
+      input,
+      button {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
@@ -55,16 +102,20 @@
         cursor: pointer;
         font-weight: 800;
       }
-      button.primary {
+      button.primary,
+      button[aria-selected="true"] {
         background: var(--gold);
         color: #111;
         border-color: transparent;
+      }
+      button.success {
+        color: var(--green);
       }
       .grid {
         display: grid;
         gap: 12px;
       }
-      .place {
+      .item {
         display: grid;
         gap: 10px;
         padding: 16px;
@@ -72,30 +123,42 @@
         border: 1px solid var(--line);
         border-radius: 8px;
       }
-      .place-head {
+      .item-head {
         display: flex;
         justify-content: space-between;
         gap: 12px;
       }
-      .place h2 {
+      h2 {
         margin: 0;
         font-size: 18px;
+        letter-spacing: 0;
       }
       .meta {
         color: var(--muted);
         font-size: 13px;
+        overflow-wrap: anywhere;
       }
       .actions {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
       }
-      .danger { color: var(--danger); }
+      .danger {
+        color: var(--danger);
+      }
       .empty {
         padding: 22px;
         border: 1px dashed var(--line);
         border-radius: 8px;
         color: var(--muted);
+      }
+      @media (max-width: 720px) {
+        header,
+        .item-head,
+        .controls {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -103,25 +166,55 @@
     <main>
       <header>
         <div>
-          <h1>Location Review</h1>
-          <p>Review normalized places before they enter live map search.</p>
+          <h1>Ontario Operations</h1>
+          <p>Review places, duplicates, profiles, and ingestion schedules.</p>
         </div>
       </header>
 
       <div class="controls">
-        <input id="admin-token" type="password" autocomplete="off" placeholder="Location admin token">
+        <input
+          id="admin-token"
+          type="password"
+          autocomplete="off"
+          placeholder="Location admin token"
+        />
         <button class="primary" id="load-btn" type="button">Load</button>
       </div>
 
-      <section class="grid" id="places"></section>
+      <nav class="tabs" aria-label="Ontario operations queues">
+        <button type="button" data-queue="places" aria-selected="true">
+          Places
+        </button>
+        <button type="button" data-queue="duplicates">Duplicates</button>
+        <button type="button" data-queue="profiles">Profiles</button>
+        <button type="button" data-queue="schedules">Schedules</button>
+      </nav>
+
+      <section class="grid" id="queue"></section>
     </main>
 
     <script>
-      const ENDPOINT = "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-review";
-      const placesEl = document.getElementById("places");
+      const ENDPOINT =
+        "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-review";
+      const queueEl = document.getElementById("queue");
       const tokenEl = document.getElementById("admin-token");
+      let activeQueue = "places";
 
       tokenEl.value = localStorage.getItem("echoo_location_admin_token") || "";
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function number(value, digits = 2) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed.toFixed(digits) : "n/a";
+      }
 
       async function request(path = "", options = {}) {
         const token = tokenEl.value.trim();
@@ -131,59 +224,185 @@
           headers: {
             "Content-Type": "application/json",
             "x-admin-token": token,
-            ...(options.headers || {})
-          }
+            ...(options.headers || {}),
+          },
         });
         const json = await response.json();
-        if (!response.ok) throw new Error(json.error || "Location review request failed");
+        if (!response.ok) {
+          throw new Error(json.error || "Location review request failed");
+        }
         return json;
       }
 
-      function render(places) {
+      function renderPlaces(places) {
         if (!places.length) {
-          placesEl.innerHTML = '<div class="empty">No places waiting for review.</div>';
-          return;
+          return '<div class="empty">No places waiting for review.</div>';
         }
-
-        placesEl.innerHTML = places.map((place) => `
-          <article class="place">
-            <div class="place-head">
+        return places
+          .map(
+            (place) => `
+          <article class="item">
+            <div class="item-head">
               <div>
-                <h2>${place.formatted_address || "Untitled place"}</h2>
-                <div class="meta">${place.city || "Unknown city"}, ${place.admin_area_1 || "CA"} · ${Number(place.latitude).toFixed(4)}, ${Number(place.longitude).toFixed(4)}</div>
+                <h2>${escapeHtml(place.name || place.formatted_address || "Untitled place")}</h2>
+                <div class="meta">${escapeHtml(place.municipality || place.city || "Ontario")} · ${escapeHtml(place.category || "uncategorized")} · ${number(place.latitude, 4)}, ${number(place.longitude, 4)}</div>
               </div>
-              <div class="meta">Confidence ${Number(place.confidence_score || 0).toFixed(2)}</div>
+              <div class="meta">Confidence ${number(place.confidence_score)}</div>
             </div>
-            <div class="meta">Provider: ${place.place_provider || "manual"} ${place.place_provider_id || ""}</div>
+            <div class="meta">Provider: ${escapeHtml(place.place_provider || place.source_provider || "manual")} ${escapeHtml(place.place_provider_id || place.source_id || "")}</div>
             <div class="actions">
-              <button class="primary" data-action="published" data-id="${place.id}">Approve</button>
-              <button data-action="needs_review" data-id="${place.id}">Keep Review</button>
-              <button class="danger" data-action="archived" data-id="${place.id}">Archive</button>
+              <button class="primary" data-action="review_place" data-status="published" data-id="${place.id}">Approve</button>
+              <button data-action="review_place" data-status="needs_review" data-id="${place.id}">Keep Review</button>
+              <button class="danger" data-action="review_place" data-status="archived" data-id="${place.id}">Archive</button>
             </div>
           </article>
-        `).join("");
+        `,
+          )
+          .join("");
+      }
+
+      function renderDuplicates(candidates) {
+        if (!candidates.length) {
+          return '<div class="empty">No duplicate candidates found.</div>';
+        }
+        return candidates
+          .map(
+            (candidate) => `
+          <article class="item">
+            <div class="item-head">
+              <div>
+                <h2>${escapeHtml(candidate.primary_name)} / ${escapeHtml(candidate.duplicate_name)}</h2>
+                <div class="meta">${escapeHtml(candidate.municipality || "Ontario")} · ${escapeHtml(candidate.category || "uncategorized")} · ${number(candidate.distance_meters, 0)} m apart</div>
+              </div>
+              <div class="meta">${number(candidate.primary_confidence)} vs ${number(candidate.duplicate_confidence)}</div>
+            </div>
+            <div class="meta">Keep ${escapeHtml(candidate.primary_source || "unknown")} · merge ${escapeHtml(candidate.duplicate_source || "unknown")}</div>
+            <div class="actions">
+              <button class="primary" data-action="merge_places" data-primary="${candidate.primary_place_id}" data-duplicate="${candidate.duplicate_place_id}">Merge Duplicate</button>
+            </div>
+          </article>
+        `,
+          )
+          .join("");
+      }
+
+      function renderProfiles(profiles) {
+        if (!profiles.length) {
+          return '<div class="empty">No low-confidence profiles waiting.</div>';
+        }
+        return profiles
+          .map(
+            (profile) => `
+          <article class="item">
+            <div class="item-head">
+              <div>
+                <h2>${escapeHtml(profile.name || "Untitled profile")}</h2>
+                <div class="meta">${escapeHtml(profile.municipality || "Ontario")} · ${escapeHtml(profile.category || "uncategorized")} · ${escapeHtml(profile.human_review_status)}</div>
+              </div>
+              <div class="meta">Confidence ${number(profile.confidence_score)}</div>
+            </div>
+            <div class="meta">${escapeHtml(profile.summary || "No summary yet.")}</div>
+            <div class="actions">
+              <button class="primary" data-action="review_profile" data-status="approved" data-id="${profile.profile_id}">Approve</button>
+              <button data-action="review_profile" data-status="needs_update" data-id="${profile.profile_id}">Needs Update</button>
+              <button class="danger" data-action="review_profile" data-status="rejected" data-id="${profile.profile_id}">Reject</button>
+            </div>
+          </article>
+        `,
+          )
+          .join("");
+      }
+
+      function renderSchedules(schedules) {
+        if (!schedules.length) {
+          return '<div class="empty">No Ontario worker schedules recorded.</div>';
+        }
+        return schedules
+          .map(
+            (schedule) => `
+          <article class="item">
+            <div class="item-head">
+              <div>
+                <h2>${escapeHtml(schedule.job_name)}</h2>
+                <div class="meta">${escapeHtml(schedule.function_name)} · ${escapeHtml(schedule.schedule_label)}</div>
+              </div>
+              <div class="meta">${schedule.is_active ? "Active" : "Paused"}</div>
+            </div>
+            <div class="meta">Last run: ${escapeHtml(schedule.last_run_at || "never")} · ${escapeHtml(schedule.last_status || "no status")}</div>
+            <div class="meta">${escapeHtml(JSON.stringify(schedule.request_payload || {}))}</div>
+          </article>
+        `,
+          )
+          .join("");
+      }
+
+      function render(data) {
+        if (activeQueue === "duplicates") {
+          queueEl.innerHTML = renderDuplicates(data.candidates || []);
+        } else if (activeQueue === "profiles") {
+          queueEl.innerHTML = renderProfiles(data.profiles || []);
+        } else if (activeQueue === "schedules") {
+          queueEl.innerHTML = renderSchedules(data.schedules || []);
+        } else {
+          queueEl.innerHTML = renderPlaces(data.places || []);
+        }
       }
 
       async function load() {
-        placesEl.innerHTML = '<div class="empty">Loading...</div>';
+        queueEl.innerHTML = '<div class="empty">Loading...</div>';
         try {
-          const data = await request("?status=needs_review&limit=50");
-          render(data.places || []);
+          const path =
+            activeQueue === "places"
+              ? "?status=needs_review&limit=50"
+              : `?queue=${activeQueue}&limit=50`;
+          render(await request(path));
         } catch (error) {
-          placesEl.innerHTML = `<div class="empty danger">${error.message}</div>`;
+          queueEl.innerHTML = `<div class="empty danger">${escapeHtml(error.message)}</div>`;
         }
       }
 
       document.getElementById("load-btn").addEventListener("click", load);
-      placesEl.addEventListener("click", async (event) => {
+      document.querySelectorAll("[data-queue]").forEach((button) => {
+        button.addEventListener("click", () => {
+          activeQueue = button.dataset.queue;
+          document.querySelectorAll("[data-queue]").forEach((tab) => {
+            tab.setAttribute("aria-selected", String(tab === button));
+          });
+          load();
+        });
+      });
+      queueEl.addEventListener("click", async (event) => {
         const button = event.target.closest("[data-action]");
         if (!button) return;
         button.disabled = true;
         try {
-          await request("", {
-            method: "PATCH",
-            body: JSON.stringify({ placeId: button.dataset.id, status: button.dataset.action })
-          });
+          if (button.dataset.action === "merge_places") {
+            await request("", {
+              method: "PATCH",
+              body: JSON.stringify({
+                action: "merge_places",
+                primaryPlaceId: button.dataset.primary,
+                duplicatePlaceId: button.dataset.duplicate,
+              }),
+            });
+          } else if (button.dataset.action === "review_profile") {
+            await request("", {
+              method: "PATCH",
+              body: JSON.stringify({
+                action: "review_profile",
+                profileId: button.dataset.id,
+                status: button.dataset.status,
+              }),
+            });
+          } else {
+            await request("", {
+              method: "PATCH",
+              body: JSON.stringify({
+                placeId: button.dataset.id,
+                status: button.dataset.status,
+              }),
+            });
+          }
           await load();
         } catch (error) {
           alert(error.message);

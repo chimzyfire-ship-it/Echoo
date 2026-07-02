@@ -7,19 +7,21 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg: #080907;
-        --panel: #11130f;
-        --panel-2: #191b15;
-        --ink: #f5f1e8;
-        --muted: #a8a397;
-        --dim: #706c62;
-        --line: rgba(245, 241, 232, 0.13);
-        --line-strong: rgba(245, 241, 232, 0.28);
-        --signal: #e7c98e;
-        --rose: #d8a2d9;
-        --clay: #c87952;
-        --blue: #91a7ff;
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+        --bg: #070807;
+        --panel: #11140f;
+        --panel-2: #181d16;
+        --panel-3: #20261c;
+        --ink: #fbf6ec;
+        --muted: #b8b0a1;
+        --dim: #7f776a;
+        --line: rgba(251, 246, 236, 0.12);
+        --line-strong: rgba(251, 246, 236, 0.24);
+        --signal: #f0c56d;
+        --mint: #8fd9b6;
+        --rose: #e0a8cf;
+        --clay: #d47957;
+        --blue: #87a7ff;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
         font-family:
           Inter,
           ui-sans-serif,
@@ -33,28 +35,40 @@
       * {
         box-sizing: border-box;
       }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
       body {
         margin: 0;
         min-height: 100vh;
         color: var(--ink);
         background:
-          linear-gradient(
-              90deg,
-              rgba(245, 241, 232, 0.035) 1px,
-              transparent 1px
-            )
-            0 0 / 34px 34px,
-          radial-gradient(
-            circle at 84% 0%,
-            rgba(145, 167, 255, 0.12),
-            transparent 26rem
-          ),
-          radial-gradient(
-            circle at 8% 40%,
-            rgba(216, 255, 95, 0.08),
-            transparent 20rem
-          ),
-          var(--bg);
+          linear-gradient(115deg, rgba(240, 197, 109, 0.07), transparent 34%),
+          linear-gradient(180deg, #0b0d0b 0%, var(--bg) 48%, #040504 100%);
+      }
+
+      body.chat-open {
+        overflow: hidden;
       }
 
       a {
@@ -87,7 +101,7 @@
         gap: 10px;
         font-weight: 950;
         font-size: 26px;
-        letter-spacing: -0.05em;
+        letter-spacing: 0;
       }
 
       .brand img {
@@ -143,7 +157,7 @@
         margin: 0;
         font-size: clamp(44px, 13vw, 92px);
         line-height: 0.88;
-        letter-spacing: -0.075em;
+        letter-spacing: 0;
       }
 
       .welcome p {
@@ -268,9 +282,12 @@
       .ask-card {
         display: grid;
         gap: 12px;
-        padding: 14px;
+        padding: 16px;
         border: 1px solid var(--line);
-        background: rgba(17, 19, 15, 0.9);
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(240, 197, 109, 0.12), transparent 42%),
+          rgba(17, 20, 15, 0.9);
         box-shadow: var(--shadow);
       }
 
@@ -285,7 +302,7 @@
         min-height: 58px;
         width: 100%;
         border: 1px solid var(--line);
-        border-radius: 0;
+        border-radius: 6px;
         outline: 0;
         background: rgba(8, 9, 7, 0.78);
         color: var(--ink);
@@ -302,10 +319,10 @@
       .ghost {
         min-height: 58px;
         border: 1px solid var(--line);
-        border-radius: 0;
+        border-radius: 6px;
         cursor: pointer;
         font-weight: 950;
-        letter-spacing: -0.03em;
+        letter-spacing: 0;
         transition:
           transform 180ms ease,
           border-color 180ms ease,
@@ -316,8 +333,8 @@
         color: #10110e;
         background: linear-gradient(
           135deg,
-          #e4bd78 0%,
-          #f2ddb0 42%,
+          var(--signal) 0%,
+          #f7df9f 42%,
           var(--rose) 100%
         );
         border-color: transparent;
@@ -344,9 +361,12 @@
       .module {
         position: relative;
         min-height: 152px;
-        padding: 16px;
+        padding: 18px;
         border: 1px solid var(--line);
-        background: rgba(17, 19, 15, 0.84);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(251, 246, 236, 0.045), transparent 60%),
+          rgba(17, 20, 15, 0.84);
         overflow: hidden;
         transition:
           transform 180ms ease,
@@ -357,7 +377,9 @@
       .module:hover {
         transform: translateY(-3px);
         border-color: var(--line-strong);
-        background: rgba(25, 27, 21, 0.94);
+        background:
+          linear-gradient(180deg, rgba(143, 217, 182, 0.08), transparent 62%),
+          rgba(25, 31, 23, 0.94);
       }
 
       .module::after {
@@ -374,7 +396,7 @@
         margin-bottom: 10px;
         font-size: 24px;
         line-height: 0.98;
-        letter-spacing: -0.055em;
+        letter-spacing: 0;
       }
 
       .module p {
@@ -430,10 +452,15 @@
       .chat-overlay {
         position: fixed;
         inset: 0;
+        height: 100dvh;
         z-index: 40;
         display: flex;
         flex-direction: column;
-        background: var(--bg);
+        overflow: hidden;
+        background:
+          linear-gradient(90deg, rgba(251, 246, 236, 0.035) 1px, transparent 1px)
+            0 0 / 56px 56px,
+          linear-gradient(180deg, #050605 0%, #0a0d0a 56%, #050605 100%);
         opacity: 0;
         pointer-events: none;
         transition: opacity 220ms ease;
@@ -450,17 +477,18 @@
         display: flex;
         align-items: center;
         gap: 14px;
-        padding: 14px 18px;
+        padding: 16px clamp(16px, 3vw, 36px);
         border-bottom: 1px solid var(--line);
-        background: rgba(8, 9, 7, 0.94);
+        background: rgba(5, 6, 5, 0.82);
+        backdrop-filter: blur(18px);
       }
 
       .chat-close {
-        width: 42px;
-        height: 42px;
+        width: 46px;
+        height: 46px;
         border: 1px solid var(--line);
-        border-radius: 0;
-        background: transparent;
+        border-radius: 6px;
+        background: rgba(251, 246, 236, 0.035);
         color: var(--ink);
         font-size: 18px;
         font-weight: 950;
@@ -473,33 +501,298 @@
 
       .chat-close:hover {
         border-color: var(--line-strong);
+        background: rgba(251, 246, 236, 0.07);
       }
 
       .chat-header-title {
-        font-size: 14px;
-        font-weight: 850;
-        letter-spacing: -0.02em;
-        color: var(--muted);
+        color: var(--ink);
+        font-size: clamp(18px, 2.2vw, 28px);
+        font-weight: 950;
+        letter-spacing: 0;
       }
 
       /* Chat body (scrollable) */
       .chat-body {
         flex: 1 1 0;
+        min-height: 0;
         overflow-y: auto;
-        padding: 20px 16px 20px;
+        width: min(1040px, 100%);
+        margin: 0 auto;
+        padding: 28px 18px 140px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 18px;
         -webkit-overflow-scrolling: touch;
-        scroll-padding-bottom: 96px;
+        scroll-padding-bottom: 160px;
+      }
+
+      .route-board {
+        position: relative;
+        align-self: flex-start;
+        width: min(940px, 100%);
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(143, 217, 182, 0.08), transparent 36%),
+          linear-gradient(315deg, rgba(224, 168, 207, 0.09), transparent 42%),
+          rgba(13, 16, 12, 0.94);
+        box-shadow: var(--shadow);
+        overflow: visible;
+        animation: bubbleIn 300ms ease both;
+      }
+
+      .route-board::before {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border: 1px solid rgba(251, 246, 236, 0.055);
+        border-radius: 6px;
+        pointer-events: none;
+      }
+
+      .route-link-svg {
+        display: none;
+      }
+
+      .route-link-svg path {
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-dasharray: 7 8;
+      }
+
+      .route-link-svg circle {
+        fill: var(--signal);
+        stroke: rgba(7, 8, 7, 0.92);
+        stroke-width: 1.2;
+      }
+
+      .route-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .route-stop {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(150px, 34%) 1fr;
+        min-height: 196px;
+        border: 1px solid rgba(251, 246, 236, 0.16);
+        border-radius: 8px;
+        overflow: hidden;
+        background: rgba(5, 6, 5, 0.86);
+        color: var(--ink);
+        cursor: default;
+        box-shadow: 0 18px 46px rgba(0, 0, 0, 0.32);
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease;
+      }
+
+      .route-stop[data-clickable="true"] {
+        cursor: pointer;
+      }
+
+      .route-stop:hover {
+        transform: translateY(-3px);
+        border-color: rgba(240, 197, 109, 0.52);
+      }
+
+      .route-stop-media {
+        position: relative;
+        min-height: 196px;
+        overflow: hidden;
+        background: var(--panel-2);
+      }
+
+      .route-stop-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(1.08) contrast(1.05);
+      }
+
+      .route-stop-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 35%, rgba(5, 6, 5, 0.7));
+      }
+
+      .route-step-number {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        display: inline-grid;
+        place-items: center;
+        min-width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--signal);
+        color: #11140f;
+        font-size: 12px;
+        font-weight: 950;
+        z-index: 2;
+      }
+
+      .route-stop-body {
+        display: grid;
+        align-content: start;
+        gap: 10px;
+        padding: 18px;
+      }
+
+      .route-stop-kicker {
+        color: var(--mint);
+        font-size: 10px;
+        font-weight: 950;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .route-stop-title {
+        margin: 0;
+        color: var(--ink);
+        font-size: clamp(20px, 2.4vw, 28px);
+        line-height: 1.04;
+        font-weight: 950;
+      }
+
+      .route-stop-copy {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+        font-weight: 650;
+      }
+
+      .route-hop {
+        align-self: end;
+        justify-self: start;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        color: var(--signal);
+        background: transparent;
+        font-size: 10px;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        text-align: left;
+        text-decoration: none;
+        text-underline-offset: 4px;
+      }
+
+      .route-hop:hover {
+        text-decoration: underline;
+      }
+
+      .route-actions,
+      .detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 4px;
+      }
+
+      .route-action,
+      .detail-action {
+        min-height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        text-decoration: none;
+        text-underline-offset: 4px;
+      }
+
+      .route-action.primary,
+      .detail-action.primary {
+        color: var(--signal);
+      }
+
+      .route-action:hover,
+      .detail-action:hover {
+        text-decoration: underline;
+      }
+
+      .detail-card {
+        align-self: flex-start;
+        width: min(820px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background:
+          linear-gradient(145deg, rgba(240, 197, 109, 0.08), transparent 38%),
+          rgba(13, 16, 12, 0.96);
+        box-shadow: var(--shadow);
+        animation: bubbleIn 260ms ease both;
+      }
+
+      .detail-card-media {
+        height: clamp(180px, 26vw, 280px);
+        background: var(--panel-2);
+      }
+
+      .detail-card-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(1.08) contrast(1.04);
+      }
+
+      .detail-card-body {
+        display: grid;
+        gap: 10px;
+        padding: 18px 20px 20px;
+      }
+
+      .detail-kicker {
+        color: var(--mint);
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .detail-title {
+        margin: 0;
+        color: var(--ink);
+        font-size: clamp(24px, 3vw, 34px);
+        line-height: 1.04;
+        font-weight: 950;
+      }
+
+      .detail-copy {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+        font-weight: 650;
       }
 
       /* Bubbles */
       .bubble {
-        max-width: 85%;
-        padding: 14px 16px;
+        max-width: min(720px, 92%);
+        padding: 16px 18px;
         font-size: 16px;
-        line-height: 1.45;
+        line-height: 1.5;
         animation: bubbleIn 260ms ease both;
       }
 
@@ -516,25 +809,29 @@
 
       .bubble.user {
         align-self: flex-end;
-        max-width: 78%;
+        max-width: min(560px, 86%);
         background: linear-gradient(
           135deg,
-          #e4bd78 0%,
-          #f2ddb0 42%,
+          var(--signal) 0%,
+          #f7df9f 46%,
           var(--rose) 100%
         );
         color: #151311;
-        font-weight: 750;
-        border-radius: 2px 0 0 0;
+        font-weight: 850;
+        border-radius: 8px 8px 2px 8px;
+        box-shadow: 0 16px 40px rgba(240, 197, 109, 0.12);
       }
 
       .bubble.ai {
         align-self: flex-start;
-        background: var(--panel);
+        background:
+          linear-gradient(180deg, rgba(251, 246, 236, 0.055), transparent),
+          rgba(17, 20, 15, 0.92);
         color: var(--ink);
         border: 1px solid var(--line);
         font-weight: 650;
-        border-radius: 0;
+        border-radius: 8px 8px 8px 2px;
+        box-shadow: var(--shadow);
       }
 
       /* Typing indicator */
@@ -542,10 +839,11 @@
         align-self: flex-start;
         display: flex;
         align-items: center;
-        gap: 4px;
-        padding: 14px 18px;
-        background: var(--panel);
+        gap: 5px;
+        padding: 15px 18px;
+        background: rgba(17, 20, 15, 0.92);
         border: 1px solid var(--line);
+        border-radius: 8px 8px 8px 2px;
         animation: bubbleIn 200ms ease both;
       }
 
@@ -553,7 +851,7 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: var(--dim);
+        background: var(--signal);
         animation: dotPulse 1.1s ease-in-out infinite;
       }
 
@@ -577,35 +875,66 @@
       /* Location card */
       .loc-card {
         align-self: flex-start;
-        width: min(560px, 100%);
+        width: min(720px, 100%);
         border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(17, 20, 15, 0.92);
         overflow: hidden;
         animation: bubbleIn 300ms ease both;
         position: relative;
+        box-shadow: var(--shadow);
       }
 
       .loc-card.hot {
-        border-left: 3px solid var(--signal);
+        border-color: rgba(240, 197, 109, 0.48);
+      }
+
+      .loc-card.hot::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        background: linear-gradient(var(--signal), var(--mint), var(--rose));
+        z-index: 2;
       }
 
       .loc-card picture,
       .loc-card img {
         display: block;
         width: 100%;
-        height: 160px;
+      }
+
+      .loc-card picture {
+        height: clamp(190px, 27vw, 300px);
+        background: var(--panel-2);
+      }
+
+      .loc-card img {
+        height: 100%;
         object-fit: cover;
+        filter: saturate(1.08) contrast(1.04);
       }
 
       .loc-card-body {
-        padding: 14px 16px 18px;
+        position: relative;
+        display: grid;
+        gap: 8px;
+        padding: 18px 20px 20px;
+        background:
+          linear-gradient(90deg, rgba(143, 217, 182, 0.055), transparent 44%),
+          rgba(12, 14, 11, 0.94);
       }
 
       .loc-card-hot {
-        display: inline-block;
+        justify-self: start;
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
         padding: 4px 10px;
-        margin-bottom: 10px;
+        margin-bottom: 2px;
         border: 1px solid rgba(231, 201, 142, 0.3);
-        background: rgba(231, 201, 142, 0.08);
+        border-radius: 999px;
+        background: rgba(240, 197, 109, 0.1);
         color: var(--signal);
         font-size: 10px;
         font-weight: 950;
@@ -614,70 +943,77 @@
       }
 
       .loc-card-tags {
-        color: var(--signal);
+        color: var(--mint);
         font-size: 11px;
         font-weight: 950;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        margin-bottom: 8px;
+        margin-bottom: 0;
       }
 
       .loc-card-name {
-        font-size: 20px;
+        color: var(--ink);
+        font-size: clamp(24px, 4vw, 38px);
         font-weight: 950;
-        letter-spacing: -0.04em;
-        line-height: 1.1;
-        margin-bottom: 8px;
+        letter-spacing: 0;
+        line-height: 0.98;
+        margin-bottom: 0;
       }
 
       .loc-card-vibe {
         color: var(--muted);
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 650;
-        line-height: 1.4;
+        line-height: 1.48;
+        max-width: 60ch;
       }
 
       /* Connecting track */
       .track {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
         align-items: center;
-        gap: 0;
-        padding: 2px 0;
+        gap: 12px;
+        padding: 2px 14px;
         align-self: flex-start;
-        width: min(560px, 100%);
+        width: min(720px, 100%);
         animation: bubbleIn 240ms ease both;
       }
 
       .track-line {
-        width: 2px;
-        height: 18px;
+        width: 100%;
+        height: 1px;
         background: repeating-linear-gradient(
-          to bottom,
-          rgba(231, 201, 142, 0.4) 0px,
-          rgba(231, 201, 142, 0.4) 4px,
-          transparent 4px,
-          transparent 8px
+          to right,
+          rgba(240, 197, 109, 0.5) 0px,
+          rgba(240, 197, 109, 0.5) 6px,
+          transparent 6px,
+          transparent 12px
         );
       }
 
       .track-label {
-        padding: 4px 12px;
+        padding: 7px 12px;
+        border: 1px solid rgba(251, 246, 236, 0.1);
+        border-radius: 999px;
+        background: rgba(251, 246, 236, 0.045);
         font-size: 11px;
-        font-weight: 850;
+        font-weight: 950;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--dim);
+        color: var(--muted);
+        white-space: nowrap;
       }
 
       /* Quick action pills */
       .pills {
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
-        overflow-x: auto;
-        width: min(560px, 100%);
+        overflow: visible;
+        width: min(820px, 100%);
         align-self: flex-start;
-        padding-bottom: 4px;
+        padding: 2px 0 8px;
         -webkit-overflow-scrolling: touch;
         animation: bubbleIn 200ms ease both;
       }
@@ -687,26 +1023,31 @@
       }
 
       .pill {
-        flex: 0 0 auto;
-        padding: 10px 16px;
+        flex: 0 1 auto;
+        max-width: 100%;
+        padding: 11px 16px;
         border: 1px solid var(--line);
-        border-radius: 100px;
-        background: transparent;
+        border-radius: 999px;
+        background: rgba(251, 246, 236, 0.035);
         color: var(--muted);
         font-size: 12px;
         font-weight: 850;
-        letter-spacing: -0.01em;
+        letter-spacing: 0;
         cursor: pointer;
-        white-space: nowrap;
+        white-space: normal;
+        text-align: left;
+        line-height: 1.2;
         transition:
           border-color 180ms ease,
-          color 180ms ease;
+          color 180ms ease,
+          background 180ms ease;
       }
 
       .pill:hover,
       .pill:active {
         border-color: var(--signal);
         color: var(--ink);
+        background: rgba(240, 197, 109, 0.08);
       }
 
       .pill.tapped {
@@ -719,36 +1060,41 @@
         flex: 0 0 auto;
         display: flex;
         gap: 8px;
-        padding: 12px 16px;
-        border-top: 1px solid var(--line);
-        background: rgba(8, 9, 7, 0.96);
-        position: sticky;
-        bottom: 0;
-        z-index: 2;
+        width: min(1040px, calc(100% - 32px));
+        margin: 0 auto max(16px, env(safe-area-inset-bottom));
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(10, 13, 10, 0.92);
+        box-shadow: var(--shadow);
+        position: relative;
+        z-index: 4;
       }
 
       .chat-input-bar input {
         flex: 1;
-        min-height: 48px;
+        min-height: 54px;
         font-size: 15px;
+        border-color: transparent;
+        background: rgba(251, 246, 236, 0.04);
       }
 
       .chat-send {
         flex: 0 0 auto;
-        min-height: 48px;
-        padding: 0 20px;
+        min-height: 54px;
+        padding: 0 24px;
         border: 1px solid transparent;
-        border-radius: 0;
+        border-radius: 6px;
         background: linear-gradient(
           135deg,
-          #e4bd78 0%,
-          #f2ddb0 42%,
+          var(--signal) 0%,
+          #f7df9f 42%,
           var(--rose) 100%
         );
         color: #10110e;
         font-weight: 950;
         font-size: 14px;
-        letter-spacing: -0.02em;
+        letter-spacing: 0;
         cursor: pointer;
         transition: transform 180ms ease;
       }
@@ -782,22 +1128,45 @@
         }
 
         .chat-body {
-          padding: 28px 24px;
+          padding: 38px 32px 150px;
         }
         .chat-input-bar {
-          padding: 14px 24px;
+          margin-bottom: 22px;
         }
         .bubble,
         .loc-card {
-          max-width: 520px;
+          max-width: 720px;
         }
         .track,
         .pills,
         .see-route-card {
-          max-width: 520px;
+          max-width: 720px;
+        }
+        .route-board {
+          max-width: 940px;
         }
         .bubble.user {
-          max-width: 420px;
+          max-width: 560px;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .route-board {
+          padding: 12px;
+        }
+        .route-grid {
+          grid-template-columns: 1fr;
+        }
+        .route-stop {
+          grid-template-columns: 1fr;
+          min-height: 0;
+        }
+        .route-stop-media {
+          min-height: 170px;
+        }
+        .chat-input-bar {
+          width: min(920px, calc(100% - 20px));
+          margin-bottom: 10px;
         }
       }
 
@@ -851,23 +1220,26 @@
         justify-content: center;
         gap: 8px;
         align-self: flex-start;
-        width: min(560px, 100%);
-        padding: 14px;
-        background: var(--panel-2);
-        border: 1px dashed var(--signal);
-        color: var(--signal);
+        width: min(720px, 100%);
+        padding: 16px;
+        background:
+          linear-gradient(135deg, rgba(240, 197, 109, 0.16), transparent 52%),
+          var(--panel-2);
+        border: 1px solid rgba(240, 197, 109, 0.46);
+        border-radius: 8px;
+        color: var(--ink);
         font-size: 13px;
-        font-weight: bold;
+        font-weight: 950;
         cursor: pointer;
         margin: 8px 0;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.08em;
         animation: bubbleIn 240ms ease both;
         transition: all 0.2s ease;
       }
       .see-route-card:hover {
-        background: var(--panel);
-        border-style: solid;
+        border-color: var(--signal);
+        transform: translateY(-1px);
       }
       /* Leaflet Dark Customizations */
       .leaflet-bar {
@@ -1043,11 +1415,6 @@
             Dinner, an experience, and a backup spot — all connected and timed.
           </p>
         </button>
-        <button class="module" data-action="tickets">
-          <small>Tickets</small>
-          <strong>Lock in the good seats</strong>
-          <p>Events, shows, and screenings with availability right now.</p>
-        </button>
         <button class="module" data-action="crew">
           <small>Group plan</small>
           <strong>Get everyone to say yes</strong>
@@ -1117,6 +1484,10 @@
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
         planEngineUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine",
+        discoverLiveUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-live",
+        placeDetailUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
       };
 
       /* ── Preferences retrieval ── */
@@ -1155,7 +1526,7 @@
       }
 
       name = name || "Preview User";
-      city = city || "Toronto";
+      city = city || "Ontario";
       vibes = vibes ? vibes.split(",") : [];
       budget = budget || "$";
       energy = energy || "chill";
@@ -1304,7 +1675,7 @@
 
       // Customize Grid Cards based on onboarding preferences
       const cards = document.querySelectorAll(".grid .module");
-      if (cards.length >= 4) {
+      if (cards.length >= 3) {
         // Card 1: Nearby
         const nearbyStrong = cards[0].querySelector("strong");
         const nearbyP = cards[0].querySelector("p");
@@ -1326,22 +1697,8 @@
           }
         }
 
-        // Card 3: Tickets
-        const ticketsStrong = cards[2].querySelector("strong");
-        const ticketsP = cards[2].querySelector("p");
-        if (ticketsStrong && ticketsP) {
-          let ticketTopic = "live concerts";
-          if (vibes.includes("Late cinema")) ticketTopic = "cinema screenings";
-          else if (vibes.includes("Sports")) ticketTopic = "sports events";
-          else if (vibes.includes("Art & galleries"))
-            ticketTopic = "gallery exhibitions";
-
-          ticketsStrong.textContent = `Available slots in ${city}`;
-          ticketsP.textContent = `Lock in tickets for nearby ${ticketTopic} that fit your budget.`;
-        }
-
-        // Card 4: Group plan
-        const crewStrong = cards[3].querySelector("strong");
+        // Card 3: Group plan
+        const crewStrong = cards[2].querySelector("strong");
         if (crewStrong) {
           crewStrong.textContent = `Group invite for ${city}`;
         }
@@ -1357,7 +1714,7 @@
           },
           {
             tag: "Patio",
-            text: "Kensington Market tests weekend pedestrian-only zones",
+            text: "Kensington Market tests pedestrian-only zones",
             img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80",
           },
           {
@@ -1384,7 +1741,7 @@
         Vancouver: [
           {
             tag: "Beach",
-            text: "Kitsilano beach bonfire permits extended for summer weekends",
+            text: "Kitsilano beach bonfire permits extended for summer",
             img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80",
           },
           {
@@ -1860,19 +2217,27 @@
       function addSeeRouteButton(stops) {
         const card = document.createElement("div");
         card.className = "see-route-card";
-        card.innerHTML = "🗺️ See Route on Map";
+        card.innerHTML = "<span>View Route Map</span>";
         card.addEventListener("click", () => {
+          const mapStops = activeRouteStops.length ? activeRouteStops : stops;
           mapOverlay.classList.add("open");
           // Initialize map after overlay opens and has physical dimensions
           setTimeout(() => {
-            const midIndex = Math.floor(stops.length / 2);
-            EchooMap.init("map-container", stops[midIndex].coords);
-            EchooMap.drawRoute(stops);
+            const midIndex = Math.floor(mapStops.length / 2);
+            EchooMap.init("map-container", mapStops[midIndex].coords);
+            EchooMap.drawRoute(mapStops);
           }, 450);
         });
         chatBody.appendChild(card);
         scrollChat();
       }
+
+      function openExternalListing(url) {
+        if (!url) return;
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+
+      let activeRouteStops = [];
 
       // Close map overlay handler
       mapClose.addEventListener("click", () => {
@@ -1950,6 +2315,30 @@
         if (el) el.remove();
       }
 
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function routeTravelLabel(index, usePreciseBase, isSelectedStart = false) {
+        if (index === 0) return isSelectedStart ? "Starting here" : "Start here";
+        const minutes = usePreciseBase ? index * 5 + 3 : index * 6 + 4;
+        const distance = usePreciseBase ? index * 350 + 150 : index * 450 + 200;
+        return `Start from here · ${minutes} min · ${distance}m walk`;
+      }
+
+      function rotateStops(stops, startIndex) {
+        const safeIndex = Math.max(
+          0,
+          Math.min(Number(startIndex) || 0, stops.length - 1),
+        );
+        return stops.slice(safeIndex).concat(stops.slice(0, safeIndex));
+      }
+
       function addLocationCard(
         img,
         imgWebp,
@@ -1961,10 +2350,11 @@
       ) {
         const card = document.createElement("div");
         card.className = hot ? "loc-card hot" : "loc-card";
+        const isExternal = /^https?:\/\//i.test(String(detailId || ""));
         if (detailId) {
           card.dataset.detailId = detailId;
           card.style.cursor = "pointer";
-          card.title = "Open event details";
+          card.title = isExternal ? "Open live listing" : "Open event details";
         }
         const hotBadge = hot
           ? '<div class="loc-card-hot">Trending now</div>'
@@ -1979,14 +2369,225 @@
             <div class="loc-card-tags">${tags}</div>
             <div class="loc-card-name">${placeName}</div>
             <div class="loc-card-vibe">${vibe}</div>
-            ${detailId ? '<div class="loc-card-tags" style="margin-top:8px;">Open details and tickets</div>' : ""}
+            ${detailId ? `<div class="loc-card-tags" style="margin-top:8px;">${isExternal ? "Open live listing" : "Open details"}</div>` : ""}
           </div>`;
         if (detailId) {
           card.addEventListener("click", () => {
-            window.location.href = `event.html?id=${encodeURIComponent(detailId)}`;
+            window.location.href = isExternal
+              ? detailId
+              : `event.html?id=${encodeURIComponent(detailId)}`;
           });
         }
         chatBody.appendChild(card);
+        scrollChat();
+      }
+
+      async function addPlaceDetailBubble(placeId) {
+        if (!placeId) return;
+        const loading = addBubble("ai", "Opening verified place details...");
+        try {
+          const headers = window.EchooAuth
+            ? await window.EchooAuth.authHeaders({
+                "Content-Type": "application/json",
+              })
+            : {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                apikey: CONFIG.supabaseAnonKey,
+              };
+          const response = await fetch(
+            `${CONFIG.placeDetailUrl}?id=${encodeURIComponent(placeId)}`,
+            { headers },
+          );
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(payload?.error || "Place detail failed");
+          }
+          const detail = payload?.data || {};
+          const place = detail.place || {};
+          const profile = detail.profile || {};
+          const sources = Array.isArray(detail.sources) ? detail.sources : [];
+          const sourceNames = sources
+            .map((source) => source.source_name)
+            .filter(Boolean)
+            .slice(0, 2)
+            .join(", ");
+          if (loading) loading.remove();
+          addDetailCard({
+            title: place.name || place.formatted_address || "Verified place",
+            kicker: [place.category || "Place", place.municipality || place.city || "Ontario"]
+              .filter(Boolean)
+              .join(" · "),
+            copy:
+              profile.summary ||
+              place.metadata?.description ||
+              "Echoo has this as a verified Ontario place record.",
+            meta: sourceNames ? `Source: ${sourceNames}` : "Verified place record",
+            image: "assets/optimized/news-date-768.jpg",
+          });
+        } catch (error) {
+          console.warn("Echoo: place detail failed.", error);
+          if (loading) {
+            loading.textContent =
+              "This is a verified Ontario place stop, but Echoo could not open its detail panel yet.";
+          }
+        }
+        scrollChat();
+      }
+
+      function addDetailCard({ title, kicker, copy, meta, image, url }) {
+        const card = document.createElement("article");
+        card.className = "detail-card";
+        const imageUrl = image || "assets/optimized/news-music-768.jpg";
+        card.innerHTML = `
+          <div class="detail-card-media">
+            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" loading="lazy" decoding="async">
+          </div>
+          <div class="detail-card-body">
+            <div class="detail-kicker">${escapeHtml(kicker || "Echoo detail")}</div>
+            <h3 class="detail-title">${escapeHtml(title || "Untitled stop")}</h3>
+            <p class="detail-copy">${escapeHtml(copy || "A matched stop from Echoo's current results.")}</p>
+            ${meta ? `<p class="detail-copy">${escapeHtml(meta)}</p>` : ""}
+            <div class="detail-actions">
+              ${url ? `<button class="detail-action primary" type="button" data-url="${escapeHtml(url)}">Open listing</button>` : ""}
+            </div>
+          </div>`;
+        const openButton = card.querySelector("[data-url]");
+        if (openButton) {
+          openButton.addEventListener("click", () =>
+            openExternalListing(openButton.dataset.url || ""),
+          );
+        }
+        chatBody.appendChild(card);
+        scrollChat();
+      }
+
+      let routeBoardSequence = 0;
+      function addRouteBoard(stops, usePreciseBase, replaceNode = null) {
+        if (!Array.isArray(stops) || !stops.length) return;
+        activeRouteStops = stops.slice();
+        routeBoardSequence += 1;
+        const gradientId = `routeLineGradient-${routeBoardSequence}`;
+        const count = stops.length;
+        const points = stops.map((_, index) => {
+          const x = count === 1 ? 50 : 10 + (index * 80) / (count - 1);
+          const y = index % 2 === 0 ? 34 : 66;
+          return { x, y };
+        });
+        const path = points
+          .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+          .join(" ");
+        const markers = points
+          .map((point) => `<circle cx="${point.x}" cy="${point.y}" r="2.7"></circle>`)
+          .join("");
+        const cards = stops
+          .map((stop, index) => {
+            const detailId = String(stop.detailId || "");
+            const isExternal = /^https?:\/\//i.test(detailId);
+            const clickable = Boolean(detailId);
+            const detailType = stop.detailType || (isExternal ? "external" : "event");
+            const timing = stop.timing ? ` ${stop.timing}` : "";
+            const vibe = `${stop.vibe || "A matched stop for this plan."}${timing}`;
+            const isSelectedStart = stop.selectedStart === true;
+            return `
+              <article
+                class="route-stop"
+                data-clickable="${clickable ? "true" : "false"}"
+                data-stop-index="${index}"
+                data-detail-id="${escapeHtml(detailId)}"
+                data-external="${isExternal ? "true" : "false"}"
+                data-detail-type="${escapeHtml(detailType)}"
+                title="${clickable ? escapeHtml(detailType === "place" ? "Open place details" : isExternal ? "Open live listing" : "Open event details") : ""}"
+              >
+                <div class="route-stop-media">
+                  <img src="${escapeHtml(stop.img || "assets/optimized/news-music-768.jpg")}" alt="${escapeHtml(stop.name)}" loading="lazy" decoding="async">
+                  <span class="route-step-number">${index + 1}</span>
+                </div>
+                <div class="route-stop-body">
+                  <div class="route-stop-kicker">${escapeHtml(`${stop.tags || "Echoo"} · ${budget}`)}</div>
+                  <h3 class="route-stop-title">${escapeHtml(stop.name)}</h3>
+                  <p class="route-stop-copy">${escapeHtml(vibe)}</p>
+                  <button class="route-hop" type="button" data-route-action="start">${escapeHtml(routeTravelLabel(index, usePreciseBase, isSelectedStart))}</button>
+                  <div class="route-actions">
+                    <button class="route-action primary" type="button" data-route-action="details">${escapeHtml(detailType === "external" ? "Preview" : "Details")}</button>
+                    ${isExternal ? '<button class="route-action" type="button" data-route-action="open">Open listing</button>' : ""}
+                  </div>
+                </div>
+              </article>`;
+          })
+          .join("");
+
+        const board = document.createElement("div");
+        board.className = "route-board";
+        board.innerHTML = `
+          <svg class="route-link-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="var(--signal)"></stop>
+                <stop offset="52%" stop-color="var(--mint)"></stop>
+                <stop offset="100%" stop-color="var(--rose)"></stop>
+              </linearGradient>
+            </defs>
+            <path d="${path}" stroke="url(#${gradientId})"></path>
+            ${markers}
+          </svg>
+          <div class="route-grid">${cards}</div>`;
+
+        board.querySelectorAll(".route-stop").forEach((card) => {
+          card.addEventListener("click", (event) => {
+            const detailId = card.dataset.detailId;
+            const stopIndex = Number(card.dataset.stopIndex) || 0;
+            const stop = stops[stopIndex] || {};
+            const routeAction = event.target.closest("[data-route-action]");
+            if (routeAction?.dataset.routeAction === "start") {
+              const reordered = rotateStops(stops, stopIndex).map((item, index) => ({
+                ...item,
+                selectedStart: index === 0,
+              }));
+              activeRouteStops = reordered;
+              addRouteBoard(reordered, usePreciseBase, board);
+              addBubble(
+                "ai",
+                `Route updated to start at ${stop.name || "that stop"}. I reordered the linked stops from there.`,
+              );
+              return;
+            }
+            if (!detailId) return;
+            if (routeAction?.dataset.routeAction === "open") {
+              openExternalListing(detailId);
+              return;
+            }
+            if (card.dataset.detailType === "place") {
+              addPlaceDetailBubble(detailId);
+              return;
+            }
+            if (card.dataset.external === "true") {
+              addDetailCard({
+                title: stop.name || "Live listing",
+                kicker: stop.tags || "Ticketmaster live event",
+                copy: stop.vibe || "Echoo found this live listing for the current plan.",
+                meta: stop.timing || "Open the listing only when you want to leave Echoo.",
+                image: stop.img,
+                url: detailId,
+              });
+              return;
+            }
+            addDetailCard({
+              title: stop.name || "Event detail",
+              kicker: stop.tags || "Echoo event",
+              copy: stop.vibe || "Echoo found this event for the current plan.",
+              meta: stop.timing || "",
+              image: stop.img,
+              url: `event.html?id=${encodeURIComponent(detailId)}`,
+            });
+          });
+        });
+        if (replaceNode) {
+          chatBody.insertBefore(board, replaceNode);
+          replaceNode.remove();
+        } else {
+          chatBody.appendChild(board);
+        }
         scrollChat();
       }
 
@@ -2059,6 +2660,18 @@
       let lastPlanEnginePayload = null;
 
       function planRequestBody(limit, queryText, mode = "build_plan") {
+        if (mode === "chat") {
+          return {
+            query: queryText,
+            mode: "chat",
+            previousPlan: lastPlanEnginePayload
+              ? {
+                  ai: lastPlanEnginePayload.ai,
+                  summary: lastPlanEnginePayload.summary,
+                }
+              : null,
+          };
+        }
         const base = {
           query: queryText,
           mode,
@@ -2089,21 +2702,152 @@
           : { ...base, city };
       }
 
+      const DISCOVERY_CITY_NAMES = [
+        "Toronto",
+        "Markham",
+        "Vancouver",
+        "Montreal",
+        "Calgary",
+        "Edmonton",
+        "Ottawa",
+        "Mississauga",
+        "Brampton",
+        "Scarborough",
+        "North York",
+        "Richmond Hill",
+        "Hamilton",
+        "Waterloo",
+        "Kitchener",
+        "London",
+        "Thunder Bay",
+        "Winnipeg",
+        "Halifax",
+        "Victoria",
+        "Quebec City",
+      ];
+
+      const LIVE_DISCOVERY_PATTERN =
+        /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|tonight|today|tomorrow|this week|weekend|near me|around me|things to do|bored|meet people|newcomer|networking|nightlife|food|restaurant|restaurants|bar|bars|cafe|coffee|brunch|dinner|date night|places?|activities?)\b/i;
+
+      function cityFromQuery(queryText = "") {
+        return (
+          DISCOVERY_CITY_NAMES.find((cityName) => {
+            const pattern = new RegExp(
+              `\\b${cityName.replace(/\s+/g, "\\s+")}\\b`,
+              "i",
+            );
+            return pattern.test(queryText);
+          }) || ""
+        );
+      }
+
+      function isOntarioPlannerQuery(queryText = "") {
+        const cityName = cityFromQuery(queryText) || city;
+        const hasOntarioCity =
+          /^(Toronto|Markham|Scarborough|North York|Vaughan|Richmond Hill|Mississauga|Brampton|Oakville|Burlington|Hamilton|Ottawa|Waterloo|Kitchener|London|Niagara Falls|Kingston|Guelph|Barrie|Windsor|Thunder Bay)$/i.test(
+            cityName || "",
+          ) || /\bontario\b/i.test(queryText || "");
+        const wantsPlan =
+          /\b(plan|route|lunch|dinner|restaurant|restaurants|cafe|coffee|date|park|museum|gallery|culture|things to do|activity|activities|bar|pub|mall)\b/i.test(
+            queryText || "",
+          );
+        const wantsLive =
+          /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|tonight|today|tomorrow|this week|weekend)\b/i.test(
+            queryText || "",
+          );
+        return hasOntarioCity && wantsPlan && !wantsLive;
+      }
+
+      function shouldUseLiveDiscovery(queryText, mode = "build_plan") {
+        if (isOntarioPlannerQuery(queryText)) return false;
+        if (mode !== "chat") return true;
+        return (
+          LIVE_DISCOVERY_PATTERN.test(queryText || "") ||
+          Boolean(cityFromQuery(queryText))
+        );
+      }
+
+      function liveDiscoveryRequestBody(limit, queryText) {
+        const queryCity = cityFromQuery(queryText);
+        const base = {
+          query: queryText,
+          limit,
+          profile: {
+            ...personalizationProfile,
+            budget,
+            energy,
+          },
+        };
+        const resolved =
+          Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
+            ? window.EchooLocationPlatform.resolveCoordinates(
+                preciseLat,
+                preciseLng,
+              )
+            : null;
+        return resolved?.supported
+          ? {
+              ...base,
+              lat: preciseLat,
+              lng: preciseLng,
+              city: queryCity || resolved.city || city,
+            }
+          : { ...base, city: queryCity || city };
+      }
+
       function mapPlanStops(payload) {
-        if (!payload?.supported || !Array.isArray(payload.plans)) return [];
-        return payload.plans
-          .map((item) => ({
-            detailId: item.entityId || item.id,
-            name: item.title,
-            tags: `${item.category || "Echoo"} · ${item.distanceMeters ? Math.max(1, Math.round(item.distanceMeters / 1000)) + " km away" : item.city || city}`,
-            coords: [item.latitude, item.longitude],
-            img: item.imageUrl || "assets/optimized/news-music-768.jpg",
-            vibe:
-              item.why ||
-              item.description ||
-              "Matched to your current location, time, and preferences.",
-            timing: item.timing || "",
-          }))
+        if (!payload?.supported) return [];
+        const items = Array.isArray(payload.recommendations)
+          ? payload.recommendations
+          : Array.isArray(payload.plans)
+            ? payload.plans
+            : [];
+        return items
+          .map((item) => {
+            const actionUrl = item.actionUrl || item.action_url || "";
+            const isExternal = /^https?:\/\//i.test(String(actionUrl));
+            const isOntarioPlace =
+              Boolean(item.placeId || item.place_id) ||
+              payload?.ai?.provider === "echoo-retrieval" ||
+              payload?.mode === "ontario_plan";
+            const isEvent =
+              !isOntarioPlace &&
+              (item.type === "event" || item.entityType === "event" || item.startsAt);
+            const detailType = isExternal ? "external" : isOntarioPlace ? "place" : isEvent ? "event" : "";
+            return {
+              detailId:
+                actionUrl ||
+                item.placeId ||
+                item.place_id ||
+                item.entityId ||
+                item.id ||
+                "",
+              detailType,
+              name: item.title,
+              tags: `${item.category || item.type || "Echoo"} · ${item.distanceMeters || item.distance_meters ? Math.max(1, Math.round((item.distanceMeters || item.distance_meters) / 1000)) + " km away" : item.city || city}`,
+              coords: [item.latitude, item.longitude],
+              img:
+                item.imageUrl ||
+                item.image_url ||
+                "assets/optimized/news-music-768.jpg",
+              vibe:
+                item.reason ||
+                item.why ||
+                item.description ||
+                item.vibe ||
+                "A real nearby option Echoo found for this moment.",
+              timing:
+                item.timing ||
+                (item.startsAt
+                  ? new Date(item.startsAt).toLocaleString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })
+                  : ""),
+            };
+          })
           .filter(
             (item) =>
               Number.isFinite(item.coords[0]) &&
@@ -2113,26 +2857,40 @@
 
       async function requestSmartPlan(limit, queryText, mode = "build_plan") {
         try {
-          const authState = await authGate;
-          if (authState && authState.ok === false)
+          const useLiveDiscovery = shouldUseLiveDiscovery(queryText, mode);
+          const authState =
+            useLiveDiscovery || mode === "chat" ? null : await authGate;
+          if (
+            !useLiveDiscovery &&
+            mode !== "chat" &&
+            authState &&
+            authState.ok === false
+          )
             return {
               payload: null,
               stops: [],
               error: "Finish signup and onboarding to use Echoo AI.",
             };
-          const response = await fetch(CONFIG.planEngineUrl, {
-            method: "POST",
-            headers: window.EchooAuth
-              ? await window.EchooAuth.authHeaders({
-                  "Content-Type": "application/json",
-                })
-              : {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
-                  apikey: CONFIG.supabaseAnonKey,
-                },
-            body: JSON.stringify(planRequestBody(limit, queryText, mode)),
-          });
+          const response = await fetch(
+            useLiveDiscovery ? CONFIG.discoverLiveUrl : CONFIG.planEngineUrl,
+            {
+              method: "POST",
+              headers: window.EchooAuth
+                ? await window.EchooAuth.authHeaders({
+                    "Content-Type": "application/json",
+                  })
+                : {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                    apikey: CONFIG.supabaseAnonKey,
+                  },
+              body: JSON.stringify(
+                useLiveDiscovery
+                  ? liveDiscoveryRequestBody(limit, queryText)
+                  : planRequestBody(limit, queryText, mode),
+              ),
+            },
+          );
           const payload = await response.json();
           lastPlanEnginePayload = payload;
           if (!response.ok) {
@@ -2140,8 +2898,10 @@
               payload,
               stops: [],
               error:
-                payload?.error ||
-                "Echoo AI could not answer that cleanly. Try again in a moment.",
+                payload?.code === "ai_unavailable"
+                  ? "Echoo AI could not get a clean Gemini response. Try again in a moment."
+                  : payload?.error ||
+                    "Echoo AI could not answer that cleanly. Try again in a moment.",
             };
           }
           if (payload?.supported === false) {
@@ -2149,7 +2909,7 @@
               payload,
               stops: [],
               error:
-                "Echoo AI needs a Canadian launch city for live planning. I can use Toronto, Vancouver, Montreal, Calgary, Ottawa, or another supported Canadian city.",
+                "Echoo AI needs an Ontario launch location for live planning. I can use Ontario, Toronto, Markham, Mississauga, Ottawa, or another supported Ontario city.",
             };
           }
           if (payload?.ai?.assistantMessage) {
@@ -2236,14 +2996,18 @@
             if (!resolved.supported) {
               preciseLat = undefined;
               preciseLng = undefined;
-              city = resolved.fallbackCity?.name || "Toronto";
+              city = resolved.fallbackRegion?.name || resolved.fallbackCity?.name || "Ontario";
               activityContext = getActivityContext();
               window.EchooLocationPlatform.writeLocationState({
                 city,
                 countryCode: "CA",
+                adminArea1: "ON",
+                province: "Ontario",
                 locationSupported: true,
-                locationPrecision: "manual_city",
+                locationPrecision: "manual_region",
                 locationReason: resolved.reason,
+                lastLat: undefined,
+                lastLng: undefined,
               });
               return;
             }
@@ -2255,6 +3019,8 @@
             window.EchooLocationPlatform.writeLocationState({
               city,
               countryCode: "CA",
+              adminArea1: "ON",
+              province: "Ontario",
               locationSupported: true,
               locationPrecision: "gps",
               lastLat: lat,
@@ -2316,28 +3082,8 @@
         addBubble("ai", ai.assistantMessage);
         await delay(350);
 
-        for (let i = 0; i < preciseStops.length; i++) {
-          const stop = preciseStops[i];
-          addLocationCard(
-            stop.img,
-            stop.img,
-            stop.name,
-            `${stop.tags} · ${budget}`,
-            stop.timing ? `${stop.vibe} ${stop.timing}` : stop.vibe,
-            i === 0,
-            stop.detailId,
-          );
-
-          if (i < preciseStops.length - 1) {
-            await delay(280);
-            const minutes = usePreciseBase ? (i + 1) * 5 + 3 : (i + 1) * 6 + 4;
-            const distance = usePreciseBase
-              ? (i + 1) * 350 + 150
-              : (i + 1) * 450 + 200;
-            addTrack(`${minutes} min · ${distance}m walk`);
-          }
-          await delay(360);
-        }
+        addRouteBoard(preciseStops, usePreciseBase);
+        await delay(360);
 
         const summary = displayAiCopy(planResult.payload?.summary);
         const assistantCopy = displayAiCopy(ai.assistantMessage);
@@ -2537,8 +3283,6 @@
             openChat("what's good and open near me right now");
           } else if (action === "date") {
             openChat("plan a date route worth remembering");
-          } else if (action === "tickets") {
-            openChat("any good shows or events with seats available");
           } else if (action === "crew") {
             openChat("need a plan my friends will actually agree on");
           }

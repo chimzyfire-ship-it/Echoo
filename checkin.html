@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Echoo Check-In</title>
     <style>
       :root {
@@ -15,23 +15,96 @@
         --signal: #8ff0b4;
         --warn: #e7c98e;
         --danger: #ef7777;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
       }
-      * { box-sizing: border-box; }
-      body { margin: 0; min-height: 100vh; color: var(--ink); background: var(--bg); }
-      a { color: inherit; text-decoration: none; }
-      button, input { font: inherit; }
-      main { width: min(760px, 100%); margin: 0 auto; padding: 28px 16px 80px; }
-      header { display: flex; justify-content: space-between; align-items: end; gap: 14px; margin-bottom: 18px; }
-      h1 { margin: 0; font-size: clamp(42px, 13vw, 88px); line-height: 0.88; letter-spacing: -0.075em; }
-      p { color: var(--muted); line-height: 1.45; }
-      .panel, .result {
+      * {
+        box-sizing: border-box;
+      }
+
+      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip; /* modern: clips without breaking position:sticky */
+        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+      }
+      img,
+      video,
+      svg,
+      canvas,
+      iframe,
+      table {
+        max-width: 100%;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      main {
+        width: min(760px, 100%);
+        margin: 0 auto;
+        padding: 28px 16px 80px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(42px, 13vw, 88px);
+        line-height: 0.88;
+        letter-spacing: -0.075em;
+      }
+      p {
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .panel,
+      .result {
         border: 1px solid var(--line);
         background: rgba(17, 19, 15, 0.94);
         padding: 16px;
       }
-      .grid { display: grid; gap: 12px; }
-      label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      label {
+        display: grid;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
       input {
         width: 100%;
         min-height: 58px;
@@ -53,14 +126,38 @@
         cursor: pointer;
         font-weight: 950;
       }
-      .meta { color: var(--muted); font-size: 13px; font-weight: 750; }
-      .result.valid { border-color: rgba(143, 240, 180, 0.65); }
-      .result.already_used, .result.wrong_event { border-color: rgba(231, 201, 142, 0.7); }
-      .result.invalid, .result.error { border-color: rgba(239, 119, 119, 0.72); }
-      .badge { font-size: 32px; font-weight: 950; letter-spacing: -0.06em; }
-      .valid .badge { color: var(--signal); }
-      .already_used .badge, .wrong_event .badge { color: var(--warn); }
-      .invalid .badge, .error .badge { color: var(--danger); }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+      }
+      .result.valid {
+        border-color: rgba(143, 240, 180, 0.65);
+      }
+      .result.already_used,
+      .result.wrong_event {
+        border-color: rgba(231, 201, 142, 0.7);
+      }
+      .result.invalid,
+      .result.error {
+        border-color: rgba(239, 119, 119, 0.72);
+      }
+      .badge {
+        font-size: 32px;
+        font-weight: 950;
+        letter-spacing: -0.06em;
+      }
+      .valid .badge {
+        color: var(--signal);
+      }
+      .already_used .badge,
+      .wrong_event .badge {
+        color: var(--warn);
+      }
+      .invalid .badge,
+      .error .badge {
+        color: var(--danger);
+      }
     </style>
   </head>
   <body>
@@ -69,32 +166,44 @@
         <div>
           <div class="meta">Door check-in</div>
           <h1>Check-In</h1>
-          <p>Enter a display code or QR token. A valid ticket is marked used immediately.</p>
+          <p>
+            Enter a display code or QR token. A valid ticket is marked used
+            immediately.
+          </p>
         </div>
         <a class="meta" id="ops-link" href="owner-events.html">Ops</a>
       </header>
 
       <section class="panel grid">
-        <label>Owner token
-          <input id="admin-token" type="password" autocomplete="off" placeholder="Ticketing admin token">
+        <label
+          >Owner token
+          <input
+            id="admin-token"
+            type="password"
+            autocomplete="off"
+            placeholder="Ticketing admin token"
+          />
         </label>
-        <label>Ticket code
-          <input id="code" autocomplete="off" placeholder="TOR-B3A513AC">
+        <label
+          >Ticket code
+          <input id="code" autocomplete="off" placeholder="TOR-B3A513AC" />
         </label>
-        <label>Operator label
-          <input id="operator" autocomplete="off" placeholder="Door 1">
+        <label
+          >Operator label
+          <input id="operator" autocomplete="off" placeholder="Door 1" />
         </label>
         <button id="check" type="button">Check in ticket</button>
       </section>
 
-      <section id="result" class="result" style="margin-top:14px;">
+      <section id="result" class="result" style="margin-top: 14px">
         <div class="badge">Ready</div>
         <p>Paste or scan a code to validate it.</p>
       </section>
     </main>
     <script>
       const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
-      const ENDPOINT = "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-checkin";
+      const ENDPOINT =
+        "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-checkin";
       const params = new URLSearchParams(window.location.search);
       const eventId = params.get("id");
       const tokenEl = document.getElementById("admin-token");
@@ -102,15 +211,25 @@
       const operatorEl = document.getElementById("operator");
       const resultEl = document.getElementById("result");
 
-      tokenEl.value = localStorage.getItem("echoo_ticketing_admin_token") || localStorage.getItem("echoo_location_admin_token") || "";
+      tokenEl.value =
+        localStorage.getItem("echoo_ticketing_admin_token") ||
+        localStorage.getItem("echoo_location_admin_token") ||
+        "";
       operatorEl.value = localStorage.getItem("echoo_checkin_operator") || "";
-      if (eventId) document.getElementById("ops-link").href = `event-ops.html?id=${eventId}`;
+      if (eventId)
+        document.getElementById("ops-link").href =
+          `event-ops.html?id=${eventId}`;
 
       function headers() {
         const token = tokenEl.value.trim();
         localStorage.setItem("echoo_ticketing_admin_token", token);
         localStorage.setItem("echoo_checkin_operator", operatorEl.value.trim());
-        return { "Content-Type": "application/json", "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "x-admin-token": token };
+        return {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ANON_KEY}`,
+          apikey: ANON_KEY,
+          "x-admin-token": token,
+        };
       }
 
       function show(status, title, copy) {
@@ -121,7 +240,11 @@
       async function checkIn() {
         const code = codeEl.value.trim();
         if (!eventId) {
-          show("error", "Missing Event", "Open check-in from an event operations page.");
+          show(
+            "error",
+            "Missing Event",
+            "Open check-in from an event operations page.",
+          );
           return;
         }
         if (!code) {
@@ -133,21 +256,41 @@
           const response = await fetch(ENDPOINT, {
             method: "POST",
             headers: headers(),
-            body: JSON.stringify({ eventId, code, operatorLabel: operatorEl.value.trim() })
+            body: JSON.stringify({
+              eventId,
+              code,
+              operatorLabel: operatorEl.value.trim(),
+            }),
           });
           const json = await response.json();
-          if (!response.ok && !json.status) throw new Error(json.error || "Check-in failed");
+          if (!response.ok && !json.status)
+            throw new Error(json.error || "Check-in failed");
           const ticket = json.ticket || {};
-          const buyer = ticket.ticket_orders?.buyer_name || ticket.ticket_orders?.buyer_email || "Guest";
+          const buyer =
+            ticket.ticket_orders?.buyer_name ||
+            ticket.ticket_orders?.buyer_email ||
+            "Guest";
           const tier = ticket.ticket_tiers?.name || "Ticket";
           if (json.status === "valid") {
-            show("valid", "Valid", `${buyer} checked in for ${tier}. Code ${ticket.display_code}.`);
+            show(
+              "valid",
+              "Valid",
+              `${buyer} checked in for ${tier}. Code ${ticket.display_code}.`,
+            );
             codeEl.value = "";
             codeEl.focus();
           } else if (json.status === "already_used") {
-            show("already_used", "Already Used", `${buyer} was already checked in. Code ${ticket.display_code}.`);
+            show(
+              "already_used",
+              "Already Used",
+              `${buyer} was already checked in. Code ${ticket.display_code}.`,
+            );
           } else if (json.status === "wrong_event") {
-            show("wrong_event", "Wrong Event", "This ticket exists, but it belongs to another event.");
+            show(
+              "wrong_event",
+              "Wrong Event",
+              "This ticket exists, but it belongs to another event.",
+            );
           } else {
             show("invalid", "Invalid", json.message || "Ticket not found.");
           }

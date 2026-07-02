@@ -32,7 +32,7 @@ async function geocodeWithOpenStreetMap(query: string) {
 
   const response = await fetch(url.toString(), {
     headers: {
-      "Accept": "application/json",
+      Accept: "application/json",
       "User-Agent": "Echoo MVP geocoder (contact: admin@echoo.app)",
     },
   });
@@ -71,13 +71,24 @@ Deno.serve(async (req) => {
     let placeProviderId = payload.placeProviderId || null;
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      const query = [payload.formattedAddress || payload.title, payload.city, "Canada"].filter(Boolean).join(", ");
+      const query = [
+        payload.formattedAddress || payload.title,
+        payload.city,
+        "Canada",
+      ]
+        .filter(Boolean)
+        .join(", ");
       if (query.trim().length > 8) {
         const cacheKey = await sha256Hex(`geocode:v1:${query.toLowerCase()}`);
         const cached = await readLocationCache(supabase, cacheKey);
-        const geocoded = cached || await geocodeWithOpenStreetMap(query);
+        const geocoded = cached || (await geocodeWithOpenStreetMap(query));
         if (geocoded) {
-          await writeLocationCache(supabase, cacheKey, geocoded, 60 * 60 * 24 * 14);
+          await writeLocationCache(
+            supabase,
+            cacheKey,
+            geocoded,
+            60 * 60 * 24 * 14,
+          );
           lat = Number(geocoded.lat);
           lng = Number(geocoded.lng);
           formattedAddress = geocoded.formattedAddress || formattedAddress;
@@ -94,15 +105,23 @@ Deno.serve(async (req) => {
         status: "needs_review",
         durationMs: Date.now() - startedAt,
         reason: "missing_coordinates",
-        request: { title: payload.title, formattedAddress: payload.formattedAddress, city: payload.city },
+        request: {
+          title: payload.title,
+          formattedAddress: payload.formattedAddress,
+          city: payload.city,
+        },
         responseSummary: { locationStatus: "needs_review" },
       });
-      return jsonResponse({
-        supported: false,
-        locationStatus: "needs_review",
-        reason: "missing_coordinates",
-        message: "Coordinates are required before a place can enter map search.",
-      }, 422);
+      return jsonResponse(
+        {
+          supported: false,
+          locationStatus: "needs_review",
+          reason: "missing_coordinates",
+          message:
+            "Coordinates are required before a place can enter map search.",
+        },
+        422,
+      );
     }
 
     if (!isInsideCanadaBounds(lat, lng)) {
@@ -111,44 +130,56 @@ Deno.serve(async (req) => {
         eventType: "unsupported_region",
         status: "blocked",
         durationMs: Date.now() - startedAt,
-        reason: "outside_canada",
+        reason: "outside_ontario",
         request: { title: payload.title, lat, lng, city: payload.city },
         responseSummary: { supported: false },
       });
-      return jsonResponse({
-        supported: false,
-        locationStatus: "needs_review",
-        reason: "outside_canada",
-        message: "Echoo is normalizing and publishing Canadian locations first.",
-      }, 200);
+      return jsonResponse(
+        {
+          supported: false,
+          locationStatus: "needs_review",
+          reason: "outside_ontario",
+          message:
+            "Echoo is normalizing and publishing Ontario locations first.",
+        },
+        200,
+      );
     }
 
     const nearest = nearestSupportedCity(lat, lng);
     const manualCity = normalizeCityName(payload.city);
     const region = manualCity || nearest;
-    const confidenceScore = Math.max(0, Math.min(Number(payload.confidenceScore ?? 0.75), 1));
+    const confidenceScore = Math.max(
+      0,
+      Math.min(Number(payload.confidenceScore ?? 0.75), 1),
+    );
     const isSupportedRegion = true;
-    const locationStatus = confidenceScore >= 0.65 ? "published" : "needs_review";
+    const locationStatus =
+      confidenceScore >= 0.65 ? "published" : "needs_review";
 
-    const upsertOptions = placeProvider && placeProviderId
-      ? { onConflict: "place_provider,place_provider_id" }
-      : {};
+    const upsertOptions =
+      placeProvider && placeProviderId
+        ? { onConflict: "place_provider,place_provider_id" }
+        : {};
     const { data, error } = await supabase
       .from("canonical_places")
-      .upsert({
-        country_code: "CA",
-        admin_area_1: region.province,
-        city: region.name,
-        formatted_address: formattedAddress || `${region.name}, Canada`,
-        latitude: lat,
-        longitude: lng,
-        timezone: region.timezone,
-        place_provider: placeProvider,
-        place_provider_id: placeProviderId,
-        confidence_score: confidenceScore,
-        is_supported_region: isSupportedRegion,
-        location_status: locationStatus,
-      }, upsertOptions)
+      .upsert(
+        {
+          country_code: "CA",
+          admin_area_1: region.province,
+          city: region.name,
+          formatted_address: formattedAddress || `${region.name}, Canada`,
+          latitude: lat,
+          longitude: lng,
+          timezone: region.timezone,
+          place_provider: placeProvider,
+          place_provider_id: placeProviderId,
+          confidence_score: confidenceScore,
+          is_supported_region: isSupportedRegion,
+          location_status: locationStatus,
+        },
+        upsertOptions,
+      )
       .select()
       .single();
 
@@ -161,8 +192,17 @@ Deno.serve(async (req) => {
       countryCode: "CA",
       adminArea1: region.province,
       city: region.name,
-      request: { title: payload.title, city: payload.city, hadCoordinates: Number.isFinite(payload.lat) && Number.isFinite(payload.lng) },
-      responseSummary: { locationStatus, placeId: data.id, provider: placeProvider },
+      request: {
+        title: payload.title,
+        city: payload.city,
+        hadCoordinates:
+          Number.isFinite(payload.lat) && Number.isFinite(payload.lng),
+      },
+      responseSummary: {
+        locationStatus,
+        placeId: data.id,
+        provider: placeProvider,
+      },
     });
 
     return jsonResponse({
@@ -173,7 +213,10 @@ Deno.serve(async (req) => {
       place: data,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown location normalization error";
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Unknown location normalization error";
     return jsonResponse({ error: message }, 500);
   }
 });

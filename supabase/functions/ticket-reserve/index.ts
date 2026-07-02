@@ -1,4 +1,8 @@
-import { CORS_HEADERS, getSupabaseAdmin, jsonResponse } from "../_shared/location.ts";
+import {
+  CORS_HEADERS,
+  getSupabaseAdmin,
+  jsonResponse,
+} from "../_shared/location.ts";
 
 type ReservePayload = {
   eventId?: string;
@@ -15,15 +19,21 @@ function paymentProvider() {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
-  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (req.method === "OPTIONS")
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (req.method !== "POST")
+    return jsonResponse({ error: "Method not allowed" }, 405);
 
   const supabase = getSupabaseAdmin();
 
   try {
-    const body = await req.json().catch(() => ({})) as ReservePayload;
-    const quantity = Math.max(1, Math.min(Math.round(Number(body.quantity || 1)), 10));
-    if (!body.eventId || !body.tierId) return jsonResponse({ error: "eventId and tierId are required." }, 422);
+    const body = (await req.json().catch(() => ({}))) as ReservePayload;
+    const quantity = Math.max(
+      1,
+      Math.min(Math.round(Number(body.quantity || 1)), 10),
+    );
+    if (!body.eventId || !body.tierId)
+      return jsonResponse({ error: "eventId and tierId are required." }, 422);
 
     const { data, error } = await supabase.rpc("reserve_ticket_order", {
       p_event_id: body.eventId,
@@ -55,9 +65,10 @@ Deno.serve(async (req) => {
         status: Number(order.total_cents) === 0 ? "paid" : "not_configured",
         checkoutUrl: null,
         providerReference: null,
-        message: Number(order.total_cents) === 0
-          ? "Free RSVP confirmed."
-          : "Payment provider is not connected yet. Owner/admin can manually confirm this order.",
+        message:
+          Number(order.total_cents) === 0
+            ? "Free RSVP confirmed."
+            : "Payment provider is not connected yet. Owner/admin can manually confirm this order.",
       },
     });
   } catch (err) {
