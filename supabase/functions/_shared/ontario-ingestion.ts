@@ -119,6 +119,22 @@ function optionalNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function normalizeOpenDataCategory(value: unknown) {
+  const category = cleanText(value).toLowerCase();
+  if (!category) return "";
+  if (/community|recreation/.test(category) && /centre|center/.test(category)) {
+    return "community_centre";
+  }
+  if (/library/.test(category)) return "library";
+  if (/trail|pathway/.test(category)) return "trail";
+  if (/park/.test(category)) return "park";
+  if (/cultural|culture|arts/.test(category)) return "cultural_space";
+  if (/fire|station|facility|facilities|civic|municipal/.test(category)) {
+    return "public_facility";
+  }
+  return category.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
 function clamp01(value: unknown, fallback: number) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -290,7 +306,9 @@ export function openDataRecordToPlace(
     optionalText(get("sourceId") || get("id")) ||
     `${sourceName}:${name}:${lat.toFixed(6)},${lng.toFixed(6)}`;
   const category =
-    optionalText(config.category || get("category")) || "public_facility";
+    optionalText(config.category) ||
+    normalizeOpenDataCategory(get("category")) ||
+    "public_facility";
 
   return {
     source: "open_data",

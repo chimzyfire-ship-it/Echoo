@@ -49,6 +49,8 @@ type Candidate = {
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models";
 const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
+const MODEL_META_RESPONSE =
+  "I’m a Claude model serving as Echoo’s local planning assistant. I can help with places, plans, events, and things to do.";
 
 function optionalNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
@@ -60,6 +62,65 @@ function cleanText(value: unknown, fallback = "") {
   return String(value || fallback)
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function isModelMetaQuery(query = "") {
+  const text = query.toLowerCase();
+  const asksIdentity =
+    /\b(what|which|who|whose|are|is|tell|say|reveal|show|name)\b/.test(text) ||
+    /\?\s*$/.test(text);
+  const hasModelTerms =
+    /\b(model|llm|ai model|language model|provider|vendor|engine|backend|underlying|foundation model|system prompt|system message|developer message|hidden instruction|instructions|prompt|version|running on|powered by|built on|using|use)\b/.test(
+      text,
+    ) ||
+    /\b(chatgpt|openai|gpt|claude|anthropic|gemini|google ai|llama|mistral|perplexity)\b/.test(
+      text,
+    );
+  const asksAssistantIdentity =
+    /\b(what are you|who are you|are you an ai|are you ai|are you a bot|are you chatgpt|are you claude|are you gemini)\b/.test(
+      text,
+    );
+  return (asksIdentity && hasModelTerms) || asksAssistantIdentity;
+}
+
+function modelMetaResponse(query: string, city: string) {
+  return {
+    supported: true,
+    mode: "live_discovery",
+    query,
+    city,
+    sources: {
+      echoo: 0,
+      ticketmaster: 0,
+      googlePlaces: 0,
+      ticketmasterConfigured: Boolean(Deno.env.get("TICKETMASTER_API_KEY")),
+      googlePlacesConfigured: Boolean(
+        Deno.env.get("GOOGLE_PLACES_API_KEY") ||
+        Deno.env.get("GOOGLE_MAPS_API_KEY"),
+      ),
+    },
+    recommendations: [],
+    ai: {
+      provider: "echoo-policy",
+      model: "deterministic",
+      assistantMessage: MODEL_META_RESPONSE,
+      suggestedPills: ["Food nearby", "Events tonight", "Things to do nearby"],
+    },
+  };
+}
+
+function googlePhotoProxyUrl(req: Request, photoName: unknown) {
+  const name = cleanText(photoName);
+  if (!name || !name.startsWith("places/")) return undefined;
+  const url = new URL(req.url);
+  url.protocol = "https:";
+  if (!url.pathname.includes("/functions/v1/")) {
+    url.pathname = `/functions/v1/${url.pathname.replace(/^\/+/, "")}`;
+  }
+  url.search = "";
+  url.searchParams.set("photo", name);
+  url.searchParams.set("w", "1200");
+  return url.toString();
 }
 
 const DISCOVERY_CITY_NAMES = [
@@ -441,6 +502,7 @@ async function loadTicketmasterCandidates(input: {
 }
 
 async function loadGooglePlaceCandidates(input: {
+  req: Request;
   query: string;
   lat?: number;
   lng?: number;
@@ -476,7 +538,7 @@ async function loadGooglePlaceCandidates(input: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.rating,places.googleMapsUri,places.regularOpeningHours",
+          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.rating,places.googleMapsUri,places.regularOpeningHours,places.photos",
       },
       body: JSON.stringify(body),
     },
@@ -494,6 +556,7 @@ async function loadGooglePlaceCandidates(input: {
     title: cleanText(place.displayName?.text, "Place"),
     category: cleanText(place.types?.[0] || "place").replace(/_/g, " "),
     description: cleanText(place.formattedAddress),
+    imageUrl: googlePhotoProxyUrl(input.req, place.photos?.[0]?.name),
     address: cleanText(place.formattedAddress),
     city: input.city,
     latitude: optionalNumber(place.location?.latitude),
@@ -681,6 +744,39 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
+
+  const url = new URL(req.url);
+  const photoName = cleanText(url.searchParams.get("photo"));
+  if (req.method === "GET" && photoName) {
+    const key =
+      Deno.env.get("GOOGLE_PLACES_API_KEY") ||
+      Deno.env.get("GOOGLE_MAPS_API_KEY");
+    if (!key || !photoName.startsWith("places/")) {
+      return jsonResponse({ error: "Photo unavailable" }, 404);
+    }
+    const width = Math.min(
+      Math.max(Number(url.searchParams.get("w")) || 1200, 400),
+      1600,
+    );
+    const mediaUrl = new URL(
+      `https://places.googleapis.com/v1/${photoName}/media`,
+    );
+    mediaUrl.searchParams.set("maxWidthPx", String(width));
+    mediaUrl.searchParams.set("key", key);
+    const media = await fetch(mediaUrl);
+    if (!media.ok || !media.body) {
+      return jsonResponse({ error: "Photo unavailable" }, 404);
+    }
+    return new Response(media.body, {
+      status: media.status,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        "Content-Type": media.headers.get("Content-Type") || "image/jpeg",
+      },
+    });
+  }
+
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
@@ -690,13 +786,16 @@ Deno.serve(async (req) => {
     const body = (await req.json().catch(() => ({}))) as DiscoverPayload;
     const query = cleanText(body.query, "things to do nearby");
     const city = cityFromQuery(query) || cleanText(body.city, "Toronto");
+    if (isModelMetaQuery(query)) {
+      return jsonResponse(modelMetaResponse(query, city));
+    }
     const lat = optionalNumber(body.lat);
     const lng = optionalNumber(body.lng);
     const limit = Math.min(clampLimit(body.limit || 8), 12);
     const intent = inferSearchIntent(query);
     const cacheKey = await sha256Hex(
       JSON.stringify({
-        v: 9,
+        v: 10,
         query: query.toLowerCase(),
         city: city.toLowerCase(),
         lat: lat ? lat.toFixed(3) : null,
@@ -714,6 +813,7 @@ Deno.serve(async (req) => {
         : Promise.resolve([]),
       intent.wantsPlaces
         ? loadGooglePlaceCandidates({
+            req,
             query: intent.placeQuery,
             lat,
             lng,

@@ -99,13 +99,7 @@ function categoryBuckets(input: string) {
     return ["cafe", "library", "park", "trail", "restaurant"];
   }
   if (/library|community|recreation|facility|indoor/.test(text)) {
-    return [
-      "library",
-      "community_centre",
-      "public_facility",
-      "fitness_centre",
-      "cafe",
-    ];
+    return ["library", "community_centre", "public_facility", "fitness_centre"];
   }
   if (/date/.test(text)) {
     return ["restaurant", "cafe", "museum", "arts_centre", "park", "mall"];
@@ -147,6 +141,17 @@ function searchQueryForPlaces(query = "", city = "", intent = "") {
     "night",
     "nightlife",
     "culture",
+    "library",
+    "libraries",
+    "community",
+    "recreation",
+    "facility",
+    "facilities",
+    "centre",
+    "centres",
+    "center",
+    "centers",
+    "indoor",
     "museum",
     "museums",
     "park",

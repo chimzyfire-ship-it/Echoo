@@ -68,6 +68,27 @@ const GTA_OPEN_DATA_PRESETS: Record<string, Partial<Payload>> = {
       municipality: "municipality",
     },
   },
+  markham_city_facilities: {
+    sourceName: "markham_open_data_city_facilities",
+    sourceUrl:
+      "https://data-markham.opendata.arcgis.com/datasets/d8cee9f1183f4d8f9c731e777782f3a3_0/about",
+    arcgisServiceUrl:
+      "https://utility.arcgis.com/usrsvcs/servers/d8cee9f1183f4d8f9c731e777782f3a3/rest/services/OpenData/OD_CITY_FACILITES/FeatureServer",
+    arcgisLayerId: 0,
+    sourceLicense: "City of Markham Open Data",
+    municipality: "Markham",
+    fields: {
+      sourceId: "OBJECTID",
+      name: "LABEL",
+      category: "TYPE",
+      subcategory: "DEPTRESP",
+      latitude: "latitude",
+      longitude: "longitude",
+      address: "ADDRESS",
+      description: "TYPE",
+      municipality: "municipality",
+    },
+  },
   toronto_libraries: {
     sourceName: "toronto_open_data_library_branches",
     sourceUrl:

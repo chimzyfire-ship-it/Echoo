@@ -354,6 +354,40 @@ Immediate post-Phase 3B direction:
     prompts stay outdoor-focused instead of drifting to restaurant/cafe
     fallbacks.
 
+Phase 3D Markham civic-facility expansion as of 2026-07-01:
+
+- Added `markham_city_facilities` to `ontario-open-data-import`.
+- Source: City of Markham `City Owned Facilities` ArcGIS Feature Service,
+  `OpenData/OD_CITY_FACILITES/FeatureServer`.
+- The source exposes Markham community centres and libraries with fields such
+  as `LABEL`, `TYPE`, `ADDRESS`, `DEPTRESP`, and polygon geometry.
+- Shared open-data normalization now maps municipal `TYPE` values into Echoo
+  categories:
+  - `Community Centre` -> `community_centre`
+  - `Library` -> `library`
+  - civic/facility/station values -> `public_facility`
+- `ontario-open-data-import` was redeployed with `--use-api`.
+- `ontario-search` and `ontario-plan` were redeployed after query cleanup so
+  civic terms like library, community, recreation, facility, centre/center, and
+  indoor are treated as intent/category words instead of over-constraining name
+  search.
+- `ontario-plan` civic/facility buckets were tightened so explicit
+  library/community/facility routes do not drift to cafe fallback records.
+- Remote Phase 3D verification completed with two tiny real-source smoke
+  records marked `metadata.phase3d_remote_smoke = true`:
+  - Milliken Mills Community Centre and Library (`community_centre`)
+  - Thornhill Village Library (`library`)
+- Each smoke record has canonical/source/mirror/profile rows.
+- Deployed `ontario-search` verified:
+  - `community centre Markham Milliken` -> Milliken Mills Community Centre and
+    Library
+  - `library Markham Thornhill` -> Thornhill Village Library
+- Deployed `ontario-plan` verified:
+  - `library and community centre route in Markham` -> Milliken Mills
+    Community Centre and Library, Thornhill Village Library, and another
+    Markham library record
+  - `Thornhill library indoor stop in Markham` -> Thornhill Village Library
+
 `ontario-plan` status as of 2026-06-27:
 
 - implemented in `supabase/functions/ontario-plan`

@@ -712,6 +712,30 @@ Immediate post-Phase 3B implementation direction:
   - `ontario-plan` outdoor category buckets were tightened so explicit
     park/trail/walk/hike prompts do not drift to restaurant/cafe fallbacks
 
+Phase 3D Markham civic-facility expansion completed on 2026-07-01:
+
+- Added `markham_city_facilities` to `ontario-open-data-import`.
+- Source: City of Markham `City Owned Facilities` ArcGIS Feature Service
+  (`OpenData/OD_CITY_FACILITES/FeatureServer`).
+- The preset maps `LABEL`, `TYPE`, `ADDRESS`, and `DEPTRESP` into Echoo
+  place records and uses polygon geometry centroids.
+- Shared open-data category normalization maps Markham civic `TYPE` values into
+  retrieval categories such as `community_centre`, `library`, and
+  `public_facility`.
+- `ontario-open-data-import`, `ontario-search`, and `ontario-plan` were
+  redeployed with `--use-api`.
+- Search/plan query cleanup now treats civic words such as library, community,
+  recreation, facility, centre/center, and indoor as intent/category terms.
+- `ontario-plan` civic/facility buckets were tightened so explicit
+  community/library/facility routes do not drift to cafe fallback records.
+- Remote verification used two tiny real-source smoke records marked
+  `metadata.phase3d_remote_smoke = true`:
+  - Milliken Mills Community Centre and Library (`community_centre`)
+  - Thornhill Village Library (`library`)
+- Deployed `ontario-search` verified both records.
+- Deployed `ontario-plan` verified direct library retrieval and a Markham
+  community/library route.
+
 ## 13. Admin Review
 
 Improve or extend `admin-locations.html` into an Ontario operations console.
@@ -906,6 +930,8 @@ Remaining:
      support and Markham presets for parks and trails.
    - Phase 3C Markham park/trail retrieval is remotely verified with two tiny
      smoke records from real City of Markham open-data sources.
+   - Phase 3D Markham city-facility retrieval is remotely verified with two
+     tiny smoke records from the real City Owned Facilities source.
    - Remaining expansion: add more municipal presets for community centres,
      recreation centres, trails, public facilities, libraries, and additional
      GTA/Ontario cities.
