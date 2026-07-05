@@ -1158,16 +1158,16 @@
           filtered
             .map(
               (event) => `
-          <article class="event" data-id="${event.id}" ${event.detailId ? `data-detail-id="${event.detailId}"` : ""} ${event.actionUrl ? `data-action-url="${event.actionUrl}"` : ""}>
+          <article class="event" data-id="${escapeHtml(event.id)}" ${event.detailId ? `data-detail-id="${escapeHtml(event.detailId)}"` : ""} ${event.actionUrl ? `data-action-url="${escapeHtml(event.actionUrl)}"` : ""}>
             <picture>
-              <source srcset="${event.webp}" type="image/webp">
-              <img src="${event.img}" alt="" loading="lazy" decoding="async">
+              <source srcset="${escapeHtml(event.webp)}" type="image/webp">
+              <img src="${escapeHtml(event.img)}" alt="" loading="lazy" decoding="async">
             </picture>
             <div>
-              <small>${event.category}</small>
-              <h2>${event.title}</h2>
-              <p>${event.copy}</p>
-              <div class="meta">${event.meta.map((item) => `<span>${item}</span>`).join("")}</div>
+              <small>${escapeHtml(event.category)}</small>
+              <h2>${escapeHtml(event.title)}</h2>
+              <p>${escapeHtml(event.copy)}</p>
+              <div class="meta">${event.meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>
             </div>
           </article>
         `,
@@ -1316,12 +1316,12 @@
       }
 
       const authGate = window.EchooAuth
-        ? window.EchooAuth.requireOnboarding({
-            next: window.EchooAuth.currentRelativeUrl(),
-          }).then((state) => {
-            if (state.ok) applyPreferenceSnapshot(state.preferences);
-            return state;
-          })
+        ? window.EchooAuth.requireOnboarding({ redirect: false }).then(
+            (state) => {
+              if (state.ok) applyPreferenceSnapshot(state.preferences);
+              return state;
+            },
+          )
         : Promise.resolve({ ok: true });
 
       const CONFIG = {
@@ -1333,6 +1333,8 @@
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine",
         discoverLiveUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-live",
+        discoverFeedUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-feed",
       };
 
       const normalizedCity = window.EchooLocationPlatform.cityByName(city);
@@ -1351,6 +1353,98 @@
       const currentContext = activityContext();
       queryInput.placeholder = currentContext.searchPlaceholder;
       if (!queryInput.value) queryInput.value = currentContext.defaultQuery;
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function metaDate(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (!Number.isFinite(date.getTime())) return "";
+        return date.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      function feedCardToEvent(card, index) {
+        const isExternal = /^https?:\/\//i.test(card.detailUrl || "");
+        return {
+          id: card.id || `feed-${index}`,
+          detailId: isExternal ? "" : card.id || "",
+          actionUrl: card.detailUrl || "",
+          category: card.category || card.type || "live",
+          title: card.title || "Ontario pick",
+          copy:
+            card.subtitle ||
+            card.priceLabel ||
+            "A live Echoo pick from the Ontario feed.",
+          img: card.imageUrl || "assets/optimized/news-music-768.jpg",
+          webp: card.imageUrl || "assets/optimized/news-music-768.webp",
+          meta: [
+            card.statusLabel || card.source || "Live",
+            card.city || city || "Ontario",
+            card.priceLabel ||
+              metaDate(card.startsAt) ||
+              card.actionLabel ||
+              "Open",
+          ].filter(Boolean),
+        };
+      }
+
+      async function loadDiscoverFeed() {
+        if (previewMode) return false;
+        try {
+          const url = new URL(CONFIG.discoverFeedUrl);
+          url.searchParams.set("city", city || "Ontario");
+          url.searchParams.set("limit", "10");
+          url.searchParams.set("mode", queryInput.value || "today");
+          if (Number.isFinite(preciseLat) && Number.isFinite(preciseLng)) {
+            url.searchParams.set("lat", String(preciseLat));
+            url.searchParams.set("lng", String(preciseLng));
+          }
+
+          const response = await fetch(url.toString(), {
+            headers: { Accept: "application/json" },
+          });
+          if (!response.ok) return false;
+          const payload = await response.json();
+          const lanes = payload?.data?.lanes || [];
+          const feedCards = lanes
+            .flatMap((lane) => lane.cards || [])
+            .filter((card) => card && card.type !== "news")
+            .slice(0, 10);
+          if (!feedCards.length) return false;
+
+          events = feedCards.map(feedCardToEvent);
+          const showsLane = lanes.find((lane) => lane.id === "shows-tickets");
+          const placesLane = lanes.find(
+            (lane) => lane.id === "trending-places",
+          );
+          document.getElementById("shows-title").textContent = showsLane?.cards
+            ?.length
+            ? showsLane.title
+            : "Live shows";
+          document.getElementById("places-title").textContent = placesLane
+            ?.cards?.length
+            ? placesLane.title
+            : "Hot places to chill";
+          render();
+          return true;
+        } catch (error) {
+          console.warn(
+            "Echoo: discover feed unavailable, using fallbacks.",
+            error,
+          );
+          return false;
+        }
+      }
 
       async function loadLocationEntities() {
         const authState = await authGate;
@@ -1384,15 +1478,20 @@
                 : { city, limit: 24 },
             ),
           });
-          if (!response.ok) return;
+          if (!response.ok) {
+            render();
+            return;
+          }
 
           const payload = await response.json();
           if (
             !payload.supported ||
             !Array.isArray(payload.results) ||
             payload.results.length === 0
-          )
+          ) {
+            render();
             return;
+          }
 
           events = payload.results.map((item, index) => ({
             id: item.id || index + 1,
@@ -1423,6 +1522,7 @@
             "Echoo: location search unavailable, using static launch cards.",
             error,
           );
+          render();
         }
       }
 
@@ -1666,13 +1766,7 @@
 
         if (displayNews.length === 0) {
           const cityList = localNewsDb[city] || localNewsDb["Toronto"];
-          const mixedNews = [];
-          const maxLen = Math.max(cityList.length, worldNews.length);
-          for (let i = 0; i < maxLen; i++) {
-            if (i < cityList.length) mixedNews.push(cityList[i]);
-            if (i < worldNews.length) mixedNews.push(worldNews[i]);
-          }
-          displayNews = mixedNews;
+          displayNews = cityList;
         }
 
         const newsTrack = document.getElementById("news-track");
@@ -1695,11 +1789,13 @@
       }
 
       async function bootDiscovery() {
-        const authState = await authGate;
-        if (authState && authState.ok === false) return;
+        await authGate;
+        render(); // Render initial static cards right away to avoid empty state
         loadNewsSlider();
-        const loaded = await loadPlanEngine();
-        if (!loaded) await loadLocationEntities();
+        const loaded = await loadDiscoverFeed();
+        if (loaded) return;
+        const planLoaded = await loadPlanEngine();
+        if (!planLoaded) await loadLocationEntities();
       }
 
       bootDiscovery();

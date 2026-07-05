@@ -83,8 +83,16 @@
         isolation: isolate;
         overflow: hidden;
         background:
-          radial-gradient(circle at 50% -4%, rgba(255, 255, 255, 0.14), transparent 18rem),
-          radial-gradient(circle at 16% 46%, rgba(255, 212, 166, 0.08), transparent 14rem),
+          radial-gradient(
+            circle at 50% -4%,
+            rgba(255, 255, 255, 0.14),
+            transparent 18rem
+          ),
+          radial-gradient(
+            circle at 16% 46%,
+            rgba(255, 212, 166, 0.08),
+            transparent 14rem
+          ),
           linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
       }
 
@@ -108,8 +116,18 @@
         z-index: -1;
         content: "";
         background:
-          linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.028)),
-          radial-gradient(ellipse at center, transparent 48%, rgba(0, 0, 0, 0.62) 100%);
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.035),
+            transparent 18%,
+            transparent 82%,
+            rgba(255, 255, 255, 0.028)
+          ),
+          radial-gradient(
+            ellipse at center,
+            transparent 48%,
+            rgba(0, 0, 0, 0.62) 100%
+          );
         pointer-events: none;
       }
 
@@ -117,7 +135,8 @@
         min-height: 100svh;
         display: flex;
         flex-direction: column;
-        padding: calc(28px + env(safe-area-inset-top)) 27px calc(94px + env(safe-area-inset-bottom));
+        padding: calc(28px + env(safe-area-inset-top)) 27px
+          calc(94px + env(safe-area-inset-bottom));
       }
 
       .topbar {
@@ -209,7 +228,11 @@
         padding: 9px 9px 9px 19px;
         border: 1px solid rgba(248, 245, 239, 0.08);
         border-radius: 999px;
-        background: linear-gradient(180deg, rgba(42, 42, 41, 0.78), rgba(29, 29, 28, 0.76));
+        background: linear-gradient(
+          180deg,
+          rgba(42, 42, 41, 0.78),
+          rgba(29, 29, 28, 0.76)
+        );
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.06),
           0 20px 55px rgba(0, 0, 0, 0.28);
@@ -352,7 +375,7 @@
         position: relative;
         padding: 11px;
         border: 0;
-        border-radius: 14px;
+        border-radius: 8px;
         background: #151515;
         box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
       }
@@ -372,13 +395,42 @@
         position: absolute;
         inset: 0;
         z-index: 1;
-        background: linear-gradient(180deg, transparent 52%, rgba(0, 0, 0, 0.54));
+        background: linear-gradient(
+          180deg,
+          transparent 52%,
+          rgba(0, 0, 0, 0.54)
+        );
         content: "";
       }
 
       .pick-card > * {
         position: relative;
         z-index: 2;
+      }
+
+      .pick-title {
+        display: -webkit-box;
+        margin: 0 0 7px;
+        overflow: hidden;
+        color: #fff;
+        font-size: 16px;
+        line-height: 1.08;
+        font-weight: 760;
+        letter-spacing: 0;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .pick-subtitle {
+        display: -webkit-box;
+        margin: 0 0 9px;
+        overflow: hidden;
+        color: rgba(248, 245, 239, 0.76);
+        font-size: 11px;
+        line-height: 1.22;
+        font-weight: 560;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
       }
 
       .meta {
@@ -624,16 +676,138 @@
         font-weight: 680;
       }
 
-      .location-proof,
-      .city-pill,
-      #day-plan,
-      #bored-plan {
-        display: none;
+      .city-pill {
+        display: inline-flex;
+        align-items: center;
+        position: relative;
+        gap: 6px;
+        width: fit-content;
+        margin: 4px auto 0;
+        color: rgba(248, 245, 239, 0.84);
+        font-size: 12px;
+        font-weight: 650;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+      }
+
+      .city-pill::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--peach);
+        box-shadow: 0 0 10px var(--peach);
+      }
+
+      .city-pill::after {
+        position: absolute;
+        bottom: -2px;
+        left: 12px;
+        right: 0;
+        height: 1px;
+        background: rgba(247, 213, 178, 0.4);
+        content: "";
+      }
+
+      .location-proof {
+        display: block;
+        margin: 2px auto 0;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 520;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        opacity: 0.72;
+      }
+
+      .main-cta,
+      .bored-cta {
+        width: 100%;
+        min-height: 52px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 680;
+        font-size: 14px;
+        transition:
+          transform 180ms ease,
+          filter 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease;
+      }
+
+      .main-cta {
+        color: #111;
+        background: var(--peach);
+        box-shadow: 0 8px 24px rgba(247, 213, 178, 0.16);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .bored-cta {
+        color: var(--ink);
+        background: rgba(248, 245, 239, 0.05);
+        border-color: rgba(248, 245, 239, 0.12);
+      }
+
+      .main-cta:hover,
+      .main-cta:focus-visible,
+      .bored-cta:hover,
+      .bored-cta:focus-visible {
+        transform: translateY(-1.5px);
+        outline: 0;
+      }
+
+      .main-cta:hover {
+        filter: brightness(1.08);
+      }
+
+      .bored-cta:hover,
+      .bored-cta:focus-visible {
+        border-color: rgba(248, 245, 239, 0.24);
+        background: rgba(248, 245, 239, 0.08);
       }
 
       @media (min-width: 520px) {
         body {
           background: #000;
+        }
+      }
+
+      @media (max-height: 760px) {
+        .page {
+          padding-top: calc(20px + env(safe-area-inset-top));
+        }
+
+        .topbar {
+          margin-bottom: 28px;
+        }
+
+        .hero {
+          gap: 18px;
+        }
+
+        .tagline {
+          margin-top: -8px;
+        }
+
+        .prompt {
+          min-height: 56px;
+          margin-top: 2px;
+        }
+
+        .send {
+          width: 46px;
+          height: 46px;
+        }
+
+        .content {
+          margin-top: 16px;
+        }
+
+        .pick-card {
+          min-height: 126px;
         }
       }
 
@@ -667,46 +841,100 @@
           <a class="brand" href="index.html" aria-label="Echoo home">
             <img src="assets/echoo-wordmark.png" alt="echoo" />
           </a>
-          <a class="profile-link" href="auth.html" aria-label="Open your profile"></a>
+          <a
+            class="profile-link"
+            href="auth.html"
+            aria-label="Open your profile"
+          ></a>
         </header>
 
         <main>
           <section class="hero" aria-labelledby="landing-title">
             <h1 id="landing-title">Pick a lane. Make it lovely.</h1>
-            <p class="tagline">Shows, tables, and places that make tonight worth it.</p>
-            <span class="city-pill">Ontario today</span>
-            <span class="location-proof" id="location-proof">Detecting your location...</span>
+            <p class="tagline">
+              Shows, tables, and places that make tonight worth it.
+            </p>
+            <div
+              class="location-wrapper"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                margin-top: -6px;
+              "
+            >
+              <span class="city-pill">Ontario today</span>
+              <span class="location-proof" id="location-proof"
+                >Using Ontario as location base</span
+              >
+            </div>
 
             <form class="prompt" id="search-form" aria-label="Ask Echoo">
               <span class="search-glyph" aria-hidden="true"></span>
-              <label for="city-search" class="sr-only">Search shows, places, dates</label>
-              <input id="city-search" autocomplete="off" placeholder="Search shows, places, dates..." />
-              <button class="send" type="submit" aria-label="Ask Echoo AI"></button>
+              <label for="city-search" class="sr-only"
+                >Search shows, places, dates</label
+              >
+              <input
+                id="city-search"
+                autocomplete="off"
+                placeholder="Search shows, places, dates..."
+              />
+              <button
+                class="send"
+                type="submit"
+                aria-label="Ask Echoo AI"
+              ></button>
             </form>
+
+            <div
+              class="cta-stack"
+              style="display: grid; gap: 12px; margin-top: 8px; width: 100%"
+            >
+              <button class="main-cta" id="day-plan" type="button">
+                Plan what's next
+              </button>
+              <button class="bored-cta" id="bored-plan" type="button">
+                I'm bored. Surprise me.
+              </button>
+            </div>
           </section>
 
           <section class="content" aria-label="Tonight on Echoo">
             <div>
               <div class="section-head">
-                <h2>Tonight's picks</h2>
+                <h2 id="live-picks-title">Tonight's picks</h2>
                 <a class="see-all" href="events.html">See all</a>
               </div>
-              <div class="pick-grid">
+              <div class="pick-grid" id="live-picks">
                 <a
                   class="pick-card"
                   href="music.html"
-                  style="--image: url('assets/news-music.png')"
+                  style="--image: url(&quot;assets/news-music.png&quot;)"
                   aria-label="Nearby live rooms, 12 spots"
                 >
-                  <span class="meta">Nearby <span class="meta-dot">·</span> 12 spots</span>
+                  <strong class="pick-title">Live rooms nearby</strong>
+                  <span class="pick-subtitle"
+                    >Music, tickets, and small rooms with a real next
+                    step.</span
+                  >
+                  <span class="meta"
+                    >Nearby <span class="meta-dot">·</span> 12 spots</span
+                  >
                 </a>
                 <a
                   class="pick-card"
                   href="dates.html"
-                  style="--image: url('assets/news-date.png')"
+                  style="--image: url(&quot;assets/news-date.png&quot;)"
                   aria-label="Nearby date plans, 8 spots"
                 >
-                  <span class="meta">Nearby <span class="meta-dot">·</span> 8 spots</span>
+                  <strong class="pick-title">Date-night energy</strong>
+                  <span class="pick-subtitle"
+                    >Food, soft second stops, and places worth lingering.</span
+                  >
+                  <span class="meta"
+                    >Nearby <span class="meta-dot">·</span> 8 spots</span
+                  >
                 </a>
               </div>
             </div>
@@ -719,31 +947,54 @@
               <div class="vibe-row" aria-label="Browse by vibe">
                 <a class="vibe" href="music.html">
                   <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l10-2v13" /><path d="M9 18a3 3 0 1 1-2-2.83" /><path d="M19 16a3 3 0 1 1-2-2.83" /></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9 18V5l10-2v13" />
+                      <path d="M9 18a3 3 0 1 1-2-2.83" />
+                      <path d="M19 16a3 3 0 1 1-2-2.83" />
+                    </svg>
                   </span>
                   <span>Music</span>
                 </a>
                 <a class="vibe" href="events.html?query=comedy">
                   <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8.5 15a5 5 0 0 0 7 0" /></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M8 10h.01" />
+                      <path d="M16 10h.01" />
+                      <path d="M8.5 15a5 5 0 0 0 7 0" />
+                    </svg>
                   </span>
                   <span>Comedy</span>
                 </a>
                 <a class="vibe" href="food.html">
                   <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v8" /><path d="M10 3v8" /><path d="M8 3v18" /><path d="M17 3v18" /><path d="M14 3v8a3 3 0 0 0 6 0V3" /></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 3v8" />
+                      <path d="M10 3v8" />
+                      <path d="M8 3v18" />
+                      <path d="M17 3v18" />
+                      <path d="M14 3v8a3 3 0 0 0 6 0V3" />
+                    </svg>
                   </span>
                   <span>Food</span>
                 </a>
                 <a class="vibe" href="dates.html">
                   <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" /></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+                      />
+                    </svg>
                   </span>
                   <span>Dates</span>
                 </a>
                 <a class="vibe" href="events.html">
                   <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h.01" /><path d="M12 12h.01" /><path d="M19 12h.01" /></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 12h.01" />
+                      <path d="M12 12h.01" />
+                      <path d="M19 12h.01" />
+                    </svg>
                   </span>
                   <span>More</span>
                 </a>
@@ -755,34 +1006,46 @@
 
       <nav class="bottom-nav" aria-label="Main navigation">
         <a class="nav-link active" href="index.html" aria-current="page">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+          </svg>
           <span>Home</span>
         </a>
         <a class="nav-link" href="events.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m16 16 4 4" />
+          </svg>
           <span>Discover</span>
         </a>
         <a class="nav-link" href="tickets.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" /><path d="M13 6v12" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" />
+            <path d="M13 6v12" />
+          </svg>
           <span>Tickets</span>
         </a>
         <a class="nav-link" href="auth.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
           <span>Profile</span>
         </a>
       </nav>
     </div>
 
-    <button class="main-cta" id="day-plan" type="button">Plan what's next</button>
-    <button class="bored-cta" id="bored-plan" type="button">I'm bored. Surprise me.</button>
-
     <aside class="sheet" id="plan-sheet" aria-hidden="true" aria-live="polite">
       <h2 id="sheet-title">Your plan is ready.</h2>
       <p id="sheet-copy">
-        We will start with a simple city plan: one anchor, one food stop, one easy
-        backup if the group changes its mind.
+        We will start with a simple city plan: one anchor, one food stop, one
+        easy backup if the group changes its mind.
       </p>
-      <div class="sheet-budget-actions" id="sheet-budget-actions" aria-label="Choose budget">
+      <div
+        class="sheet-budget-actions"
+        id="sheet-budget-actions"
+        aria-label="Choose budget"
+      >
         <button type="button" data-budget="$">Low</button>
         <button type="button" data-budget="$$">Mid</button>
         <button type="button" data-budget="$$$">Special</button>
@@ -802,19 +1065,47 @@
         browsing with Ontario anytime.
       </p>
 
+      <div
+        class="location-help-wrapper"
+        style="text-align: center; margin-bottom: 12px"
+      >
+        <button
+          type="button"
+          id="location-help-toggle"
+          style="
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 13px;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 4px;
+          "
+        >
+          Location not working?
+        </button>
+      </div>
+
       <div class="instruction-section" id="location-instructions">
         <div class="instruction-title">iPhone (iOS) Directions:</div>
         <ol class="instruction-list">
           <li>Open your iPhone <b>Settings</b>.</li>
           <li>Tap <b>Privacy & Security</b> &gt; <b>Location Services</b>.</li>
           <li>Scroll and tap your browser.</li>
-          <li>Select <b>While Using the App</b> and ensure <b>Precise Location</b> is on.</li>
+          <li>
+            Select <b>While Using the App</b> and ensure
+            <b>Precise Location</b> is on.
+          </li>
         </ol>
       </div>
 
       <div class="location-modal-buttons">
-        <button class="location-modal-btn" id="location-dismiss">Use Ontario</button>
-        <button class="location-modal-btn primary" id="location-try-again">Allow location</button>
+        <button class="location-modal-btn" id="location-dismiss">
+          Use Ontario
+        </button>
+        <button class="location-modal-btn primary" id="location-try-again">
+          Allow location
+        </button>
       </div>
       <a class="preview-link" href="events.html?preview=1">Preview Echoo</a>
     </div>
@@ -825,13 +1116,18 @@
     <script src="assets/echoo-auth.js"></script>
     <script>
       window.addEventListener("beforeunload", () => {
-        const history = JSON.parse(sessionStorage.getItem("echoo_unload_log") || "[]");
+        const history = JSON.parse(
+          sessionStorage.getItem("echoo_unload_log") || "[]",
+        );
         history.push({
           time: new Date().toISOString(),
           url: window.location.href,
           stack: new Error().stack,
         });
-        sessionStorage.setItem("echoo_unload_log", JSON.stringify(history.slice(-10)));
+        sessionStorage.setItem(
+          "echoo_unload_log",
+          JSON.stringify(history.slice(-10)),
+        );
       });
 
       const searchInput = document.getElementById("city-search");
@@ -839,14 +1135,23 @@
       const sheetTitle = document.getElementById("sheet-title");
       const sheetCopy = document.getElementById("sheet-copy");
       const sheetLink = document.getElementById("sheet-link");
-      const sheetBudgetActions = document.getElementById("sheet-budget-actions");
+      const sheetBudgetActions = document.getElementById(
+        "sheet-budget-actions",
+      );
       const locationProof = document.getElementById("location-proof");
       const dayPlanBtn = document.getElementById("day-plan");
+      const livePicks = document.getElementById("live-picks");
+      const livePicksTitle = document.getElementById("live-picks-title");
+      const DISCOVER_FEED_URL =
+        "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-feed";
       let pendingBudgetHref = "";
+      let lastFeedKey = "";
 
       async function hasOnboardedProfile() {
         if (!window.EchooAuth) return true;
-        const state = await window.EchooAuth.requireOnboarding({ redirect: false });
+        const state = await window.EchooAuth.requireOnboarding({
+          redirect: false,
+        });
         return Boolean(state.ok);
       }
 
@@ -881,14 +1186,20 @@
       function setDayPlanCopy(cityName) {
         const context = activityContext(cityName);
         if (dayPlanBtn) dayPlanBtn.textContent = context.planCta;
-        if (sheetLink) sheetLink.href = `events.html?query=${encodeURIComponent(planQuery(cityName))}`;
+        if (sheetLink)
+          sheetLink.href = `events.html?query=${encodeURIComponent(planQuery(cityName))}`;
         return context;
       }
 
       function saveBudgetPreference(nextBudget) {
         try {
-          const prefs = JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
-          localStorage.setItem("echoo_preferences", JSON.stringify({ ...prefs, budget: nextBudget }));
+          const prefs = JSON.parse(
+            localStorage.getItem("echoo_preferences") || "{}",
+          );
+          localStorage.setItem(
+            "echoo_preferences",
+            JSON.stringify({ ...prefs, budget: nextBudget }),
+          );
         } catch (e) {}
       }
 
@@ -903,29 +1214,55 @@
         sheet.setAttribute("aria-hidden", "false");
       }
 
-      document.getElementById("search-form").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const query = searchInput.value.trim() || "tonight near me";
-        await openProtectedRoute(`app.html?q=${encodeURIComponent(query)}`);
-      });
+      let pendingLocationCallback = null;
 
-      dayPlanBtn.addEventListener("click", async () => {
-        const context = activityContext("Toronto");
-        await showProtectedPlanSheet(
-          `Built for ${context.label}.`,
-          "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.",
-          `events.html?query=${encodeURIComponent(context.planQuery)}`,
-        );
+      function ensureLocationContext(callback) {
+        const prefs = window.EchooLocationPlatform.readPreferences();
+        if (prefs && prefs.locationPrecision) {
+          callback();
+        } else {
+          pendingLocationCallback = callback;
+          if (modalInstructions) modalInstructions.style.display = "none";
+          locationModal.classList.add("active");
+          locationBackdrop.classList.add("active");
+        }
+      }
+
+      document
+        .getElementById("search-form")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const query = searchInput.value.trim() || "tonight near me";
+          ensureLocationContext(async () => {
+            await openProtectedRoute(`app.html?q=${encodeURIComponent(query)}`);
+          });
+        });
+
+      dayPlanBtn.addEventListener("click", () => {
+        ensureLocationContext(async () => {
+          const currentCity =
+            window.EchooLocationPlatform.readPreferences().city || "Ontario";
+          const context = activityContext(currentCity);
+          await showProtectedPlanSheet(
+            `Built for ${context.label}.`,
+            "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.",
+            `events.html?query=${encodeURIComponent(context.planQuery)}`,
+          );
+        });
       });
 
       document.getElementById("bored-plan").addEventListener("click", () => {
-        const context = activityContext("Toronto");
-        openSheet(
-          "What budget should Echoo respect?",
-          "Pick this first, then Echoo will make the surprise fit the spend instead of guessing.",
-          `events.html?query=${encodeURIComponent(`surprise me ${context.label} in Toronto`)}&mode=surprise`,
-          true,
-        );
+        ensureLocationContext(() => {
+          const currentCity =
+            window.EchooLocationPlatform.readPreferences().city || "Ontario";
+          const context = activityContext(currentCity);
+          openSheet(
+            "What budget should Echoo respect?",
+            "Pick this first, then Echoo will make the surprise fit the spend instead of guessing.",
+            `events.html?query=${encodeURIComponent(`surprise me ${context.label} in ${currentCity}`)}&mode=surprise`,
+            true,
+          );
+        });
       });
 
       sheetBudgetActions.addEventListener("click", (event) => {
@@ -934,7 +1271,9 @@
         const nextBudget = button.dataset.budget;
         saveBudgetPreference(nextBudget);
         const separator = pendingBudgetHref.includes("?") ? "&" : "?";
-        openProtectedRoute(`${pendingBudgetHref}${separator}budget=${encodeURIComponent(nextBudget)}`);
+        openProtectedRoute(
+          `${pendingBudgetHref}${separator}budget=${encodeURIComponent(nextBudget)}`,
+        );
       });
 
       document.getElementById("sheet-close").addEventListener("click", () => {
@@ -950,8 +1289,38 @@
       const dismissBtn = document.getElementById("location-dismiss");
       const modalTitle = document.getElementById("location-modal-title");
       const modalCopy = document.getElementById("location-modal-copy");
-      const modalInstructions = document.getElementById("location-instructions");
+      const modalInstructions = document.getElementById(
+        "location-instructions",
+      );
       const cityPill = document.querySelector(".city-pill");
+      const helpToggleBtn = document.getElementById("location-help-toggle");
+
+      if (helpToggleBtn) {
+        helpToggleBtn.addEventListener("click", () => {
+          if (modalInstructions) {
+            const isHidden =
+              modalInstructions.style.display === "none" ||
+              modalInstructions.style.display === "";
+            modalInstructions.style.display = isHidden ? "block" : "none";
+          }
+        });
+      }
+
+      cityPill.addEventListener("click", () => {
+        pendingLocationCallback = null;
+        if (modalInstructions) modalInstructions.style.display = "none";
+        locationModal.classList.add("active");
+        locationBackdrop.classList.add("active");
+      });
+
+      if (locationProof) {
+        locationProof.addEventListener("click", () => {
+          pendingLocationCallback = null;
+          if (modalInstructions) modalInstructions.style.display = "none";
+          locationModal.classList.add("active");
+          locationBackdrop.classList.add("active");
+        });
+      }
 
       function updatePageCity(cityName, coords) {
         let prefs = {};
@@ -987,20 +1356,105 @@
             : `Using ${cityName} as your location base`;
         }
         const context = setDayPlanCopy(cityName);
+        loadLivePicks(cityName, coords);
+      }
 
-        dayPlanBtn.onclick = async () => {
-          await showProtectedPlanSheet(
-            `Built for ${context.label}.`,
-            "A crisp plan with a place to meet, something worth doing, and somewhere comfortable after.",
-            `events.html?query=${encodeURIComponent(context.planQuery)}`,
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function cardHref(card) {
+        if (card.detailUrl) return card.detailUrl;
+        if (card.type === "event")
+          return `events.html?query=${encodeURIComponent(card.title || "events Ontario")}`;
+        if (card.type === "place")
+          return `app.html?q=${encodeURIComponent(card.title || "places Ontario")}`;
+        return "events.html";
+      }
+
+      function cardMeta(card) {
+        const label = escapeHtml(card.statusLabel || card.city || "Ontario");
+        const cityValue =
+          card.city && card.city !== card.statusLabel ? card.city : "";
+        const city = escapeHtml(cityValue);
+        return city
+          ? `${label} <span class="meta-dot">·</span> ${city}`
+          : label;
+      }
+
+      async function loadLivePicks(cityName = "Ontario", coords) {
+        if (!livePicks) return;
+        const key = `${cityName}:${coords?.lat || ""}:${coords?.lng || ""}`;
+        if (key === lastFeedKey) return;
+        lastFeedKey = key;
+
+        const url = new URL(DISCOVER_FEED_URL);
+        url.searchParams.set("city", cityName || "Ontario");
+        url.searchParams.set("limit", "4");
+        if (coords?.lat && coords?.lng) {
+          url.searchParams.set("lat", String(coords.lat));
+          url.searchParams.set("lng", String(coords.lng));
+        }
+
+        try {
+          const response = await fetch(url.toString(), {
+            headers: { Accept: "application/json" },
+          });
+          if (!response.ok)
+            throw new Error(`Feed request failed: ${response.status}`);
+          const payload = await response.json();
+          const lanes = payload?.data?.lanes || [];
+          const cards = lanes
+            .flatMap((lane) => lane.cards || [])
+            .filter(Boolean)
+            .slice(0, 2);
+          if (!cards.length) return;
+
+          if (livePicksTitle) {
+            livePicksTitle.textContent = coords
+              ? "Live near you"
+              : "Live Ontario picks";
+          }
+          livePicks.innerHTML = cards
+            .map((card) => {
+              const image =
+                card.imageUrl || "assets/optimized/news-music-768.jpg";
+              const title = escapeHtml(card.title || "Ontario pick");
+              const subtitle = escapeHtml(
+                card.subtitle || card.category || "Echoo verified",
+              );
+              return `
+                <a
+                  class="pick-card"
+                  href="${escapeHtml(cardHref(card))}"
+                  style="--image: url('${escapeHtml(image)}')"
+                  aria-label="${title}"
+                >
+                  <strong class="pick-title">${title}</strong>
+                  <span class="pick-subtitle">${subtitle}</span>
+                  <span class="meta">${cardMeta(card)}</span>
+                </a>
+              `;
+            })
+            .join("");
+        } catch (error) {
+          console.warn(
+            "Echoo: discover-feed unavailable, keeping static picks.",
+            error,
           );
-        };
+        }
       }
 
       function showCanadaPreviewModal(title, copy) {
         if (modalTitle) modalTitle.textContent = title;
         if (modalCopy) modalCopy.textContent = copy;
-        if (modalInstructions) modalInstructions.hidden = title === "Ontario launch only";
+        if (modalInstructions)
+          modalInstructions.hidden = title === "Ontario launch only";
         locationModal.classList.add("active");
         locationBackdrop.classList.add("active");
       }
@@ -1008,6 +1462,10 @@
       function detectUserLocation() {
         if (!navigator.geolocation) {
           updatePageCity("Ontario");
+          if (pendingLocationCallback) {
+            pendingLocationCallback();
+            pendingLocationCallback = null;
+          }
           return;
         }
 
@@ -1018,19 +1476,27 @@
 
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
-            if (!resolved.supported) {
-              updatePageCity(resolved.fallbackRegion?.name || "Ontario");
-              return;
-            }
-            updatePageCity(resolved.city.name, {
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(
               lat,
               lng,
-              accuracy: position.coords.accuracy,
-            });
+            );
+            if (!resolved.supported) {
+              updatePageCity(resolved.fallbackRegion?.name || "Ontario");
+            } else {
+              updatePageCity(resolved.city.name, {
+                lat,
+                lng,
+                accuracy: position.coords.accuracy,
+              });
+            }
+            if (pendingLocationCallback) {
+              pendingLocationCallback();
+              pendingLocationCallback = null;
+            }
           },
           () => {
             updatePageCity("Ontario");
+            if (modalInstructions) modalInstructions.style.display = "block";
           },
           { timeout: 8000 },
         );
@@ -1053,10 +1519,21 @@
           locationReason: "ontario_fallback",
         });
         updatePageCity("Ontario");
+        if (pendingLocationCallback) {
+          pendingLocationCallback();
+          pendingLocationCallback = null;
+        }
       });
 
-      detectUserLocation();
-      setDayPlanCopy("Ontario");
+      const savedPrefs = window.EchooLocationPlatform.readPreferences();
+      const initialCity = savedPrefs.city || "Ontario";
+      updatePageCity(
+        initialCity,
+        savedPrefs.lastLat && savedPrefs.lastLng
+          ? { lat: savedPrefs.lastLat, lng: savedPrefs.lastLng }
+          : null,
+      );
+      setDayPlanCopy(initialCity);
     </script>
   </body>
 </html>

@@ -273,7 +273,9 @@
         border-radius: 12px;
         border: 1px solid var(--line);
         background: rgba(248, 245, 239, 0.05);
-        transition: border-color 180ms ease, background 180ms ease;
+        transition:
+          border-color 180ms ease,
+          background 180ms ease;
       }
       .news-card:hover {
         border-color: var(--line-strong);
@@ -407,7 +409,9 @@
         color: var(--muted);
         font-size: 13px;
         font-weight: 620;
-        transition: border-color 180ms ease, color 180ms ease;
+        transition:
+          border-color 180ms ease,
+          color 180ms ease;
       }
       .ask-card button.ghost:hover {
         border-color: var(--line-strong);
@@ -431,7 +435,10 @@
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
         text-align: left;
         color: var(--ink);
-        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+        transition:
+          transform 180ms ease,
+          background 180ms ease,
+          border-color 180ms ease;
       }
       .module:hover {
         transform: translateY(-2px);
@@ -472,8 +479,16 @@
         flex-direction: column;
         overflow: hidden;
         background:
-          radial-gradient(circle at 50% -4%, rgba(255, 255, 255, 0.14), transparent 18rem),
-          radial-gradient(circle at 16% 46%, rgba(255, 212, 166, 0.08), transparent 14rem),
+          radial-gradient(
+            circle at 50% -4%,
+            rgba(255, 255, 255, 0.14),
+            transparent 18rem
+          ),
+          radial-gradient(
+            circle at 16% 46%,
+            rgba(255, 212, 166, 0.08),
+            transparent 14rem
+          ),
           linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
         opacity: 0;
         pointer-events: none;
@@ -504,7 +519,9 @@
         cursor: pointer;
         display: grid;
         place-items: center;
-        transition: border-color 180ms ease, background 180ms ease;
+        transition:
+          border-color 180ms ease,
+          background 180ms ease;
       }
       .chat-close:hover {
         border-color: var(--line-strong);
@@ -562,7 +579,9 @@
         color: var(--ink);
         cursor: default;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-        transition: transform 180ms ease, border-color 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease;
       }
       .route-stop[data-clickable="true"] {
         cursor: pointer;
@@ -588,7 +607,11 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, transparent 40%, rgba(5, 5, 5, 0.7));
+        background: linear-gradient(
+          180deg,
+          transparent 40%,
+          rgba(5, 5, 5, 0.7)
+        );
       }
       .route-step-number {
         position: absolute;
@@ -791,8 +814,13 @@
         animation-delay: 300ms;
       }
       @keyframes dotPulse {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 1; }
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
       }
       /* ── Location card ── */
       .loc-card {
@@ -932,7 +960,10 @@
         font-weight: 520;
         cursor: pointer;
         line-height: 1.2;
-        transition: border-color 180ms ease, color 180ms ease, background 180ms ease;
+        transition:
+          border-color 180ms ease,
+          color 180ms ease,
+          background 180ms ease;
       }
       .pill:hover,
       .pill:active {
@@ -1059,6 +1090,58 @@
       .geo-modal-btn:hover {
         background: var(--panel);
       }
+
+      /* ── Bottom Nav CSS ── */
+      .bottom-nav {
+        position: fixed;
+        left: 50%;
+        bottom: 12px;
+        z-index: 30;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
+        background: rgba(25, 25, 24, 0.82);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
+        transform: translateX(-50%);
+      }
+
+      .nav-link {
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 5px;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
+      }
+
+      .nav-link.active {
+        color: var(--peach);
+      }
+
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .nav-link.active svg {
+        fill: currentColor;
+        stroke-width: 0;
+      }
     </style>
     <link
       rel="stylesheet"
@@ -1155,11 +1238,34 @@
       <div class="map-container" id="map-container"></div>
     </div>
 
-    <nav class="bottom-nav" aria-label="Primary">
-      <a class="active" href="app.html">Home</a>
-      <a href="events.html">Explore</a>
-      <a href="#" id="nav-plan">Plan</a>
-      <a href="index.html">Exit</a>
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <a class="nav-link" href="index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+        </svg>
+        <span>Home</span>
+      </a>
+      <a class="nav-link" href="events.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m16 16 4 4" />
+        </svg>
+        <span>Discover</span>
+      </a>
+      <a class="nav-link" href="tickets.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" />
+          <path d="M13 6v12" />
+        </svg>
+        <span>Tickets</span>
+      </a>
+      <a class="nav-link" href="auth.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        </svg>
+        <span>Profile</span>
+      </a>
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2030,8 +2136,13 @@
           .replace(/'/g, "&#039;");
       }
 
-      function routeTravelLabel(index, usePreciseBase, isSelectedStart = false) {
-        if (index === 0) return isSelectedStart ? "Starting here" : "Start here";
+      function routeTravelLabel(
+        index,
+        usePreciseBase,
+        isSelectedStart = false,
+      ) {
+        if (index === 0)
+          return isSelectedStart ? "Starting here" : "Start here";
         const minutes = usePreciseBase ? index * 5 + 3 : index * 6 + 4;
         const distance = usePreciseBase ? index * 350 + 150 : index * 450 + 200;
         return `Start from here · ${minutes} min · ${distance}m walk`;
@@ -2121,14 +2232,19 @@
           if (loading) loading.remove();
           addDetailCard({
             title: place.name || place.formatted_address || "Verified place",
-            kicker: [place.category || "Place", place.municipality || place.city || "Ontario"]
+            kicker: [
+              place.category || "Place",
+              place.municipality || place.city || "Ontario",
+            ]
               .filter(Boolean)
               .join(" · "),
             copy:
               profile.summary ||
               place.metadata?.description ||
               "Echoo has this as a verified Ontario place record.",
-            meta: sourceNames ? `Source: ${sourceNames}` : "Verified place record",
+            meta: sourceNames
+              ? `Source: ${sourceNames}`
+              : "Verified place record",
             image: "assets/optimized/news-date-768.jpg",
           });
         } catch (error) {
@@ -2181,17 +2297,24 @@
           return { x, y };
         });
         const path = points
-          .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+          .map(
+            (point, index) =>
+              `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`,
+          )
           .join(" ");
         const markers = points
-          .map((point) => `<circle cx="${point.x}" cy="${point.y}" r="2.7"></circle>`)
+          .map(
+            (point) =>
+              `<circle cx="${point.x}" cy="${point.y}" r="2.7"></circle>`,
+          )
           .join("");
         const cards = stops
           .map((stop, index) => {
             const detailId = String(stop.detailId || "");
             const isExternal = /^https?:\/\//i.test(detailId);
             const clickable = Boolean(detailId);
-            const detailType = stop.detailType || (isExternal ? "external" : "event");
+            const detailType =
+              stop.detailType || (isExternal ? "external" : "event");
             const timing = stop.timing ? ` ${stop.timing}` : "";
             const vibe = `${stop.vibe || "A matched stop for this plan."}${timing}`;
             const isSelectedStart = stop.selectedStart === true;
@@ -2246,10 +2369,12 @@
             const stop = stops[stopIndex] || {};
             const routeAction = event.target.closest("[data-route-action]");
             if (routeAction?.dataset.routeAction === "start") {
-              const reordered = rotateStops(stops, stopIndex).map((item, index) => ({
-                ...item,
-                selectedStart: index === 0,
-              }));
+              const reordered = rotateStops(stops, stopIndex).map(
+                (item, index) => ({
+                  ...item,
+                  selectedStart: index === 0,
+                }),
+              );
               activeRouteStops = reordered;
               addRouteBoard(reordered, usePreciseBase, board);
               addBubble(
@@ -2271,8 +2396,12 @@
               addDetailCard({
                 title: stop.name || "Live listing",
                 kicker: stop.tags || "Ticketmaster live event",
-                copy: stop.vibe || "Echoo found this live listing for the current plan.",
-                meta: stop.timing || "Open the listing only when you want to leave Echoo.",
+                copy:
+                  stop.vibe ||
+                  "Echoo found this live listing for the current plan.",
+                meta:
+                  stop.timing ||
+                  "Open the listing only when you want to leave Echoo.",
                 image: stop.img,
                 url: detailId,
               });
@@ -2518,8 +2647,16 @@
               payload?.mode === "ontario_plan";
             const isEvent =
               !isOntarioPlace &&
-              (item.type === "event" || item.entityType === "event" || item.startsAt);
-            const detailType = isExternal ? "external" : isOntarioPlace ? "place" : isEvent ? "event" : "";
+              (item.type === "event" ||
+                item.entityType === "event" ||
+                item.startsAt);
+            const detailType = isExternal
+              ? "external"
+              : isOntarioPlace
+                ? "place"
+                : isEvent
+                  ? "event"
+                  : "";
             return {
               detailId:
                 actionUrl ||
@@ -2702,7 +2839,10 @@
             if (!resolved.supported) {
               preciseLat = undefined;
               preciseLng = undefined;
-              city = resolved.fallbackRegion?.name || resolved.fallbackCity?.name || "Ontario";
+              city =
+                resolved.fallbackRegion?.name ||
+                resolved.fallbackCity?.name ||
+                "Ontario";
               activityContext = getActivityContext();
               window.EchooLocationPlatform.writeLocationState({
                 city,
@@ -2755,10 +2895,44 @@
         await delay(700);
 
         const planResult = await requestSmartPlan(maxStops, queryText, mode);
-        if (planResult.error) {
+        if (planResult.error || !planResult.stops || !planResult.stops.length) {
           removeTyping();
-          addBubble("ai", planResult.error);
-          addPills(["Try again", "Change budget", "Start over"]);
+          console.warn(
+            "Echoo AI plan engine failed or returned empty stops, loading curated local fallback.",
+            planResult.error,
+          );
+
+          const resolvedCity =
+            window.EchooLocationPlatform.cityByName(city)?.name || "Toronto";
+          const fallbackGroup =
+            curationDb[resolvedCity] || curationDb["Toronto"];
+          const energyKey = energy && fallbackGroup[energy] ? energy : "chill";
+          const fallbackStops =
+            fallbackGroup[energyKey] || fallbackGroup["chill"];
+
+          const preciseStops = fallbackStops.map((stop, index) => ({
+            detailId: "fallback-" + index,
+            name: stop.name,
+            tags: stop.tags || "Curation",
+            coords: stop.coords,
+            img: stop.img || "assets/optimized/news-music-768.jpg",
+            vibe: stop.vibe || "Curated recommendation from Echoo local base.",
+            detailType: "place",
+          }));
+
+          addBubble(
+            "ai",
+            `Echoo AI is currently offline or taking a moment to load. I generated this local curated starter plan for you in ${resolvedCity} instead:`,
+          );
+          await delay(350);
+
+          addRouteBoard(preciseStops, false);
+          await delay(360);
+
+          addSeeRouteButton(preciseStops);
+          await delay(200);
+
+          addPills(["Cheaper", "Closer", "More lively", "Start over"]);
           return;
         }
         const desiredStops =
@@ -2800,7 +2974,21 @@
 
         addSeeRouteButton(preciseStops);
         await delay(200);
-        addPills(ai.suggestedPills);
+
+        let suggestedPills = ai.suggestedPills || [];
+        if (
+          !suggestedPills.includes("Cheaper") &&
+          !suggestedPills.includes("make it cheaper")
+        ) {
+          suggestedPills = [
+            ...suggestedPills.slice(0, 3),
+            "Cheaper",
+            "Closer",
+            "More lively",
+            ...suggestedPills.slice(3),
+          ];
+        }
+        addPills(suggestedPills);
       }
 
       let pendingBudgetIntent = null;
@@ -2897,8 +3085,13 @@
           return;
         }
 
-        if (/make it cheaper/i.test(text)) {
+        if (/make it cheaper|cheaper/i.test(text)) {
           setBudgetPreference("$");
+          budget = "$";
+        }
+        if (/more lively|lively/i.test(text)) {
+          energy = "hype";
+          window.EchooAuth?.updateOnboardingPatch({ energy }).catch(() => {});
         }
 
         const queryForPill =
@@ -2910,7 +3103,13 @@
                 ? `movie times and a simple plan near ${city}`
                 : text === "Try again"
                   ? activityContext.defaultQuery
-                  : text;
+                  : /cheaper/i.test(text)
+                    ? `cheaper plan in ${city}`
+                    : /closer/i.test(text)
+                      ? `closer plan in ${city}`
+                      : /lively/i.test(text)
+                        ? `lively plan in ${city}`
+                        : text;
         await presentSmartPlan(
           queryForPill,
           /one stop|shorter/i.test(text) ? 1 : /third|food/i.test(text) ? 3 : 4,
@@ -2976,10 +3175,13 @@
       });
 
       /* ── Nav plan link ── */
-      document.getElementById("nav-plan").addEventListener("click", (e) => {
-        e.preventDefault();
-        document.getElementById("plan-query").focus();
-      });
+      const navPlanEl = document.getElementById("nav-plan");
+      if (navPlanEl) {
+        navPlanEl.addEventListener("click", (e) => {
+          e.preventDefault();
+          document.getElementById("plan-query").focus();
+        });
+      }
 
       /* ── Module card actions ── */
       document.querySelectorAll("[data-action]").forEach((button) => {
