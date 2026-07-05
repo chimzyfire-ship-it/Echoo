@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Echoo Compliance Dashboard</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f8f5ef;
+        --muted: #aaa29a;
+        --soft: rgba(248, 245, 239, 0.72);
+        --line: rgba(248, 245, 239, 0.12);
+        --line-strong: rgba(248, 245, 239, 0.2);
+        --glass: rgba(30, 30, 29, 0.72);
+        --peach: #f7d5b2;
+        --black: #050505;
+        --panel: #131313;
+        --red: #ffb4a8;
+        --green: #b4e3b4;
+        --orange: #f2bf8f;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip;
+        overscroll-behavior-y: none;
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+        min-height: 100%;
+        margin: 0;
+        background: #000;
+        color: var(--ink);
+        min-height: 100svh;
+        display: grid;
+        justify-items: center;
+        align-items: start;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button {
+        font: inherit;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: inherit;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* ── App shell ── */
+      .app-shell {
+        width: min(100vw, 430px);
+        min-height: 100svh;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            circle at 50% -4%,
+            rgba(255, 255, 255, 0.14),
+            transparent 18rem
+          ),
+          radial-gradient(
+            circle at 16% 46%,
+            rgba(255, 212, 166, 0.08),
+            transparent 14rem
+          ),
+          linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
+      }
+
+      .app-shell::after {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        background:
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.035),
+            transparent 18%,
+            transparent 82%,
+            rgba(255, 255, 255, 0.028)
+          ),
+          radial-gradient(
+            ellipse at center,
+            transparent 48%,
+            rgba(0, 0, 0, 0.62) 100%
+          );
+        pointer-events: none;
+      }
+
+      /* ── Topbar ── */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: calc(14px + env(safe-area-inset-top)) 27px 12px;
+        background: rgba(8, 8, 8, 0.6);
+        backdrop-filter: blur(22px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        width: 96px;
+        height: 34px;
+        overflow: hidden;
+      }
+
+      .brand img {
+        display: block;
+        width: 96px;
+        height: auto;
+        filter: brightness(1.2) contrast(1.05);
+      }
+
+      .profile-link {
+        width: 34px;
+        height: 34px;
+        border: 2px solid rgba(248, 245, 239, 0.7);
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.9;
+      }
+
+      .profile-link::before {
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        content: "";
+        transform: translateX(-50%);
+      }
+
+      .profile-link::after {
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        bottom: 6px;
+        height: 10px;
+        border: 2px solid currentColor;
+        border-bottom: 0;
+        border-radius: 14px 14px 0 0;
+        content: "";
+      }
+
+      /* ── Shell ── */
+      .shell {
+        padding: 22px 27px calc(110px + env(safe-area-inset-bottom));
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        font-size: 26px;
+        font-weight: 820;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+        font-weight: 520;
+        margin-bottom: 24px;
+      }
+
+      /* ── Progress Box ── */
+      .progress-card {
+        background: rgba(248, 245, 239, 0.05);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 24px;
+      }
+
+      .progress-label-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .progress-percentage {
+        color: var(--peach);
+      }
+
+      .progress-bar-bg {
+        height: 6px;
+        background: rgba(248, 245, 239, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: var(--peach);
+        width: 0%;
+        transition: width 400ms cubic-bezier(0.1, 0.76, 0.55, 0.94);
+      }
+
+      .live-consent-badge {
+        font-size: 11px;
+        font-weight: 520;
+        color: var(--muted);
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .live-consent-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--red);
+      }
+
+      .live-consent-dot.active {
+        background: var(--green);
+        box-shadow: 0 0 8px var(--green);
+      }
+
+      /* ── Filter Tabs ── */
+      .filter-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 18px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 8px;
+      }
+
+      .tab {
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 650;
+        color: var(--muted);
+        border-radius: 999px;
+        transition: all 180ms ease;
+      }
+
+      .tab.active {
+        color: #111;
+        background: var(--peach);
+      }
+
+      /* ── Checklist Items ── */
+      .checklist-group {
+        display: grid;
+        gap: 10px;
+      }
+
+      .checklist-item {
+        background: rgba(248, 245, 239, 0.04);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        transition:
+          border-color 180ms ease,
+          background 180ms ease;
+      }
+
+      .checklist-item:hover {
+        border-color: var(--line-strong);
+        background: rgba(248, 245, 239, 0.06);
+      }
+
+      .item-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        user-select: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+      }
+
+      .item-title-col {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .status-dot.done {
+        background: var(--green);
+        box-shadow: 0 0 8px var(--green);
+      }
+
+      .status-dot.critical {
+        background: var(--red);
+        box-shadow: 0 0 8px var(--red);
+      }
+
+      .status-dot.pending {
+        background: var(--orange);
+        box-shadow: 0 0 8px var(--orange);
+      }
+
+      .item-title {
+        font-size: 14px;
+        font-weight: 620;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .status-tag {
+        font-size: 9px;
+        font-weight: 650;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 3px 6px;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+
+      .status-tag.done {
+        color: var(--green);
+        background: rgba(180, 227, 180, 0.1);
+      }
+
+      .status-tag.critical {
+        color: var(--red);
+        background: rgba(255, 180, 168, 0.1);
+      }
+
+      .status-tag.pending {
+        color: var(--orange);
+        background: rgba(242, 191, 143, 0.1);
+      }
+
+      /* ── Item Content ── */
+      .item-body {
+        display: none;
+        padding: 0 18px 16px;
+        border-top: 1px dashed var(--line);
+        background: rgba(0, 0, 0, 0.2);
+        animation: slideDown 200ms ease;
+      }
+
+      .checklist-item.expanded .item-body {
+        display: block;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .body-section {
+        margin-top: 12px;
+      }
+
+      .section-label {
+        font-size: 10px;
+        font-weight: 650;
+        text-transform: uppercase;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+      }
+
+      .section-text {
+        font-size: 13px;
+        line-height: 1.45;
+        color: var(--soft);
+      }
+
+      .resources-list {
+        display: grid;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .resource-link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--peach);
+        text-decoration: underline;
+      }
+
+      /* ── Admin Controls inside Item ── */
+      .admin-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+      }
+
+      .admin-btn {
+        font-size: 11px;
+        font-weight: 650;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        transition: all 180ms ease;
+      }
+
+      .admin-btn:hover {
+        background: rgba(248, 245, 239, 0.05);
+        border-color: var(--line-strong);
+      }
+
+      .admin-btn.active-done {
+        background: rgba(180, 227, 180, 0.15);
+        color: var(--green);
+        border-color: var(--green);
+      }
+
+      .admin-btn.active-critical {
+        background: rgba(255, 180, 168, 0.15);
+        color: var(--red);
+        border-color: var(--red);
+      }
+
+      .admin-btn.active-pending {
+        background: rgba(242, 191, 143, 0.15);
+        color: var(--orange);
+        border-color: var(--orange);
+      }
+
+      /* ── Bottom navigation ── */
+      .bottom-nav {
+        position: fixed;
+        left: 50%;
+        bottom: 12px;
+        z-index: 30;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
+        background: rgba(25, 25, 24, 0.82);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
+        transform: translateX(-50%);
+      }
+
+      .nav-link {
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 5px;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
+      }
+
+      .nav-link.active {
+        color: var(--peach);
+      }
+
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .nav-link.active svg {
+        fill: currentColor;
+        stroke-width: 0;
+      }
+
+      @media (max-width: 374px) {
+        .shell {
+          padding-inline: 20px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar" aria-label="Echoo">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
+        </a>
+        <a
+          class="profile-link"
+          href="auth.html"
+          aria-label="Open your profile"
+        ></a>
+      </header>
+
+      <main class="shell">
+        <h1>Legal Compliance</h1>
+        <p class="subtitle">
+          Complete legal framework and launch screening required before public
+          promotion or revenue collection.
+        </p>
+
+        <!-- ─── PROGRESS METRIC ─── -->
+        <div class="progress-card">
+          <div class="progress-label-row">
+            <span>Launch Readiness</span>
+            <span class="progress-percentage" id="progress-text">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-bar"></div>
+          </div>
+
+          <div class="live-consent-badge">
+            <div class="live-consent-dot" id="live-consent-dot"></div>
+            <span id="live-consent-text">Checking local consent status...</span>
+          </div>
+        </div>
+
+        <!-- ─── FILTERS ─── -->
+        <div
+          class="filter-tabs"
+          role="tablist"
+          aria-label="Filter checklist items"
+        >
+          <button
+            class="tab active"
+            id="tab-all"
+            role="tab"
+            aria-selected="true"
+          >
+            All
+          </button>
+          <button
+            class="tab"
+            id="tab-critical"
+            role="tab"
+            aria-selected="false"
+          >
+            Critical
+          </button>
+          <button class="tab" id="tab-pending" role="tab" aria-selected="false">
+            Pending
+          </button>
+          <button class="tab" id="tab-done" role="tab" aria-selected="false">
+            Done
+          </button>
+        </div>
+
+        <!-- ─── CHECKLIST ─── -->
+        <div class="checklist-group" id="checklist-group">
+          <!-- Dynamically Rendered Checklist Items -->
+        </div>
+      </main>
+    </div>
+
+    <!-- ─── BOTTOM NAV ─── -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <a class="nav-link" href="index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+        </svg>
+        <span>Home</span>
+      </a>
+      <a class="nav-link" href="events.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m16 16 4 4" />
+        </svg>
+        <span>Discover</span>
+      </a>
+      <a class="nav-link" href="tickets.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" />
+          <path d="M13 6v12" />
+        </svg>
+        <span>Tickets</span>
+      </a>
+      <a class="nav-link active" href="auth.html" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        </svg>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+    <script>
+      // Checklist baseline definition matching Echoo-Legal-Compliance-Screen.pdf
+      const BASELINE_TASKS = [
+        {
+          id: "sole_proprietor",
+          title: "Sole proprietor registered in Ontario",
+          category: "general",
+          defaultStatus: "done",
+          risk: "Operating without registering means you cannot legally conduct business transactions under the name Echoo.",
+          penalty:
+            "Inability to open commercial accounts or register business licences.",
+          todo: "Ontario Master Business Licence must be obtained. (Completed)",
+          resources: [
+            {
+              name: "Ontario Business Registry",
+              url: "https://www.ontario.ca/page/ontario-business-registry",
+            },
+          ],
+        },
+        {
+          id: "business_name",
+          title: "Business name Echoo registered",
+          category: "general",
+          defaultStatus: "done",
+          risk: "Name availability issues or conflicts with other operating entities in Ontario.",
+          penalty: "Forced name change, trade dispute, or legal claims.",
+          todo: "Search and register business name on ontario.ca registry. (Completed)",
+          resources: [
+            {
+              name: "Business Name Search Ontario",
+              url: "https://www.ontario.ca/page/business-name-registration",
+            },
+          ],
+        },
+        {
+          id: "work_permit",
+          title: "Work permit self-employment confirmation",
+          category: "general",
+          defaultStatus: "critical",
+          risk: "As a refugee claimant, work permits carry conditions that limit self-employment. Operating before confirming this violates immigration law.",
+          penalty:
+            "Violation of immigration conditions; potential negative impact on refugee claims.",
+          todo: "Call FCJ Refugee Centre (416-469-9754) and Refugee Law Office (416-977-8111) immediately. Ask if current permit allows technology product self-employment. Get confirmation in writing.",
+          resources: [
+            {
+              name: "FCJ Refugee Centre",
+              url: "https://www.fcjrefugeecentre.org",
+            },
+            { name: "Refugee Law Office", url: "https://www.legalaid.on.ca" },
+          ],
+        },
+        {
+          id: "privacy_policy",
+          title: "Privacy Policy published on website",
+          category: "privacy",
+          defaultStatus: "done",
+          risk: "Collecting user preferences, location, and dietary info without an active Privacy Policy violates PIPEDA.",
+          penalty:
+            "Office of the Privacy Commissioner (OPC) investigation, reputational damage, CPPA fines up to $10M.",
+          todo: "Publish PIPEDA-compliant policy at echoocity.com/privacy-policy and link in the footer of every page. List Idris Oyejobi as Privacy Officer.",
+          resources: [
+            { name: "Termly.io (Free Generator)", url: "https://termly.io" },
+            { name: "OPC Guide for Businesses", url: "https://www.priv.gc.ca" },
+          ],
+        },
+        {
+          id: "pipeda_consent",
+          title: "PIPEDA consent mechanism in onboarding",
+          category: "privacy",
+          defaultStatus: "done",
+          risk: "Sensitive preferences, location, and dietary info collected without explicit, transparent user consent.",
+          penalty: "Invalidated consents, regulatory enforcement.",
+          todo: "Add consent checkbox to signup form with specific text showing location, interest, and allergy tracking details.",
+          resources: [
+            {
+              name: "PIPEDA Fair Information Principles",
+              url: "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/",
+            },
+          ],
+        },
+        {
+          id: "tos_published",
+          title: "Terms of Service published on website",
+          category: "general",
+          defaultStatus: "done",
+          risk: "No legal terms covering user conduct, limitation of liability for planning outcomes, or dispute resolution.",
+          penalty:
+            "Unbounded civil liability for venue recommendation outcomes.",
+          todo: "Generate and publish Terms of Service at echoocity.com/terms. Require users to agree on sign-up.",
+          resources: [
+            {
+              name: "Terms of Service Template Guide",
+              url: "https://termly.io",
+            },
+          ],
+        },
+        {
+          id: "casl_push_consent",
+          title: "CASL push notification opt-in",
+          category: "spam",
+          defaultStatus: "done",
+          risk: "Sending Thursday 6pm personalized plans via push/email without documented express opt-in consent is a CASL violation.",
+          penalty: "CASL fines up to $1 million per violation for individuals.",
+          todo: "Add unchecked opt-in screen/options during onboarding. Record selection with timestamp in Supabase.",
+          resources: [
+            {
+              name: "CRTC CASL Rules",
+              url: "https://crtc.gc.ca/eng/internet/anti.htm",
+            },
+          ],
+        },
+        {
+          id: "city_intel_clause",
+          title: "City Intelligence consent clause",
+          category: "privacy",
+          defaultStatus: "done",
+          risk: "Selling commercial city intelligence reports using user activity records without explicit consent from Day 1.",
+          penalty:
+            "All existing user data becomes unusable for Model 5 revenue if consent is added retroactively.",
+          todo: "Add explicit check-in aggregation paragraph in Privacy Policy and dedicated opt-in toggle in onboarding.",
+          resources: [
+            {
+              name: "Ontario Information and Privacy Commissioner",
+              url: "https://www.ipc.on.ca",
+            },
+          ],
+        },
+        {
+          id: "allergy_policy",
+          title: "Allergy/dietary data sensitive handling policy",
+          category: "allergy",
+          defaultStatus: "pending",
+          risk: "Allergy records are classified as sensitive health data. Leaking or exposing them carries high legal liability.",
+          penalty: "Significant health breach liability; loss of trust.",
+          todo: "Draft sensitive data handling policy. Encrypt allergy database fields at rest. Display warning message where collected.",
+          resources: [
+            {
+              name: "CLEO Health Privacy Resources",
+              url: "https://www.cleo.on.ca",
+            },
+          ],
+        },
+        {
+          id: "partner_agreement",
+          title: "Partner Programme agreement template",
+          category: "general",
+          defaultStatus: "pending",
+          risk: "No written terms with restaurants paying $99/mo detailing service delivery, payments, or cancellations.",
+          penalty:
+            "Legally ambiguous business partnerships and payment disputes.",
+          todo: "Write one-page Partner Agreement covering fees, cancellation terms, data accuracy, and liability.",
+          resources: [
+            {
+              name: "Ontario Business Law Guides",
+              url: "https://www.ontario.ca",
+            },
+          ],
+        },
+        {
+          id: "hst_registration",
+          title: "HST registration setup",
+          category: "tax",
+          defaultStatus: "pending",
+          risk: "Mandatory once cumulative revenue crosses $30,000 in a 12-month period.",
+          penalty:
+            "Forced to pay uncollected 13% HST out-of-pocket plus penalties.",
+          todo: "Register for CRA HST account online. Set trigger warning at $25,000 cumulative revenue.",
+          resources: [
+            {
+              name: "CRA GST/HST Registry",
+              url: "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses.html",
+            },
+          ],
+        },
+        {
+          id: "data_breach_proc",
+          title: "Data breach notification procedure",
+          category: "privacy",
+          defaultStatus: "pending",
+          risk: "PIPEDA requires notifying OPC and affected users of breaches that present real risk of significant harm.",
+          penalty: "Failing to notify is a stand-alone regulatory violation.",
+          todo: "Write one-page internal breach procedure outlining contacts (OPC: priv.gc.ca) and 72-hour notification timeline.",
+          resources: [
+            {
+              name: "OPC Breach Reporting Portal",
+              url: "https://www.priv.gc.ca/en/report-a-concern/report-a-privacy-breach-at-your-organization/",
+            },
+          ],
+        },
+        {
+          id: "anthropic_api_review",
+          title: "Anthropic API terms compliance review",
+          category: "general",
+          defaultStatus: "pending",
+          risk: "Providing allergy guidance via Claude AI voice system must comply with safety policies.",
+          penalty: "API access termination, halting voice engine.",
+          todo: "Review anthropic.com/usage-policy. Ensure every allergy plan card has disclaimer 'call ahead to confirm'.",
+          resources: [
+            {
+              name: "Anthropic Usage Policy",
+              url: "https://www.anthropic.com/legal/consumer-terms",
+            },
+          ],
+        },
+        {
+          id: "trademark_echoo",
+          title: "Trademark the Echoo name and logo",
+          category: "general",
+          defaultStatus: "pending",
+          risk: "Echoo is currently unregistered. Competitors could register and block your use of the name in Canada.",
+          penalty: "Forced rebranding; loss of brand assets.",
+          todo: "File trademark application with Canadian Intellectual Property Office (CIPO) under Class 42. Cost is $458.43.",
+          resources: [
+            {
+              name: "CIPO Trademark Filing Tool",
+              url: "https://www.ic.gc.ca/app/opic-cipo/trdmrks/srch/home?lang=eng",
+            },
+          ],
+        },
+        {
+          id: "copyright_notice",
+          title: "Copyright Notice in footer",
+          category: "general",
+          defaultStatus: "done",
+          risk: "Unprotected layouts and original cultural planning scripts open to unchecked copycats.",
+          penalty: "Difficulty enforcing legal ownership claims.",
+          todo: "Add copyright notice in website footer: 'Copyright 2026 Idris Oyejobi. All rights reserved.'",
+          resources: [
+            {
+              name: "Canadian Copyright Office",
+              url: "https://www.ic.gc.ca/eic/site/cipointernet-internetopic.nsf/eng/h_wr02281.html",
+            },
+          ],
+        },
+        {
+          id: "venue_allergy_disclaimer",
+          title: "Allergy disclaimer in Partner Agreement",
+          category: "allergy",
+          defaultStatus: "pending",
+          risk: "Being sued directly for incorrect allergy info uploaded or provided by partner restaurants.",
+          penalty: "Direct financial liability; no legal shield.",
+          todo: "Add clause to partner agreement: 'Partner is solely responsible for allergy accuracy and indemnifies Echoo.'",
+          resources: [
+            {
+              name: "Ontario Contract Law Primer",
+              url: "https://www.ontario.ca",
+            },
+          ],
+        },
+      ];
+
+      // State management for checklist
+      let tasks = [];
+      let currentFilter = "all";
+
+      // Load tasks state
+      function initTasks() {
+        const stored = localStorage.getItem("echoo_compliance_status");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            tasks = BASELINE_TASKS.map((t) => ({
+              ...t,
+              status: parsed[t.id] || t.defaultStatus,
+            }));
+          } catch (e) {
+            tasks = BASELINE_TASKS.map((t) => ({
+              ...t,
+              status: t.defaultStatus,
+            }));
+          }
+        } else {
+          tasks = BASELINE_TASKS.map((t) => ({
+            ...t,
+            status: t.defaultStatus,
+          }));
+          saveTasksState();
+        }
+      }
+
+      function saveTasksState() {
+        const stateMap = {};
+        tasks.forEach((t) => {
+          stateMap[t.id] = t.status;
+        });
+        localStorage.setItem(
+          "echoo_compliance_status",
+          JSON.stringify(stateMap),
+        );
+      }
+
+      // Check current user consents from local storage
+      function updateLiveConsentCheck() {
+        const dot = document.getElementById("live-consent-dot");
+        const text = document.getElementById("live-consent-text");
+
+        const pipeda = localStorage.getItem("echoo_pipeda_consent_at");
+        const cityIntel = localStorage.getItem("echoo_city_intel_consent_at");
+        const casl = localStorage.getItem("echoo_casl_push_consent_at");
+
+        if (pipeda) {
+          dot.classList.add("active");
+          let detail = `PIPEDA Opt-in active (Signed ${new Date(pipeda).toLocaleDateString()})`;
+          if (cityIntel) detail += `, City Intel Active`;
+          if (casl) detail += `, CASL push Active`;
+          text.textContent = detail;
+        } else {
+          dot.classList.remove("active");
+          text.textContent =
+            "No user consent recorded in this session. Complete sign-up to test.";
+        }
+      }
+
+      // Progress Calculation
+      function renderProgress() {
+        const completed = tasks.filter((t) => t.status === "done").length;
+        const total = tasks.length;
+        const percentage = Math.round((completed / total) * 100);
+
+        document.getElementById("progress-text").textContent = `${percentage}%`;
+        document.getElementById("progress-bar").style.width = `${percentage}%`;
+      }
+
+      // Render items list
+      function renderChecklist() {
+        const container = document.getElementById("checklist-group");
+        container.innerHTML = "";
+
+        const filtered = tasks.filter((t) => {
+          if (currentFilter === "all") return true;
+          return t.status === currentFilter;
+        });
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; color: var(--muted); padding: 32px 0; font-size: 14px;">
+              No items in this category.
+            </div>
+          `;
+          return;
+        }
+
+        filtered.forEach((task) => {
+          const item = document.createElement("div");
+          item.className = "checklist-item";
+          item.id = `task-card-${task.id}`;
+
+          item.innerHTML = `
+            <button type="button" class="item-header" onclick="toggleExpand('${task.id}')" aria-expanded="false" aria-controls="body-${task.id}">
+              <div class="item-title-col">
+                <span class="status-dot ${task.status}" aria-hidden="true"></span>
+                <span class="item-title">${task.title}</span>
+              </div>
+              <span class="status-tag ${task.status}">${task.status}</span>
+            </button>
+            <div class="item-body" id="body-${task.id}">
+              <div class="body-section">
+                <div class="section-label">Risk if not done</div>
+                <div class="section-text">${task.risk}</div>
+              </div>
+              <div class="body-section">
+                <div class="section-label">Penalty</div>
+                <div class="section-text" style="color: var(--red);">${task.penalty}</div>
+              </div>
+              <div class="body-section">
+                <div class="section-label">What to do</div>
+                <div class="section-text">${task.todo}</div>
+              </div>
+              ${
+                task.resources && task.resources.length > 0
+                  ? `
+                <div class="body-section">
+                  <div class="section-label">Free Legal Resources</div>
+                  <div class="resources-list">
+                    ${task.resources
+                      .map(
+                        (r) => `
+                      <a href="${r.url}" class="resource-link" target="_blank">
+                        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2;" aria-hidden="true">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        ${r.name}
+                      </a>
+                    `,
+                      )
+                      .join("")}
+                  </div>
+                </div>
+              `
+                  : ""
+              }
+              <div class="admin-controls">
+                <div class="section-label" style="margin: 0; margin-right: auto;">Set Status:</div>
+                <button type="button" class="admin-btn ${task.status === "done" ? "active-done" : ""}" onclick="updateStatus('${task.id}', 'done')">Done</button>
+                <button type="button" class="admin-btn ${task.status === "pending" ? "active-pending" : ""}" onclick="updateStatus('${task.id}', 'pending')">Pending</button>
+                <button type="button" class="admin-btn ${task.status === "critical" ? "active-critical" : ""}" onclick="updateStatus('${task.id}', 'critical')">Critical</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      window.toggleExpand = function (id) {
+        const el = document.getElementById(`task-card-${id}`);
+        const btn = el.querySelector(".item-header");
+        const expanded = el.classList.contains("expanded");
+
+        // Collapse all others
+        document.querySelectorAll(".checklist-item").forEach((item) => {
+          item.classList.remove("expanded");
+          item
+            .querySelector(".item-header")
+            .setAttribute("aria-expanded", "false");
+        });
+
+        if (!expanded) {
+          el.classList.add("expanded");
+          btn.setAttribute("aria-expanded", "true");
+        }
+      };
+
+      window.updateStatus = function (id, newStatus) {
+        const task = tasks.find((t) => t.id === id);
+        if (task) {
+          task.status = newStatus;
+          saveTasksState();
+          renderProgress();
+          renderChecklist();
+          // Keep expanded
+          setTimeout(() => {
+            const el = document.getElementById(`task-card-${id}`);
+            if (el) {
+              el.classList.add("expanded");
+              el.querySelector(".item-header").setAttribute(
+                "aria-expanded",
+                "true",
+              );
+            }
+          }, 10);
+        }
+      };
+
+      // Tab handlers
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".tab").forEach((t) => {
+            t.classList.remove("active");
+            t.setAttribute("aria-selected", "false");
+          });
+          tab.classList.add("active");
+          tab.setAttribute("aria-selected", "true");
+          currentFilter = tab.id.replace("tab-", "");
+          renderChecklist();
+        });
+      });
+
+      // Initialize
+      initTasks();
+      renderProgress();
+      renderChecklist();
+      updateLiveConsentCheck();
+
+      // Keep consent status fresh in case of preferences changes
+      window.addEventListener("focus", updateLiveConsentCheck);
+    </script>
+  </body>
+</html>

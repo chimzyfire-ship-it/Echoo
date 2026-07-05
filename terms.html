@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Echoo Terms of Service</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f8f5ef;
+        --muted: #aaa29a;
+        --soft: rgba(248, 245, 239, 0.72);
+        --line: rgba(248, 245, 239, 0.12);
+        --line-strong: rgba(248, 245, 239, 0.2);
+        --glass: rgba(30, 30, 29, 0.72);
+        --peach: #f7d5b2;
+        --black: #050505;
+        --panel: #131313;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip;
+        overscroll-behavior-y: none;
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        position: relative;
+        overflow-wrap: break-word;
+        min-height: 100%;
+        margin: 0;
+        background: #000;
+        color: var(--ink);
+        min-height: 100svh;
+        display: grid;
+        justify-items: center;
+        align-items: start;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ── App shell ── */
+      .app-shell {
+        width: min(100vw, 430px);
+        min-height: 100svh;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            circle at 50% -4%,
+            rgba(255, 255, 255, 0.14),
+            transparent 18rem
+          ),
+          radial-gradient(
+            circle at 16% 46%,
+            rgba(255, 212, 166, 0.08),
+            transparent 14rem
+          ),
+          linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
+      }
+
+      .app-shell::after {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        background:
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.035),
+            transparent 18%,
+            transparent 82%,
+            rgba(255, 255, 255, 0.028)
+          ),
+          radial-gradient(
+            ellipse at center,
+            transparent 48%,
+            rgba(0, 0, 0, 0.62) 100%
+          );
+        pointer-events: none;
+      }
+
+      /* ── Topbar ── */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: calc(14px + env(safe-area-inset-top)) 27px 12px;
+        background: rgba(8, 8, 8, 0.6);
+        backdrop-filter: blur(22px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        width: 96px;
+        height: 34px;
+        overflow: hidden;
+      }
+
+      .brand img {
+        display: block;
+        width: 96px;
+        height: auto;
+        filter: brightness(1.2) contrast(1.05);
+      }
+
+      .back-link {
+        font-size: 13px;
+        color: var(--peach);
+        font-weight: 650;
+      }
+
+      /* ── Shell ── */
+      .shell {
+        padding: 22px 27px calc(110px + env(safe-area-inset-bottom));
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        font-size: 26px;
+        font-weight: 820;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin-bottom: 14px;
+      }
+
+      h2 {
+        font-size: 16px;
+        font-weight: 680;
+        color: var(--peach);
+        margin-top: 24px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      p,
+      li {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--soft);
+        margin-bottom: 12px;
+      }
+
+      .warning-box {
+        background: rgba(255, 180, 168, 0.05);
+        border-left: 3px solid #ffb4a8;
+        padding: 14px 16px;
+        border-radius: 4px;
+        margin: 18px 0;
+      }
+
+      .warning-box p {
+        margin-bottom: 0;
+        color: var(--ink);
+      }
+
+      /* Footer */
+      footer {
+        margin-top: 48px;
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+        font-size: 11px;
+        color: var(--muted);
+        text-align: center;
+        display: grid;
+        gap: 6px;
+      }
+
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .footer-links a {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar" aria-label="Echoo">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
+        </a>
+        <a class="back-link" href="auth.html">Back</a>
+      </header>
+
+      <main class="shell">
+        <h1>Terms of Service</h1>
+        <p
+          class="subtitle"
+          style="
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: -8px;
+            margin-bottom: 20px;
+          "
+        >
+          Effective Date: July 5, 2026
+        </p>
+
+        <p>
+          By creating an account or using Echoo, you agree to comply with and be
+          bound by the following terms and conditions.
+        </p>
+
+        <h2>1. Services Provided</h2>
+        <p>
+          Echoo is a local discovery and city planning tool. It organizes
+          routes, plans, and venue recommendations based on aggregate regional
+          data and user-specified filters.
+        </p>
+
+        <h2>2. Allergy & Recommendation Disclaimer</h2>
+        <div class="warning-box">
+          <p>
+            <strong>Limitation of Liability:</strong> Echoo provides dietary and
+            allergy information as a discovery aid only. This information is
+            provided by partner venues and is not verified by a medical
+            authority. Always confirm your specific dietary requirements
+            directly with the venue before ordering. Echoo is not liable for any
+            harm resulting from venue-provided allergen information.
+          </p>
+        </div>
+
+        <h2>3. Intellectual Property</h2>
+        <p>
+          All original templates, branding, design assets, and AI-enriched
+          editorial content on echoocity.com belong exclusively to Echoo.
+          Copying or scraping platform details is strictly prohibited.
+        </p>
+
+        <h2>4. Governing Law</h2>
+        <p>
+          These terms are governed by and construed in accordance with the laws
+          of the Province of Ontario and the federal laws of Canada. Any legal
+          actions arising from your use of Echoo must be filed in the courts of
+          Ontario.
+        </p>
+
+        <footer>
+          <div class="footer-links">
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="compliance.html">Compliance Checklist</a>
+          </div>
+          <span>Copyright © 2026 Idris Oyejobi. All rights reserved.</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

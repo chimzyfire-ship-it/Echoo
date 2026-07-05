@@ -153,6 +153,9 @@
       tone,
       onboardingCompletedAt: row.completed_at,
       personalizationProfile,
+      pipeda_consent_at: row.metadata?.pipeda_consent_at || null,
+      city_intel_consent_at: row.metadata?.city_intel_consent_at || null,
+      casl_push_consent_at: row.metadata?.casl_push_consent_at || null,
     };
   }
 
@@ -194,6 +197,9 @@
       },
       metadata: {
         source: clean(profile.source, "web_onboarding"),
+        pipeda_consent_at: profile.pipeda_consent_at || null,
+        city_intel_consent_at: profile.city_intel_consent_at || null,
+        casl_push_consent_at: profile.casl_push_consent_at || null,
       },
     };
   }

@@ -478,11 +478,7 @@
       .ob-panel {
         border-radius: 14px;
         background:
-          linear-gradient(
-            135deg,
-            rgba(247, 213, 178, 0.08),
-            transparent 34%
-          ),
+          linear-gradient(135deg, rgba(247, 213, 178, 0.08), transparent 34%),
           rgba(248, 245, 239, 0.05);
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
         overflow: hidden;
@@ -998,20 +994,67 @@
                   required
                 />
               </div>
+              <div class="field signup-only" style="margin: 6px 0">
+                <label
+                  class="checkbox-container"
+                  style="
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 10px;
+                    cursor: pointer;
+                    color: var(--muted);
+                    font-size: 13px;
+                    font-weight: 520;
+                    line-height: 1.45;
+                    text-transform: none;
+                    letter-spacing: normal;
+                  "
+                >
+                  <input
+                    id="pipeda-consent"
+                    type="checkbox"
+                    required
+                    style="
+                      width: auto;
+                      min-height: auto;
+                      margin-top: 3px;
+                      cursor: pointer;
+                    "
+                  />
+                  <span
+                    >By creating an Echoo account, you agree to our
+                    <a
+                      href="privacy.html"
+                      target="_blank"
+                      style="color: var(--peach); text-decoration: underline"
+                      >Privacy Policy</a
+                    >
+                    and
+                    <a
+                      href="terms.html"
+                      target="_blank"
+                      style="color: var(--peach); text-decoration: underline"
+                      >Terms of Service</a
+                    >. Echoo collects your location, check-in history, cultural
+                    preferences, and dietary requirements to personalise your
+                    plans. You can update or delete your data at any time.</span
+                  >
+                </label>
+              </div>
               <div class="auth-meta">
                 <span>Secured by Echoo</span>
-                <a href="#">Need help?</a>
+                <a
+                  href="compliance.html"
+                  style="color: var(--peach); text-decoration: underline"
+                  >Compliance Checklist</a
+                >
               </div>
               <div class="auth-status" id="auth-status" role="status"></div>
               <button class="submit-btn" type="submit" id="submit-label">
                 Open my city
               </button>
               <div class="divider">or</div>
-              <button
-                class="provider-btn"
-                type="button"
-                data-provider="Google"
-              >
+              <button class="provider-btn" type="button" data-provider="Google">
                 Continue with Google
               </button>
               <button class="provider-btn" type="button" data-provider="Apple">
@@ -1151,6 +1194,8 @@
         tone: initialStoredPrefs.tone || "direct",
         userName: initialStoredPrefs.name || "",
         userEmail: initialStoredPrefs.email || "",
+        city_intel_consent: "",
+        casl_push_consent: "",
       };
 
       /* ── DOM refs ── */
@@ -1366,7 +1411,7 @@
           type: "cards",
           title: "How should Echoo talk to you?",
           sub: "Pick the recommendation style your AI guide should use.",
-          btn: "Let's go",
+          btn: "Continue",
           key: "tone",
           options: [
             {
@@ -1378,6 +1423,44 @@
               value: "detailed",
               name: "Curated and contextual",
               desc: "Why it fits, alternate routes, and fuller planning context.",
+            },
+          ],
+        },
+        {
+          type: "cards",
+          title: "Help shape Ontario's spaces.",
+          sub: "Echoo compiles anonymised check-in and activity data to produce city intelligence reports for urban planners. Individual users are never identifiable.",
+          btn: "Continue",
+          key: "city_intel_consent",
+          options: [
+            {
+              value: "yes",
+              name: "Yes, contribute anonymised data",
+              desc: "Allow my aggregate, anonymised check-ins to support city development reports.",
+            },
+            {
+              value: "no",
+              name: "No, keep my check-ins private",
+              desc: "Do not include my activity data in any aggregated urban intelligence reports.",
+            },
+          ],
+        },
+        {
+          type: "cards",
+          title: "Personalised plans, every Thursday.",
+          sub: "Would you like Echoo to send you a personalised weekend plan every Thursday at 6:00 PM?",
+          btn: "Let's go",
+          key: "casl_push_consent",
+          options: [
+            {
+              value: "yes",
+              name: "Yes, send me plans",
+              desc: "Receive curated routes and weekend suggestions weekly. Unsubscribe anytime.",
+            },
+            {
+              value: "no",
+              name: "No, thanks",
+              desc: "I will discover routes manually inside the Echoo planner when I choose.",
             },
           ],
         },
@@ -1723,6 +1806,19 @@
           return;
         }
 
+        const consentCheckbox = document.getElementById("pipeda-consent");
+        if (consentCheckbox && !consentCheckbox.checked) {
+          setStatus(
+            "You must agree to the Privacy Policy and Terms of Service to sign up.",
+            true,
+          );
+          return;
+        }
+        localStorage.setItem(
+          "echoo_pipeda_consent_at",
+          new Date().toISOString(),
+        );
+
         setBusy(true, "Creating…");
         setStatus("Creating your free Echoo account…");
         try {
@@ -1826,6 +1922,23 @@
       }
 
       obNext.addEventListener("click", () => {
+        const currentStep = OB_STEPS[state.obStep];
+        if (
+          currentStep &&
+          currentStep.key === "city_intel_consent" &&
+          !state.city_intel_consent
+        ) {
+          alert("Please select one of the choices to continue.");
+          return;
+        }
+        if (
+          currentStep &&
+          currentStep.key === "casl_push_consent" &&
+          !state.casl_push_consent
+        ) {
+          alert("Please select one of the choices to continue.");
+          return;
+        }
         if (state.obStep < OB_STEPS.length - 1) {
           renderObStep(state.obStep + 1);
         } else {
@@ -1966,8 +2079,32 @@
           dob,
           tone,
           personalizationProfile,
+          pipeda_consent_at:
+            localStorage.getItem("echoo_pipeda_consent_at") ||
+            new Date().toISOString(),
+          city_intel_consent_at:
+            state.city_intel_consent === "yes"
+              ? new Date().toISOString()
+              : null,
+          casl_push_consent_at:
+            state.casl_push_consent === "yes" ? new Date().toISOString() : null,
         };
         localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
+        if (prefs.pipeda_consent_at)
+          localStorage.setItem(
+            "echoo_pipeda_consent_at",
+            prefs.pipeda_consent_at,
+          );
+        if (prefs.city_intel_consent_at)
+          localStorage.setItem(
+            "echoo_city_intel_consent_at",
+            prefs.city_intel_consent_at,
+          );
+        if (prefs.casl_push_consent_at)
+          localStorage.setItem(
+            "echoo_casl_push_consent_at",
+            prefs.casl_push_consent_at,
+          );
 
         setStatus("Saving your Echoo personality…");
         obNext.disabled = true;
@@ -2004,8 +2141,7 @@
           .toUpperCase()
           .slice(0, 2);
 
-        document.getElementById("profile-avatar").textContent =
-          initials || "U";
+        document.getElementById("profile-avatar").textContent = initials || "U";
         document.getElementById("profile-name").textContent = name;
         document.getElementById("profile-email").textContent = email;
 
@@ -2048,7 +2184,7 @@
           },
         ];
 
-        document.getElementById("profile-cards").innerHTML = cards
+        let cardsHtml = cards
           .map(
             (card) => `
           <div class="profile-card">
@@ -2058,6 +2194,20 @@
         `,
           )
           .join("");
+
+        cardsHtml += `
+          <a href="compliance.html" class="profile-card" style="border: 1px dashed var(--peach); background: rgba(247, 213, 178, 0.04); display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 14px 18px; border-radius: 14px; transition: background 180ms ease;">
+            <span class="profile-card-label" style="color: var(--peach);">Legal Compliance</span>
+            <span class="profile-card-value" style="color: var(--peach); display: flex; align-items: center; gap: 4px;">
+              Checklist
+              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </a>
+        `;
+
+        document.getElementById("profile-cards").innerHTML = cardsHtml;
       }
 
       document
