@@ -478,7 +478,7 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        background: #f5f0e8;
+        background: #0b1426;
         opacity: 0;
         pointer-events: none;
         transition: opacity 220ms ease;
@@ -493,15 +493,15 @@
         align-items: center;
         gap: 12px;
         padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        background: #f5f0e8;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0b1426;
       }
       .chat-header-avatar {
         width: 36px;
         height: 36px;
         border-radius: 50%;
         object-fit: cover;
-        border: 2px solid rgba(0, 0, 0, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
       }
       .chat-header-info {
         display: flex;
@@ -510,7 +510,7 @@
         flex: 1;
       }
       .chat-header-title {
-        color: #262626;
+        color: #ffffff;
         font-size: 15px;
         font-weight: 650;
         line-height: 1.2;
@@ -520,7 +520,7 @@
         align-items: center;
         gap: 5px;
         font-size: 11px;
-        color: #8e8e8e;
+        color: #a0aab8;
         font-weight: 480;
       }
       .chat-header-status::before {
@@ -536,8 +536,8 @@
         height: 36px;
         border: none;
         border-radius: 50%;
-        background: rgba(0, 0, 0, 0.05);
-        color: #262626;
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
         font-size: 16px;
         cursor: pointer;
         display: grid;
@@ -546,7 +546,7 @@
         transition: background 180ms ease;
       }
       .chat-close:hover {
-        background: rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.15);
       }
       .chat-body {
         flex: 1 1 0;
@@ -566,7 +566,7 @@
         background: transparent;
       }
       .chat-body::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.1);
         border-radius: 4px;
       }
       /* ── Route Board (Itinerary) ── */
@@ -804,20 +804,20 @@
       }
       .bubble.user {
         align-self: flex-end;
-        background: linear-gradient(135deg, #f7d5b2 0%, #e8c49a 100%);
-        color: #1a1a1a;
+        background: linear-gradient(135deg, #3897f0, #9356ff);
+        color: #ffffff;
         font-weight: 520;
         border-radius: 20px 20px 4px 20px;
-        box-shadow: 0 2px 10px rgba(200, 149, 108, 0.18);
+        box-shadow: 0 2px 10px rgba(56, 151, 240, 0.25);
       }
       .bubble.ai {
         align-self: flex-start;
-        background: #ededec;
-        color: #262626;
+        background: #1c2738;
+        color: #f0f3f8;
         border: none;
         font-weight: 480;
         border-radius: 20px 20px 20px 4px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
       }
       /* ── Bubble row (avatar + AI bubble) ── */
       .bubble-row {
@@ -838,7 +838,7 @@
         border-radius: 50%;
         object-fit: cover;
         flex-shrink: 0;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
       }
       .bubble-row .bubble.ai {
         margin-left: 0;
@@ -868,16 +868,16 @@
         align-items: center;
         gap: 5px;
         padding: 12px 16px;
-        background: #ededec;
+        background: #1c2738;
         border: none;
         border-radius: 20px 20px 20px 4px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
       }
       .typing-dot {
         width: 7px;
         height: 7px;
         border-radius: 50%;
-        background: #8e8e8e;
+        background: #8e9fae;
         animation: typingWave 1.4s ease-in-out infinite;
       }
       .typing-dot:nth-child(2) {
@@ -900,7 +900,7 @@
       }
       .typing-label {
         font-size: 11px;
-        color: #8e8e8e;
+        color: #8e9fae;
         font-weight: 500;
         font-style: italic;
         padding-left: 4px;
@@ -1066,18 +1066,18 @@
         gap: 10px;
         padding: 10px 14px;
         padding-bottom: calc(10px + env(safe-area-inset-bottom));
-        border-top: 1px solid rgba(0, 0, 0, 0.06);
-        background: #f5f0e8;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0b1426;
       }
       .chat-input-bar input {
         flex: 1;
         min-height: 42px;
         padding: 0 16px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 22px;
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.06);
         backdrop-filter: blur(10px);
-        color: #262626;
+        color: #ffffff;
         font-size: 14px;
         font-weight: 480;
         outline: none;
@@ -1087,13 +1087,13 @@
           background 200ms ease;
       }
       .chat-input-bar input::placeholder {
-        color: #b0b0b0;
+        color: #6a7585;
         font-weight: 440;
       }
       .chat-input-bar input:focus {
-        border-color: rgba(200, 149, 108, 0.5);
-        box-shadow: 0 0 0 3px rgba(200, 149, 108, 0.1);
-        background: #fff;
+        border-color: rgba(247, 213, 178, 0.4);
+        box-shadow: 0 0 0 3px rgba(247, 213, 178, 0.08);
+        background: rgba(255, 255, 255, 0.1);
       }
       .chat-send {
         width: 38px;
@@ -1129,52 +1129,97 @@
       }
       .card-stack.stacked {
         cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 220px;
+        margin: 16px 0 8px;
+        position: relative;
+        overflow: visible;
       }
       .card-stack.stacked .route-grid {
         position: relative;
-        gap: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: visible;
       }
       .card-stack.stacked .route-stop {
+        position: absolute;
+        width: 135px;
+        height: 185px;
+        transform: translate(var(--stacked-tx, 0px), var(--stacked-ty, 0px))
+          rotate(var(--stacked-rot, 0deg));
+        z-index: var(--stacked-z, 1);
         transition:
-          transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-          opacity 0.4s ease;
+          transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+          opacity 0.3s ease,
+          box-shadow 0.3s ease;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
       }
-      .card-stack.stacked .route-stop:nth-child(1) {
-        position: relative;
-        z-index: 4;
-        transform: rotate(-1.5deg);
+      .card-stack.stacked .route-stop:hover {
+        transform: translate(
+            var(--stacked-tx, 0px),
+            calc(var(--stacked-ty, 0px) - 8px)
+          )
+          rotate(var(--stacked-rot, 0deg)) scale(1.03) !important;
+        z-index: 15 !important;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
       }
-      .card-stack.stacked .route-stop:nth-child(2) {
+      .card-stack.stacked .route-stop-media {
+        height: 100% !important;
+        min-height: 100% !important;
+      }
+      .card-stack.stacked .route-stop-body {
+        padding: 8px 10px;
         position: absolute;
-        top: 0;
+        bottom: 0;
         left: 0;
         right: 0;
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.85) 40%,
+          transparent
+        );
         z-index: 3;
-        transform: rotate(2deg) translate(6px, 12px) scale(0.97);
-        opacity: 0.88;
       }
-      .card-stack.stacked .route-stop:nth-child(3) {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 2;
-        transform: rotate(-1deg) translate(-4px, 24px) scale(0.94);
-        opacity: 0.72;
+      .card-stack.stacked .route-stop-copy,
+      .card-stack.stacked .route-hop,
+      .card-stack.stacked .route-actions {
+        display: none !important;
       }
-      .card-stack.stacked .route-stop:nth-child(n + 4) {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1;
-        transform: translate(2px, 36px) scale(0.91);
-        opacity: 0.55;
+      .card-stack.stacked .route-stop-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-stack.stacked .route-stop-kicker {
+        font-size: 8px;
+        color: #c8956c;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+      }
+      .card-stack.stacked .route-step-number {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+        top: 8px;
+        left: 8px;
       }
       .card-stack.expanded .route-grid {
+        display: grid;
+        grid-template-columns: 1fr;
         gap: 12px;
       }
-      .card-stack.expanded .route-stop:nth-child(n + 1) {
+      .card-stack.expanded .route-stop {
         position: relative;
         top: auto;
         left: auto;
@@ -1183,47 +1228,203 @@
         opacity: 1;
         z-index: auto;
         transition:
-          transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+          transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
           opacity 0.4s ease;
       }
       .card-stack-hint {
         text-align: center;
-        padding: 10px 0 4px;
-        font-size: 12px;
-        color: #8e8e8e;
+        padding: 4px 0;
+        font-size: 11px;
+        color: #6a7585;
         font-weight: 520;
-        letter-spacing: 0.01em;
-      }
-      /* ── See Route Card ── */
-      .see-route-card {
-        align-self: flex-start;
+        letter-spacing: 0.02em;
         width: 100%;
-        padding: 14px 20px;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 14px;
-        background: #fff;
-        color: #262626;
-        font-size: 14px;
-        font-weight: 620;
-        cursor: pointer;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      /* ── Drag-and-Fade FAB Map Button ── */
+      #chat-map-fab {
+        position: absolute;
+        bottom: 80px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1b2738, #0a1120);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 35;
+        cursor: grab;
+        opacity: 0.35;
         transition:
-          transform 180ms ease,
-          box-shadow 180ms ease;
-        animation: bubbleIn 260ms ease both;
+          opacity 0.3s ease,
+          transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        user-select: none;
+        touch-action: none;
       }
-      .see-route-card:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+      #chat-map-fab:active {
+        cursor: grabbing;
+        transform: scale(0.95);
       }
-      .see-route-card:active {
+      #chat-map-fab.active {
+        opacity: 1 !important;
+      }
+      #chat-map-fab svg {
+        width: 24px;
+        height: 24px;
+        color: #f7d5b2;
+        pointer-events: none;
+      }
+      /* ── Card Detail Modal ── */
+      .card-detail-modal {
+        position: fixed;
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+        width: min(100vw, 430px);
+        height: 100dvh;
+        z-index: 50;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .card-detail-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+      }
+      .card-detail-modal.open {
+        pointer-events: auto;
+      }
+      .card-detail-modal.open .card-detail-modal-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .card-detail-modal-container {
+        position: relative;
+        width: 100%;
+        max-height: 82vh;
+        background: #121c2c;
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 2;
+      }
+      .card-detail-modal.open .card-detail-modal-container {
+        transform: translateY(0);
+      }
+      .card-detail-modal-drag-handle {
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 12px auto 6px;
+        flex-shrink: 0;
+      }
+      .card-detail-modal-close {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 18px;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: background 0.2s ease;
+      }
+      .card-detail-modal-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .card-detail-modal-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 20px 30px;
+        color: #fff;
+      }
+      .card-modal-media {
+        width: 100%;
+        height: 220px;
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 18px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      }
+      .card-modal-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .card-modal-kicker {
+        color: #c8956c;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+      }
+      .card-modal-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 10px;
+        line-height: 1.2;
+      }
+      .card-modal-copy {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #b0c0d0;
+        margin: 0 0 20px;
+      }
+      .card-modal-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .card-modal-btn {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s ease;
+      }
+      .card-modal-btn:active {
         transform: scale(0.98);
       }
-      .see-route-card span {
-        color: #c8956c;
+      .card-modal-btn.primary {
+        background: linear-gradient(135deg, #f7d5b2, #e0b88c);
+        color: #1a1a1a;
       }
-      /* ── Chat Cream Theme Overrides ── */
+      .card-modal-btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      /* ── Chat Dark Theme Overrides ── */
       .chat-overlay .route-board {
         padding: 0;
         border: none;
@@ -1234,86 +1435,86 @@
         display: none;
       }
       .chat-overlay .route-stop {
-        border: none;
-        background: #fff;
-        color: #262626;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0d1522;
+        color: #ffffff;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       }
       .chat-overlay .route-stop:hover {
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-        border-color: transparent;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        border-color: rgba(255, 255, 255, 0.15);
       }
       .chat-overlay .route-stop-media {
-        background: #e8e4dc;
+        background: #080d16;
       }
       .chat-overlay .route-stop-kicker {
         color: #c8956c;
       }
       .chat-overlay .route-stop-title {
-        color: #262626;
+        color: #ffffff;
       }
       .chat-overlay .route-stop-copy {
-        color: #8e8e8e;
+        color: #a0aab8;
       }
       .chat-overlay .route-hop {
         color: #c8956c;
       }
       .chat-overlay .route-action {
-        color: #8e8e8e;
+        color: #a0aab8;
       }
       .chat-overlay .route-action:hover {
-        color: #262626;
+        color: #ffffff;
       }
       .chat-overlay .route-action.primary {
         color: #c8956c;
       }
       .chat-overlay .loc-card {
-        border: none;
-        background: #fff;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0d1522;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       }
       .chat-overlay .loc-card.hot {
-        border: 1px solid rgba(200, 149, 108, 0.3);
+        border: 1px solid rgba(247, 213, 178, 0.3);
       }
       .chat-overlay .loc-card-body {
-        background: #fff;
+        background: #0d1522;
       }
       .chat-overlay .loc-card-tags {
         color: #c8956c;
       }
       .chat-overlay .loc-card-name {
-        color: #262626;
+        color: #ffffff;
       }
       .chat-overlay .loc-card-vibe {
-        color: #8e8e8e;
+        color: #a0aab8;
       }
       .chat-overlay .loc-card-hot {
-        border-color: rgba(200, 149, 108, 0.3);
-        background: rgba(200, 149, 108, 0.08);
-        color: #c8956c;
+        border-color: rgba(247, 213, 178, 0.3);
+        background: rgba(247, 213, 178, 0.08);
+        color: #f7d5b2;
       }
       .chat-overlay .detail-card {
-        border: none;
-        background: #fff;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0d1522;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       }
       .chat-overlay .detail-card-media {
-        background: #e8e4dc;
+        background: #080d16;
       }
       .chat-overlay .detail-kicker {
         color: #c8956c;
       }
       .chat-overlay .detail-title {
-        color: #262626;
+        color: #ffffff;
       }
       .chat-overlay .detail-copy {
-        color: #8e8e8e;
+        color: #a0aab8;
       }
       .chat-overlay .detail-action {
-        color: #8e8e8e;
+        color: #a0aab8;
       }
       .chat-overlay .detail-action:hover {
-        color: #262626;
+        color: #ffffff;
       }
       .chat-overlay .detail-action.primary {
         color: #c8956c;
@@ -1321,28 +1522,28 @@
       .chat-overlay .track-line {
         background: repeating-linear-gradient(
           to right,
-          rgba(200, 149, 108, 0.3) 0px,
-          rgba(200, 149, 108, 0.3) 6px,
+          rgba(247, 213, 178, 0.3) 0px,
+          rgba(247, 213, 178, 0.3) 6px,
           transparent 6px,
           transparent 12px
         );
       }
       .chat-overlay .track-label {
-        border-color: rgba(0, 0, 0, 0.08);
-        background: #fff;
-        color: #8e8e8e;
+        border-color: rgba(255, 255, 255, 0.08);
+        background: #0d1522;
+        color: #a0aab8;
       }
       .chat-overlay .pill {
-        border-color: rgba(0, 0, 0, 0.1);
-        background: #fff;
-        color: #8e8e8e;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+        background: #0d1522;
+        color: #a0aab8;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
       .chat-overlay .pill:hover,
       .chat-overlay .pill:active {
-        border-color: rgba(0, 0, 0, 0.18);
-        color: #262626;
-        background: rgba(0, 0, 0, 0.02);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.05);
       }
       .chat-overlay .pill.tapped {
         border-color: #c8956c;
@@ -1632,6 +1833,25 @@
         </button>
       </div>
       <div class="chat-body" id="chat-body"></div>
+
+      <!-- Drag-and-Fade FAB Map Button -->
+      <div id="chat-map-fab" aria-label="View Route Map" style="display: none">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+          <line x1="9" y1="3" x2="9" y2="18" />
+          <line x1="15" y1="6" x2="15" y2="21" />
+        </svg>
+      </div>
+
       <div class="chat-input-bar">
         <input type="text" id="chat-input" placeholder="Message..." />
         <button class="chat-send" id="chat-send" aria-label="Send">
@@ -1642,6 +1862,28 @@
             />
           </svg>
         </button>
+      </div>
+    </div>
+
+    <!-- Card Detail Modal -->
+    <div id="card-detail-modal" class="card-detail-modal">
+      <div
+        class="card-detail-modal-backdrop"
+        id="card-detail-modal-backdrop"
+      ></div>
+      <div class="card-detail-modal-container" id="card-detail-modal-container">
+        <div class="card-detail-modal-drag-handle"></div>
+        <button
+          class="card-detail-modal-close"
+          id="card-detail-modal-close"
+          aria-label="Close details"
+        >
+          &#x2715;
+        </button>
+        <div
+          class="card-detail-modal-content"
+          id="card-detail-modal-content"
+        ></div>
       </div>
     </div>
 
@@ -2194,6 +2436,115 @@
       const mapOverlay = document.getElementById("map-overlay");
       const mapClose = document.getElementById("map-close");
 
+      const fab = document.getElementById("chat-map-fab");
+      const detailModal = document.getElementById("card-detail-modal");
+      const detailModalClose = document.getElementById(
+        "card-detail-modal-close",
+      );
+      const detailModalBackdrop = document.getElementById(
+        "card-detail-modal-backdrop",
+      );
+
+      /* ── FAB Map Drag & Transparency Logic ── */
+      let isDraggingFab = false;
+      let fabStartX = 0,
+        fabStartY = 0;
+      let fabOffsetLeft = 0,
+        fabOffsetTop = 0;
+      let dragDistance = 0;
+      let fabActivityTimer = null;
+
+      function triggerFabActivity() {
+        if (!fab) return;
+        fab.classList.add("active");
+        if (fabActivityTimer) clearTimeout(fabActivityTimer);
+        fabActivityTimer = setTimeout(() => {
+          if (!isDraggingFab && fab.style.display !== "none") {
+            fab.classList.remove("active");
+          }
+        }, 2500);
+      }
+
+      function resetFabPosition() {
+        if (!fab) return;
+        fab.style.left = "";
+        fab.style.top = "";
+        fab.style.right = "";
+        fab.style.bottom = "";
+      }
+
+      if (overlay) {
+        overlay.addEventListener("pointermove", triggerFabActivity);
+        overlay.addEventListener("click", triggerFabActivity);
+        overlay.addEventListener("touchstart", triggerFabActivity);
+      }
+
+      if (fab) {
+        fab.addEventListener("pointerdown", (e) => {
+          isDraggingFab = true;
+          dragDistance = 0;
+          fab.classList.add("active");
+          fabStartX = e.clientX;
+          fabStartY = e.clientY;
+          const rect = fab.getBoundingClientRect();
+          const parentRect = overlay.getBoundingClientRect();
+          fabOffsetLeft = rect.left - parentRect.left;
+          fabOffsetTop = rect.top - parentRect.top;
+          fab.setPointerCapture(e.pointerId);
+          e.preventDefault();
+        });
+
+        fab.addEventListener("pointermove", (e) => {
+          if (!isDraggingFab) return;
+          const dx = e.clientX - fabStartX;
+          const dy = e.clientY - fabStartY;
+          dragDistance += Math.abs(dx) + Math.abs(dy);
+
+          const parentRect = overlay.getBoundingClientRect();
+          const fabWidth = fab.offsetWidth;
+          const fabHeight = fab.offsetHeight;
+
+          let newLeft = fabOffsetLeft + dx;
+          let newTop = fabOffsetTop + dy;
+
+          newLeft = Math.max(
+            10,
+            Math.min(newLeft, parentRect.width - fabWidth - 10),
+          );
+          newTop = Math.max(
+            60,
+            Math.min(newTop, parentRect.height - fabHeight - 80),
+          );
+
+          fab.style.left = `${newLeft}px`;
+          fab.style.top = `${newTop}px`;
+          fab.style.right = "auto";
+          fab.style.bottom = "auto";
+        });
+
+        fab.addEventListener("pointerup", (e) => {
+          if (!isDraggingFab) return;
+          isDraggingFab = false;
+          fab.releasePointerCapture(e.pointerId);
+          triggerFabActivity();
+
+          if (dragDistance < 10) {
+            if (fab.onclick) fab.onclick();
+          }
+        });
+      }
+
+      if (detailModalClose) {
+        detailModalClose.addEventListener("click", () => {
+          detailModal.classList.remove("open");
+        });
+      }
+      if (detailModalBackdrop) {
+        detailModalBackdrop.addEventListener("click", () => {
+          detailModal.classList.remove("open");
+        });
+      }
+
       /* ── Modular Map Wrapper ── */
       const EchooMap = {
         mapInstance: null,
@@ -2442,21 +2793,135 @@
       });
 
       function addSeeRouteButton(stops) {
-        const card = document.createElement("div");
-        card.className = "see-route-card";
-        card.innerHTML = "<span>View Route Map</span>";
-        card.addEventListener("click", () => {
+        if (!fab) return;
+        fab.style.display = "flex";
+        fab.classList.add("active");
+        resetFabPosition();
+        triggerFabActivity();
+
+        fab.onclick = () => {
+          if (isDraggingFab) return;
           const mapStops = activeRouteStops.length ? activeRouteStops : stops;
           mapOverlay.classList.add("open");
-          // Initialize map after overlay opens and has physical dimensions
           setTimeout(() => {
             const midIndex = Math.floor(mapStops.length / 2);
             EchooMap.init("map-container", mapStops[midIndex].coords);
             EchooMap.drawRoute(mapStops);
           }, 450);
-        });
-        chatBody.appendChild(card);
-        scrollChat();
+        };
+      }
+
+      function openCardDetailModal(
+        stop,
+        index,
+        usePreciseBase,
+        stops,
+        currentStackEl,
+      ) {
+        if (!detailModal) return;
+        const content = document.getElementById("card-detail-modal-content");
+        if (!content) return;
+
+        const detailId = String(stop.detailId || "");
+        const isExternal = /^https?:\/\//i.test(detailId);
+        const detailType =
+          stop.detailType || (isExternal ? "external" : "event");
+        const timing = stop.timing ? ` ${stop.timing}` : "";
+        const vibe = `${stop.vibe || "A matched stop for this plan."}${timing}`;
+        const isSelectedStart = stop.selectedStart === true;
+
+        let actionButtons = "";
+        if (detailId) {
+          if (detailType === "place") {
+            actionButtons += `<button class="card-modal-btn secondary" id="modal-action-details">View Details</button>`;
+          } else if (isExternal) {
+            actionButtons += `<button class="card-modal-btn secondary" id="modal-action-preview">Preview Listing</button>`;
+            actionButtons += `<button class="card-modal-btn secondary" style="margin-top: 8px;" id="modal-action-open">Open Listing</button>`;
+          } else {
+            actionButtons += `<button class="card-modal-btn secondary" id="modal-action-event">Event Details</button>`;
+          }
+        }
+
+        content.innerHTML = `
+          <div class="card-modal-media">
+            <img src="${escapeHtml(stop.img || "assets/optimized/news-music-768.jpg")}" alt="${escapeHtml(stop.name)}">
+          </div>
+          <div class="card-modal-kicker">${escapeHtml(`${stop.tags || "Echoo"} · ${budget}`)}</div>
+          <h3 class="card-modal-title">${escapeHtml(stop.name)}</h3>
+          <p class="card-modal-copy">${escapeHtml(vibe)}</p>
+          <div class="card-modal-actions">
+            <button class="card-modal-btn primary" id="modal-action-start">${escapeHtml(routeTravelLabel(index, usePreciseBase, isSelectedStart))}</button>
+            ${actionButtons}
+          </div>
+        `;
+
+        document
+          .getElementById("modal-action-start")
+          .addEventListener("click", () => {
+            detailModal.classList.remove("open");
+            const reordered = rotateStops(stops, index).map((item, idx) => ({
+              ...item,
+              selectedStart: idx === 0,
+            }));
+            activeRouteStops = reordered;
+            addRouteBoard(reordered, usePreciseBase, currentStackEl);
+            addBubble(
+              "ai",
+              `Route updated to start at ${stop.name || "that stop"}. I reordered the linked stops from there.`,
+            );
+          });
+
+        const detailsBtn = document.getElementById("modal-action-details");
+        if (detailsBtn) {
+          detailsBtn.addEventListener("click", () => {
+            detailModal.classList.remove("open");
+            addPlaceDetailBubble(detailId);
+          });
+        }
+
+        const previewBtn = document.getElementById("modal-action-preview");
+        if (previewBtn) {
+          previewBtn.addEventListener("click", () => {
+            detailModal.classList.remove("open");
+            addDetailCard({
+              title: stop.name || "Live listing",
+              kicker: stop.tags || "Ticketmaster live event",
+              copy:
+                stop.vibe ||
+                "Echoo found this live listing for the current plan.",
+              meta:
+                stop.timing ||
+                "Open the listing only when you want to leave Echoo.",
+              image: stop.img,
+              url: detailId,
+            });
+          });
+        }
+
+        const openBtn = document.getElementById("modal-action-open");
+        if (openBtn) {
+          openBtn.addEventListener("click", () => {
+            detailModal.classList.remove("open");
+            openExternalListing(detailId);
+          });
+        }
+
+        const eventBtn = document.getElementById("modal-action-event");
+        if (eventBtn) {
+          eventBtn.addEventListener("click", () => {
+            detailModal.classList.remove("open");
+            addDetailCard({
+              title: stop.name || "Event detail",
+              kicker: stop.tags || "Echoo event",
+              copy: stop.vibe || "Echoo found this event for the current plan.",
+              meta: stop.timing || "",
+              image: stop.img,
+              url: `event.html?id=${encodeURIComponent(detailId)}`,
+            });
+          });
+        }
+
+        detailModal.classList.add("open");
       }
 
       function openExternalListing(url) {
@@ -2799,87 +3264,43 @@
           </svg>
           <div class="route-grid">${cards}</div>`;
 
-        board.querySelectorAll(".route-stop").forEach((card) => {
-          card.addEventListener("click", (event) => {
-            const detailId = card.dataset.detailId;
-            const stopIndex = Number(card.dataset.stopIndex) || 0;
-            const stop = stops[stopIndex] || {};
-            const routeAction = event.target.closest("[data-route-action]");
-            if (routeAction?.dataset.routeAction === "start") {
-              const reordered = rotateStops(stops, stopIndex).map(
-                (item, index) => ({
-                  ...item,
-                  selectedStart: index === 0,
-                }),
-              );
-              activeRouteStops = reordered;
-              addRouteBoard(reordered, usePreciseBase, board);
-              addBubble(
-                "ai",
-                `Route updated to start at ${stop.name || "that stop"}. I reordered the linked stops from there.`,
-              );
-              return;
-            }
-            if (!detailId) return;
-            if (routeAction?.dataset.routeAction === "open") {
-              openExternalListing(detailId);
-              return;
-            }
-            if (card.dataset.detailType === "place") {
-              addPlaceDetailBubble(detailId);
-              return;
-            }
-            if (card.dataset.external === "true") {
-              addDetailCard({
-                title: stop.name || "Live listing",
-                kicker: stop.tags || "Ticketmaster live event",
-                copy:
-                  stop.vibe ||
-                  "Echoo found this live listing for the current plan.",
-                meta:
-                  stop.timing ||
-                  "Open the listing only when you want to leave Echoo.",
-                image: stop.img,
-                url: detailId,
-              });
-              return;
-            }
-            addDetailCard({
-              title: stop.name || "Event detail",
-              kicker: stop.tags || "Echoo event",
-              copy: stop.vibe || "Echoo found this event for the current plan.",
-              meta: stop.timing || "",
-              image: stop.img,
-              url: `event.html?id=${encodeURIComponent(detailId)}`,
-            });
-          });
-        });
         const stack = document.createElement("div");
         stack.className =
           stops.length > 1 ? "card-stack stacked" : "card-stack expanded";
         stack.appendChild(board);
+
         if (stops.length > 1) {
+          const stopsCount = stops.length;
+          board.querySelectorAll(".route-stop").forEach((card, idx) => {
+            const centerIdx = (stopsCount - 1) / 2;
+            const offsetMultiplier = idx - centerIdx;
+
+            const tx = offsetMultiplier * 48;
+            const rot = offsetMultiplier * 7.5;
+            const ty = Math.abs(offsetMultiplier) * 6 - 2;
+            const zIndex = 10 - Math.round(Math.abs(offsetMultiplier));
+
+            card.style.setProperty("--stacked-tx", `${tx}px`);
+            card.style.setProperty("--stacked-ty", `${ty}px`);
+            card.style.setProperty("--stacked-rot", `${rot}deg`);
+            card.style.setProperty("--stacked-z", `${zIndex}`);
+          });
+
           const stackHint = document.createElement("div");
           stackHint.className = "card-stack-hint";
           stackHint.textContent =
-            stops.length + " locations \u00b7 tap to expand";
+            stops.length + " locations \u00b7 tap to inspect";
           stack.appendChild(stackHint);
-          stack.addEventListener("click", function (e) {
-            if (e.target.closest("button, [data-route-action]")) return;
-            if (stack.classList.contains("stacked")) {
-              stack.classList.remove("stacked");
-              stack.classList.add("expanded");
-              stackHint.textContent = "tap to collapse";
-              scrollChat();
-            } else if (!e.target.closest(".route-stop")) {
-              stack.classList.remove("expanded");
-              stack.classList.add("stacked");
-              stackHint.textContent =
-                stops.length + " locations \u00b7 tap to expand";
-              scrollChat();
-            }
-          });
         }
+
+        board.querySelectorAll(".route-stop").forEach((card) => {
+          card.addEventListener("click", () => {
+            const stopIndex = Number(card.dataset.stopIndex) || 0;
+            const stop = stops[stopIndex] || {};
+            openCardDetailModal(stop, stopIndex, usePreciseBase, stops, stack);
+          });
+        });
+
         const actualReplace =
           replaceNode && replaceNode.closest
             ? replaceNode.closest(".card-stack") || replaceNode
@@ -2902,17 +3323,7 @@
       }
 
       function addPills(labels) {
-        const wrap = document.createElement("div");
-        wrap.className = "pills";
-        labels.forEach((text) => {
-          const btn = document.createElement("button");
-          btn.className = "pill";
-          btn.textContent = text;
-          btn.addEventListener("click", () => handlePillTap(btn));
-          wrap.appendChild(btn);
-        });
-        chatBody.appendChild(wrap);
-        scrollChat();
+        // Disabled to remove quick phrase suggested pills from chat overlay
       }
 
       async function fetchPreciseNearby(limit) {
@@ -3256,6 +3667,8 @@
       /* ── Open / close ── */
       function openChat(userText) {
         chatBody.innerHTML = "";
+        if (fab) fab.style.display = "none";
+        resetFabPosition();
         overlay.classList.add("open");
         document.body.classList.add("chat-open");
         runConversation(userText);
@@ -3264,6 +3677,8 @@
       function closeChat() {
         overlay.classList.remove("open");
         document.body.classList.remove("chat-open");
+        if (fab) fab.style.display = "none";
+        resetFabPosition();
       }
 
       document
@@ -3469,6 +3884,8 @@
 
       function askBudgetBeforeSurprise(queryText, userLabel = "Surprise me") {
         chatBody.innerHTML = "";
+        if (fab) fab.style.display = "none";
+        resetFabPosition();
         pendingBudgetIntent = { query: queryText, mode: "surprise" };
         addBubble("user", userLabel);
         addBubble(
@@ -3488,6 +3905,8 @@
 
         // If starting fresh (opening default chat window)
         if (!userText) {
+          if (fab) fab.style.display = "none";
+          resetFabPosition();
           activityContext = getActivityContext();
           addBubble(
             "ai",
