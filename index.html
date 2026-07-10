@@ -410,13 +410,14 @@
 
       .pick-title {
         display: -webkit-box;
-        margin: 0 0 7px;
+        margin: 0;
         overflow: hidden;
         color: #fff;
-        font-size: 16px;
-        line-height: 1.08;
-        font-weight: 760;
-        letter-spacing: 0;
+        font-size: 11px;
+        line-height: 1.1;
+        font-weight: 700;
+        letter-spacing: 0.1px;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
       }
@@ -911,30 +912,17 @@
                   class="pick-card"
                   href="music.html"
                   style="--image: url(&quot;assets/news-music.png&quot;)"
-                  aria-label="Nearby live rooms, 12 spots"
+                  aria-label="Live rooms nearby"
                 >
                   <strong class="pick-title">Live rooms nearby</strong>
-                  <span class="pick-subtitle"
-                    >Music, tickets, and small rooms with a real next
-                    step.</span
-                  >
-                  <span class="meta"
-                    >Nearby <span class="meta-dot">·</span> 12 spots</span
-                  >
                 </a>
                 <a
                   class="pick-card"
                   href="dates.html"
                   style="--image: url(&quot;assets/news-date.png&quot;)"
-                  aria-label="Nearby date plans, 8 spots"
+                  aria-label="Date-night energy"
                 >
                   <strong class="pick-title">Date-night energy</strong>
-                  <span class="pick-subtitle"
-                    >Food, soft second stops, and places worth lingering.</span
-                  >
-                  <span class="meta"
-                    >Nearby <span class="meta-dot">·</span> 8 spots</span
-                  >
                 </a>
               </div>
             </div>
@@ -1450,9 +1438,6 @@
               const image =
                 card.imageUrl || "assets/optimized/news-music-768.jpg";
               const title = escapeHtml(card.title || "Ontario pick");
-              const subtitle = escapeHtml(
-                card.subtitle || card.category || "Echoo verified",
-              );
               return `
                 <a
                   class="pick-card"
@@ -1461,8 +1446,6 @@
                   aria-label="${title}"
                 >
                   <strong class="pick-title">${title}</strong>
-                  <span class="pick-subtitle">${subtitle}</span>
-                  <span class="meta">${cardMeta(card)}</span>
                 </a>
               `;
             })
