@@ -9,12 +9,17 @@ import {
   sha256Hex,
   writeLocationCache,
 } from "../_shared/location.ts";
+import {
+  companionVoiceRules,
+  isModelMetaQuery,
+  MODEL_META_RESPONSE,
+} from "../_shared/companion-core.ts";
 
 type DiscoverPayload = {
   query?: string;
   lat?: number;
   lng?: number;
-  city?: string;
+  city?: unknown;
   limit?: number;
   profile?: {
     interests?: string[];
@@ -39,18 +44,16 @@ type Candidate = {
   startsAt?: string;
   priceLabel?: string;
   actionUrl?: string;
-  rating?: number;
   distanceMeters?: number;
   popularityScore?: number;
+  sourceAttribution?: string;
   reason?: string;
   actionLabel?: string;
 };
 
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
-const MODEL_META_RESPONSE =
-  "I’m a Claude model serving as Echoo’s local planning assistant. I can help with places, plans, events, and things to do.";
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";
 
 function optionalNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
@@ -64,23 +67,24 @@ function cleanText(value: unknown, fallback = "") {
     .trim();
 }
 
-function isModelMetaQuery(query = "") {
-  const text = query.toLowerCase();
-  const asksIdentity =
-    /\b(what|which|who|whose|are|is|tell|say|reveal|show|name)\b/.test(text) ||
-    /\?\s*$/.test(text);
-  const hasModelTerms =
-    /\b(model|llm|ai model|language model|provider|vendor|engine|backend|underlying|foundation model|system prompt|system message|developer message|hidden instruction|instructions|prompt|version|running on|powered by|built on|using|use)\b/.test(
-      text,
-    ) ||
-    /\b(chatgpt|openai|gpt|claude|anthropic|gemini|google ai|llama|mistral|perplexity)\b/.test(
-      text,
+function cityLabel(value: unknown, fallback = "Toronto") {
+  if (typeof value === "string") {
+    return cleanText(value, fallback);
+  }
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return cleanText(
+      record.city || record.name || record.label || record.title,
+      fallback,
     );
-  const asksAssistantIdentity =
-    /\b(what are you|who are you|are you an ai|are you ai|are you a bot|are you chatgpt|are you claude|are you gemini)\b/.test(
-      text,
-    );
-  return (asksIdentity && hasModelTerms) || asksAssistantIdentity;
+  }
+  return fallback;
+}
+
+function isDebugRequest(req: Request) {
+  const debugToken = cleanText(req.headers.get("x-echoo-debug"));
+  const adminToken = cleanText(Deno.env.get("LOCATION_ADMIN_TOKEN"));
+  return Boolean(debugToken && adminToken && debugToken === adminToken);
 }
 
 function modelMetaResponse(query: string, city: string) {
@@ -89,38 +93,14 @@ function modelMetaResponse(query: string, city: string) {
     mode: "live_discovery",
     query,
     city,
-    sources: {
-      echoo: 0,
-      ticketmaster: 0,
-      googlePlaces: 0,
-      ticketmasterConfigured: Boolean(Deno.env.get("TICKETMASTER_API_KEY")),
-      googlePlacesConfigured: Boolean(
-        Deno.env.get("GOOGLE_PLACES_API_KEY") ||
-        Deno.env.get("GOOGLE_MAPS_API_KEY"),
-      ),
-    },
     recommendations: [],
     ai: {
       provider: "echoo-policy",
       model: "deterministic",
       assistantMessage: MODEL_META_RESPONSE,
-      suggestedPills: ["Food nearby", "Events tonight", "Things to do nearby"],
+      suggestedPills: ["Food nearby", "Events tonight", "Surprise me"],
     },
   };
-}
-
-function googlePhotoProxyUrl(req: Request, photoName: unknown) {
-  const name = cleanText(photoName);
-  if (!name || !name.startsWith("places/")) return undefined;
-  const url = new URL(req.url);
-  url.protocol = "https:";
-  if (!url.pathname.includes("/functions/v1/")) {
-    url.pathname = `/functions/v1/${url.pathname.replace(/^\/+/, "")}`;
-  }
-  url.search = "";
-  url.searchParams.set("photo", name);
-  url.searchParams.set("w", "1200");
-  return url.toString();
 }
 
 const DISCOVERY_CITY_NAMES = [
@@ -253,7 +233,6 @@ function scoreCandidate(item: Candidate, query: string) {
   const distanceScore = item.distanceMeters
     ? Math.max(0, 1 - item.distanceMeters / 30000)
     : 0.45;
-  const ratingScore = item.rating ? Math.min(item.rating / 5, 1) : 0.45;
   const popularityScore = Math.min(item.popularityScore || 0.4, 1);
   const titlePenalty = /combo ticket|weekend pass|parking|add-on|package/i.test(
     item.title,
@@ -261,11 +240,10 @@ function scoreCandidate(item: Candidate, query: string) {
     ? 0.22
     : 0;
   return (
-    queryHits * 0.16 +
-    timeScore * 0.24 +
-    distanceScore * 0.22 +
-    ratingScore * 0.18 +
-    popularityScore * 0.2 -
+    queryHits * 0.2 +
+    timeScore * 0.25 +
+    distanceScore * 0.28 +
+    popularityScore * 0.27 -
     titlePenalty
   );
 }
@@ -538,7 +516,7 @@ async function loadGooglePlaceCandidates(input: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.rating,places.googleMapsUri,places.regularOpeningHours,places.photos",
+          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri",
       },
       body: JSON.stringify(body),
     },
@@ -556,16 +534,15 @@ async function loadGooglePlaceCandidates(input: {
     title: cleanText(place.displayName?.text, "Place"),
     category: cleanText(place.types?.[0] || "place").replace(/_/g, " "),
     description: cleanText(place.formattedAddress),
-    imageUrl: googlePhotoProxyUrl(input.req, place.photos?.[0]?.name),
     address: cleanText(place.formattedAddress),
     city: input.city,
     latitude: optionalNumber(place.location?.latitude),
     longitude: optionalNumber(place.location?.longitude),
-    rating: optionalNumber(place.rating),
     actionUrl: place.googleMapsUri,
-    popularityScore: optionalNumber(place.rating)
-      ? Number(place.rating) / 5
-      : 0.55,
+    // Google results are a live coverage fallback. Echoo ratings and Hot Picks
+    // are computed only from Echoo-owned community activity.
+    popularityScore: 0.45,
+    sourceAttribution: "Google Maps",
     actionLabel: "Directions",
   }));
 }
@@ -588,11 +565,9 @@ function deterministicExplain(item: Candidate, query: string) {
       : `${item.title}${venue} lines up for ${when}, with a clear next step.${price}`.trim();
   }
   if (/food|dinner|date|drink|restaurant/i.test(lower)) {
-    const rating = item.rating ? ` Rated ${item.rating}/5.` : "";
-    return `${item.title} works as a food, drink, or conversation anchor before/after the main move.${rating}`.trim();
+    return `${item.title} works as the food, drink, or conversation stop before or after the main move.`;
   }
-  const rating = item.rating ? ` Rated ${item.rating}/5.` : "";
-  return `${item.title} is a real place you can act on now and use as an anchor for the outing.${rating}`.trim();
+  return `${item.title} is a real place you can start from now.`;
 }
 
 function assistantMessageFor(input: {
@@ -600,29 +575,30 @@ function assistantMessageFor(input: {
   intent: ReturnType<typeof inferSearchIntent>;
   ticketmasterCount: number;
   placesCount: number;
+  city: string;
 }) {
   if (!input.count) {
-    return "I could not find live options yet. Try a broader request or another city.";
+    return `${input.city} did not return clean live records for that exact ask yet. Broaden the mood, switch neighbourhoods, or ask Echoo for a quieter fallback plan.`;
   }
   if (input.intent.wantsFood && input.ticketmasterCount && input.placesCount) {
-    return "I found a night-out mix: live events first, then nearby food or drink anchors.";
+    return `${input.city} has a night-out mix here: live events first, then nearby food or drinks.`;
   }
   if (input.intent.wantsSocial) {
-    return "I found social options with built-in reasons to show up and talk to people.";
+    return `${input.city} has social options with built-in reasons to show up and talk to people.`;
   }
   if (input.intent.wantsFree) {
-    return "I found low-friction options you can check now, including free or easy-entry picks where available.";
+    return `${input.city} has low-friction options to check now, including free or easy-entry picks where available.`;
   }
   if (input.ticketmasterCount && input.placesCount) {
-    return "I found live events plus nearby places you can turn into a real plan.";
+    return `${input.city} has live events plus nearby places that can become a real plan.`;
   }
   if (input.ticketmasterCount) {
-    return "I found live events you can act on now.";
+    return `${input.city} has live events you can act on now.`;
   }
   if (input.placesCount) {
-    return "I found nearby places that can anchor the outing.";
+    return `${input.city} has nearby places that can turn into a real outing.`;
   }
-  return "I found a few Echoo picks you can act on now.";
+  return `${input.city} has a few Echoo picks you can act on now.`;
 }
 
 function isWeakReason(reason = "") {
@@ -658,8 +634,7 @@ async function explainWithGemini(input: {
   if (!key || input.candidates.length === 0) return input.candidates;
 
   const prompt = [
-    "You are Echoo AI, a real-life discovery layer. Explain only the real candidates provided.",
-    "Be short, warm, practical, and action-oriented. Do not invent places, times, prices, ratings, or availability.",
+    companionVoiceRules(),
     "Return JSON with intro and recommendations. Each recommendation must include id, reason, and actionLabel.",
     JSON.stringify({
       userQuery: input.query,
@@ -678,12 +653,25 @@ async function explainWithGemini(input: {
         city: item.city,
         startsAt: item.startsAt,
         priceLabel: item.priceLabel,
-        rating: item.rating,
       })),
     }),
   ].join("\n\n");
 
-  const models = ["gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
+  const configured = Deno.env.get("GEMINI_MODEL") || DEFAULT_GEMINI_MODEL;
+  const configuredFallbacks = (Deno.env.get("GEMINI_MODEL_FALLBACKS") || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const models = [
+    ...new Set([
+      configured,
+      ...configuredFallbacks,
+      DEFAULT_GEMINI_MODEL,
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-flash-latest",
+    ]),
+  ];
   for (const model of models) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
@@ -745,38 +733,6 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
-  const url = new URL(req.url);
-  const photoName = cleanText(url.searchParams.get("photo"));
-  if (req.method === "GET" && photoName) {
-    const key =
-      Deno.env.get("GOOGLE_PLACES_API_KEY") ||
-      Deno.env.get("GOOGLE_MAPS_API_KEY");
-    if (!key || !photoName.startsWith("places/")) {
-      return jsonResponse({ error: "Photo unavailable" }, 404);
-    }
-    const width = Math.min(
-      Math.max(Number(url.searchParams.get("w")) || 1200, 400),
-      1600,
-    );
-    const mediaUrl = new URL(
-      `https://places.googleapis.com/v1/${photoName}/media`,
-    );
-    mediaUrl.searchParams.set("maxWidthPx", String(width));
-    mediaUrl.searchParams.set("key", key);
-    const media = await fetch(mediaUrl);
-    if (!media.ok || !media.body) {
-      return jsonResponse({ error: "Photo unavailable" }, 404);
-    }
-    return new Response(media.body, {
-      status: media.status,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "public, max-age=86400, s-maxage=86400",
-        "Content-Type": media.headers.get("Content-Type") || "image/jpeg",
-      },
-    });
-  }
-
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
@@ -785,7 +741,8 @@ Deno.serve(async (req) => {
   try {
     const body = (await req.json().catch(() => ({}))) as DiscoverPayload;
     const query = cleanText(body.query, "things to do nearby");
-    const city = cityFromQuery(query) || cleanText(body.city, "Toronto");
+    const city = cityFromQuery(query) || cityLabel(body.city, "Toronto");
+    const debugRequested = isDebugRequest(req);
     if (isModelMetaQuery(query)) {
       return jsonResponse(modelMetaResponse(query, city));
     }
@@ -803,7 +760,9 @@ Deno.serve(async (req) => {
         limit,
       }),
     );
-    const cached = await readLocationCache(supabase, cacheKey);
+    const cached = debugRequested
+      ? null
+      : await readLocationCache(supabase, cacheKey);
     if (cached) return jsonResponse({ ...cached, cacheHit: true });
 
     const [echoo, ticketmaster, places] = await Promise.all([
@@ -840,35 +799,43 @@ Deno.serve(async (req) => {
       mode: "live_discovery",
       query,
       city,
-      sources: {
-        echoo: echoo.length,
-        ticketmaster: ticketmaster.length,
-        googlePlaces: places.length,
-        ticketmasterConfigured: Boolean(Deno.env.get("TICKETMASTER_API_KEY")),
-        googlePlacesConfigured: Boolean(
-          Deno.env.get("GOOGLE_PLACES_API_KEY") ||
-          Deno.env.get("GOOGLE_MAPS_API_KEY"),
-        ),
-      },
       recommendations,
       ai: {
-        provider: "gemini",
+        provider: "echoo-live",
         assistantMessage: assistantMessageFor({
           count: recommendations.length,
           intent,
           ticketmasterCount: ticketmaster.length,
           placesCount: places.length,
+          city,
         }),
-        suggestedPills: [
-          "Food nearby",
-          "Events tonight",
-          "Newcomer friendly",
-          "Free things to do",
-        ],
+        suggestedPills: ["Food nearby", "Events tonight", "Free things to do"],
       },
+      ...(debugRequested
+        ? {
+            debug: {
+              sources: {
+                echoo: echoo.length,
+                ticketmaster: ticketmaster.length,
+                googlePlaces: places.length,
+                ticketmasterConfigured: Boolean(
+                  Deno.env.get("TICKETMASTER_API_KEY"),
+                ),
+                googlePlacesConfigured: Boolean(
+                  Deno.env.get("GOOGLE_PLACES_API_KEY") ||
+                  Deno.env.get("GOOGLE_MAPS_API_KEY"),
+                ),
+              },
+              intent,
+              rankedCount: ranked.length,
+            },
+          }
+        : {}),
     };
 
-    await writeLocationCache(supabase, cacheKey, response, 600);
+    if (!debugRequested) {
+      await writeLocationCache(supabase, cacheKey, response, 600);
+    }
     await logLocationEvent(supabase, {
       functionName: "discover-live",
       eventType:

@@ -14,6 +14,7 @@ type Payload = {
     | "ticketmaster_refresh"
     | "stale_event_cleanup"
     | "place_enrichment"
+    | "hot_pick_rollup"
     | "scheduled";
   cities?: string[];
   categories?: string[];
@@ -43,31 +44,41 @@ function baseFunctionUrl(req: Request) {
 }
 
 function ingestionSecret(req: Request) {
-  return req.headers.get("x-ingestion-secret") ||
+  return (
+    req.headers.get("x-ingestion-secret") ||
     req.headers.get("x-admin-token") ||
-    "";
+    ""
+  );
 }
 
 async function invokeTicketmasterRefresh(req: Request, payload: Payload) {
   const refreshPayload = {
-    cities: (payload.cities?.length ? payload.cities : ONTARIO_CITY_BUCKETS)
-      .slice(0, 40),
+    cities: (payload.cities?.length
+      ? payload.cities
+      : ONTARIO_CITY_BUCKETS
+    ).slice(0, 40),
     categories: (payload.categories?.length
       ? payload.categories
-      : TICKETMASTER_CATEGORY_BUCKETS).slice(0, 12),
+      : TICKETMASTER_CATEGORY_BUCKETS
+    ).slice(0, 12),
     size: Math.max(1, Math.min(Number(payload.size || 20), 50)),
   };
-  const response = await fetch(`${baseFunctionUrl(req)}/ticketmaster-ontario-ingest`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-ingestion-secret": ingestionSecret(req),
+  const response = await fetch(
+    `${baseFunctionUrl(req)}/ticketmaster-ontario-ingest`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-ingestion-secret": ingestionSecret(req),
+      },
+      body: JSON.stringify(refreshPayload),
     },
-    body: JSON.stringify(refreshPayload),
-  });
+  );
   const json = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(json.error || `Ticketmaster refresh failed: ${response.status}`);
+    throw new Error(
+      json.error || `Ticketmaster refresh failed: ${response.status}`,
+    );
   }
   return json;
 }
@@ -93,7 +104,10 @@ async function invokePlaceEnrichment(req: Request, payload: Payload) {
     municipality: payload.cities?.[0],
     categories: payload.categories?.length ? payload.categories : undefined,
     sourceProvider: payload.sourceProvider,
-    limit: Math.max(1, Math.min(Number(payload.limit || payload.size || 100), 500)),
+    limit: Math.max(
+      1,
+      Math.min(Number(payload.limit || payload.size || 100), 500),
+    ),
     offset: Math.max(0, Number(payload.offset || 0)),
     includeExisting: Boolean(payload.includeExisting),
   };
@@ -107,9 +121,18 @@ async function invokePlaceEnrichment(req: Request, payload: Payload) {
   });
   const json = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(json.error || `Place enrichment failed: ${response.status}`);
+    throw new Error(
+      json.error || `Place enrichment failed: ${response.status}`,
+    );
   }
   return json;
+}
+
+async function refreshHotPicks() {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.rpc("refresh_discovery_hot_picks");
+  if (error) throw error;
+  return { updatedEntities: Number(data || 0), windowDays: 30 };
 }
 
 async function recordScheduleResult(
@@ -174,11 +197,20 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (action === "hot_pick_rollup" || action === "scheduled") {
+      const hotPicks = await refreshHotPicks();
+      results.hotPicks = hotPicks;
+      await recordScheduleResult(
+        "discovery_hot_pick_rollup",
+        "completed",
+        hotPicks,
+      );
+    }
+
     return jsonResponse({ success: true, action, results });
   } catch (err) {
-    const message = err instanceof Error
-      ? err.message
-      : "Unknown Ontario maintenance error";
+    const message =
+      err instanceof Error ? err.message : "Unknown Ontario maintenance error";
     return jsonResponse({ error: message }, 500);
   }
 });

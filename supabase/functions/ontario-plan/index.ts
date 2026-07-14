@@ -71,11 +71,28 @@ function envelope(data: unknown, meta: Record<string, unknown> = {}) {
 
 function categoryBuckets(input: string) {
   const text = input.toLowerCase();
+  const buckets: string[] = [];
+  const add = (categories: string[]) => {
+    for (const category of categories) {
+      if (!buckets.includes(category)) buckets.push(category);
+    }
+  };
+
   if (/bar|pub|drink|nightlife/.test(text)) {
-    return ["bar", "pub", "restaurant", "cafe"];
+    add(["bar", "pub", "restaurant", "cafe"]);
+  }
+  if (/morning|activity|activities|things to do|best/.test(text)) {
+    add(["cafe", "park", "museum", "cultural_space", "library", "attraction"]);
+  }
+  if (
+    /food|lunch|dinner|restaurant|restaurants|brunch|meal|bite|chinese|dim sum|dumpling|hot pot|korean|indian|pakistani|jamaican|caribbean|ethiopian|vietnamese|filipino/.test(
+      text,
+    )
+  ) {
+    add(["restaurant", "cafe", "bar", "pub", "mall"]);
   }
   if (/museum|gallery|culture|art|rainy/.test(text)) {
-    return [
+    add([
       "museum",
       "arts_centre",
       "cultural_space",
@@ -84,54 +101,128 @@ function categoryBuckets(input: string) {
       "mall",
       "cafe",
       "restaurant",
-    ];
+    ]);
   }
   if (/park.*trail|trail.*park/.test(text)) {
-    return ["trail", "park", "nature_reserve"];
+    add(["trail", "park", "nature_reserve", "cafe"]);
   }
   if (/trail|walk|hike/.test(text)) {
-    return ["trail", "park", "nature_reserve"];
+    add(["trail", "park", "nature_reserve", "cafe"]);
   }
-  if (/park|outdoor|picnic|chill/.test(text)) {
-    return ["park", "trail", "nature_reserve", "cafe"];
+  if (/park|outdoor|picnic|chill|relax/.test(text)) {
+    add(["park", "trail", "nature_reserve", "cafe"]);
   }
   if (/coffee|cafe|work|quiet|solo/.test(text)) {
-    return ["cafe", "library", "park", "trail", "restaurant"];
+    add(["cafe", "library", "park", "trail", "restaurant"]);
   }
-  if (/library|community|recreation|facility|indoor/.test(text)) {
-    return ["library", "community_centre", "public_facility", "fitness_centre"];
+  if (/library|libraries|community|recreation|facility|indoor/.test(text)) {
+    add(["library", "community_centre", "public_facility", "fitness_centre"]);
   }
-  if (/date/.test(text)) {
-    return ["restaurant", "cafe", "museum", "arts_centre", "park", "mall"];
+  if (
+    /date|romantic|girlfriend|boyfriend|partner|wife|husband|sweet/.test(text)
+  ) {
+    add(["restaurant", "cafe", "museum", "arts_centre", "park", "mall"]);
   }
-  if (/group|friends/.test(text)) {
-    return ["restaurant", "pub", "mall", "park", "museum", "cafe"];
+  if (/group|friend|friends/.test(text)) {
+    add(["restaurant", "pub", "mall", "park", "museum", "cafe"]);
   }
-  return [
-    "restaurant",
-    "cafe",
-    "park",
-    "museum",
-    "arts_centre",
-    "mall",
-    "library",
-  ];
+  if (!buckets.length) {
+    add([
+      "restaurant",
+      "cafe",
+      "park",
+      "museum",
+      "arts_centre",
+      "mall",
+      "library",
+    ]);
+  }
+  return buckets.slice(0, 10);
 }
 
 function searchQueryForPlaces(query = "", city = "", intent = "") {
-  let cleaned = query.toLowerCase();
+  let cleaned = query.toLowerCase().replace(/[’']/g, "'");
   const removable = [
     city,
     intent,
+    "chat",
+    "build_plan",
+    "local_plan",
+    "food_plan",
+    "cultural_food",
+    "date_night",
     "markham",
     "toronto",
+    "arkham",
     "ontario",
     "near me",
+    "around me",
     "nearby",
+    "around",
+    "close by",
+    "close",
     "plan",
     "route",
+    "i",
+    "i'm",
+    "im",
+    "am",
+    "me",
+    "my",
+    "need",
+    "want",
+    "give",
+    "make",
+    "find",
+    "search",
+    "show",
+    "looking for",
+    "looking",
+    "look",
+    "best",
+    "nice",
+    "good",
+    "for",
+    "in",
+    "and",
+    "a",
+    "an",
+    "the",
     "two stop",
     "three stop",
+    "2 stop",
+    "3 stop",
+    "two step",
+    "three step",
+    "2 step",
+    "3 step",
+    "step",
+    "steps",
+    "stop",
+    "stops",
+    "chill",
+    "chilled",
+    "relax",
+    "reset",
+    "breathe",
+    "nerves",
+    "peaceful",
+    "soft",
+    "evening",
+    "early",
+    "today",
+    "afternoon",
+    "morning",
+    "activity",
+    "activities",
+    "relaxed",
+    "fun",
+    "simple",
+    "different",
+    "anchor",
+    "same",
+    "mood",
+    "tonight",
     "lunch",
     "dinner",
     "restaurant",
@@ -154,6 +245,14 @@ function searchQueryForPlaces(query = "", city = "", intent = "") {
     "indoor",
     "museum",
     "museums",
+    "gallery",
+    "galleries",
+    "art",
+    "arts",
+    "shop",
+    "shops",
+    "interesting",
+    "unique",
     "park",
     "parks",
     "trail",
@@ -196,6 +295,36 @@ function searchQueryForPlaces(query = "", city = "", intent = "") {
     "build plan",
     "build_plan",
     "surprise",
+    "random",
+    "pick",
+    "friend",
+    "friends",
+    "romantic",
+    "girlfriend",
+    "boyfriend",
+    "partner",
+    "wife",
+    "husband",
+    "baby",
+    "babe",
+    "special",
+    "sophisticated",
+    "atmosphere",
+    "upscale",
+    "refined",
+    "chinese",
+    "dim sum",
+    "dumpling",
+    "dumplings",
+    "hot pot",
+    "korean",
+    "indian",
+    "pakistani",
+    "jamaican",
+    "caribbean",
+    "ethiopian",
+    "vietnamese",
+    "filipino",
     "chat",
   ];
   for (const word of removable) {
@@ -204,7 +333,33 @@ function searchQueryForPlaces(query = "", city = "", intent = "") {
     cleaned = cleaned.replace(new RegExp(`\\b${token}\\b`, "g"), " ");
   }
   cleaned = cleaned.replace(/\s+/g, " ").trim();
-  return cleaned.length >= 3 ? cleaned : null;
+  if (cleaned.length >= 3) return cleaned;
+
+  const source = `${query} ${intent}`.toLowerCase();
+  if (/group|friend|friends/.test(source)) return null;
+  if (
+    /surprise|random|pick for me|today|early|morning|activity|activities|afternoon/.test(
+      source,
+    )
+  )
+    return null;
+  if (
+    /walk|walking|trail|park|outdoor|outside|chill|chilled|quiet|calm|relax|reset|breathe|nerves|peaceful|soft/.test(
+      source,
+    )
+  ) {
+    return null;
+  }
+  if (/coffee|cafe/.test(source)) return null;
+  if (
+    /lunch|dinner|food|restaurant|restaurants|brunch|meal|bite/.test(source)
+  ) {
+    return "restaurant";
+  }
+  if (/date|sweet|romantic/.test(source)) return "date";
+  if (/library|libraries/.test(source)) return "library";
+  if (/museum|gallery|culture|art/.test(source)) return "museum";
+  return null;
 }
 
 function stopCountForQuery(query: string, limit: number) {
@@ -225,6 +380,11 @@ function stopCountForQuery(query: string, limit: number) {
 
 function intentScore(place: PlaceRow, intent: string) {
   const text = intent.toLowerCase();
+  if (/library|libraries/.test(text)) {
+    if (/library/.test(place.category || "")) return 0.9;
+    if (/community|public_facility/.test(place.category || "")) return 0.62;
+    return 0.32;
+  }
   if (/lunch|food|restaurant|dinner/.test(text)) {
     return Number(place.lunch_score ?? 0.45);
   }
@@ -297,6 +457,12 @@ function vibeScore(place: PlaceRow, intent: string) {
       has(/indoor|rainy|museum|library|mall|movie/) ? 0.84 : 0.42,
     );
   }
+  if (/library|libraries/.test(text)) {
+    score = Math.max(
+      score,
+      has(/library|quiet|study|community|indoor/) ? 0.88 : 0.38,
+    );
+  }
   if (/park|trail|walk|hike|outdoor|picnic/.test(text)) {
     score = Math.max(
       score,
@@ -366,16 +532,16 @@ function stopVibe(place: PlaceRow, index: number, total: number) {
   const category = place.category || "place";
   const tags = normalizedTags(place);
   if (tags.some((tag) => /quiet|cozy|relaxed|low-key/.test(tag))) {
-    return "Chosen for a calmer Echoo profile match with confidence-safe local signals.";
+    return "A calmer stop that keeps the plan easy instead of loud.";
   }
   if (tags.some((tag) => /polished|date|artful|cultural/.test(tag))) {
-    return "Chosen because its Echoo profile fits a stronger date or culture stop.";
+    return "Better as the date or culture stop than as a throwaway errand.";
   }
   if (tags.some((tag) => /group|social|lively|casual/.test(tag))) {
-    return "Chosen because its profile works well for a social stop.";
+    return "Works when the outing needs a little more social energy.";
   }
   if (index === 0 && /restaurant|cafe|bar|pub/.test(category)) {
-    return "Start with the strongest food or coffee match from Echoo's Ontario records.";
+    return "Start here so the outing has a real place to land.";
   }
   if (/park/.test(category)) {
     return "Use this as the easy walk or outdoor reset in the route.";
@@ -384,12 +550,12 @@ function stopVibe(place: PlaceRow, index: number, total: number) {
     return "Add a culture or rainy-day stop that gives the plan a real activity.";
   }
   if (/mall/.test(category)) {
-    return "Keep this as the weather-safe backup anchor.";
+    return "Keep this as the weather-safe backup.";
   }
   if (index === total - 1) {
     return "Close with a nearby stop that keeps the route simple.";
   }
-  return "Matched from verified Ontario place records.";
+  return "Keep this as the simple nearby stop that gives the plan shape.";
 }
 
 function confidenceLabel(recordCount: number, stopCount: number) {
@@ -397,6 +563,102 @@ function confidenceLabel(recordCount: number, stopCount: number) {
   if (recordCount >= 3 && stopCount >= 2) return "medium";
   if (recordCount >= 1) return "low";
   return "none";
+}
+
+function friendlyPlanMessage(
+  city: string,
+  query: string,
+  stops: Array<{ title: string }>,
+) {
+  const placeCity = city || "Ontario";
+  const text = query.toLowerCase();
+  const first = cleanText(stops[0]?.title);
+  const second = cleanText(stops[1]?.title);
+  const hasSecond = Boolean(second);
+  if (!first) {
+    return `${placeCity} is not giving a solid match for that yet. Try coffee, park, food, culture, or one quiet reset.`;
+  }
+  if (/\b(library|libraries)\b/.test(text)) {
+    return hasSecond
+      ? `Start with ${first}. Keep ${second} as the backup if the first library is not the right fit.`
+      : `${first} is the clean library move. Use the map button when you are ready to go.`;
+  }
+  if (
+    /\b(chinese|dim sum|dumpling|dumplings|hot pot|korean|indian|pakistani|jamaican|caribbean|ethiopian|vietnamese|filipino)\b/.test(
+      text,
+    )
+  ) {
+    return hasSecond
+      ? `Start with ${first}. Keep ${second} as the backup, and check the card details before you commit to the cuisine.`
+      : `${first} is the strongest nearby food lead. Check the card details before you commit to the cuisine.`;
+  }
+  if (
+    /\b(relax|nerves|breathe|reset|quiet|calm|peaceful|chill|chilled|chilling)\b/.test(
+      text,
+    )
+  ) {
+    return hasSecond
+      ? `Start at ${first}. If you feel like keeping the outing going, make it ${second}; otherwise let the first stop be enough.`
+      : `${first} is the calm move. Go there first, then call it a good outing if that is all you feel like.`;
+  }
+  if (/\b(friend|friends|group)\b/.test(text)) {
+    return hasSecond
+      ? `${first} is the easy first stop with your friend. Keep ${second} as the second move if you both still feel like wandering.`
+      : `${first} is the easy friend-plan move. Keep it simple and leave room to talk.`;
+  }
+  if (
+    /\b(date|romantic|sweet|partner|baby|babe|girlfriend|boyfriend|wife|husband)\b/.test(
+      text,
+    )
+  ) {
+    return hasSecond
+      ? `Start at ${first}; keep ${second} as the soft second stop if the night is going well.`
+      : `${first} is enough for a low-pressure date. Let the room do the work.`;
+  }
+  if (/\b(surprise|random|pick|early|today|afternoon)\b/.test(text)) {
+    return hasSecond
+      ? `Start with ${first}. If the day still has room, make ${second} the easy second stop.`
+      : `${first} is the move for today. Keep it light and do not over-plan it.`;
+  }
+  return hasSecond
+    ? `Start with ${first}, then keep ${second} as the easy second stop. Simple enough to actually enjoy.`
+    : `${first} is the move. Keep the plan light around it.`;
+}
+
+function fallbackSearchQueryForCategory(category: string, query = "") {
+  const text = query.toLowerCase();
+  if (category === "park") {
+    if (/walk|walking|trail|hike/.test(text)) return "walk";
+    return "relaxed";
+  }
+  if (category === "cultural_space") {
+    if (/gallery|galleries/.test(text)) return "gallery";
+    if (/culture|cultural/.test(text)) return "culture";
+    return "art";
+  }
+  if (category === "food_premise") {
+    return "lunch";
+  }
+  if (category === "library") {
+    return "library";
+  }
+  if (category === "community_centre" || category === "public_facility") {
+    return "community";
+  }
+  if (category === "trail" || category === "nature_reserve") {
+    return /walk|walking|trail|hike/.test(text) ? "walk" : "relaxed";
+  }
+  return null;
+}
+
+function isSkippablePlaceSearchError(error: {
+  code?: string;
+  message?: string;
+}) {
+  return (
+    error.code === "57014" ||
+    /statement timeout|canceling statement/i.test(cleanText(error.message))
+  );
 }
 
 async function loadPlaces(input: {
@@ -413,8 +675,10 @@ async function loadPlaces(input: {
   const rows: PlaceRow[] = [];
 
   for (const category of buckets) {
+    const categoryQuery =
+      placeQuery || fallbackSearchQueryForCategory(category, input.query);
     const { data, error } = await input.supabase.rpc("search_ontario_places", {
-      p_query: placeQuery,
+      p_query: categoryQuery,
       p_city: input.city || null,
       p_lat: input.lat ?? null,
       p_lng: input.lng ?? null,
@@ -422,7 +686,10 @@ async function loadPlaces(input: {
       p_category: category,
       p_limit: input.limit,
     });
-    if (error) throw error;
+    if (error) {
+      if (isSkippablePlaceSearchError(error)) continue;
+      throw error;
+    }
     rows.push(...(data || []));
   }
 
@@ -506,7 +773,6 @@ Deno.serve(async (req) => {
       longitude: place.longitude,
       distanceMeters: place.distance_meters,
       tags: [place.category, place.subcategory].filter(Boolean).join(" / "),
-      profileTags: normalizedTags(place).slice(0, 6),
       vibe: stopVibe(place, index, stops.length),
       timing:
         index === 0
@@ -514,6 +780,10 @@ Deno.serve(async (req) => {
           : index === stops.length - 1
             ? "Finish nearby"
             : "Then walk or drive over",
+    }));
+
+    const debugStops = stops.map((place) => ({
+      id: place.id,
       scores: {
         lunch: place.lunch_score,
         date: place.date_score,
@@ -539,35 +809,20 @@ Deno.serve(async (req) => {
 
     const routeTitle = stops.length
       ? `${city || "Ontario"} ${stops.length}-stop plan`
-      : `No verified ${city || "Ontario"} plan yet`;
-    const summary = stops.length
-      ? `I found ${stops.length} verified Echoo stop${stops.length === 1 ? "" : "s"} from the Ontario database.`
-      : "Echoo does not have enough verified local records for that plan yet.";
+      : `${city || "Ontario"} needs a broader lane`;
+    const summary = "";
     const assistantMessage = stops.length
-      ? `${summary} I used retrieved place records only, so details like hours or specials are omitted unless Echoo has them.`
-      : `${summary} Try a broader city, a simpler intent, or add validation/import data first.`;
+      ? friendlyPlanMessage(city || "Ontario", query, planStops)
+      : `${city || "Ontario"} is not giving a solid match for that yet. Try a broader shape: coffee, park, food, culture, or one quiet reset.`;
 
     const responseData = {
       supported: Boolean(region.supported),
       region,
       plan: {
         title: routeTitle,
-        summary,
+        summary: summary || assistantMessage,
         explanation: assistantMessage,
         steps: planStops,
-      },
-      sourceStatus: {
-        recordCount: places.length,
-        stopCount: stops.length,
-        confidence,
-        sources: ["canonical_places", "place_profiles", "location_entities"],
-        ranking: "profile_vibe_editorial_confidence_v1",
-        strongProfileCount: stops.filter(
-          (place) => numberScore(place.profile_quality_score) >= 0.65,
-        ).length,
-        confidenceSafeCount: stops.filter(
-          (place) => confidenceSafety(place) >= 0.86,
-        ).length,
       },
       compatibility: {
         mode: "ontario_plan",
@@ -576,7 +831,7 @@ Deno.serve(async (req) => {
           intensity: stops.length >= 3 ? "route" : "simple",
           confidence:
             confidence === "high" ? 0.9 : confidence === "medium" ? 0.7 : 0.35,
-          reason: "Retrieved from Echoo Ontario records.",
+          reason: "Grounded Ontario plan.",
         },
         ai: {
           provider: "echoo-retrieval",
@@ -616,10 +871,35 @@ Deno.serve(async (req) => {
       },
     });
 
+    const debugToken = cleanText(req.headers.get("x-echoo-debug"));
+    const adminToken = cleanText(Deno.env.get("LOCATION_ADMIN_TOKEN"));
+    const debug =
+      debugToken && adminToken && debugToken === adminToken
+        ? {
+            recordCount: places.length,
+            stopCount: stops.length,
+            confidence,
+            sources: [
+              "canonical_places",
+              "place_profiles",
+              "location_entities",
+            ],
+            ranking: "profile_vibe_editorial_confidence_v1",
+            strongProfileCount: stops.filter(
+              (place) => numberScore(place.profile_quality_score) >= 0.65,
+            ).length,
+            confidenceSafeCount: stops.filter(
+              (place) => confidenceSafety(place) >= 0.86,
+            ).length,
+            stops: debugStops,
+          }
+        : undefined;
+
     return jsonResponse(
       envelope(responseData, {
         durationMs: Date.now() - startedAt,
         radiusMeters,
+        ...(debug ? { debug } : {}),
       }),
     );
   } catch (err) {

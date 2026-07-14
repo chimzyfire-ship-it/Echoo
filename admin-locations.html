@@ -167,7 +167,10 @@
       <header>
         <div>
           <h1>Ontario Operations</h1>
-          <p>Review places, duplicates, profiles, and ingestion schedules.</p>
+          <p>
+            Review places, community content, duplicates, profiles, and
+            schedules.
+          </p>
         </div>
       </header>
 
@@ -187,6 +190,8 @@
         </button>
         <button type="button" data-queue="duplicates">Duplicates</button>
         <button type="button" data-queue="profiles">Profiles</button>
+        <button type="button" data-queue="demand">Demand</button>
+        <button type="button" data-queue="community">Community</button>
         <button type="button" data-queue="schedules">Schedules</button>
       </nav>
 
@@ -336,11 +341,88 @@
           .join("");
       }
 
+      function renderDemand(demand, recent) {
+        if (!demand.length && !recent.length) {
+          return '<div class="empty">No zero-result demand logged yet.</div>';
+        }
+        const clusters = demand
+          .map(
+            (item) => `
+          <article class="item">
+            <div class="item-head">
+              <div>
+                <h2>${escapeHtml(item.query || "Untitled query")}</h2>
+                <div class="meta">${escapeHtml(item.city || "Ontario")} · ${escapeHtml(item.intent || "unknown")} · ${escapeHtml(item.province || "ON")}</div>
+              </div>
+              <div class="meta">${Number(item.count || 0)} zero-result ${Number(item.count || 0) === 1 ? "hit" : "hits"}</div>
+            </div>
+            <div class="meta">Last seen: ${escapeHtml(item.lastSeenAt || "unknown")} · Sample ${escapeHtml(item.sampleId || "")}</div>
+          </article>
+        `,
+          )
+          .join("");
+        const recentRows = recent.length
+          ? `<div class="empty">Recent misses</div>${recent
+              .slice(0, 8)
+              .map(
+                (item) => `
+            <article class="item">
+              <div class="item-head">
+                <div>
+                  <h2>${escapeHtml(item.query || "Untitled query")}</h2>
+                  <div class="meta">${escapeHtml(item.city || "Ontario")} · ${escapeHtml(item.intent || "unknown")} · ${escapeHtml(item.created_at || "")}</div>
+                </div>
+                <div class="meta">${number(item.lat, 4)}, ${number(item.lng, 4)}</div>
+              </div>
+            </article>
+          `,
+              )
+              .join("")}`
+          : "";
+        return `${clusters}${recentRows}`;
+      }
+
+      function renderCommunity(reviews, reports, media) {
+        if (!reviews.length && !reports.length && !media.length) {
+          return '<div class="empty">No community content waiting for review.</div>';
+        }
+        const reviewCards = reviews
+          .map(
+            (review) => `
+          <article class="item"><div class="item-head"><div><h2>${escapeHtml(review.location_entities?.title || "Echoo place")}</h2><div class="meta">Review · ${escapeHtml(review.location_entities?.city || "Ontario")} · ${escapeHtml(review.created_at)}</div></div><div class="meta">${escapeHtml(review.moderation_status)}</div></div><div>${escapeHtml(review.body)}</div><div class="actions"><button class="primary" data-action="moderate_discovery_content" data-type="review" data-status="approved" data-id="${review.id}">Approve</button><button class="danger" data-action="moderate_discovery_content" data-type="review" data-status="rejected" data-id="${review.id}">Reject</button></div></article>`,
+          )
+          .join("");
+        const mediaCards = media
+          .map(
+            (item) => `
+          <article class="item"><div class="item-head"><div><h2>${escapeHtml(item.location_entities?.title || "Echoo place")}</h2><div class="meta">Image · ${escapeHtml(item.source_type)} · ${escapeHtml(item.rights_status)}</div></div><div class="meta">${escapeHtml(item.created_at)}</div></div><div class="meta">${escapeHtml(item.alt_text || item.storage_path)}</div><div class="actions"><button class="primary" data-action="moderate_discovery_content" data-type="media" data-status="approved" data-id="${item.id}">Approve</button><button class="danger" data-action="moderate_discovery_content" data-type="media" data-status="rejected" data-id="${item.id}">Reject</button></div></article>`,
+          )
+          .join("");
+        const reportCards = reports
+          .map(
+            (report) =>
+              `<article class="item"><div class="item-head"><div><h2>Open ${escapeHtml(report.target_type)} report</h2><div class="meta">${escapeHtml(report.reason)} · ${escapeHtml(report.created_at)}</div></div><div class="meta">${escapeHtml(report.target_id)}</div></div><div class="meta">${escapeHtml(report.details || "No further details")}</div></article>`,
+          )
+          .join("");
+        return `${reviewCards}${mediaCards}${reportCards}`;
+      }
+
       function render(data) {
         if (activeQueue === "duplicates") {
           queueEl.innerHTML = renderDuplicates(data.candidates || []);
         } else if (activeQueue === "profiles") {
           queueEl.innerHTML = renderProfiles(data.profiles || []);
+        } else if (activeQueue === "demand") {
+          queueEl.innerHTML = renderDemand(
+            data.demand || [],
+            data.recent || [],
+          );
+        } else if (activeQueue === "community") {
+          queueEl.innerHTML = renderCommunity(
+            data.reviews || [],
+            data.reports || [],
+            data.media || [],
+          );
         } else if (activeQueue === "schedules") {
           queueEl.innerHTML = renderSchedules(data.schedules || []);
         } else {
@@ -391,6 +473,16 @@
               body: JSON.stringify({
                 action: "review_profile",
                 profileId: button.dataset.id,
+                status: button.dataset.status,
+              }),
+            });
+          } else if (button.dataset.action === "moderate_discovery_content") {
+            await request("", {
+              method: "PATCH",
+              body: JSON.stringify({
+                action: "moderate_discovery_content",
+                contentType: button.dataset.type,
+                contentId: button.dataset.id,
                 status: button.dataset.status,
               }),
             });

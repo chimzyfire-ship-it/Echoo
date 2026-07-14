@@ -3,19 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>echoo explore</title>
+    <meta name="theme-color" content="#090909" />
+    <title>Explore · echoo</title>
     <style>
       :root {
         color-scheme: dark;
         --ink: #f8f5ef;
         --muted: #aaa29a;
-        --soft: rgba(248, 245, 239, 0.72);
         --line: rgba(248, 245, 239, 0.12);
-        --line-strong: rgba(248, 245, 239, 0.2);
-        --glass: rgba(30, 30, 29, 0.72);
         --peach: #f7d5b2;
-        --black: #050505;
-        --panel: #131313;
+        --panel: #151515;
+        --deep: #070707;
         font-family:
           Inter,
           ui-sans-serif,
@@ -25,154 +23,115 @@
           "Segoe UI",
           sans-serif;
       }
-
       * {
         box-sizing: border-box;
       }
-
-      /* ── Viewport stability: lock horizontal scroll + native-app feel ── */
       html,
       body {
-        max-width: 100%;
-        overflow-x: hidden;
-        overflow-x: clip; /* modern: clips without breaking position:sticky */
-        overscroll-behavior-y: none; /* kill iOS rubber-band bounce */
-        -webkit-text-size-adjust: 100%;
-        -webkit-tap-highlight-color: transparent;
-      }
-      body {
-        position: relative;
-        overflow-wrap: break-word;
-      }
-      img,
-      video,
-      svg,
-      canvas,
-      iframe,
-      table {
-        max-width: 100%;
-      }
-
-      html,
-      body {
-        min-height: 100%;
         margin: 0;
+        min-height: 100%;
         background: #000;
         color: var(--ink);
       }
-
       body {
-        min-height: 100svh;
         display: grid;
         justify-items: center;
-        align-items: start;
+        overflow-x: hidden;
       }
-
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
-
       button,
       input {
         font: inherit;
       }
-
       button {
-        -webkit-tap-highlight-color: transparent;
+        cursor: pointer;
       }
-
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
       .app-shell {
         width: min(100vw, 430px);
         min-height: 100svh;
-        position: relative;
         isolation: isolate;
         overflow: hidden;
+        position: relative;
         background:
           radial-gradient(
-            circle at 50% -4%,
-            rgba(255, 255, 255, 0.14),
-            transparent 18rem
+            circle at 72% -5%,
+            rgba(247, 213, 178, 0.16),
+            transparent 21rem
           ),
           radial-gradient(
-            circle at 16% 46%,
-            rgba(255, 212, 166, 0.08),
-            transparent 14rem
+            circle at 5% 35%,
+            rgba(111, 130, 169, 0.12),
+            transparent 18rem
           ),
-          linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
+          linear-gradient(145deg, #171716 0%, #0a0a0a 46%, #030303);
       }
-
-      .app-shell::after {
+      .app-shell::before {
+        content: "";
         position: absolute;
         inset: 0;
+        pointer-events: none;
         z-index: -1;
-        content: "";
+        opacity: 0.55;
         background:
           linear-gradient(
             90deg,
-            rgba(255, 255, 255, 0.035),
-            transparent 18%,
-            transparent 82%,
-            rgba(255, 255, 255, 0.028)
+            rgba(255, 255, 255, 0.028),
+            transparent 17%,
+            transparent 83%,
+            rgba(255, 255, 255, 0.024)
           ),
           radial-gradient(
             ellipse at center,
-            transparent 48%,
-            rgba(0, 0, 0, 0.62) 100%
+            transparent 43%,
+            rgba(0, 0, 0, 0.62)
           );
-        pointer-events: none;
       }
-
       .topbar {
         position: sticky;
         top: 0;
         z-index: 20;
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        align-items: center;
         padding: calc(14px + env(safe-area-inset-top)) 27px 12px;
-        background: rgba(8, 8, 8, 0.6);
+        background: rgba(8, 8, 8, 0.64);
         backdrop-filter: blur(22px);
       }
-
       .brand {
         display: inline-flex;
-        align-items: center;
         width: 96px;
         height: 34px;
+        align-items: center;
         overflow: hidden;
       }
-
       .brand img {
-        display: block;
         width: 96px;
-        height: auto;
         filter: brightness(1.2) contrast(1.05);
       }
-
       .profile-link {
+        display: grid;
+        place-items: center;
         width: 34px;
         height: 34px;
-        border: 2px solid rgba(248, 245, 239, 0.7);
+        border: 2px solid rgba(248, 245, 239, 0.72);
         border-radius: 50%;
         position: relative;
-        opacity: 0.9;
+        color: var(--ink);
       }
-
       .profile-link::before {
-        position: absolute;
-        top: 6px;
-        left: 50%;
+        content: "";
         width: 8px;
         height: 8px;
         border: 2px solid currentColor;
         border-radius: 50%;
-        content: "";
-        transform: translateX(-50%);
+        position: absolute;
+        top: 6px;
       }
-
       .profile-link::after {
+        content: "";
         position: absolute;
         left: 7px;
         right: 7px;
@@ -181,679 +140,789 @@
         border: 2px solid currentColor;
         border-bottom: 0;
         border-radius: 14px 14px 0 0;
-        content: "";
       }
-
       .shell {
-        padding: 18px 27px calc(110px + env(safe-area-inset-bottom));
+        padding: 16px 20px calc(112px + env(safe-area-inset-bottom));
       }
-
+      .eyebrow {
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 760;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+      }
       .hero {
-        display: grid;
-        gap: 18px;
-        padding: 10px 0 20px;
+        padding: 10px 7px 20px;
       }
-
-      h1,
-      h2,
-      h3,
-      p {
-        margin-top: 0;
-      }
-
       h1 {
-        margin-bottom: 0;
-        max-width: 11ch;
-        font-size: clamp(42px, 13vw, 56px);
-        line-height: 1.02;
-        font-weight: 820;
-        letter-spacing: 0;
+        margin: 6px 0 10px;
+        max-width: 9ch;
+        font-size: clamp(42px, 12.2vw, 55px);
+        line-height: 0.98;
+        letter-spacing: -0.055em;
+        font-weight: 830;
         text-wrap: balance;
       }
-
-      .hero-copy {
-        display: grid;
-        gap: 12px;
-      }
-
-      .hero-copy p {
+      .hero p {
         margin: 0;
         max-width: 31ch;
         color: var(--muted);
-        font-size: 15px;
-        line-height: 1.42;
-        font-weight: 520;
+        font-size: 14px;
+        line-height: 1.45;
+        font-weight: 510;
       }
-
+      .search-wrap {
+        position: relative;
+        z-index: 10;
+        margin-top: 20px;
+      }
       .search {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: 22px 1fr 44px;
         align-items: center;
-        gap: 14px;
-        min-height: 60px;
-        margin-top: 4px;
-        padding: 9px 9px 9px 19px;
-        border: 1px solid rgba(248, 245, 239, 0.08);
-        border-radius: 999px;
+        gap: 11px;
+        min-height: 62px;
+        padding: 8px 8px 8px 17px;
+        border: 1px solid rgba(248, 245, 239, 0.1);
+        border-radius: 22px;
         background: linear-gradient(
           180deg,
-          rgba(42, 42, 41, 0.78),
-          rgba(29, 29, 28, 0.76)
+          rgba(48, 48, 46, 0.84),
+          rgba(27, 27, 26, 0.84)
         );
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.06),
-          0 20px 55px rgba(0, 0, 0, 0.28);
-        backdrop-filter: blur(22px);
+          inset 0 1px rgba(255, 255, 255, 0.07),
+          0 18px 42px rgba(0, 0, 0, 0.26);
+        backdrop-filter: blur(24px);
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
       }
-
       .search:focus-within {
-        border-color: rgba(247, 213, 178, 0.45);
+        border-color: rgba(247, 213, 178, 0.55);
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.07),
-          0 0 0 4px rgba(247, 213, 178, 0.08),
-          0 20px 55px rgba(0, 0, 0, 0.28);
+          inset 0 1px rgba(255, 255, 255, 0.08),
+          0 0 0 4px rgba(247, 213, 178, 0.09),
+          0 18px 42px rgba(0, 0, 0, 0.26);
       }
-
-      .search-glyph {
-        width: 24px;
-        height: 24px;
-        border: 2.5px solid var(--ink);
+      .search-icon {
+        width: 17px;
+        height: 17px;
+        border: 2px solid var(--ink);
         border-radius: 50%;
         position: relative;
-        opacity: 0.96;
+        opacity: 0.9;
       }
-
-      .search-glyph::after {
-        position: absolute;
-        right: -6px;
-        bottom: -4px;
-        width: 10px;
-        height: 2.5px;
-        border-radius: 999px;
-        background: var(--ink);
+      .search-icon::after {
         content: "";
+        width: 7px;
+        height: 2px;
+        background: var(--ink);
+        position: absolute;
+        right: -5px;
+        bottom: -3px;
         transform: rotate(45deg);
+        border-radius: 99px;
       }
-
-      input {
+      .search input {
         width: 100%;
         min-width: 0;
-        min-height: 48px;
         border: 0;
         outline: 0;
+        background: transparent;
         color: var(--ink);
-        background: transparent;
-        padding: 0;
-        font-size: clamp(15px, 4.1vw, 18px);
-        font-weight: 520;
-        letter-spacing: 0;
-      }
-
-      input::placeholder {
-        color: rgba(248, 245, 239, 0.68);
-        opacity: 1;
-      }
-
-      .primary {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 50px;
-        height: 50px;
-        border: 0;
-        border-radius: 50%;
-        padding: 0;
-        color: #111;
-        background: var(--peach);
-        cursor: pointer;
-        flex: 0 0 auto;
-        position: relative;
-        font-size: 0;
-      }
-
-      .primary::before {
-        position: absolute;
-        top: 24px;
-        left: 14px;
-        width: 21px;
-        height: 3px;
-        border-radius: 999px;
-        background: currentColor;
-        content: "";
-      }
-
-      .primary::after {
-        position: absolute;
-        top: 17px;
-        right: 15px;
-        width: 14px;
-        height: 14px;
-        border-top: 3px solid currentColor;
-        border-right: 3px solid currentColor;
-        content: "";
-        transform: rotate(45deg);
-      }
-
-      /* Text CTA variant (e.g. inside the brief) */
-      .brief .primary {
-        width: auto;
-        height: 46px;
-        padding: 0 18px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 680;
-      }
-
-      .brief .primary::before,
-      .brief .primary::after {
-        content: none;
-      }
-
-      .primary:hover,
-      .primary:focus-visible {
-        outline: 0;
-      }
-
-      .filters {
-        display: flex;
-        gap: 18px;
-        overflow-x: auto;
-        padding: 2px 0 16px;
-        scrollbar-width: none;
-      }
-
-      .filters::-webkit-scrollbar,
-      .rail::-webkit-scrollbar,
-      .news-slider::-webkit-scrollbar {
-        display: none;
-      }
-
-      .filter {
-        position: relative;
-        flex: 0 0 auto;
-        min-height: 34px;
-        padding: 0;
-        border: 0;
-        color: rgba(248, 245, 239, 0.52);
-        background: transparent;
-        cursor: pointer;
         font-size: 15px;
         font-weight: 560;
       }
-
-      .filter.active {
-        color: var(--ink);
+      .search input::placeholder {
+        color: rgba(248, 245, 239, 0.46);
       }
-
-      .filter.active::after {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 1px;
-        height: 2px;
-        border-radius: 999px;
+      .search-submit {
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 15px;
         background: var(--peach);
-        content: "";
+        color: #17130f;
+        display: grid;
+        place-items: center;
+        transition: transform 0.18s ease;
       }
-
-      .filter:hover,
-      .filter:focus-visible {
-        color: var(--peach);
+      .search-submit:hover {
+        transform: scale(1.045);
+      }
+      .search-submit::before {
+        content: "↗";
+        font-size: 22px;
+        line-height: 1;
+        font-weight: 700;
+        transform: translate(-1px, 1px);
+      }
+      .suggestions {
+        position: absolute;
+        top: calc(100% + 8px);
+        inset-inline: 0;
+        overflow: hidden;
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        border-radius: 18px;
+        background: rgba(25, 25, 24, 0.96);
+        box-shadow: 0 20px 44px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(26px);
+      }
+      .suggestions[hidden] {
+        display: none;
+      }
+      .suggestion {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 30px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 0;
+        border-bottom: 1px solid rgba(248, 245, 239, 0.07);
+        background: transparent;
+        color: var(--ink);
+        text-align: left;
+      }
+      .suggestion:last-child {
+        border-bottom: 0;
+      }
+      .suggestion:hover,
+      .suggestion:focus-visible {
+        background: rgba(255, 255, 255, 0.06);
         outline: 0;
       }
-
-      .section {
+      .suggestion-mark {
+        width: 28px;
+        height: 28px;
         display: grid;
-        gap: 12px;
-        margin: 0 0 28px;
+        place-items: center;
+        border-radius: 9px;
+        background: rgba(247, 213, 178, 0.13);
+        color: var(--peach);
+        font-size: 13px;
       }
-
-      .section-head {
+      .suggestion strong {
+        font-size: 13px;
+        font-weight: 680;
+      }
+      .suggestion small {
+        color: var(--muted);
+        text-transform: capitalize;
+        font-size: 11px;
+      }
+      .location-line {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 14px 2px 0;
+        color: rgba(248, 245, 239, 0.55);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.055em;
+        text-transform: uppercase;
+      }
+      .location-line::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--peach);
+        box-shadow: 0 0 13px rgba(247, 213, 178, 0.75);
+      }
+      .chips {
+        display: flex;
+        gap: 8px;
+        overflow: auto;
+        padding: 2px 0 17px;
+        scrollbar-width: none;
+      }
+      .chips::-webkit-scrollbar {
+        display: none;
+      }
+      .chip {
+        flex: 0 0 auto;
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 99px;
+        padding: 0 13px;
+        background: rgba(255, 255, 255, 0.035);
+        color: rgba(248, 245, 239, 0.7);
+        font-size: 12px;
+        font-weight: 650;
+        transition: 0.18s ease;
+      }
+      .chip:hover,
+      .chip.active {
+        border-color: rgba(247, 213, 178, 0.5);
+        background: rgba(247, 213, 178, 0.14);
+        color: var(--ink);
+      }
+      .result-head {
         display: flex;
         align-items: end;
         justify-content: space-between;
-        gap: 14px;
+        gap: 16px;
+        padding: 5px 2px 13px;
       }
-
-      .section-head h2 {
+      .result-head h2 {
         margin: 0;
-        font-size: 21px;
-        line-height: 1;
-        font-weight: 650;
+        font-size: 22px;
+        letter-spacing: -0.04em;
       }
-
-      .section-head span {
-        color: rgba(248, 245, 239, 0.42);
-        font-size: 11px;
-        font-weight: 520;
-        white-space: nowrap;
+      .result-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
       }
-
-      .rail {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: minmax(245px, 78%);
-        gap: 12px;
-        overflow-x: auto;
-        margin: 0 -16px;
-        padding: 0 16px 4px;
-        scroll-snap-type: x proximity;
-        scrollbar-width: none;
+      .view-switch {
+        display: flex;
+        padding: 3px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.045);
       }
-
-      .feature-card {
-        position: relative;
-        min-height: 292px;
-        overflow: hidden;
-        border-radius: 14px;
-        background: var(--panel);
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
-        isolation: isolate;
-        scroll-snap-align: start;
-      }
-
-      .feature-card img {
-        position: absolute;
-        inset: 0;
-        z-index: -2;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        filter: saturate(0.95) contrast(1.03);
-      }
-
-      .feature-card::after {
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        background:
-          linear-gradient(180deg, rgba(8, 10, 10, 0.1), transparent 32%),
-          linear-gradient(0deg, rgba(8, 10, 10, 0.9), transparent 72%);
-        content: "";
-      }
-
-      .feature-card a {
-        display: grid;
-        align-content: space-between;
-        min-height: 292px;
-        padding: 14px;
-      }
-
-      .feature-card h3 {
-        margin: 0 0 8px;
-        font-size: 24px;
-        line-height: 1;
-        font-weight: 680;
-        text-wrap: balance;
-      }
-
-      .feature-card p {
-        margin: 0;
-        color: rgba(248, 245, 239, 0.74);
-        font-size: 13px;
-        line-height: 1.32;
-        font-weight: 520;
-      }
-
-      .sound-rail {
-        display: grid;
-        gap: 8px;
-      }
-
-      .sound-card {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        align-items: center;
-        gap: 12px;
-        min-height: 62px;
-        color: var(--ink);
-      }
-
-      .sound-mark {
-        display: grid;
-        place-items: center;
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background: var(--peach);
-        color: #111;
+      .view-switch button {
+        width: 31px;
+        height: 28px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--muted);
         font-size: 14px;
-        font-weight: 680;
       }
-
-      .sound-card strong {
-        display: block;
-        font-size: 16px;
-        line-height: 1.1;
-        font-weight: 620;
+      .view-switch button.active {
+        background: rgba(247, 213, 178, 0.2);
+        color: var(--peach);
       }
-
-      .sound-card span span {
-        display: block;
-        margin-top: 4px;
-        color: rgba(248, 245, 239, 0.54);
-        font-size: 12px;
-        font-weight: 520;
-      }
-
-      .place-stack {
+      .results {
         display: grid;
-        gap: 4px;
+        gap: 13px;
       }
-
-      .place-row {
-        display: grid;
-        grid-template-columns: 1fr;
-        align-items: center;
-        gap: 12px;
-        min-height: 72px;
-        color: var(--ink);
-      }
-
-      .place-row strong {
-        display: block;
-        font-size: 17px;
-        line-height: 1.1;
-        font-weight: 620;
-      }
-
-      .place-row span {
-        display: block;
-        margin-top: 5px;
-        color: rgba(248, 245, 239, 0.54);
-        font-size: 12px;
-        line-height: 1.28;
-        font-weight: 520;
-      }
-
-      .news-carousel-wrap {
+      .explore-card {
         position: relative;
-        width: auto;
-        overflow: hidden;
-        margin: 0 -16px;
-      }
-
-      .news-carousel-wrap::before,
-      .news-carousel-wrap::after {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        z-index: 2;
-        width: 18px;
-        content: "";
-        pointer-events: none;
-      }
-
-      .news-carousel-wrap::before {
-        left: 0;
-        background: linear-gradient(90deg, #050505, transparent);
-      }
-
-      .news-carousel-wrap::after {
-        right: 0;
-        background: linear-gradient(270deg, #050505, transparent);
-      }
-
-      .news-slider {
-        display: flex;
-        overflow-x: auto;
-        cursor: grab;
-        user-select: none;
-        touch-action: pan-x;
-        scrollbar-width: none;
-      }
-
-      .news-slider:active {
-        cursor: grabbing;
-      }
-
-      .news-track {
-        display: flex;
-        gap: 10px;
-        padding: 2px 16px 6px;
-      }
-
-      .news-card {
-        display: inline-flex;
-        align-items: center;
-        flex: 0 0 258px;
-        gap: 10px;
-        min-height: 72px;
-        padding: 8px;
-        border-radius: 12px;
-        background: rgba(248, 245, 239, 0.05);
-      }
-
-      .news-card img {
-        flex: 0 0 auto;
-        width: 56px;
-        height: 56px;
-        border-radius: 10px;
-        object-fit: cover;
-      }
-
-      .news-card .news-info {
         display: grid;
-        gap: 4px;
+        grid-template-columns: 116px 1fr;
+        min-height: 148px;
+        overflow: hidden;
+        border: 1px solid rgba(248, 245, 239, 0.11);
+        border-radius: 19px;
+        background: linear-gradient(
+          120deg,
+          rgba(37, 37, 36, 0.8),
+          rgba(18, 18, 18, 0.78)
+        );
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition:
+          transform 0.18s ease,
+          border-color 0.18s ease;
+      }
+      .explore-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(247, 213, 178, 0.4);
+      }
+      .card-art {
+        position: relative;
+        min-height: 100%;
+        overflow: hidden;
+        background: linear-gradient(145deg, #775a44, #171616);
+      }
+      .card-art::before {
+        content: "";
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        left: -35px;
+        bottom: -28px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        box-shadow:
+          30px -24px 0 -1px rgba(255, 255, 255, 0.09),
+          65px 12px 0 -2px rgba(247, 213, 178, 0.55);
+      }
+      .card-art::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          155deg,
+          transparent 35%,
+          rgba(0, 0, 0, 0.42)
+        );
+      }
+      .card-art[data-kind="museum"],
+      .card-art[data-kind="gallery"] {
+        background: linear-gradient(150deg, #756a61, #202020 67%);
+      }
+      .card-art[data-kind="restaurant"],
+      .card-art[data-kind="food"] {
+        background: linear-gradient(145deg, #8c552f, #271813 70%);
+      }
+      .card-art[data-kind="event"] {
+        background: linear-gradient(145deg, #674a78, #18131d 70%);
+      }
+      .card-art[data-kind="google"] {
+        background: linear-gradient(145deg, #4c6380, #141b24 70%);
+      }
+      .card-art-label {
+        position: absolute;
+        left: 11px;
+        bottom: 10px;
+        z-index: 1;
+        max-width: 88px;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 760;
+        letter-spacing: 0.07em;
+        line-height: 1.1;
+        text-transform: uppercase;
+      }
+      .card-body {
+        display: grid;
+        align-content: start;
+        gap: 7px;
+        padding: 15px 14px 13px;
         min-width: 0;
       }
-
-      .news-card .tag {
-        color: var(--peach);
-        font-size: 10px;
-        font-weight: 650;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
+      .card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
       }
-
-      .news-card .headline {
-        max-width: 172px;
+      .card-kicker {
+        color: var(--peach);
         overflow: hidden;
-        color: rgba(248, 245, 239, 0.78);
-        font-size: 13px;
-        font-weight: 540;
-        line-height: 1.18;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+      .new-badge,
+      .hot-badge {
+        flex: 0 0 auto;
+        padding: 4px 6px;
+        border-radius: 6px;
+        background: rgba(247, 213, 178, 0.14);
+        color: var(--peach);
+        font-size: 9px;
+        font-weight: 760;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .hot-badge {
+        background: rgba(255, 137, 88, 0.16);
+        color: #ffc09d;
+      }
+      .card-body h3 {
+        margin: 0;
+        overflow: hidden;
+        font-size: 17px;
+        line-height: 1.08;
+        letter-spacing: -0.028em;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-
-      .content {
-        display: grid;
-        gap: 12px;
-      }
-
-      .events-list {
-        display: grid;
-        gap: 12px;
-      }
-
-      .event {
-        display: grid;
-        grid-template-columns: 96px minmax(0, 1fr);
-        gap: 12px;
-        min-height: 126px;
-        padding: 10px;
-        border-radius: 14px;
-        background: rgba(248, 245, 239, 0.05);
-        cursor: pointer;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-        transition:
-          transform 180ms ease,
-          background 180ms ease;
-      }
-
-      .event:hover,
-      .event:focus-within {
-        transform: translateY(-2px);
-        background: rgba(248, 245, 239, 0.08);
-      }
-
-      .event picture,
-      .event img {
-        width: 96px;
-        height: 112px;
-      }
-
-      .event img {
-        display: block;
-        border-radius: 10px;
-        object-fit: cover;
-        filter: saturate(0.9) contrast(1.02);
-      }
-
-      .event div {
-        min-width: 0;
-      }
-
-      .event small {
-        display: inline-flex;
-        color: var(--peach);
-        font-size: 10px;
-        font-weight: 650;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-
-      .event h2 {
-        margin: 6px 0 7px;
-        color: var(--ink);
-        font-size: 20px;
-        line-height: 1;
-        font-weight: 620;
-        text-wrap: balance;
-      }
-
-      .event p {
+      .card-body p {
         display: -webkit-box;
-        margin: 0 0 9px;
+        margin: 0;
         overflow: hidden;
-        color: rgba(248, 245, 239, 0.6);
-        font-size: 12px;
-        line-height: 1.28;
-        font-weight: 520;
+        color: var(--muted);
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
+        font-size: 12px;
+        line-height: 1.36;
       }
-
-      .meta {
+      .card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 1px;
+      }
+      .card-meta span {
+        max-width: 100%;
+        overflow: hidden;
+        padding: 4px 6px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.055);
+        color: rgba(248, 245, 239, 0.7);
+        font-size: 10px;
+        font-weight: 620;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .provider-note {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 1px 2px 0;
+        color: rgba(248, 245, 239, 0.43);
+        font-size: 10px;
+      }
+      .provider-note::before {
+        content: "";
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgba(248, 245, 239, 0.5);
+      }
+      .map-view {
+        position: relative;
+        min-height: 470px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 21px;
+        background:
+          radial-gradient(
+            circle at 42% 36%,
+            rgba(247, 213, 178, 0.11),
+            transparent 17%
+          ),
+          linear-gradient(135deg, #1c211e, #111412 48%, #1b1a18);
+      }
+      .map-view[hidden] {
+        display: none;
+      }
+      .map-grid {
+        position: absolute;
+        inset: -10%;
+        opacity: 0.32;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+        background-size: 44px 44px;
+        transform: rotate(-11deg) scale(1.2);
+      }
+      .map-road {
+        position: absolute;
+        height: 2px;
+        width: 130%;
+        left: -15%;
+        background: rgba(247, 213, 178, 0.24);
+        transform: rotate(-27deg);
+        box-shadow:
+          0 42px 0 rgba(247, 213, 178, 0.12),
+          0 -86px 0 rgba(247, 213, 178, 0.12);
+      }
+      .map-caption {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 7px 9px;
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        border-radius: 9px;
+        background: rgba(6, 6, 6, 0.6);
+        color: rgba(248, 245, 239, 0.65);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        backdrop-filter: blur(8px);
+      }
+      .map-pin {
+        position: absolute;
+        width: 35px;
+        height: 35px;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        border-radius: 50% 50% 50% 0;
+        background: var(--peach);
+        color: #17120e;
+        box-shadow:
+          0 7px 20px rgba(0, 0, 0, 0.45),
+          0 0 0 5px rgba(247, 213, 178, 0.14);
+        transform: translate(-50%, -100%) rotate(-45deg);
+        transition: transform 0.18s ease;
+      }
+      .map-pin:hover {
+        transform: translate(-50%, -105%) rotate(-45deg) scale(1.1);
+      }
+      .map-pin span {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 800;
+        transform: rotate(45deg);
+      }
+      .map-pin.google {
+        background: #a9c7e8;
+      }
+      .skeleton {
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .skeleton .card-art,
+      .skeleton .sk-line {
+        background: linear-gradient(
+          100deg,
+          rgba(255, 255, 255, 0.045) 24%,
+          rgba(255, 255, 255, 0.12) 38%,
+          rgba(255, 255, 255, 0.045) 55%
+        );
+        background-size: 260% 100%;
+        animation: shimmer 1.3s infinite linear;
+      }
+      .sk-line {
+        height: 10px;
+        border-radius: 99px;
+      }
+      .sk-line.big {
+        width: 78%;
+        height: 18px;
+      }
+      .sk-line.medium {
+        width: 94%;
+      }
+      .sk-line.short {
+        width: 55%;
+      }
+      @keyframes shimmer {
+        to {
+          background-position: -160% 0;
+        }
+      }
+      .empty {
+        display: grid;
+        justify-items: start;
+        gap: 9px;
+        padding: 27px 22px;
+        border: 1px dashed rgba(248, 245, 239, 0.19);
+        border-radius: 19px;
+        background: rgba(255, 255, 255, 0.025);
+      }
+      .empty-mark {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border-radius: 12px;
+        background: rgba(247, 213, 178, 0.13);
+        color: var(--peach);
+        font-size: 18px;
+      }
+      .empty h3 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: -0.03em;
+      }
+      .empty p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .empty button {
+        margin-top: 3px;
+        min-height: 35px;
+        border: 1px solid rgba(247, 213, 178, 0.35);
+        border-radius: 99px;
+        padding: 0 12px;
+        background: rgba(247, 213, 178, 0.1);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 680;
+      }
+      .load-more {
+        width: 100%;
+        min-height: 46px;
+        margin-top: 3px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .load-more:hover {
+        border-color: rgba(247, 213, 178, 0.4);
+      }
+      .sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: grid;
+        align-items: end;
+        pointer-events: none;
+      }
+      .sheet.open {
+        pointer-events: auto;
+      }
+      .sheet-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.68);
+        opacity: 0;
+        transition: opacity 0.24s;
+      }
+      .sheet.open .sheet-backdrop {
+        opacity: 1;
+      }
+      .sheet-panel {
+        position: relative;
+        width: min(430px, 100%);
+        max-height: min(80svh, 700px);
+        overflow: auto;
+        margin-inline: auto;
+        padding: 10px 20px calc(28px + env(safe-area-inset-bottom));
+        border: 1px solid rgba(248, 245, 239, 0.14);
+        border-radius: 25px 25px 0 0;
+        background: linear-gradient(145deg, #272625, #101010 62%);
+        box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.46);
+        transform: translateY(105%);
+        transition: transform 0.3s cubic-bezier(0.22, 0.9, 0.3, 1);
+      }
+      .sheet.open .sheet-panel {
+        transform: translateY(0);
+      }
+      .sheet-handle {
+        width: 38px;
+        height: 4px;
+        margin: 0 auto 17px;
+        border-radius: 99px;
+        background: rgba(248, 245, 239, 0.26);
+      }
+      .sheet-close {
+        position: absolute;
+        top: 15px;
+        right: 17px;
+        width: 31px;
+        height: 31px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--ink);
+        font-size: 17px;
+      }
+      .detail-art {
+        height: 150px;
+        margin-bottom: 17px;
+        border-radius: 17px;
+        background: linear-gradient(135deg, #805b41, #1b1715 68%);
+        position: relative;
+        overflow: hidden;
+      }
+      .detail-art::after {
+        content: "";
+        position: absolute;
+        width: 210px;
+        height: 210px;
+        right: -43px;
+        top: -78px;
+        border: 1px solid rgba(255, 255, 255, 0.23);
+        border-radius: 50%;
+        box-shadow: -48px 45px 0 -2px rgba(247, 213, 178, 0.5);
+      }
+      .detail-kicker {
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+      .detail-title {
+        margin: 7px 0 9px;
+        font-size: 30px;
+        line-height: 1;
+        letter-spacing: -0.055em;
+      }
+      .detail-copy {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .detail-stats {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        margin: 17px 0;
       }
-
-      .meta span {
-        color: rgba(248, 245, 239, 0.48);
+      .detail-stats span {
+        padding: 7px 9px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(248, 245, 239, 0.78);
         font-size: 11px;
-        font-weight: 520;
-      }
-
-      .side {
-        display: grid;
-        gap: 12px;
-      }
-
-      .brief {
-        padding: 16px;
-        border-radius: 14px;
-        background:
-          linear-gradient(135deg, rgba(247, 213, 178, 0.12), transparent),
-          rgba(248, 245, 239, 0.05);
-      }
-
-      .brief h3 {
-        margin: 0 0 8px;
-        font-size: 21px;
-        line-height: 1;
         font-weight: 650;
       }
-
-      .brief p {
-        margin: 0 0 14px;
-        color: rgba(248, 245, 239, 0.66);
-        font-size: 13px;
-        line-height: 1.38;
-        font-weight: 520;
+      .detail-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
       }
-
+      .detail-actions button,
+      .detail-actions a {
+        display: grid;
+        min-height: 46px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 720;
+      }
+      .detail-actions .primary {
+        border-color: transparent;
+        background: var(--peach);
+        color: #18120e;
+      }
       .bottom-nav {
         position: fixed;
         left: 50%;
         bottom: 12px;
         z-index: 30;
-        width: min(376px, calc(100% - 52px));
-        min-height: 72px;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 6px;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
         padding: 10px 15px 8px;
-        border: 1px solid rgba(248, 245, 239, 0.06);
+        border: 1px solid rgba(248, 245, 239, 0.07);
         border-radius: 28px;
-        background: rgba(25, 25, 24, 0.82);
+        background: rgba(25, 25, 24, 0.84);
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          inset 0 1px rgba(255, 255, 255, 0.05),
           0 18px 44px rgba(0, 0, 0, 0.42);
         backdrop-filter: blur(26px);
         transform: translateX(-50%);
       }
-
       .nav-link {
-        min-width: 0;
         display: grid;
-        justify-items: center;
-        align-content: center;
+        min-width: 0;
+        place-items: center;
         gap: 5px;
         color: rgba(248, 245, 239, 0.62);
         font-size: 12px;
         font-weight: 560;
       }
-
       .nav-link.active {
         color: var(--peach);
       }
-
       .nav-link svg {
         width: 27px;
         height: 27px;
-        stroke: currentColor;
-        stroke-width: 1.8;
         fill: none;
+        stroke: currentColor;
         stroke-linecap: round;
         stroke-linejoin: round;
+        stroke-width: 1.8;
       }
-
       .nav-link.active svg {
         fill: currentColor;
         stroke-width: 0;
       }
-
-      .location-note {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        width: fit-content;
-        color: rgba(248, 245, 239, 0.5);
-        font-size: 12px;
-        font-weight: 650;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .location-note::before {
-        width: 7px;
-        height: 7px;
-        border-radius: 999px;
-        background: var(--peach);
-        box-shadow: 0 0 12px rgba(247, 213, 178, 0.7);
-        content: "";
-      }
-
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
         *::after {
-          scroll-behavior: auto !important;
-          transition-duration: 0.01ms !important;
           animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
         }
       }
     </style>
@@ -861,1034 +930,495 @@
   <body>
     <div class="app-shell">
       <header class="topbar" aria-label="Echoo">
-        <a class="brand" href="index.html" aria-label="Echoo home">
-          <img src="assets/echoo-wordmark.png" alt="echoo" />
-        </a>
+        <a class="brand" href="index.html" aria-label="Echoo home"
+          ><img src="assets/echoo-wordmark.png" alt="echoo"
+        /></a>
         <a
           class="profile-link"
           href="auth.html"
           aria-label="Open your profile"
         ></a>
       </header>
-
       <main class="shell">
         <section class="hero">
-          <div class="hero-copy" data-echoo-hero="discover">
-            <h1 data-echoo-hero-title>What is worth doing right now?</h1>
-            <p data-echoo-hero-copy>
-              Shows, chill spots, music heat, and easy plans in one calm flow.
-            </p>
-            <span class="location-note" id="location-note">Using Ontario</span>
+          <span class="eyebrow">Echoo Explore</span>
+          <h1>Find your next good place.</h1>
+          <p>
+            Thoughtful places, plans, and experiences — all grounded in what
+            Echoo knows locally.
+          </p>
+          <div class="search-wrap">
+            <form
+              class="search"
+              id="search-form"
+              role="search"
+              aria-label="Search Explore"
+            >
+              <span class="search-icon" aria-hidden="true"></span>
+              <input
+                id="query"
+                autocomplete="off"
+                placeholder="Try rooftop view, quiet date night…"
+                aria-controls="suggestions"
+                aria-expanded="false"
+              />
+              <button
+                class="search-submit"
+                type="submit"
+                aria-label="Search"
+              ></button>
+            </form>
+            <div
+              class="suggestions"
+              id="suggestions"
+              role="listbox"
+              hidden
+            ></div>
           </div>
-          <form class="search" id="search-form" aria-label="Search Echoo">
-            <span class="search-glyph" aria-hidden="true"></span>
-            <input id="query" placeholder="Search Ontario tonight" />
-            <button class="primary" type="submit" aria-label="Search"></button>
-          </form>
+          <div class="location-line" id="location-note">Exploring Ontario</div>
         </section>
-
-        <div class="filters" id="filters" aria-label="Discovery filters">
-          <button class="filter active" data-filter="all">All</button>
-          <a class="filter" href="music.html">Music</a>
-          <a class="filter" href="dates.html">Dates</a>
-          <a class="filter" href="films.html">Films</a>
-          <a class="filter" href="food.html">Food</a>
+        <div class="chips" id="chips" aria-label="Explore categories">
+          <button class="chip active" data-query="">For you</button
+          ><button class="chip" data-query="rooftop view">Rooftop views</button
+          ><button class="chip" data-query="date night">Date night</button
+          ><button class="chip" data-query="live music">Live music</button
+          ><button class="chip" data-query="museum">Culture</button
+          ><button class="chip" data-query="coffee">Coffee</button>
         </div>
-
-        <section class="section" aria-labelledby="shows-title">
-          <div class="section-head">
-            <h2 id="shows-title">Live shows</h2>
-            <span>Updated today</span>
-          </div>
-          <div class="rail">
-            <article class="feature-card">
-              <img
-                src="assets/optimized/news-music-768.jpg"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-              <a href="music.html">
-                <span>
-                  <h3>Live rooms still moving</h3>
-                  <p>Concerts, DJs, intimate sets, and the places nearby.</p>
-                </span>
-              </a>
-            </article>
-            <article class="feature-card">
-              <img
-                src="assets/optimized/news-date-768.jpg"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-              <a href="dates.html">
-                <span>
-                  <h3>Date plans that feel effortless</h3>
-                  <p>One anchor, one food stop, one softer place after.</p>
-                </span>
-              </a>
-            </article>
-            <article class="feature-card">
-              <img
-                src="assets/optimized/news-movie-768.jpg"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-              <a href="films.html">
-                <span>
-                  <h3>Screenings with somewhere good after</h3>
-                  <p>Film nights paired with food, dessert, and late spots.</p>
-                </span>
-              </a>
-            </article>
-          </div>
-        </section>
-
-        <section class="section" aria-labelledby="music-title">
-          <div class="section-head">
-            <h2 id="music-title">Music moving</h2>
-            <span>Ontario signals</span>
-          </div>
-          <div class="sound-rail">
-            <a class="sound-card" href="music.html">
-              <span class="sound-mark">01</span>
-              <span>
-                <strong>Trending artists with Ontario shows</strong>
-                <span>Music buzz that connects to real listings.</span>
-              </span>
-            </a>
-            <a class="sound-card" href="music.html">
-              <span class="sound-mark">02</span>
-              <span>
-                <strong>Tracks turning into Ontario plans</strong>
-                <span>Signals from charts, events, venues, and saves.</span>
-              </span>
-            </a>
-            <a class="sound-card" href="music.html">
-              <span class="sound-mark">03</span>
-              <span>
-                <strong>Concert energy</strong>
-                <span>Useful music discovery, not decorative charts.</span>
-              </span>
-            </a>
-          </div>
-        </section>
-
-        <section class="section" aria-labelledby="places-title">
-          <div class="section-head">
-            <h2 id="places-title">Hot places to chill</h2>
-            <span>Ontario picks</span>
-          </div>
-          <div class="place-stack">
-            <a class="place-row" href="food.html">
-              <span>
-                <strong>Food before the show</strong>
-                <span>Quick tables, warm rooms, easy group energy.</span>
-              </span>
-            </a>
-            <a
-              class="place-row"
-              href="events.html?query=late%20night%20ontario"
-            >
-              <span>
-                <strong>Late-night picks</strong>
-                <span
-                  >Places that keep the night alive after the main plan.</span
-                >
-              </span>
-            </a>
-            <a class="place-row" href="dates.html">
-              <span>
-                <strong>Date-night energy</strong>
-                <span>Comfortable, not stiff, actually good for talking.</span>
-              </span>
-            </a>
-          </div>
-        </section>
-
-        <section class="section" aria-labelledby="pulse-title">
-          <div class="section-head">
-            <h2 id="pulse-title">Entertainment pulse</h2>
-            <span>Fresh picks</span>
-          </div>
-          <div class="news-carousel-wrap">
-            <div class="news-slider" id="news-slider">
-              <div class="news-track" id="news-track"></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="content" aria-labelledby="live-picks-title">
-          <div class="section-head">
-            <h2 id="live-picks-title">Near your mood</h2>
-            <span>Live picks</span>
-          </div>
-          <div class="events-list" id="events-list"></div>
-          <aside class="side">
-            <div class="brief">
-              <h3 id="brief-title">A few good starts</h3>
-              <p id="brief-copy">
-                One easy plan, one interesting plan, and one backup for when the
-                group changes its mind.
+        <section aria-live="polite" aria-busy="true" id="explore-section">
+          <div class="result-head">
+            <div>
+              <h2 id="result-title">Explore nearby</h2>
+              <p id="result-subtitle">
+                A fresh local edit, just for this area.
               </p>
-              <a class="primary" href="app.html">Plan with friends</a>
             </div>
-          </aside>
-        </section>
-        <footer
-          style="
-            margin-top: 48px;
-            border-top: 1px solid var(--line);
-            padding-top: 18px;
-            font-size: 11px;
-            color: var(--muted);
-            text-align: center;
-            display: grid;
-            gap: 8px;
-          "
-        >
-          <div style="display: flex; justify-content: center; gap: 14px">
-            <a href="privacy.html" style="text-decoration: underline"
-              >Privacy Policy</a
-            >
-            <a href="terms.html" style="text-decoration: underline"
-              >Terms of Service</a
-            >
-            <a href="compliance.html" style="text-decoration: underline"
-              >Compliance Checklist</a
-            >
+            <div class="view-switch" aria-label="Result layout">
+              <button class="active" data-view="list" aria-label="List view">
+                ☷</button
+              ><button data-view="map" aria-label="Map view">⌖</button>
+            </div>
           </div>
-          <span>Copyright © 2026 Idris Oyejobi. All rights reserved.</span>
-        </footer>
+          <div class="results" id="results"></div>
+          <div class="map-view" id="map-view" hidden>
+            <div class="map-grid"></div>
+            <div class="map-road"></div>
+            <span class="map-caption">Explore map</span>
+            <div id="map-pins"></div>
+          </div>
+          <button class="load-more" id="load-more" hidden>
+            Show more places
+          </button>
+        </section>
       </main>
-
       <nav class="bottom-nav" aria-label="Main navigation">
-        <a class="nav-link" href="index.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
-          </svg>
-          <span>Home</span>
-        </a>
-        <a class="nav-link active" href="events.html" aria-current="page">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+        <a class="nav-link" href="index.html"
+          ><svg viewBox="0 0 24 24">
+            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg
+          ><span>Home</span></a
+        >
+        <a class="nav-link active" href="events.html" aria-current="page"
+          ><svg viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="7" />
-            <path d="m16 16 4 4" />
-          </svg>
-          <span>Discover</span>
-        </a>
-        <a class="nav-link" href="tickets.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m16 16 4 4" /></svg
+          ><span>Explore</span></a
+        >
+        <a class="nav-link" href="tickets.html"
+          ><svg viewBox="0 0 24 24">
             <path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" />
-            <path d="M13 6v12" />
-          </svg>
-          <span>Tickets</span>
-        </a>
-        <a class="nav-link" href="auth.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M13 6v12" /></svg
+          ><span>Tickets</span></a
+        >
+        <a class="nav-link" href="auth.html"
+          ><svg viewBox="0 0 24 24">
             <circle cx="12" cy="8" r="4" />
-            <path d="M4 21a8 8 0 0 1 16 0" />
-          </svg>
-          <span>Profile</span>
-        </a>
+            <path d="M4 21a8 8 0 0 1 16 0" /></svg
+          ><span>Profile</span></a
+        >
       </nav>
     </div>
-
+    <div class="sheet" id="detail-sheet" aria-hidden="true">
+      <div class="sheet-backdrop" data-close-sheet></div>
+      <section
+        class="sheet-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Place details"
+      >
+        <div class="sheet-handle"></div>
+        <button class="sheet-close" data-close-sheet aria-label="Close details">
+          ×
+        </button>
+        <div id="detail-content"></div>
+      </section>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
     <script src="assets/location-platform.js"></script>
-    <script src="assets/activity-context.js"></script>
-    <script src="assets/hero-copy.js"></script>
     <script>
-      /* Diagnostic logger for redirects */
-      window.addEventListener("beforeunload", () => {
-        const history = JSON.parse(
-          sessionStorage.getItem("echoo_unload_log") || "[]",
-        );
-        history.push({
-          time: new Date().toISOString(),
-          url: window.location.href,
-          stack: new Error().stack,
-        });
-        sessionStorage.setItem(
-          "echoo_unload_log",
-          JSON.stringify(history.slice(-10)),
-        );
-      });
-
-      let events = [
-        {
-          id: 1,
-          category: "music",
-          title: "Basement listening room",
-          copy: "A small-room set with reserved standing space and an easy food route nearby.",
-          img: "assets/optimized/news-music-768.jpg",
-          webp: "assets/optimized/news-music-768.webp",
-          meta: ["Today", "18 min", "$28"],
-        },
-        {
-          id: 2,
-          category: "dates",
-          title: "Rooftop dinner plus quiet walk",
-          copy: "A date plan that feels built, not assembled: table, timing, and a softer second stop.",
-          img: "assets/optimized/news-date-768.jpg",
-          webp: "assets/optimized/news-date-768.webp",
-          meta: ["Today", "Two stops", "$$"],
-        },
-        {
-          id: 3,
-          category: "movies",
-          title: "Late film with post-show dessert",
-          copy: "A cinema anchor paired with a place that stays open late enough to keep talking.",
-          img: "assets/optimized/news-movie-768.jpg",
-          webp: "assets/optimized/news-movie-768.webp",
-          meta: ["9:40 PM", "Seats open", "$18"],
-        },
-        {
-          id: 4,
-          category: "food",
-          title: "Kitchen still open",
-          copy: "A simple food-first option for when nobody wants to plan, but everyone wants a good answer.",
-          img: "assets/optimized/news-date-768.jpg",
-          webp: "assets/optimized/news-date-768.webp",
-          meta: ["Open late", "12 min", "$$"],
-        },
-      ];
-
-      const list = document.getElementById("events-list");
-      const queryInput = document.getElementById("query");
-      const locationNote = document.getElementById("location-note");
-      let activeFilter = "all";
-
-      function render() {
-        const query = queryInput.value.trim().toLowerCase();
-        const planIntent =
-          /plan|today|tonight|night|date|near|nearby|out|discover|surprise|bored|morning|lunch|afternoon|evening|late|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(
-            query,
-          );
-        const filtered = events.filter((event) => {
-          const inFilter =
-            activeFilter === "all" || event.category === activeFilter;
-          const inQuery =
-            !query ||
-            planIntent ||
-            `${event.title} ${event.copy} ${event.category} ${event.meta.join(" ")}`
-              .toLowerCase()
-              .includes(query);
-          return inFilter && inQuery;
-        });
-
-        list.innerHTML =
-          filtered
-            .map(
-              (event) => `
-          <article class="event" data-id="${escapeHtml(event.id)}" ${event.detailId ? `data-detail-id="${escapeHtml(event.detailId)}"` : ""} ${event.actionUrl ? `data-action-url="${escapeHtml(event.actionUrl)}"` : ""}>
-            <picture>
-              <source srcset="${escapeHtml(event.webp)}" type="image/webp">
-              <img src="${escapeHtml(event.img)}" alt="" loading="lazy" decoding="async">
-            </picture>
-            <div>
-              <small>${escapeHtml(event.category)}</small>
-              <h2>${escapeHtml(event.title)}</h2>
-              <p>${escapeHtml(event.copy)}</p>
-              <div class="meta">${event.meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>
-            </div>
-          </article>
-        `,
-            )
-            .join("") ||
-          `<div class="brief"><h3>Nothing close yet</h3><p>Try music, dates, movies, food, today, or near me.</p></div>`;
-      }
-
-      document.getElementById("filters").addEventListener("click", (event) => {
-        const button = event.target.closest("[data-filter]");
-        if (!button) return;
-        activeFilter = button.dataset.filter;
-        document
-          .querySelectorAll("[data-filter]")
-          .forEach((item) => item.classList.toggle("active", item === button));
-        render();
-      });
-
-      document
-        .getElementById("search-form")
-        .addEventListener("submit", (event) => {
-          event.preventDefault();
-          const q = queryInput.value.trim();
-          if (q) {
-            window.location.href = `app.html?q=${encodeURIComponent(q)}`;
-          } else {
-            render();
-          }
-        });
-
-      list.addEventListener("click", (event) => {
-        const card = event.target.closest(
-          "[data-detail-id], [data-action-url]",
-        );
-        if (!card) return;
-        window.location.href = card.dataset.actionUrl
-          ? card.dataset.actionUrl
-          : `event.html?id=${encodeURIComponent(card.dataset.detailId)}`;
-      });
-
-      const params = new URLSearchParams(window.location.search);
-      const filter = params.get("filter");
-      const query = params.get("query") || params.get("ai");
-      let budget = params.get("budget");
-      let storedPrefs = {};
-      const previewMode =
-        params.get("preview") === "1" ||
-        window.EchooLocationPlatform.readPreferences().locationSupported ===
-          false;
-      if (query)
-        queryInput.value =
-          query === "bored" ? "simple surprising plan today" : query;
-      if (filter) {
-        const button = document.querySelector(`[data-filter="${filter}"]`);
-        if (button) button.click();
-      } else {
-        render();
-      }
-
-      /* ── News Bubble Slider ── */
-      let city = params.get("city");
-      let preciseLat;
-      let preciseLng;
-      const stored = localStorage.getItem("echoo_preferences");
-      if (stored) {
-        try {
-          storedPrefs = JSON.parse(stored);
-        } catch (e) {}
-      }
-      if (budget) {
-        try {
-          localStorage.setItem(
-            "echoo_preferences",
-            JSON.stringify({ ...storedPrefs, budget }),
-          );
-          storedPrefs = { ...storedPrefs, budget };
-        } catch (e) {}
-      }
-      if (!city) {
-        city = storedPrefs.city;
-        preciseLat = Number(storedPrefs.lastLat);
-        preciseLng = Number(storedPrefs.lastLng);
-      }
-      city = city || "Ontario";
-      budget = budget || storedPrefs.budget || "$";
-      if (locationNote) {
-        locationNote.textContent =
-          Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
-            ? `Near you in ${city}`
-            : `Using ${city || "Ontario"}`;
-      }
-      const personalizationProfile = {
-        interests: Array.isArray(storedPrefs.interests)
-          ? storedPrefs.interests
-          : [],
-        eventStyles: Array.isArray(storedPrefs.eventStyles)
-          ? storedPrefs.eventStyles
-          : [],
-        audiences: Array.isArray(storedPrefs.audiences)
-          ? storedPrefs.audiences
-          : [],
-        motivations: Array.isArray(storedPrefs.motivations)
-          ? storedPrefs.motivations
-          : [],
-        budget,
-        energy: storedPrefs.energy || "chill",
-        city,
-        gender: storedPrefs.gender || "Prefer not to say",
-        dob: storedPrefs.dob || "",
-        tone: storedPrefs.tone || "direct",
-      };
-
-      function applyPreferenceSnapshot(prefs = {}) {
-        if (!prefs || typeof prefs !== "object") return;
-        storedPrefs = { ...storedPrefs, ...prefs };
-        city = prefs.city || city;
-        budget = params.get("budget") || prefs.budget || budget;
-        preciseLat = Number(prefs.lastLat ?? preciseLat);
-        preciseLng = Number(prefs.lastLng ?? preciseLng);
-        if (locationNote) {
-          locationNote.textContent =
-            Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
-              ? `Near you in ${city}`
-              : `Using ${city || "Ontario"}`;
-        }
-        Object.assign(personalizationProfile, {
-          interests: Array.isArray(prefs.interests)
-            ? prefs.interests
-            : personalizationProfile.interests,
-          eventStyles: Array.isArray(prefs.eventStyles)
-            ? prefs.eventStyles
-            : personalizationProfile.eventStyles,
-          audiences: Array.isArray(prefs.audiences)
-            ? prefs.audiences
-            : personalizationProfile.audiences,
-          motivations: Array.isArray(prefs.motivations)
-            ? prefs.motivations
-            : personalizationProfile.motivations,
-          budget,
-          energy: prefs.energy || personalizationProfile.energy,
-          city,
-          gender: prefs.gender || personalizationProfile.gender,
-          dob: prefs.dob || personalizationProfile.dob,
-          tone: prefs.tone || personalizationProfile.tone,
-        });
-      }
-
-      const authGate = window.EchooAuth
-        ? window.EchooAuth.requireOnboarding({ redirect: false }).then(
-            (state) => {
-              if (state.ok) applyPreferenceSnapshot(state.preferences);
-              return state;
-            },
-          )
-        : Promise.resolve({ ok: true });
-
       const CONFIG = {
-        supabaseUrl: "https://dlezregdjpdqmooubwvl.supabase.co",
-        supabaseAnonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        locationSearchUrl:
-          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search",
-        planEngineUrl:
-          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/plan-engine",
-        discoverLiveUrl:
-          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-live",
-        discoverFeedUrl:
-          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-feed",
+        anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+        exploreUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
+        suggestionsUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/search-suggestions",
+        communityUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discovery-community",
       };
-
-      const normalizedCity = window.EchooLocationPlatform.cityByName(city);
-      if (!normalizedCity) {
-        city = "Ontario";
+      const params = new URLSearchParams(location.search);
+      let prefs = {};
+      try {
+        prefs = JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
+      } catch (_) {}
+      let city = params.get("city") || prefs.city || "Ontario";
+      let lat = Number(prefs.lastLat),
+        lng = Number(prefs.lastLng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        lat = undefined;
+        lng = undefined;
       }
-
-      function activityContext() {
-        const cityRecord = window.EchooLocationPlatform.cityByName(city);
-        return window.EchooActivityContext.getActivityContext({
+      const queryInput = document.getElementById("query"),
+        resultsEl = document.getElementById("results"),
+        suggestionsEl = document.getElementById("suggestions"),
+        mapView = document.getElementById("map-view"),
+        mapPins = document.getElementById("map-pins"),
+        loadMore = document.getElementById("load-more"),
+        section = document.getElementById("explore-section");
+      let activeQuery = params.get("query") || "",
+        nextCursor = null,
+        items = [],
+        view = "list",
+        suggestionTimer;
+      const esc = (value) =>
+        String(value || "").replace(
+          /[&<>"']/g,
+          (char) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[char],
+        );
+      const headers = {
+        "Content-Type": "application/json",
+        apikey: CONFIG.anonKey,
+        Authorization: `Bearer ${CONFIG.anonKey}`,
+      };
+      function categoryArt(item) {
+        const value = `${item.category || ""} ${item.type || ""}`.toLowerCase();
+        if (item.source === "google_places") return "google";
+        if (/museum|gallery/.test(value)) return "museum";
+        if (/restaurant|food|cafe|bar/.test(value)) return "restaurant";
+        if (/event/.test(value)) return "event";
+        return "place";
+      }
+      function skeletons() {
+        resultsEl.innerHTML = Array.from(
+          { length: 4 },
+          () =>
+            `<article class="explore-card skeleton"><div class="card-art"></div><div class="card-body"><span class="sk-line short"></span><span class="sk-line big"></span><span class="sk-line medium"></span><span class="sk-line short"></span></div></article>`,
+        ).join("");
+      }
+      function card(item, index) {
+        const community = item.community;
+        const rating = community?.ratingAverage
+          ? `${Number(community.ratingAverage).toFixed(1)} Echoo rating`
+          : "New to Echoo";
+        const distance = item.distanceMeters
+          ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away`
+          : item.city || city;
+        const feature = item.features?.[0]
+          ? item.features[0].replace(/_/g, " ")
+          : item.category || "Local pick";
+        const badge =
+          item.source === "google_places"
+            ? `<span class="new-badge">Live find</span>`
+            : community?.isHot
+              ? `<span class="hot-badge">Hot</span>`
+              : "";
+        return `<article class="explore-card" tabindex="0" data-index="${index}"><div class="card-art" data-kind="${esc(categoryArt(item))}"><span class="card-art-label">${esc(feature)}</span></div><div class="card-body"><div class="card-top"><span class="card-kicker">${esc(item.category || "place")}</span>${badge}</div><h3>${esc(item.title)}</h3><p>${esc(item.description || "A place worth opening for the details.")}</p><div class="card-meta"><span>${esc(rating)}</span><span>${esc(distance)}</span></div>${item.source === "google_places" ? `<div class="provider-note">Google Maps</div>` : ""}</div></article>`;
+      }
+      function renderItems() {
+        section.setAttribute("aria-busy", "false");
+        if (!items.length) {
+          resultsEl.innerHTML = `<div class="empty"><span class="empty-mark">⌁</span><h3>No Echoo places match that yet.</h3><p>Try a simpler phrase, another category, or let Echoo show the wider area.</p><button id="clear-search">Show everything</button></div>`;
+          document.getElementById("clear-search").onclick = () => search("");
+        } else resultsEl.innerHTML = items.map(card).join("");
+        renderMap();
+      }
+      function renderMap() {
+        mapPins.innerHTML = "";
+        const mappable = items.filter(
+          (item) =>
+            Number.isFinite(item.latitude) && Number.isFinite(item.longitude),
+        );
+        const coords = mappable.map((item) => [item.latitude, item.longitude]);
+        const minLat = Math.min(...coords.map((x) => x[0]), 43.61),
+          maxLat = Math.max(...coords.map((x) => x[0]), 43.7),
+          minLng = Math.min(...coords.map((x) => x[1]), -79.46),
+          maxLng = Math.max(...coords.map((x) => x[1]), -79.34);
+        mappable.forEach((item, index) => {
+          const x =
+              13 + ((item.longitude - minLng) / (maxLng - minLng || 1)) * 74,
+            y = 88 - ((item.latitude - minLat) / (maxLat - minLat || 1)) * 67;
+          const pin = document.createElement("button");
+          pin.className = `map-pin ${item.source === "google_places" ? "google" : ""}`;
+          pin.style.left = `${x}%`;
+          pin.style.top = `${y}%`;
+          pin.innerHTML = `<span>${index + 1}</span>`;
+          pin.setAttribute("aria-label", `Open ${item.title}`);
+          pin.onclick = () => openDetail(items.indexOf(item));
+          mapPins.append(pin);
+        });
+      }
+      function updateHeader(payload) {
+        document.getElementById("result-title").textContent = activeQuery
+          ? `Results for “${activeQuery}”`
+          : "Explore nearby";
+        const owned = Number(payload.ownedResultCount || 0),
+          live = Number(payload.liveFallbackCount || 0);
+        document.getElementById("result-subtitle").textContent = owned
+          ? `${owned} Echoo ${owned === 1 ? "place" : "places"}${live ? ` · ${live} live map finds` : ""}`
+          : live
+            ? "Fresh live map finds · New to Echoo"
+            : "The local edit is still growing here.";
+      }
+      async function search(query = activeQuery, append = false) {
+        activeQuery = query.trim();
+        if (!append) {
+          nextCursor = null;
+          items = [];
+          skeletons();
+        }
+        queryInput.value = activeQuery;
+        suggestionsEl.hidden = true;
+        queryInput.setAttribute("aria-expanded", "false");
+        section.setAttribute("aria-busy", "true");
+        const body = {
+          query: activeQuery,
           city,
-          timezone: cityRecord?.timezone,
-        });
-      }
-
-      const currentContext = activityContext();
-      queryInput.placeholder = currentContext.searchPlaceholder;
-      if (!queryInput.value) queryInput.value = currentContext.defaultQuery;
-
-      function escapeHtml(value) {
-        return String(value || "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#39;");
-      }
-
-      function metaDate(value) {
-        if (!value) return "";
-        const date = new Date(value);
-        if (!Number.isFinite(date.getTime())) return "";
-        return date.toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        });
-      }
-
-      function feedCardToEvent(card, index) {
-        const isExternal = /^https?:\/\//i.test(card.detailUrl || "");
-        return {
-          id: card.id || `feed-${index}`,
-          detailId: isExternal ? "" : card.id || "",
-          actionUrl: card.detailUrl || "",
-          category: card.category || card.type || "live",
-          title: card.title || "Ontario pick",
-          copy:
-            card.subtitle ||
-            card.priceLabel ||
-            "A live Echoo pick from the Ontario feed.",
-          img: card.imageUrl || "assets/optimized/news-music-768.jpg",
-          webp: card.imageUrl || "assets/optimized/news-music-768.webp",
-          meta: [
-            card.statusLabel || card.source || "Live",
-            card.city || city || "Ontario",
-            card.priceLabel ||
-              metaDate(card.startsAt) ||
-              card.actionLabel ||
-              "Open",
-          ].filter(Boolean),
+          includeLiveFallback: true,
+          limit: 12,
         };
-      }
-
-      async function loadDiscoverFeed() {
-        if (previewMode) return false;
+        if (lat !== undefined) Object.assign(body, { lat, lng });
+        if (append && nextCursor) body.cursor = nextCursor;
         try {
-          const url = new URL(CONFIG.discoverFeedUrl);
-          url.searchParams.set("city", city || "Ontario");
-          url.searchParams.set("limit", "10");
-          url.searchParams.set("mode", queryInput.value || "today");
-          if (Number.isFinite(preciseLat) && Number.isFinite(preciseLng)) {
-            url.searchParams.set("lat", String(preciseLat));
-            url.searchParams.set("lng", String(preciseLng));
-          }
-
-          const response = await fetch(url.toString(), {
-            headers: { Accept: "application/json" },
+          const response = await fetch(CONFIG.exploreUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
           });
-          if (!response.ok) return false;
+          if (!response.ok) throw new Error("Explore request failed");
           const payload = await response.json();
-          const lanes = payload?.data?.lanes || [];
-          const feedCards = lanes
-            .flatMap((lane) => lane.cards || [])
-            .filter((card) => card && card.type !== "news")
-            .slice(0, 10);
-          if (!feedCards.length) return false;
-
-          events = feedCards.map(feedCardToEvent);
-          const showsLane = lanes.find((lane) => lane.id === "shows-tickets");
-          const placesLane = lanes.find(
-            (lane) => lane.id === "trending-places",
-          );
-          document.getElementById("shows-title").textContent = showsLane?.cards
-            ?.length
-            ? showsLane.title
-            : "Live shows";
-          document.getElementById("places-title").textContent = placesLane
-            ?.cards?.length
-            ? placesLane.title
-            : "Hot places to chill";
-          render();
-          return true;
+          if (!payload.supported)
+            throw new Error(payload.reason || "This region is not supported");
+          items = append
+            ? [...items, ...(payload.results || [])]
+            : payload.results || [];
+          nextCursor = payload.nextCursor || null;
+          updateHeader(payload);
+          renderItems();
+          loadMore.hidden = !nextCursor;
         } catch (error) {
-          console.warn(
-            "Echoo: discover feed unavailable, using fallbacks.",
-            error,
-          );
-          return false;
+          console.warn(error);
+          section.setAttribute("aria-busy", "false");
+          resultsEl.innerHTML = `<div class="empty"><span class="empty-mark">×</span><h3>Explore could not refresh.</h3><p>Your saved view is still here. Give it another try in a moment.</p><button id="retry-search">Try again</button></div>`;
+          document.getElementById("retry-search").onclick = () =>
+            search(activeQuery);
+          loadMore.hidden = true;
         }
       }
-
-      async function loadLocationEntities() {
-        const authState = await authGate;
-        if (authState && authState.ok === false) return;
-        if (previewMode) {
-          console.info(
-            "Echoo: preview mode active; live Ontario location search is paused.",
-          );
+      async function suggest() {
+        const query = queryInput.value.trim();
+        if (query.length < 2) {
+          suggestionsEl.hidden = true;
+          queryInput.setAttribute("aria-expanded", "false");
           return;
         }
         try {
-          const response = await fetch(CONFIG.locationSearchUrl, {
+          const response = await fetch(CONFIG.suggestionsUrl, {
             method: "POST",
-            headers: window.EchooAuth
-              ? await window.EchooAuth.authHeaders({
-                  "Content-Type": "application/json",
-                })
-              : {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
-                  apikey: CONFIG.supabaseAnonKey,
-                },
-            body: JSON.stringify(
-              Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
-                ? {
-                    lat: preciseLat,
-                    lng: preciseLng,
-                    radiusMeters: 25000,
-                    limit: 24,
-                  }
-                : { city, limit: 24 },
-            ),
+            headers,
+            body: JSON.stringify({ query, city, limit: 6 }),
           });
-          if (!response.ok) {
-            render();
+          const payload = await response.json();
+          const suggestions = payload.suggestions || [];
+          if (!suggestions.length) {
+            suggestionsEl.hidden = true;
             return;
           }
-
-          const payload = await response.json();
-          if (
-            !payload.supported ||
-            !Array.isArray(payload.results) ||
-            payload.results.length === 0
-          ) {
-            render();
-            return;
-          }
-
-          events = payload.results.map((item, index) => ({
-            id: item.id || index + 1,
-            detailId: item.entity_id || item.id,
-            category: item.category || item.entity_type || "events",
-            title: item.title,
-            copy:
-              item.description ||
-              "A nearby Echoo recommendation with verified Canadian location data.",
-            img: item.image_url || "assets/optimized/news-music-768.jpg",
-            webp: item.image_url || "assets/optimized/news-music-768.webp",
-            meta: [
-              item.city || city,
-              item.distance_meters
-                ? `${Math.max(1, Math.round(item.distance_meters / 1000))} km away`
-                : "Ontario",
-              item.starts_at
-                ? new Date(item.starts_at).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })
-                : "Open",
-            ],
-          }));
-          render();
-        } catch (error) {
-          console.warn(
-            "Echoo: location search unavailable, using static launch cards.",
-            error,
-          );
-          render();
-        }
-      }
-
-      async function loadPlanEngine() {
-        const authState = await authGate;
-        if (authState && authState.ok === false) return false;
-        if (previewMode) return false;
-        const queryText =
-          queryInput.value.trim() || activityContext().defaultQuery;
-        try {
-          const response = await fetch(CONFIG.discoverLiveUrl, {
-            method: "POST",
-            headers: window.EchooAuth
-              ? await window.EchooAuth.authHeaders({
-                  "Content-Type": "application/json",
-                })
-              : {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
-                  apikey: CONFIG.supabaseAnonKey,
-                },
-            body: JSON.stringify(
-              Number.isFinite(preciseLat) && Number.isFinite(preciseLng)
-                ? {
-                    lat: preciseLat,
-                    lng: preciseLng,
-                    query: queryText,
-                    budget,
-                    profile: personalizationProfile,
-                    limit: 8,
-                  }
-                : {
-                    city,
-                    query: queryText,
-                    budget,
-                    profile: personalizationProfile,
-                    limit: 8,
-                  },
-            ),
-          });
-          if (!response.ok) return false;
-          const payload = await response.json();
-          if (
-            !payload.supported ||
-            !Array.isArray(payload.recommendations) ||
-            payload.recommendations.length === 0
-          )
-            return false;
-
-          events = payload.recommendations.map((item, index) => ({
-            id: item.id || index + 1,
-            detailId: item.actionUrl ? "" : item.id,
-            actionUrl: item.actionUrl || "",
-            category: item.category || item.type || "live",
-            title: item.title,
-            copy:
-              item.reason ||
-              item.description ||
-              "A live Echoo pick matched to your current moment.",
-            img: item.imageUrl || "assets/optimized/news-music-768.jpg",
-            webp: item.imageUrl || "assets/optimized/news-music-768.webp",
-            meta: [
-              item.source || "Live",
-              item.distanceMeters
-                ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away`
-                : item.city || city,
-              item.startsAt
-                ? new Date(item.startsAt).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })
-                : item.priceLabel || item.actionLabel || "Open",
-            ],
-          }));
-          render();
-          return true;
-        } catch (error) {
-          console.warn(
-            "Echoo: plan engine unavailable, falling back to location search.",
-            error,
-          );
-          return false;
-        }
-      }
-
-      const localNewsDb = {
-        Toronto: [
-          {
-            tag: "TIFF",
-            text: "Midnight Madness lineups announced for September",
-            img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Patio",
-            text: "Kensington Market tests pedestrian-only zones",
-            img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Jazz",
-            text: "Queen West jazz club hosts unannounced late basement set",
-            img: "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Food",
-            text: "Ossington street crawl reveals new underground ramen spot",
-            img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Sports",
-            text: "Scotiabank Arena hosts outdoor pre-game rally today",
-            img: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Rooftop",
-            text: "Broadview Hotel opens winterized rooftop deck early for sunset",
-            img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80",
-          },
-        ],
-        Vancouver: [
-          {
-            tag: "Beach",
-            text: "Kitsilano beach bonfire permits extended for summer",
-            img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Theatre",
-            text: "Granville Island waterfront stage premieres new indie play",
-            img: "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Cocktails",
-            text: "Gastown lounge rated top 50 in North America for mixology",
-            img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Ride",
-            text: "Stanley Park night cycle ride draws record five hundred riders",
-            img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Food",
-            text: "Richmond Night Market expands late fusion food stands",
-            img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=120&q=80",
-          },
-        ],
-        Montreal: [
-          {
-            tag: "Jazz",
-            text: "Montreal Jazz Fest reveals free outdoor street show lineup",
-            img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Bagels",
-            text: "Mile End food crawl introduces late-night wood-fired bakery",
-            img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Art",
-            text: "Plateau Mont-Royal street art murals expand down Saint-Laurent",
-            img: "https://images.unsplash.com/photo-156121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Speakeasy",
-            text: "Old Montreal speakeasy hidden behind vintage phone booth",
-            img: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Music",
-            text: "Saint-Denis underground electronic gig sells out in record minutes",
-            img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=120&q=80",
-          },
-        ],
-      };
-
-      const worldNews = [
-        {
-          tag: "Outdoor",
-          text: "National parks report massive surge in summer night hikers",
-          img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=120&q=80",
-        },
-        {
-          tag: "Gaming",
-          text: "Indie retro arcades and console lounges trending globally",
-          img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=120&q=80",
-        },
-        {
-          tag: "Coffee",
-          text: "Slow-drip specialty coffee crawls taking over urban neighborhoods",
-          img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=120&q=80",
-        },
-        {
-          tag: "Concert",
-          text: "Major outdoor music festival tours announce carbon-neutral lineups",
-          img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=120&q=80",
-        },
-        {
-          tag: "Museum",
-          text: "Historic virtual-reality exhibitions open globally at science centers",
-          img: "https://images.unsplash.com/photo-1566121318594-a4f657f68c17?auto=format&fit=crop&w=120&q=80",
-        },
-      ];
-
-      async function loadNewsSlider() {
-        let displayNews = [];
-
-        if (CONFIG.supabaseUrl && CONFIG.supabaseAnonKey && window.supabase) {
-          try {
-            const supabaseClient = window.supabase.createClient(
-              CONFIG.supabaseUrl,
-              CONFIG.supabaseAnonKey,
-            );
-            const { data, error } = await supabaseClient
-              .from("news")
-              .select("*")
-              .or(`city.eq.${city},city.eq.Global`)
-              .order("published_at", { ascending: false })
-              .limit(12);
-
-            if (!error && data && data.length > 0) {
-              displayNews = data.map((item) => ({
-                tag: item.tag,
-                text: item.title,
-                img:
-                  item.image_url ||
-                  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=120&q=80",
-              }));
-              console.log("Echoo: Loaded real-time news from Supabase.");
-            } else if (error) {
-              console.warn(
-                "Echoo: Supabase query error, falling back to mock news:",
-                error.message,
-              );
-            }
-          } catch (e) {
-            console.warn(
-              "Echoo: Failed to query Supabase, falling back to mock news:",
-              e,
-            );
-          }
-        }
-
-        if (displayNews.length === 0) {
-          const cityList = localNewsDb[city] || localNewsDb["Toronto"];
-          displayNews = cityList;
-        }
-
-        const newsTrack = document.getElementById("news-track");
-        if (newsTrack) {
-          const doubledNews = [...displayNews, ...displayNews];
-          newsTrack.innerHTML = doubledNews
+          suggestionsEl.innerHTML = suggestions
             .map(
-              (item) => `
-            <div class="news-card">
-              <img src="${item.img}" alt="" loading="lazy">
-              <div class="news-info">
-                <span class="tag">${item.tag}</span>
-                <span class="headline">${item.text}</span>
-              </div>
-            </div>
-          `,
+              (item, index) =>
+                `<button class="suggestion" role="option" data-suggestion="${index}"><span class="suggestion-mark">${item.type === "place" ? "⌖" : item.type === "feature" ? "✦" : "⌁"}</span><span><strong>${esc(item.label)}</strong></span><small>${esc(item.type)}</small></button>`,
             )
             .join("");
+          suggestionsEl._items = suggestions;
+          suggestionsEl.hidden = false;
+          queryInput.setAttribute("aria-expanded", "true");
+        } catch (_) {
+          suggestionsEl.hidden = true;
         }
       }
-
-      async function bootDiscovery() {
-        await authGate;
-        render(); // Render initial static cards right away to avoid empty state
-        loadNewsSlider();
-        const loaded = await loadDiscoverFeed();
-        if (loaded) return;
-        const planLoaded = await loadPlanEngine();
-        if (!planLoaded) await loadLocationEntities();
-      }
-
-      bootDiscovery();
-
-      const slider = document.getElementById("news-slider");
-      let scrollSpeed = 0.18;
-      let autoScrollActive = true;
-      let interactionTimeout;
-      let isDraggingNews = false;
-      let newsStartX = 0;
-      let newsStartScrollLeft = 0;
-      let isProgrammaticScroll = false;
-
-      function step() {
-        if (autoScrollActive && slider) {
-          isProgrammaticScroll = true;
-          slider.scrollLeft += scrollSpeed;
-          if (slider.scrollLeft >= slider.scrollWidth / 2) {
-            slider.scrollLeft = 0;
-          }
-          requestAnimationFrame(() => {
-            isProgrammaticScroll = false;
+      async function communityAction(item, action, button) {
+        if (item.source !== "echoo") return;
+        if (!window.EchooAuth?.client) {
+          window.location.href = "auth.html?next=events.html";
+          return;
+        }
+        const { data } = await window.EchooAuth.client.auth.getSession();
+        if (!data.session) {
+          window.EchooAuth.redirectToAuth("events.html");
+          return;
+        }
+        const request = { action, entityId: item.id };
+        if (action === "rate") {
+          const rating = Number(prompt("Rate this place from 1 to 5"));
+          if (!Number.isInteger(rating) || rating < 1 || rating > 5) return;
+          request.rating = rating;
+        }
+        if (action === "review") {
+          const body = prompt("Share what stood out (at least 20 characters)");
+          if (!body) return;
+          request.body = body;
+        }
+        button.disabled = true;
+        const original = button.textContent;
+        button.textContent = "Saving…";
+        try {
+          const actionHeaders = await window.EchooAuth.authHeaders({
+            "Content-Type": "application/json",
           });
+          const response = await fetch(CONFIG.communityUrl, {
+            method: "POST",
+            headers: actionHeaders,
+            body: JSON.stringify(request),
+          });
+          const payload = await response.json();
+          if (!response.ok)
+            throw new Error(payload.error || "Could not save that action");
+          button.textContent =
+            action === "save"
+              ? payload.saved
+                ? "Saved"
+                : "Save"
+              : action === "visit"
+                ? "Marked visited"
+                : action === "rate"
+                  ? `${payload.rating} stars`
+                  : "Review sent";
+          button.disabled = action !== "save";
+        } catch (error) {
+          console.warn(error);
+          button.textContent = error.message || original;
+          button.disabled = false;
         }
-        requestAnimationFrame(step);
       }
-
-      function pauseNewsAutoScroll(delay = 2600) {
-        autoScrollActive = false;
-        clearTimeout(interactionTimeout);
-        interactionTimeout = setTimeout(() => {
-          autoScrollActive = true;
-        }, delay);
+      function openDetail(index) {
+        const item = items[index];
+        if (!item) return;
+        const community = item.community;
+        const rating = community?.ratingAverage
+          ? `${Number(community.ratingAverage).toFixed(1)} Echoo rating · ${community.ratingCount || 0} ratings`
+          : "New to Echoo · no community rating yet";
+        const features = (item.features || [])
+          .slice(0, 4)
+          .map((value) => value.replace(/_/g, " "));
+        const directions =
+          item.actionUrl ||
+          (Number.isFinite(item.latitude)
+            ? `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`
+            : "");
+        const actions =
+          item.source === "echoo"
+            ? `<button data-community-action="save">Save</button><button data-community-action="visit">Visited</button><button data-community-action="rate">Rate</button><button data-community-action="review">Review</button>`
+            : "";
+        document.getElementById("detail-content").innerHTML =
+          `<div class="detail-art"></div><span class="detail-kicker">${esc(item.source === "google_places" ? "Live result · Google Maps" : item.category || "Echoo place")}</span><h2 class="detail-title">${esc(item.title)}</h2><p class="detail-copy">${esc(item.description || "A newly discovered local place.")}</p><div class="detail-stats"><span>${esc(rating)}</span>${community?.verifiedVisitCount ? `<span>${community.verifiedVisitCount} verified visits</span>` : ""}${features.map((value) => `<span>${esc(value)}</span>`).join("")}</div><div class="detail-actions">${actions}${directions ? `<a class="primary" href="${esc(directions)}" target="_blank" rel="noopener">Directions</a>` : `<button class="primary" data-local-action="open">Open place</button>`}</div>${item.source === "google_places" ? `<p class="provider-note">Live Google Maps result. It has no Echoo rating or history yet.</p>` : ""}`;
+        const sheet = document.getElementById("detail-sheet");
+        sheet.classList.add("open");
+        sheet.setAttribute("aria-hidden", "false");
+        document
+          .querySelectorAll("[data-community-action]")
+          .forEach(
+            (button) =>
+              (button.onclick = () =>
+                communityAction(item, button.dataset.communityAction, button)),
+          );
+        document.querySelectorAll("[data-local-action]").forEach(
+          (button) =>
+            (button.onclick = () => {
+              button.textContent = "Coming soon";
+              button.disabled = true;
+            }),
+        );
       }
-
-      if (slider) {
-        slider.addEventListener("pointerdown", (event) => {
-          isDraggingNews = true;
-          newsStartX = event.clientX;
-          newsStartScrollLeft = slider.scrollLeft;
-          slider.setPointerCapture?.(event.pointerId);
-          pauseNewsAutoScroll(5000);
-        });
-        slider.addEventListener("pointermove", (event) => {
-          if (!isDraggingNews) return;
+      function closeDetail() {
+        const sheet = document.getElementById("detail-sheet");
+        sheet.classList.remove("open");
+        sheet.setAttribute("aria-hidden", "true");
+      }
+      document.getElementById("search-form").onsubmit = (event) => {
+        event.preventDefault();
+        search(queryInput.value);
+      };
+      queryInput.oninput = () => {
+        clearTimeout(suggestionTimer);
+        suggestionTimer = setTimeout(suggest, 180);
+      };
+      suggestionsEl.onclick = (event) => {
+        const button = event.target.closest("[data-suggestion]");
+        if (!button) return;
+        const item = suggestionsEl._items[Number(button.dataset.suggestion)];
+        queryInput.value = item.label;
+        search(item.type === "feature" ? item.label : item.value);
+      };
+      document.getElementById("chips").onclick = (event) => {
+        const chip = event.target.closest("[data-query]");
+        if (!chip) return;
+        document
+          .querySelectorAll(".chip")
+          .forEach((item) => item.classList.toggle("active", item === chip));
+        search(chip.dataset.query || "");
+      };
+      document.querySelector(".view-switch").onclick = (event) => {
+        const button = event.target.closest("[data-view]");
+        if (!button) return;
+        view = button.dataset.view;
+        document
+          .querySelectorAll("[data-view]")
+          .forEach((item) => item.classList.toggle("active", item === button));
+        resultsEl.hidden = view === "map";
+        mapView.hidden = view !== "map";
+        loadMore.hidden = view === "map" || !nextCursor;
+      };
+      resultsEl.onclick = (event) => {
+        const card = event.target.closest("[data-index]");
+        if (card) openDetail(Number(card.dataset.index));
+      };
+      resultsEl.onkeydown = (event) => {
+        if (
+          (event.key === "Enter" || event.key === " ") &&
+          event.target.matches("[data-index]")
+        ) {
           event.preventDefault();
-          const delta = event.clientX - newsStartX;
-          slider.scrollLeft = newsStartScrollLeft - delta;
-        });
-        ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
-          slider.addEventListener(type, (event) => {
-            if (!isDraggingNews) return;
-            isDraggingNews = false;
-            if (slider.hasPointerCapture?.(event.pointerId))
-              slider.releasePointerCapture(event.pointerId);
-            pauseNewsAutoScroll(1800);
-          });
-        });
-        slider.addEventListener("wheel", () => pauseNewsAutoScroll(2200), {
-          passive: true,
-        });
-        slider.addEventListener("scroll", () => {
-          if (!isProgrammaticScroll && !isDraggingNews)
-            pauseNewsAutoScroll(2200);
-        });
-
-        requestAnimationFrame(step);
-      }
+          openDetail(Number(event.target.dataset.index));
+        }
+      };
+      loadMore.onclick = () => search(activeQuery, true);
+      document
+        .querySelectorAll("[data-close-sheet]")
+        .forEach((item) => (item.onclick = closeDetail));
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeDetail();
+      });
+      document.getElementById("location-note").textContent =
+        lat === undefined ? `Exploring ${city}` : `Near you in ${city}`;
+      if (activeQuery) queryInput.value = activeQuery;
+      skeletons();
+      search(activeQuery);
     </script>
   </body>
 </html>

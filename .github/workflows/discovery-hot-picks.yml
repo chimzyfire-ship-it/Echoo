@@ -1,0 +1,57 @@
+name: Discovery Hot Pick rollup
+
+on:
+  # GitHub Actions schedules are UTC. Both entries are needed because Toronto
+  # observes daylight saving time; the guard below lets through only 04:35 ET.
+  schedule:
+    - cron: "35 8 * * *"
+    - cron: "35 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discovery-hot-pick-rollup
+  cancel-in-progress: false
+
+jobs:
+  rollup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm Toronto schedule window
+        id: schedule_window
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          local_hour="$(TZ=America/Toronto date +%H)"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$local_hour" = "04" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Outside the 04:35 Toronto window; skipping duplicate DST trigger."
+          fi
+
+      - name: Run owned Hot Pick rollup
+        if: steps.schedule_window.outputs.run == 'true'
+        env:
+          ONTARIO_INGESTION_SECRET: ${{ secrets.ONTARIO_INGESTION_SECRET }}
+          MAINTENANCE_URL: https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ontario-maintenance
+        run: |
+          test -n "$ONTARIO_INGESTION_SECRET"
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+          curl --fail-with-body --silent --show-error \
+            --retry 3 \
+            --retry-all-errors \
+            --connect-timeout 15 \
+            --max-time 120 \
+            -X POST "$MAINTENANCE_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-ingestion-secret: $ONTARIO_INGESTION_SECRET" \
+            --data '{"action":"hot_pick_rollup"}' \
+            --output "$response_file"
+          grep -Eq '"success"[[:space:]]*:[[:space:]]*true' "$response_file"
+          grep -Eq '"hotPicks"' "$response_file"
+          cat "$response_file"
