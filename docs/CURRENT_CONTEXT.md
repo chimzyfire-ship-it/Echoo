@@ -1,6 +1,6 @@
 # Echoo Current Context
 
-Last updated: 2026-06-29
+Last updated: 2026-07-06
 
 ## Purpose
 
@@ -14,7 +14,21 @@ The key product rule:
 
 > AI should enrich and explain retrieved Echoo records. AI should not invent local facts.
 
+The companion voice rule:
+
+> Echoo must feel like a warm, decisive local friend, not a chatbot, support
+> assistant, model wrapper, or recommendation engine. Text-only companion
+> answers are valid product responses and must not be treated as AI outages.
+
 Ontario-wide coverage is the target. GTA/Markham is the first quality bar.
+
+## Hybrid Discovery Track
+
+The active shift from AI-led prompts to visual, database-backed universal
+discovery is tracked in `docs/hybrid-discovery-implementation.md`. Treat that
+file as the source of truth for Echoo-owned ratings, visits, Hot Picks, feature
+tags, imagery, the optional Google Places fallback, and the staged Explore
+screen rollout.
 
 ## Canonical Planning Document
 
@@ -27,6 +41,19 @@ Use `docs/ontario-intelligence-implementation-plan.md` as the implementation sou
 - retrieval-first chat
 - admin review
 - rollout timeline
+
+Use `docs/Echoo-AI-Companion-Specification redo .pdf` as the AI behavior and
+voice source of truth. Required voice constraints include:
+
+- never start assistant copy with "I"
+- never say "I recommend", "based on your preferences", "as an AI", or "our
+  algorithm"
+- never expose model/provider/system/prompt/outage details to users
+- never give more than three options
+- make decisions for vague users instead of dumping lists
+- do not invent local facts; use retrieved records for factual local plans
+- treat allergies, halal, kosher, and other dietary requirements as hard safety
+  constraints
 
 ## Existing Architecture To Preserve
 
@@ -65,7 +92,24 @@ If working on chat coherence, prefer backend/data fixes over more visual polish.
 
 ## Current Product Problem
 
-The chat can still feel incoherent because local questions may be handled like raw AI chat instead of retrieval-grounded local intelligence.
+The chat can still feel incoherent if local questions are handled like raw AI
+chat instead of retrieval-grounded local intelligence, or if text-only companion
+answers are misclassified as route failures.
+
+July 6 reliability fix:
+
+- `plan-engine` now has a stronger Echoo companion prompt and an env-driven
+  Gemini fallback chain via `GEMINI_MODEL_FALLBACKS`.
+- If the model path fails, `plan-engine` returns a deterministic
+  `ai.provider = "echoo-companion"` chat payload instead of a 502
+  `ai_unavailable` response.
+- `app.html` now distinguishes a true request failure from a valid no-stops
+  assistant answer. A zero-stop text answer should render as chat, not trigger
+  the "AI offline" curated route fallback.
+- `discover-live` public assistant copy now avoids "I found..." and provider
+  language. Thin live results should be honest without sounding broken.
+- `scripts/smoke-echoo-ai.mjs` checks identity guard, Ontario retrieval, live
+  discovery, and general companion chat voice/reliability.
 
 Target flow:
 
@@ -388,6 +432,81 @@ Phase 3D Markham civic-facility expansion as of 2026-07-01:
     Markham library record
   - `Thornhill library indoor stop in Markham` -> Thornhill Village Library
 
+Phase 4A Live Ontario feed kickoff as of 2026-07-04:
+
+- Phase 4 is the product surface phase for the live Ontario feed described in
+  `docs/homepage-live-ontario-feed-plan.md` and
+  `docs/homepage-captivating-ui-plan.md`.
+- Added `supabase/functions/discover-feed` as the first normalized feed
+  endpoint.
+- `discover-feed` is a retrieval-first read endpoint. It returns a
+  `{ data, error, meta }` envelope with location metadata and normalized lanes:
+  `shows-tickets`, `trending-places`, and `entertainment-news`.
+- The first implementation reads existing Echoo data instead of calling
+  external APIs from the browser:
+  - events from `location_entities` / Ticketmaster mirrors
+  - places from `search_ontario_places` and approved profile/ranking signals
+  - news from the existing `news` table when available
+- Province-default place ranking starts from the Markham launch-quality dataset
+  to avoid expensive all-Ontario place scans while the feed ranking layer is
+  still young.
+- `discover-feed` is configured with `verify_jwt = false` and deployed on the
+  linked Supabase project using `supabase functions deploy discover-feed
+--use-api`.
+- Remote smoke tests verified:
+  - CORS preflight returns 204.
+  - `city=Ontario&limit=3` returns the feed envelope with real Markham place
+    cards and current news rows.
+  - `city=Markham&limit=3` returns JOEY Markville, Inspire Restaurant, and
+    Smash Kitchen and Bar from the retrieval layer.
+- `index.html` now hydrates the homepage `Tonight's picks` cards from
+  `discover-feed`, falling back to the existing static cards if the endpoint is
+  unavailable.
+- Local browser verification confirmed the live homepage cards render without
+  horizontal overflow and the compact-height layout keeps cards clear of the
+  fixed bottom navigation.
+
+Phase 4B Live Ontario feed hardening as of 2026-07-04:
+
+- `discover-feed` now falls back to a server-side Ticketmaster Discovery API
+  lookup when stored Echoo event mirrors are thin, so the `shows-tickets` lane
+  can return live Ontario events without the browser calling Ticketmaster
+  directly.
+- `discover-feed` metadata now reports `phase4b-live-ontario-feed`.
+- `discover-feed` was hardened for dense Toronto/GPS requests:
+  - Markham keeps using the richer `search_ontario_places` profile/ranking
+    path for launch-quality picks.
+  - Toronto/GPS and broader province-default requests use the lighter
+    `location_entities` nearby/region search for place feed cards to avoid
+    statement timeouts on dense open-data layers.
+- Remote smoke tests verified:
+  - `city=Ontario&limit=4&mode=today` returns 4 live Ticketmaster event cards,
+    4 place cards, and 4 news cards. First event: FIFA Fan Festival Toronto.
+  - `city=Markham&limit=4&mode=today` returns the same live events plus
+    Markham launch-quality places headed by JOEY Markville.
+  - `city=Toronto&lat=43.6532&lng=-79.3832&limit=4&mode=today` returns without
+    timeout, with live event cards and nearby Toronto place cards headed by Art
+    Gallery of Ontario.
+- `events.html` now tries `discover-feed` first for public Discover content,
+  maps feed cards into the existing event-list UI, and falls back to the older
+  `discover-live`/`location-search` path if the feed is unavailable.
+- `events.html` no longer redirects unauthenticated public Discover visitors to
+  onboarding before loading the live feed. Onboarding remains available for
+  personalization.
+- `events.html` render output now escapes feed/card text and URLs before
+  injecting HTML.
+- Verification completed:
+  - `discover-feed` was redeployed with `supabase functions deploy
+discover-feed --use-api`.
+  - Remote endpoint smoke tests passed for Ontario, Markham, and GPS Toronto.
+  - `events.html` and `index.html` inline script syntax checks passed with
+    `node --check`.
+  - `git diff --check` passed.
+  - Local static server logs verified `events.html?city=Ontario` loads directly
+    without the previous `auth.html` redirect. In-app/headless browser DOM
+    automation was attempted but was unreliable on this Mac due browser
+    navigation/runtime hangs; do not treat it as completed visual QA.
+
 `ontario-plan` status as of 2026-06-27:
 
 - implemented in `supabase/functions/ontario-plan`
@@ -521,6 +640,28 @@ Ontario operations additions:
 ## Worktree Warning
 
 The worktree has many modified files that may include user or previous generated work. Do not revert unrelated changes. Before editing a file, inspect it and keep changes scoped.
+
+## Echoo Companion Orchestrator Track
+
+The active AI-quality plan is now recorded in:
+
+- `docs/echoo-companion-orchestrator-plan.md`
+
+This track exists because Echoo must behave like the companion described in
+`docs/Echoo-AI-Companion-Specification redo .pdf`, not like a database-backed
+recommendation bot. Current priority:
+
+- block all user-facing leakage of database/retrieval/import/provider/fallback
+  language
+- classify conversation vs planning vs food/cultural/date-night intent
+- preserve short-term state across turns
+- prepare a dedicated orchestrator and persistent memory layer
+
+Before deploying AI changes, run:
+
+```sh
+node scripts/smoke-echoo-ai.mjs
+```
 
 ## Deployment Note
 

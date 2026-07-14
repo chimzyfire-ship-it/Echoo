@@ -468,7 +468,7 @@ Request:
   "query": "nice lunch in Markham",
   "city": "Markham",
   "lat": 43.8561,
-  "lng": -79.3370,
+  "lng": -79.337,
   "intent": "lunch",
   "limit": 20
 }
@@ -880,6 +880,13 @@ The Ontario intelligence layer is acceptable when:
 - Low-confidence place profiles appear in admin review.
 - Zero-result searches are logged for future improvement.
 - The planner can gracefully explain when Echoo lacks enough verified data.
+- General companion chat never shows a false "AI offline" route fallback just
+  because the response has zero stops.
+- Model/provider/system/prompt questions are answered by deterministic Echoo
+  policy and never forwarded to the model.
+- Companion responses follow `docs/Echoo-AI-Companion-Specification redo .pdf`:
+  no "I recommend", no "based on your preferences", no raw provider language,
+  no more than three options, and no invented local facts.
 
 ## 18. Immediate Next Build Actions
 

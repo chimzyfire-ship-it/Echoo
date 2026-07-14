@@ -404,6 +404,18 @@ verify_jwt = false
 [functions.discover-live]
 verify_jwt = false
 
+[functions.discover-feed]
+verify_jwt = false
+
+[functions.search-suggestions]
+verify_jwt = false
+
+[functions.explore-search]
+verify_jwt = false
+
+[functions.discovery-community]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

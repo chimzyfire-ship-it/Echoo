@@ -288,7 +288,7 @@ export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-admin-token",
+    "authorization, x-client-info, apikey, content-type, x-admin-token, x-echoo-debug",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
 };
 

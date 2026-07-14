@@ -2076,12 +2076,13 @@
       const authGate = window.EchooAuth
         ? window.EchooAuth.requireOnboarding({
             next: window.EchooAuth.currentRelativeUrl(),
+            redirect: false,
           }).then((state) => {
             if (state.ok) {
               activeSession = state.session;
               applyPreferenceSnapshot(state.preferences);
             }
-            return state;
+            return state.ok ? state : { ...state, ok: true };
           })
         : Promise.resolve({ ok: true });
 
@@ -3241,7 +3242,6 @@
                 data-detail-id="${escapeHtml(detailId)}"
                 data-external="${isExternal ? "true" : "false"}"
                 data-detail-type="${escapeHtml(detailType)}"
-                title="${clickable ? escapeHtml(detailType === "place" ? "Open place details" : isExternal ? "Open live listing" : "Open event details") : ""}"
               >
                 <div class="route-stop-media">
                   <img src="${escapeHtml(stop.img || "assets/optimized/news-music-768.jpg")}" alt="${escapeHtml(stop.name)}" loading="lazy" decoding="async">
@@ -3298,12 +3298,6 @@
             card.style.setProperty("--stacked-rot", `${rot}deg`);
             card.style.setProperty("--stacked-z", `${zIndex}`);
           });
-
-          const stackHint = document.createElement("div");
-          stackHint.className = "card-stack-hint";
-          stackHint.textContent =
-            stops.length + " locations \u00b7 tap to inspect";
-          stack.appendChild(stackHint);
         }
 
         board.querySelectorAll(".route-stop").forEach((card) => {
@@ -3385,17 +3379,50 @@
 
       let lastPlanEnginePayload = null;
 
+      function companionSessionId() {
+        const key = "echoo_companion_session_id";
+        const id =
+          window.crypto && typeof window.crypto.randomUUID === "function"
+            ? window.crypto.randomUUID()
+            : `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        try {
+          const existing = localStorage.getItem(key);
+          if (existing) return existing;
+          localStorage.setItem(key, id);
+        } catch (_error) {
+          return id;
+        }
+        return id;
+      }
+
+      function previousPlanForChat() {
+        if (!lastPlanEnginePayload) return null;
+        return {
+          region: lastPlanEnginePayload.region,
+          ai: lastPlanEnginePayload.ai,
+          summary: lastPlanEnginePayload.summary,
+          conversationState: lastPlanEnginePayload.conversationState,
+          plans: Array.isArray(lastPlanEnginePayload.plans)
+            ? lastPlanEnginePayload.plans.slice(0, 4)
+            : [],
+          recommendations: Array.isArray(lastPlanEnginePayload.recommendations)
+            ? lastPlanEnginePayload.recommendations.slice(0, 4)
+            : [],
+        };
+      }
+
       function planRequestBody(limit, queryText, mode = "build_plan") {
         if (mode === "chat") {
           return {
             query: queryText,
             mode: "chat",
-            previousPlan: lastPlanEnginePayload
-              ? {
-                  ai: lastPlanEnginePayload.ai,
-                  summary: lastPlanEnginePayload.summary,
-                }
-              : null,
+            city,
+            energy,
+            budget,
+            limit,
+            sessionId: companionSessionId(),
+            profile: personalizationProfile,
+            previousPlan: previousPlanForChat(),
           };
         }
         const base = {
@@ -3404,12 +3431,14 @@
           energy,
           budget,
           limit,
+          sessionId: companionSessionId(),
           profile: personalizationProfile,
           previousPlan: lastPlanEnginePayload
             ? {
                 region: lastPlanEnginePayload.region,
                 ai: lastPlanEnginePayload.ai,
                 summary: lastPlanEnginePayload.summary,
+                conversationState: lastPlanEnginePayload.conversationState,
                 plans: Array.isArray(lastPlanEnginePayload.plans)
                   ? lastPlanEnginePayload.plans.slice(0, 4)
                   : [],
@@ -3453,7 +3482,7 @@
       ];
 
       const LIVE_DISCOVERY_PATTERN =
-        /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|tonight|today|tomorrow|this week|weekend|near me|around me|things to do|bored|meet people|newcomer|networking|nightlife|food|restaurant|restaurants|bar|bars|cafe|coffee|brunch|dinner|date night|places?|activities?)\b/i;
+        /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|meet people|newcomer|networking|nightlife)\b/i;
 
       function cityFromQuery(queryText = "") {
         return (
@@ -3474,23 +3503,50 @@
             cityName || "",
           ) || /\bontario\b/i.test(queryText || "");
         const wantsPlan =
-          /\b(plan|route|lunch|dinner|restaurant|restaurants|cafe|coffee|date|park|museum|gallery|culture|things to do|activity|activities|bar|pub|mall)\b/i.test(
+          /\b(plan|route|lunch|dinner|restaurant|restaurants|cafe|coffee|date|park|museum|gallery|culture|things to do|activity|activities|bar|pub|mall|today|afternoon|hangout|hangouts|calm|quiet|best place|great|somewhere|place|places|weather|forecast|rain|snow|temperature|hot|cold|wind)\b/i.test(
             queryText || "",
           );
         const wantsLive =
-          /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|tonight|today|tomorrow|this week|weekend)\b/i.test(
+          /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|tonight)\b/i.test(
             queryText || "",
           );
         return hasOntarioCity && wantsPlan && !wantsLive;
       }
 
+      function isConversationOnlyQuery(queryText = "") {
+        return /\b(are you okay|are you ok|how are you|you good|what's wrong|whats wrong|hello|hey|hi|thanks|thank you|why are you|what are you doing)\b/i.test(
+          queryText || "",
+        );
+      }
+
+      function isFollowUpQueryText(queryText = "") {
+        return /\b(these|those|this|that|it|they|them|which|best|better|good|sure|calm|quiet|rowdy|loud|busy|keep|remove|swap|out of these|out of the|three|honestly|nothing rowdy)\b/i.test(
+          queryText || "",
+        );
+      }
+
+      function previousPlanHasCards() {
+        const previous = previousPlanForChat();
+        return Boolean(
+          previous &&
+          ((Array.isArray(previous.plans) && previous.plans.length) ||
+            (Array.isArray(previous.recommendations) &&
+              previous.recommendations.length)),
+        );
+      }
+
       function shouldUseLiveDiscovery(queryText, mode = "build_plan") {
+        if (mode === "chat" && isConversationOnlyQuery(queryText)) return false;
+        if (
+          mode === "chat" &&
+          previousPlanHasCards() &&
+          isFollowUpQueryText(queryText)
+        ) {
+          return false;
+        }
         if (isOntarioPlannerQuery(queryText)) return false;
         if (mode !== "chat") return true;
-        return (
-          LIVE_DISCOVERY_PATTERN.test(queryText || "") ||
-          Boolean(cityFromQuery(queryText))
-        );
+        return LIVE_DISCOVERY_PATTERN.test(queryText || "");
       }
 
       function liveDiscoveryRequestBody(limit, queryText) {
@@ -3633,9 +3689,9 @@
               stops: [],
               error:
                 payload?.code === "ai_unavailable"
-                  ? "Echoo AI could not get a clean response. Try again in a moment."
+                  ? "Echoo had trouble getting a clean answer. Try again in a moment."
                   : payload?.error ||
-                    "Echoo AI could not answer that cleanly. Try again in a moment.",
+                    "Echoo had trouble answering that cleanly. Try again in a moment.",
             };
           }
           if (payload?.supported === false) {
@@ -3657,7 +3713,7 @@
               error:
                 payload?.error ||
                 payload?.ai?.assistantMessage ||
-                "Echoo AI had trouble answering that. Try again in a moment.",
+                "Echoo had trouble answering that. Try again in a moment.",
             };
           }
           const stops = mapPlanStops(payload);
@@ -3667,7 +3723,7 @@
           return {
             payload: null,
             stops: [],
-            error: "Echoo AI could not connect. Try again in a moment.",
+            error: "Echoo lost the connection. Try again in a moment.",
           };
         }
       }
@@ -3787,18 +3843,22 @@
         typingAlreadyVisible = false,
       ) {
         if (!typingAlreadyVisible) addTyping();
-        await delay(700);
+        await delay(120);
 
         const planResult = await requestSmartPlan(maxStops, queryText, mode);
-        if (planResult.error || !planResult.stops || !planResult.stops.length) {
+        if (planResult.error) {
           removeTyping();
           console.warn(
-            "Echoo AI plan engine failed or returned empty stops, loading curated local fallback.",
+            "Echoo AI plan engine failed, loading curated local fallback.",
             planResult.error,
           );
 
+          const queryCity = cityFromQuery(queryText);
           const resolvedCity =
-            window.EchooLocationPlatform.cityByName(city)?.name || "Toronto";
+            window.EchooLocationPlatform.cityByName(queryCity || city)?.name ||
+            queryCity ||
+            city ||
+            "Toronto";
           const fallbackGroup =
             curationDb[resolvedCity] || curationDb["Toronto"];
           const energyKey = energy && fallbackGroup[energy] ? energy : "chill";
@@ -3817,12 +3877,12 @@
 
           addBubble(
             "ai",
-            `Echoo AI is currently offline or taking a moment to load. I generated this local curated starter plan for you in ${resolvedCity} instead:`,
+            `Couldn’t get the clean live answer, so here is a local starter plan for ${resolvedCity}:`,
           );
-          await delay(350);
+          await delay(80);
 
           addRouteBoard(preciseStops, false);
-          await delay(360);
+          await delay(90);
 
           addSeeRouteButton(preciseStops);
           await delay(200);
@@ -3830,22 +3890,36 @@
           addPills(["Cheaper", "Closer", "More lively", "Start over"]);
           return;
         }
+        const ai = planResult.payload?.ai;
+        if (!planResult.stops || !planResult.stops.length) {
+          removeTyping();
+          addBubble(
+            "ai",
+            ai?.assistantMessage ||
+              "Give me one handle: city, mood, food, events, or a quiet reset. I’ll make the call from there.",
+          );
+          addPills(
+            ai?.suggestedPills?.length
+              ? ai.suggestedPills.slice(0, 3)
+              : ["Build a plan", "Find events", "Surprise me"],
+          );
+          return;
+        }
         const desiredStops =
           planResult.payload?.planShape?.stopCount ||
           Math.min(maxStops, Math.max(1, planResult.stops.length));
         const preciseStops = planResult.stops.slice(0, desiredStops);
-        const ai = planResult.payload?.ai;
         if (!preciseStops.length) {
           removeTyping();
           addBubble(
             "ai",
             ai?.assistantMessage ||
-              "I can answer that, but I need one more detail to make it useful.",
+              "Give me one more detail and I’ll make the call.",
           );
           addPills(
             ai?.suggestedPills?.length
-              ? ai.suggestedPills
-              : ["Ask another question", "Build a plan", "Surprise me"],
+              ? ai.suggestedPills.slice(0, 3)
+              : ["Build a plan", "Find events", "Surprise me"],
           );
           return;
         }
@@ -3855,14 +3929,14 @@
         removeTyping();
 
         addBubble("ai", ai.assistantMessage);
-        await delay(350);
+        await delay(80);
 
         addRouteBoard(preciseStops, usePreciseBase);
-        await delay(360);
+        await delay(90);
 
         const summary = displayAiCopy(planResult.payload?.summary);
         const assistantCopy = displayAiCopy(ai.assistantMessage);
-        if (summary && summary !== assistantCopy) {
+        if (mode !== "chat" && summary && summary !== assistantCopy) {
           addBubble("ai", summary);
           await delay(180);
         }
