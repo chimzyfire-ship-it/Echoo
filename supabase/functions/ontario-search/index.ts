@@ -5,6 +5,7 @@ import {
   getSupabaseAdmin,
   jsonResponse,
   logLocationEvent,
+  normalizeCityName,
 } from "../_shared/location.ts";
 
 type SearchPayload = {
@@ -266,6 +267,11 @@ Deno.serve(async (req) => {
       intent: cleanText(body.intent ?? url.searchParams.get("intent")),
       limit: optionalNumber(body.limit ?? url.searchParams.get("limit")),
     };
+    const normalizedCity = normalizeCityName(payload.city);
+    // Preserve unsupported free-form Ontario cities for province fallback, but
+    // ensure GTA aliases (for example Stouffville or Scarborough) retrieve
+    // from their canonical municipality inventory.
+    const city = normalizedCity?.name || payload.city;
 
     const supabase = getSupabaseAdmin();
     const radiusMeters = clampRadiusMeters(payload.radiusMeters);
@@ -276,18 +282,18 @@ Deno.serve(async (req) => {
     );
     const placeQuery = searchQueryForPlaces(
       payload.query,
-      payload.city,
+      city,
       payload.intent,
     );
     const support = await supabase.rpc("ontario_region_support", {
-      p_city: payload.city || null,
+      p_city: city || null,
     });
     if (support.error) throw support.error;
     const region = support.data?.[0] || {
       supported: true,
       launch_tier: 2,
       coverage_level: "province",
-      city: payload.city || "Ontario",
+      city: city || "Ontario",
       province: "ON",
       features_enabled: ["places", "lunch"],
     };
@@ -296,7 +302,7 @@ Deno.serve(async (req) => {
     for (const category of categoryBuckets) {
       const places = await supabase.rpc("search_ontario_places", {
         p_query: placeQuery,
-        p_city: payload.city || null,
+        p_city: city || null,
         p_lat: payload.lat ?? null,
         p_lng: payload.lng ?? null,
         p_radius_meters: radiusMeters,
@@ -364,7 +370,7 @@ Deno.serve(async (req) => {
     if (!results.length && payload.query) {
       await supabase.from("zero_result_queries").insert({
         query: payload.query,
-        city: payload.city || null,
+        city: city || null,
         province: "ON",
         lat: payload.lat ?? null,
         lng: payload.lng ?? null,
@@ -379,10 +385,10 @@ Deno.serve(async (req) => {
       durationMs: Date.now() - startedAt,
       countryCode: "CA",
       adminArea1: "ON",
-      city: payload.city || null,
+      city: city || null,
       request: {
         query: payload.query,
-        city: payload.city,
+        city,
         radiusMeters,
         categories: categoryBuckets,
         placeQuery,

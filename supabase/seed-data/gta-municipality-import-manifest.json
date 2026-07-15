@@ -1,0 +1,24 @@
+{
+  "description": "Municipal-boundary OSM import plan for full GTA place coverage. Each input must be clipped to the named municipal boundary before it is sent to ontario-osm-import.",
+  "source": {
+    "name": "OpenStreetMap",
+    "license": "ODbL-1.0",
+    "requiredInput": "A current Ontario OSM extract filtered by each official municipal boundary; do not use a centroid-radius extract."
+  },
+  "municipalities": [
+    { "name": "Toronto", "region": "Toronto", "aliases": ["Scarborough", "North York", "Etobicoke", "East York", "York"] },
+    { "name": "Ajax", "region": "Durham" }, { "name": "Brock", "region": "Durham" },
+    { "name": "Clarington", "region": "Durham" }, { "name": "Oshawa", "region": "Durham" },
+    { "name": "Pickering", "region": "Durham" }, { "name": "Scugog", "region": "Durham" },
+    { "name": "Uxbridge", "region": "Durham" }, { "name": "Whitby", "region": "Durham" },
+    { "name": "Aurora", "region": "York" }, { "name": "East Gwillimbury", "region": "York" },
+    { "name": "Georgina", "region": "York" }, { "name": "King", "region": "York", "aliases": ["King Township"] },
+    { "name": "Markham", "region": "York" }, { "name": "Newmarket", "region": "York" },
+    { "name": "Richmond Hill", "region": "York" }, { "name": "Vaughan", "region": "York" },
+    { "name": "Whitchurch-Stouffville", "region": "York", "aliases": ["Stouffville"] },
+    { "name": "Brampton", "region": "Peel" }, { "name": "Caledon", "region": "Peel" },
+    { "name": "Mississauga", "region": "Peel" },
+    { "name": "Burlington", "region": "Halton" }, { "name": "Halton Hills", "region": "Halton" },
+    { "name": "Milton", "region": "Halton" }, { "name": "Oakville", "region": "Halton" }
+  ]
+}

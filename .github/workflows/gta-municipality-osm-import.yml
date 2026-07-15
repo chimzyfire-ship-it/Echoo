@@ -1,0 +1,88 @@
+name: GTA Municipality OSM Import
+
+on:
+  workflow_dispatch:
+    inputs:
+      extract_url:
+        description: Current Ontario OSM PBF URL
+        required: true
+        default: https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf
+        type: string
+      municipalities:
+        description: Comma-separated canonical municipalities, or ALL
+        required: true
+        default: ALL
+        type: string
+      osm_chunk_size:
+        description: Records per protected ingest request
+        required: true
+        default: "100"
+        type: string
+      resume_municipality:
+        description: Canonical municipality to resume, if a prior run stopped
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      IMPORT_ENDPOINT: https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ontario-osm-import
+      ONTARIO_INGESTION_SECRET: ${{ secrets.ONTARIO_INGESTION_SECRET }}
+      OSM_CHUNK_SIZE: ${{ inputs.osm_chunk_size }}
+      OSM_IMPORT_RETRIES: "5"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OSM tools
+        run: sudo apt-get update && sudo apt-get install -y osmium-tool jq
+      - name: Validate protected import configuration
+        run: |
+          test -n "$ONTARIO_INGESTION_SECRET" || { echo "Missing ONTARIO_INGESTION_SECRET." >&2; exit 1; }
+      - name: Download current Ontario bulk extract
+        run: |
+          curl --fail --location --retry 4 --retry-delay 10 "${{ inputs.extract_url }}" --output ontario.osm.pbf
+          osmium fileinfo -e ontario.osm.pbf
+      - name: Resolve municipality boundaries
+        run: node scripts/resolve-gta-boundaries.mjs supabase/seed-data/gta-municipality-import-manifest.json gta-boundaries
+      - name: Clip, convert, and import every requested municipality
+        env:
+          REQUESTED_MUNICIPALITIES: ${{ inputs.municipalities }}
+          RESUME_MUNICIPALITY: ${{ inputs.resume_municipality }}
+        run: |
+          node - <<'NODE' > municipalities.txt
+          const fs = require('fs');
+          const requested = process.env.REQUESTED_MUNICIPALITIES.trim();
+          const resume = process.env.RESUME_MUNICIPALITY.trim();
+          const names = require('./supabase/seed-data/gta-municipality-import-manifest.json').municipalities.map((item) => item.name);
+          const selected = requested.toUpperCase() === 'ALL' ? names : requested.split(',').map((name) => name.trim());
+          for (const name of selected) if (!names.includes(name)) throw new Error(`Unknown canonical municipality: ${name}`);
+          const start = resume ? selected.indexOf(resume) : 0;
+          if (resume && start < 0) throw new Error('resume_municipality must be in municipalities.');
+          console.log(selected.slice(start).join('\n'));
+          NODE
+          while IFS= read -r municipality; do
+            slug="$(echo "$municipality" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')"
+            echo "Importing $municipality"
+            osmium extract --strategy=complete_ways --polygon "gta-boundaries/${slug}.geojson" ontario.osm.pbf --output "${slug}.osm.pbf" --overwrite
+            scripts/osm-pbf-to-ndjson.sh "${slug}.osm.pbf" "${slug}.ndjson"
+            test -s "${slug}.ndjson"
+            OSM_MUNICIPALITY="$municipality" node scripts/import-ontario-osm-chunks.mjs "${slug}.ndjson" "$IMPORT_ENDPOINT"
+          done < municipalities.txt
+      - name: Verify published inventory coverage
+        run: |
+          curl --fail --silent --show-error --request POST "$IMPORT_ENDPOINT" \
+            --header 'Content-Type: application/json' \
+            --header "x-ingestion-secret: $ONTARIO_INGESTION_SECRET" \
+            --data '{"action":"coverage"}' | tee gta-coverage.json
+          test "$(jq -r '.complete' gta-coverage.json)" = true || { jq -r '.missingMunicipalities[]' gta-coverage.json >&2; exit 1; }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gta-municipality-coverage
+          path: gta-coverage.json
+          retention-days: 30

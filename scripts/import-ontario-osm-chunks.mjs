@@ -19,6 +19,7 @@ const startOffset = Math.max(
   0,
   Number(process.env.OSM_IMPORT_START_OFFSET || 0),
 );
+const municipality = String(process.env.OSM_MUNICIPALITY || "").trim();
 
 if (!inputPath || !endpoint || !secret) {
   console.error(
@@ -42,6 +43,7 @@ async function postChunk(records, offset) {
         },
         body: JSON.stringify({
           sourceName: "openstreetmap",
+          municipality: municipality || undefined,
           records,
           offset,
           maxRecords: records.length,
@@ -105,4 +107,5 @@ console.log(JSON.stringify({
   sourceRecordsSkippedBeforeSubmit: skipped,
   chunkSize,
   startOffset,
+  municipality: municipality || null,
 }));
