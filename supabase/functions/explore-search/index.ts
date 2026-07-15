@@ -86,6 +86,14 @@ function ownedCard(item: OwnedResult) {
       hotScore: optionalDiscoveryNumber(item.hot_score) || 0,
       isHot: Number(item.hot_score || 0) > 0,
     },
+    placement: item.is_registered
+      ? {
+        // Never present paid placement as an organic community endorsement.
+        label: item.placement_tier === "top_pick" ? "Top Pick" : "Registered business",
+        tier: item.placement_tier || "registered",
+        sponsored: true,
+      }
+      : null,
     rankScore: optionalDiscoveryNumber(item.rank_score) || 0,
   };
 }
@@ -357,6 +365,7 @@ Deno.serve(async (req) => {
       filters: { category, featureSlugs, radiusMeters },
       results: merged,
       ownedResultCount: page.length,
+      registeredResultCount: ownedCards.filter((item: any) => item.placement?.sponsored).length,
       liveFallbackCount: live.results.length,
       nextCursor:
         hasNextPage && last

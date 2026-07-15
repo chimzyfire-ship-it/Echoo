@@ -160,6 +160,17 @@ Deno.serve(async (req) => {
         });
       }
 
+      if (queue === "venue_listings") {
+        const { data, error } = await supabase
+          .from("venue_listing_requests")
+          .select("id,location_entity_id,business_name,business_email,business_phone,business_website,requested_categories,note,status,created_at,location_entities(title,category,city)")
+          .in("status", ["submitted", "verified"])
+          .order("created_at", { ascending: true })
+          .limit(limit);
+        if (error) throw error;
+        return jsonResponse({ queue, requests: data || [] });
+      }
+
       const { data, error } = await supabase
         .from("canonical_places")
         .select("*")
@@ -174,6 +185,52 @@ Deno.serve(async (req) => {
     if (req.method === "PATCH") {
       const body = await req.json();
       const action = body.action || "review_place";
+
+      if (action === "activate_venue_listing") {
+        const requestId = cleanText(body.requestId, "");
+        const tier = cleanText(body.tier, "registered").toLowerCase();
+        const billingReference = cleanText(body.billingReference, "");
+        const categories = Array.isArray(body.categories)
+          ? [...new Set(body.categories.map((item: unknown) => cleanText(item).toLowerCase()).filter(Boolean))].slice(0, 8)
+          : [];
+        const endsAt = body.endsAt ? new Date(String(body.endsAt)) : null;
+        if (!requestId || !["registered", "featured", "top_pick"].includes(tier) || !billingReference) {
+          return jsonResponse({ error: "requestId, valid tier, and billingReference are required." }, 422);
+        }
+        if (endsAt && (!Number.isFinite(endsAt.getTime()) || endsAt <= new Date())) {
+          return jsonResponse({ error: "endsAt must be a future date when provided." }, 422);
+        }
+        const { data: request, error: requestError } = await supabase
+          .from("venue_listing_requests")
+          .select("id,location_entity_id,requested_categories,status")
+          .eq("id", requestId)
+          .maybeSingle();
+        if (requestError) throw requestError;
+        if (!request || ["rejected", "withdrawn"].includes(request.status)) {
+          return jsonResponse({ error: "Listing request was not found or cannot be activated." }, 404);
+        }
+        const { data: placement, error: placementError } = await supabase
+          .from("venue_search_placements")
+          .upsert({
+            location_entity_id: request.location_entity_id,
+            listing_request_id: request.id,
+            status: "active",
+            tier,
+            promoted_categories: categories.length ? categories : request.requested_categories,
+            starts_at: new Date().toISOString(),
+            ends_at: endsAt?.toISOString() || null,
+            billing_reference: billingReference,
+          }, { onConflict: "location_entity_id" })
+          .select("id,location_entity_id,status,tier,promoted_categories,starts_at,ends_at")
+          .single();
+        if (placementError) throw placementError;
+        const { error: reviewError } = await supabase
+          .from("venue_listing_requests")
+          .update({ status: "approved", reviewed_at: new Date().toISOString() })
+          .eq("id", request.id);
+        if (reviewError) throw reviewError;
+        return jsonResponse({ placement });
+      }
 
       if (action === "review_profile") {
         const profileId = body.profileId;
