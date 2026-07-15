@@ -10,6 +10,8 @@ export type SupportedCity = {
   lat: number;
   lng: number;
   coverageLevel?: "province" | "municipality";
+  /** Alternative user-facing names that resolve to this municipality. */
+  aliases?: string[];
 };
 
 export const ONTARIO_REGION: SupportedCity = {
@@ -38,6 +40,9 @@ export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
     lat: 43.6532,
     lng: -79.3832,
     coverageLevel: "municipality",
+    // These are Toronto districts, not separate municipalities. Keeping them
+    // as aliases prevents their inventory from being split into empty silos.
+    aliases: ["Downtown Toronto", "East York", "Etobicoke", "North York", "Scarborough", "York"],
   },
   {
     name: "Markham",
@@ -46,24 +51,6 @@ export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
     timezone: "America/Toronto",
     lat: 43.8561,
     lng: -79.337,
-    coverageLevel: "municipality",
-  },
-  {
-    name: "Scarborough",
-    province: "ON",
-    provinceName: "Ontario",
-    timezone: "America/Toronto",
-    lat: 43.7764,
-    lng: -79.2318,
-    coverageLevel: "municipality",
-  },
-  {
-    name: "North York",
-    province: "ON",
-    provinceName: "Ontario",
-    timezone: "America/Toronto",
-    lat: 43.7615,
-    lng: -79.4111,
     coverageLevel: "municipality",
   },
   {
@@ -128,6 +115,165 @@ export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
     lat: 43.2557,
     lng: -79.8711,
     coverageLevel: "municipality",
+  },
+  // Greater Toronto Area: Toronto plus Durham, York, Peel, and Halton.
+  // Keep this list in lock-step with ONTARIO_CITY_BUCKETS and the GTA
+  // supported-region migration so a manual search, GPS normalization, event
+  // refresh, and place import all use the same municipality names.
+  {
+    name: "Ajax",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.8509,
+    lng: -79.0204,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Aurora",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.0065,
+    lng: -79.4504,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Brock",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.3045,
+    lng: -78.7276,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Caledon",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.8769,
+    lng: -79.8654,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Clarington",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.9353,
+    lng: -78.608,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "East Gwillimbury",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.103,
+    lng: -79.447,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Georgina",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.303,
+    lng: -79.366,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Halton Hills",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.63,
+    lng: -79.95,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "King",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.997,
+    lng: -79.63,
+    coverageLevel: "municipality",
+    aliases: ["King Township"],
+  },
+  {
+    name: "Milton",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.5183,
+    lng: -79.8774,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Newmarket",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.0592,
+    lng: -79.4613,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Oshawa",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.8971,
+    lng: -78.8658,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Pickering",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.8384,
+    lng: -79.0868,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Scugog",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.1116,
+    lng: -78.9445,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Uxbridge",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 44.1086,
+    lng: -79.1224,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Whitby",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.8975,
+    lng: -78.9429,
+    coverageLevel: "municipality",
+  },
+  {
+    name: "Whitchurch-Stouffville",
+    province: "ON",
+    provinceName: "Ontario",
+    timezone: "America/Toronto",
+    lat: 43.9708,
+    lng: -79.2444,
+    coverageLevel: "municipality",
+    aliases: ["Stouffville", "Whitchurch Stouffville"],
   },
   {
     name: "Vancouver",
@@ -442,7 +588,9 @@ export function normalizeCityName(input?: string | null): SupportedCity | null {
   if (normalized === "ontario" || normalized === "on") return ONTARIO_REGION;
   return (
     SUPPORTED_CANADA_CITIES.find(
-      (city) => city.name.toLowerCase() === normalized,
+      (city) =>
+        city.name.toLowerCase() === normalized ||
+        city.aliases?.some((alias) => alias.toLowerCase() === normalized),
     ) || null
   );
 }

@@ -14,9 +14,13 @@ import {
 } from "../_shared/ontario-ingestion.ts";
 
 type Payload = {
+  /** Returns the protected GTA inventory readiness report without importing. */
+  action?: "import" | "coverage";
   sourceUrl?: string;
   records?: unknown[];
   sourceName?: string;
+  /** Required when the input is clipped to one GTA municipal boundary. */
+  municipality?: string;
   offset?: number;
   maxRecords?: number;
 };
@@ -49,6 +53,19 @@ Deno.serve(async (req) => {
 
   try {
     const payload = (await req.json()) as Payload;
+    if (payload.action === "coverage") {
+      const { data, error } = await supabase.rpc("gta_municipality_coverage");
+      if (error) throw error;
+      const coverage = Array.isArray(data) ? data : [];
+      const missing = coverage.filter((row) => Number(row.published_entities) === 0);
+      return jsonResponse({
+        success: true,
+        coverage,
+        complete: coverage.length === 25 && missing.length === 0,
+        missingMunicipalities: missing.map((row) => row.city),
+      });
+    }
+
     const maxRecords = asRecordLimit(payload.maxRecords);
     const startAt = asRecordOffset(payload.offset);
     const rawRecords = Array.isArray(payload.records)
@@ -64,6 +81,7 @@ Deno.serve(async (req) => {
       metadata: {
         offset: startAt,
         maxRecords,
+        municipality: payload.municipality,
         mode: payload.sourceUrl ? "source_url" : "inline_records",
         note:
           "Worker expects an Ontario/Canada extract converted to JSON/NDJSON/GeoJSON, not Overpass bulk queries.",
@@ -72,7 +90,7 @@ Deno.serve(async (req) => {
 
     const places = rawRecords
       .slice(startAt, startAt + maxRecords)
-      .map(osmElementToPlace)
+      .map((record) => osmElementToPlace(record, payload.municipality))
       .filter((place): place is PlaceInput => Boolean(place));
     const summary = await importPlaces(supabase, places);
     const filteredOutInWindow =

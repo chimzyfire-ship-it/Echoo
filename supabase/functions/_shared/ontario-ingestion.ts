@@ -48,8 +48,6 @@ const ONTARIO_BOUNDS = {
 export const ONTARIO_CITY_BUCKETS = [
   "Toronto",
   "Markham",
-  "Scarborough",
-  "North York",
   "Vaughan",
   "Richmond Hill",
   "Mississauga",
@@ -57,6 +55,24 @@ export const ONTARIO_CITY_BUCKETS = [
   "Oakville",
   "Burlington",
   "Hamilton",
+  // Full GTA municipality coverage: Durham, York, Peel, and Halton.
+  "Ajax",
+  "Aurora",
+  "Brock",
+  "Caledon",
+  "Clarington",
+  "East Gwillimbury",
+  "Georgina",
+  "Halton Hills",
+  "King",
+  "Milton",
+  "Newmarket",
+  "Oshawa",
+  "Pickering",
+  "Scugog",
+  "Uxbridge",
+  "Whitby",
+  "Whitchurch-Stouffville",
   "Ottawa",
   "Waterloo",
   "Kitchener",
@@ -235,7 +251,10 @@ function pointFromGeometry(geometry: any) {
   return {};
 }
 
-export function osmElementToPlace(element: any): PlaceInput | null {
+export function osmElementToPlace(
+  element: any,
+  municipalityOverride?: string,
+): PlaceInput | null {
   const tags =
     element?.tags || element?.properties?.tags || element?.properties || {};
   const category = inferOsmCategory(tags);
@@ -278,7 +297,11 @@ export function osmElementToPlace(element: any): PlaceInput | null {
     ),
     latitude: lat,
     longitude: lng,
-    municipality: optionalText(tags["addr:city"] || tags["is_in:city"]),
+    // A municipality-scoped extract is authoritative for this field. OSM
+    // address tags are optional and often contain a postal/community name,
+    // which otherwise leaves valid GTA places undiscoverable by city.
+    municipality: optionalText(municipalityOverride) ||
+      optionalText(tags["addr:city"] || tags["is_in:city"]),
     address: addressFromTags(tags),
     website: optionalText(tags.website || tags["contact:website"]),
     phone: optionalText(tags.phone || tags["contact:phone"]),

@@ -30,6 +30,7 @@ type ExplorePayload = {
   featureSlugs?: unknown;
   limit?: unknown;
   cursor?: unknown;
+  livePageToken?: unknown;
   includeLiveFallback?: unknown;
 };
 
@@ -89,29 +90,73 @@ function ownedCard(item: OwnedResult) {
   };
 }
 
-async function googleFallback(input: {
+function normalizedLiveQuery(query: string, category: string | null) {
+  const normalized = cleanDiscoveryText(query || category || "things to do", 120)
+    .replace(/\bresturants?\b/gi, "restaurants")
+    .replace(/\brestaraunts?\b/gi, "restaurants");
+  return normalized || "things to do";
+}
+
+function metersBetween(
+  originLat?: number,
+  originLng?: number,
+  destinationLat?: number,
+  destinationLng?: number,
+) {
+  if (![originLat, originLng, destinationLat, destinationLng].every(Number.isFinite)) return undefined;
+  const radians = Math.PI / 180;
+  const latDelta = (Number(destinationLat) - Number(originLat)) * radians;
+  const lngDelta = (Number(destinationLng) - Number(originLng)) * radians;
+  const a = Math.sin(latDelta / 2) ** 2 + Math.cos(Number(originLat) * radians) * Math.cos(Number(destinationLat) * radians) * Math.sin(lngDelta / 2) ** 2;
+  return Math.round(6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function liveType(query: string, category: string | null) {
+  const normalized = `${query} ${category || ""}`.toLowerCase();
+  if (/\b(restaurants?|resturants?|restaraunts?)\b/.test(normalized)) return "restaurant";
+  if (/\b(cafes?|coffee)\b/.test(normalized)) return "cafe";
+  if (/\b(bars?|pubs?)\b/.test(normalized)) return "bar";
+  if (/\b(parks?|trails?)\b/.test(normalized)) return "park";
+  if (/\b(libraries?)\b/.test(normalized)) return "library";
+  if (/\b(museums?|galleries?)\b/.test(normalized)) return "museum";
+  return null;
+}
+
+async function googleLiveSearch(input: {
   query: string;
+  category: string | null;
   city: string;
   lat?: number;
   lng?: number;
   limit: number;
+  pageToken?: string;
 }) {
   const key =
     Deno.env.get("GOOGLE_PLACES_API_KEY") ||
     Deno.env.get("GOOGLE_MAPS_API_KEY");
-  if (!key || !input.query) return [];
+  if (!key || !input.query) return { results: [], nextPageToken: null };
   const body: Record<string, unknown> = {
-    textQuery: `${input.query} in ${input.city}`,
-    maxResultCount: Math.min(input.limit, 10),
+    textQuery: `${normalizedLiveQuery(input.query, input.category)} in ${input.city}, Ontario`,
+    pageSize: Math.min(Math.max(input.limit, 1), 20),
     languageCode: "en",
+    regionCode: "CA",
   };
+  if (input.pageToken) body.pageToken = input.pageToken;
+  const includedType = liveType(input.query, input.category);
+  if (includedType) {
+    body.includedType = includedType;
+    body.strictTypeFiltering = true;
+  }
   if (Number.isFinite(input.lat) && Number.isFinite(input.lng)) {
     body.locationBias = {
       circle: {
         center: { latitude: input.lat, longitude: input.lng },
-        radius: 18000,
+        // Category searches should feel useful beyond a tiny immediate block;
+        // distance ranking still keeps closest options at the top.
+        radius: 35000,
       },
     };
+    body.rankPreference = "DISTANCE";
   }
   const response = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
@@ -131,7 +176,10 @@ async function googleFallback(input: {
     return [];
   }
   const data = await response.json();
-  return (data.places || []).map((place: any) => ({
+  const results = (data.places || []).map((place: any) => {
+    const latitude = optionalDiscoveryNumber(place.location?.latitude);
+    const longitude = optionalDiscoveryNumber(place.location?.longitude);
+    return {
     id: `google:${cleanDiscoveryText(place.id, 160)}`,
     source: "google_places",
     type: "place",
@@ -141,15 +189,19 @@ async function googleFallback(input: {
     description: cleanDiscoveryText(place.formattedAddress, 300),
     address: cleanDiscoveryText(place.formattedAddress, 300),
     city: input.city,
-    latitude: optionalDiscoveryNumber(place.location?.latitude),
-    longitude: optionalDiscoveryNumber(place.location?.longitude),
+    latitude,
+    longitude,
+    distanceMeters: metersBetween(input.lat, input.lng, latitude, longitude),
     image: null,
     features: [],
     community: null,
     actionUrl: cleanDiscoveryText(place.googleMapsUri, 500) || null,
     attribution: { provider: "Google Maps", requiredLabel: "Google Maps" },
     isNewToEchoo: true,
-  }));
+    };
+  });
+  results.sort((a: any, b: any) => (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER));
+  return { results, nextPageToken: cleanDiscoveryText(data.nextPageToken, 2048) || null };
 }
 
 Deno.serve(async (req) => {
@@ -165,6 +217,10 @@ Deno.serve(async (req) => {
     const get = (key: keyof ExplorePayload) =>
       body[key] ?? url.searchParams.get(String(key)) ?? undefined;
     const query = cleanDiscoveryText(get("query"), 120);
+    // Keep typo tolerance consistent across Echoo inventory and live places.
+    // Without this, "resturants" reached Google correctly but missed Echoo's
+    // own search index entirely.
+    const searchQuery = query ? normalizedLiveQuery(query, null) : "";
     const lat = optionalDiscoveryNumber(get("lat"));
     const lng = optionalDiscoveryNumber(get("lng"));
     if ((lat === undefined) !== (lng === undefined))
@@ -211,6 +267,7 @@ Deno.serve(async (req) => {
     const cursor = decodeDiscoveryCursor(get("cursor"));
     if (get("cursor") && !cursor)
       return jsonResponse({ error: "Invalid cursor" }, 422);
+    const livePageToken = cleanDiscoveryText(get("livePageToken"), 2048) || undefined;
     const supabase = getSupabaseAdmin();
     const { data: features, error: featuresError } = await supabase
       .from("discovery_feature_catalog")
@@ -226,14 +283,14 @@ Deno.serve(async (req) => {
     const featureSlugs = [
       ...new Set([
         ...explicitFeatures.filter((slug) => knownSlugs.has(slug)),
-        ...matchedFeatureSlugs(query, (features || []) as DiscoveryFeature[]),
+        ...matchedFeatureSlugs(searchQuery, (features || []) as DiscoveryFeature[]),
       ]),
     ].slice(0, 8);
     const cityFilter = city.coverageLevel === "municipality" ? city.name : null;
     const cacheKey = await sha256Hex(
       JSON.stringify({
         v: 1,
-        query: query.toLowerCase(),
+        query: searchQuery.toLowerCase(),
         city: cityFilter,
         lat: lat?.toFixed(4) || null,
         lng: lng?.toFixed(4) || null,
@@ -244,15 +301,15 @@ Deno.serve(async (req) => {
         cursor,
       }),
     );
-    const cached = await readLocationCache(supabase, cacheKey);
+    const cached = !livePageToken ? await readLocationCache(supabase, cacheKey) : null;
     let owned: OwnedResult[];
     if (cached) {
       owned = (cached as any).owned || [];
-    } else {
+    } else if (!livePageToken || cursor) {
       const { data, error } = await supabase.rpc(
         "search_discovery_owned_entities",
         {
-          p_query: query || null,
+          p_query: searchQuery || null,
           p_feature_slugs: featureSlugs,
           p_lat: lat ?? null,
           p_lng: lng ?? null,
@@ -267,34 +324,45 @@ Deno.serve(async (req) => {
       if (error) throw error;
       owned = data || [];
       await writeLocationCache(supabase, cacheKey, { owned }, 90);
+    } else {
+      owned = [];
     }
 
     const hasNextPage = owned.length > limit;
     const page = owned.slice(0, limit);
     const includeLiveFallback = asBoolean(get("includeLiveFallback"), true);
-    const fallback =
-      !cursor && includeLiveFallback && page.length < Math.min(5, limit)
-        ? await googleFallback({
-            query: query || category || "things to do",
-            city: city.name,
-            lat,
-            lng,
-            limit: Math.min(5, limit - page.length),
-          })
-        : [];
+    const live = includeLiveFallback
+      ? await googleLiveSearch({
+          query: searchQuery || category || "things to do",
+          category,
+          city: city.name,
+          lat,
+          lng,
+          limit,
+          pageToken: livePageToken,
+        })
+      : { results: [], nextPageToken: null };
     const last = page.at(-1);
+    const ownedCards = page.map(ownedCard);
+    const merged = [...ownedCards, ...live.results].filter((item, index, all) =>
+      all.findIndex((candidate) => candidate.id === item.id) === index,
+    );
+    if (lat !== undefined && lng !== undefined) {
+      merged.sort((a: any, b: any) => (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER));
+    }
     return jsonResponse({
       supported: true,
       query,
       region: city,
       filters: { category, featureSlugs, radiusMeters },
-      results: [...page.map(ownedCard), ...fallback],
+      results: merged,
       ownedResultCount: page.length,
-      liveFallbackCount: fallback.length,
+      liveFallbackCount: live.results.length,
       nextCursor:
         hasNextPage && last
           ? encodeDiscoveryCursor(last.rank_score, last.id)
           : null,
+      liveNextPageToken: live.nextPageToken,
     });
   } catch (error) {
     return jsonResponse(
