@@ -5,6 +5,7 @@ import {
   getSupabaseAdmin,
   jsonResponse,
   logLocationEvent,
+  normalizeCityName,
 } from "../_shared/location.ts";
 
 type PlanPayload = {
@@ -720,7 +721,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const city = cleanText(body.city || "Markham");
+    const requestedCity = cleanText(body.city || "Markham");
+    const city = normalizeCityName(requestedCity)?.name || requestedCity;
     const radiusMeters = clampRadiusMeters(body.radiusMeters);
     const limit = Math.max(2, Math.min(clampLimit(body.limit), 12));
     const support = await supabase.rpc("ontario_region_support", {
