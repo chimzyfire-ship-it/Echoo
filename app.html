@@ -1738,8 +1738,8 @@
       body.chat-open .companion-landing { opacity: 0; transform: scale(0.985); pointer-events: none; }
       .companion-landing::before { position: absolute; inset: 0; content: ""; pointer-events: none; background: linear-gradient(180deg, rgba(1, 5, 14, 0.28), transparent 38%, rgba(1, 5, 14, 0.2)); }
       .companion-welcome { position: relative; z-index: 1; display: flex; flex: 1; flex-direction: column; justify-content: center; align-items: center; gap: 18px; width: 100%; margin: 0; text-align: center; }
-      .echo-mark { display: grid; width: 78px; height: 78px; place-items: center; overflow: hidden; border: 1px solid rgba(247, 213, 178, 0.22); border-radius: 24px; background: rgba(255, 255, 255, 0.035); box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24); animation: mark-breathe 4s ease-in-out infinite; }
-      .echo-mark img { width: 112px; height: 112px; max-width: none; object-fit: cover; mix-blend-mode: screen; transform: scale(1.08); }
+      .echo-mark { display: grid; width: 82px; height: 82px; place-items: center; overflow: hidden; border-radius: 24px; background: #0b1426; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24); animation: mark-breathe 4s ease-in-out infinite; }
+      .echo-mark img { width: 104px; height: 104px; max-width: none; object-fit: cover; mix-blend-mode: multiply; transform: scale(1.08); }
       @keyframes mark-breathe { 50% { transform: translateY(-5px); } }
       .companion-welcome h1 { margin: 0; color: #f8f5ef; font-size: clamp(32px, 9vw, 42px); font-weight: 690; letter-spacing: -0.045em; line-height: 1; }
       .companion-composer { position: relative; z-index: 1; width: 100%; }
@@ -1752,7 +1752,6 @@
       .companion-add::after { transform: rotate(90deg); }
       .companion-composer input { flex: 1; min-width: 0; border: 0; outline: 0; color: #ffffff; background: transparent; font-size: 16px; font-weight: 480; }
       .companion-composer input::placeholder { color: #6a7585; }
-      .companion-voice { display: none; }
       .companion-submit { width: 48px; height: 48px; border-radius: 50%; color: #1a1a1a; background: linear-gradient(135deg, #f7d5b2, #e0b88c); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22); transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 180ms ease; }
       .companion-submit:hover { transform: scale(1.06); filter: brightness(1.04); }
       .companion-submit svg { width: 22px; height: 22px; }
@@ -1800,7 +1799,6 @@
             <button class="companion-add" type="button" aria-label="Add details"></button>
             <label class="sr-only" for="plan-query">Ask Echo A.I. for a plan</label>
             <input id="plan-query" autocomplete="off" placeholder="Ask for a plan" />
-            <button class="companion-voice" type="button" aria-label="Use voice input"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/></svg></button>
             <button class="companion-submit" type="submit" aria-label="Create plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           </form>
           <button class="ghost landing-surprise" id="surprise">Surprise me</button>
