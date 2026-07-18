@@ -106,6 +106,13 @@ saving time. It requires the repository Actions secret
 `ONTARIO_INGESTION_SECRET`. The Explore detail sheet now uses the real
 community actions.
 
+July 15 depth pass: official City of Markham open-data records now receive
+conservative, source-backed feature tags: municipal parks and trails are
+`outdoor`; libraries and community centres are `indoor`. No venue vibe,
+dietary, identity, popularity, or quality claims were inferred. Approved cover
+media remains the largest visual discovery gap and requires rights-cleared
+partner, venue, or Echoo-owned assets.
+
 ### Stage 5 — Data depth and launch quality — Pending
 
 - [ ] Complete GTA source imports and feature-tag high-demand locations.

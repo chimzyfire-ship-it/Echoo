@@ -374,12 +374,14 @@ Deno.serve(async (req) => {
       liveNextPageToken: live.nextPageToken,
     });
   } catch (error) {
-    return jsonResponse(
-      {
-        error: error instanceof Error ? error.message : "Explore search failed",
-        code: "explore_search_failed",
-      },
-      500,
-    );
+    // PostgrestError / fetch errors are often not `instanceof Error` in Deno,
+    // which previously swallowed the real cause and returned a generic message.
+    // Surface the underlying message + code so failures are diagnosable.
+    const message =
+      (error && (error as any).message) ||
+      (typeof error === "string" ? error : "Explore search failed");
+    const code = (error && (error as any).code) || "explore_search_failed";
+    console.error("explore-search failed:", JSON.stringify(error));
+    return jsonResponse({ error: message, code }, 500);
   }
 });

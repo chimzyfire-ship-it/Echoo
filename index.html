@@ -359,11 +359,101 @@
         transform: rotate(45deg);
       }
 
-      .pick-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+      .pick-carousel-container {
+        position: relative;
         margin-top: 16px;
+        width: 100%;
+      }
+
+      .pick-carousel {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 12px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        scroll-behavior: smooth;
+        padding: 4px 2px;
+        margin: -4px -2px;
+      }
+
+      .pick-carousel::-webkit-scrollbar {
+        display: none;
+      }
+
+      .pick-carousel .pick-card {
+        flex: 0 0 calc(50% - 6px);
+        scroll-snap-align: start;
+      }
+
+      .carousel-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(25, 25, 24, 0.6);
+        border: 1px solid rgba(248, 245, 239, 0.15);
+        color: var(--peach);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        z-index: 5;
+        backdrop-filter: blur(8px);
+        transition: all 0.2s ease;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .pick-carousel-container:hover .carousel-arrow,
+      .pick-carousel-container:focus-within .carousel-arrow {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      @media (hover: none) {
+        .carousel-arrow {
+          opacity: 0.8;
+          pointer-events: auto;
+        }
+      }
+
+      .carousel-arrow:hover {
+        background: rgba(25, 25, 24, 0.85);
+        border-color: var(--peach);
+      }
+
+      .carousel-arrow.prev {
+        left: -8px;
+      }
+
+      .carousel-arrow.next {
+        right: -8px;
+      }
+
+      .carousel-arrow svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .vibe-expanded {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+        opacity: 0;
+      }
+
+      .vibe-expanded.open {
+        max-height: 140px;
+        opacity: 1;
+        transition: max-height 0.3s ease-in, opacity 0.2s ease-in;
+        margin-top: 12px;
       }
 
       .pick-card {
@@ -817,8 +907,11 @@
           padding-inline: 20px;
         }
 
-        .pick-grid {
+        .pick-carousel {
           gap: 10px;
+        }
+        .pick-carousel .pick-card {
+          flex: 0 0 calc(50% - 5px);
         }
 
         .pick-card {
@@ -907,30 +1000,37 @@
                 <h2 id="live-picks-title">Tonight's picks</h2>
                 <a class="see-all" href="events.html">See all</a>
               </div>
-              <div class="pick-grid" id="live-picks">
-                <a
-                  class="pick-card"
-                  href="music.html"
-                  style="--image: url(&quot;assets/news-music.png&quot;)"
-                  aria-label="Live rooms nearby"
-                >
-                  <strong class="pick-title">Live rooms nearby</strong>
-                </a>
-                <a
-                  class="pick-card"
-                  href="dates.html"
-                  style="--image: url(&quot;assets/news-date.png&quot;)"
-                  aria-label="Date-night energy"
-                >
-                  <strong class="pick-title">Date-night energy</strong>
-                </a>
+              <div class="pick-carousel-container">
+                <button class="carousel-arrow prev" id="picks-prev" aria-label="Previous pick" type="button">
+                  <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <div class="pick-carousel" id="live-picks">
+                  <a
+                    class="pick-card"
+                    href="music.html"
+                    style="--image: url(&quot;assets/news-music.png&quot;)"
+                    aria-label="Live rooms nearby"
+                  >
+                    <strong class="pick-title">Live rooms nearby</strong>
+                  </a>
+                  <a
+                    class="pick-card"
+                    href="dates.html"
+                    style="--image: url(&quot;assets/news-date.png&quot;)"
+                    aria-label="Date-night energy"
+                  >
+                    <strong class="pick-title">Date-night energy</strong>
+                  </a>
+                </div>
+                <button class="carousel-arrow next" id="picks-next" aria-label="Next pick" type="button">
+                  <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
+                </button>
               </div>
             </div>
 
             <div>
               <div class="section-head">
                 <h2>For your vibe</h2>
-                <a class="see-all" href="events.html">See all</a>
               </div>
               <div class="vibe-row" aria-label="Browse by vibe">
                 <a class="vibe" href="music.html">
@@ -976,16 +1076,76 @@
                   </span>
                   <span>Dates</span>
                 </a>
-                <a class="vibe" href="events.html">
+                <button class="vibe" id="more-vibes-btn" type="button" aria-expanded="false" aria-controls="more-vibes-container" style="background:none; border:none; padding:0;">
                   <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" id="more-vibe-icon">
                       <path d="M5 12h.01" />
                       <path d="M12 12h.01" />
                       <path d="M19 12h.01" />
                     </svg>
                   </span>
                   <span>More</span>
-                </a>
+                </button>
+              </div>
+
+              <!-- Extra Vibes Row (hidden/expandable) -->
+              <div class="vibe-expanded" id="more-vibes-container">
+                <div class="vibe-row">
+                  <a class="vibe" href="events.html?query=nightlife">
+                    <span class="vibe-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M22 22H2" />
+                        <path d="M21 3L12 11L3 3" />
+                        <path d="M12 11V22" />
+                        <path d="M17 2H7" />
+                      </svg>
+                    </span>
+                    <span>Bars</span>
+                  </a>
+                  <a class="vibe" href="events.html?query=coffee">
+                    <span class="vibe-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+                        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+                        <path d="M6 2v2" />
+                        <path d="M10 2v2" />
+                        <path d="M14 2v2" />
+                      </svg>
+                    </span>
+                    <span>Coffee</span>
+                  </a>
+                  <a class="vibe" href="events.html?query=museum">
+                    <span class="vibe-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 22V10" />
+                        <path d="M9 22V10" />
+                        <path d="M15 22V10" />
+                        <path d="M20 22V10" />
+                        <path d="M12 2L2 7v3h20V7L12 2Z" />
+                        <path d="M2 22h20" />
+                      </svg>
+                    </span>
+                    <span>Culture</span>
+                  </a>
+                  <a class="vibe" href="events.html?query=park">
+                    <span class="vibe-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 2L3 17h18L12 2Z" />
+                        <path d="M12 12V22" />
+                      </svg>
+                    </span>
+                    <span>Outdoors</span>
+                  </a>
+                  <a class="vibe" href="events.html?query=wellness">
+                    <span class="vibe-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                        <path d="M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
+                      </svg>
+                    </span>
+                    <span>Wellness</span>
+                  </a>
+                </div>
               </div>
             </div>
           </section>
@@ -1247,7 +1407,17 @@
           event.preventDefault();
           const query = searchInput.value.trim() || "tonight near me";
           ensureLocationContext(async () => {
-            await openProtectedRoute(`app.html?q=${encodeURIComponent(query)}`);
+            // Place/category searches belong in Explore, which can show a
+            // browsable local list instead of the companion's short route.
+            const isPlaceSearch =
+              /\b(restaurant|resturant|resturants|restaraunt|restaraunts|cafe|coffee|bar|pub|food|eat|lunch|brunch|dinner|breakfast|bakery|museum|gallery|park|trail|library|shopping|mall|hotel|spa|gym|things to do|place|places)\b/i.test(
+                query,
+              );
+            await openProtectedRoute(
+              isPlaceSearch
+                ? `events.html?query=${encodeURIComponent(query)}`
+                : `app.html?q=${encodeURIComponent(query)}`,
+            );
           });
         });
 
@@ -1400,6 +1570,62 @@
           : label;
       }
 
+      const fallbackPicks = [
+        {
+          title: "The Rex Jazz & Blues Bar",
+          imageUrl: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=400&q=80",
+          detailUrl: "events.html?query=jazz"
+        },
+        {
+          title: "Distillery District Walking Tour",
+          imageUrl: "https://images.unsplash.com/photo-1543807535-eceef0bc6599?auto=format&fit=crop&w=400&q=80",
+          detailUrl: "events.html?query=distillery"
+        },
+        {
+          title: "Kensington Market Vintage Crawl",
+          imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=400&q=80",
+          detailUrl: "events.html?query=kensington"
+        },
+        {
+          title: "Bar Raval (Spanish Tapas & Drinks)",
+          imageUrl: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=400&q=80",
+          detailUrl: "events.html?query=bar"
+        },
+        {
+          title: "Toronto Music Garden Serenade",
+          imageUrl: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=400&q=80",
+          detailUrl: "events.html?query=music"
+        },
+        {
+          title: "TIFF Lightbox Film Screenings",
+          imageUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80",
+          detailUrl: "events.html?query=film"
+        }
+      ];
+
+      function renderFallbackPicks() {
+        if (!livePicks) return;
+        if (livePicksTitle) {
+          livePicksTitle.textContent = "Live Ontario picks";
+        }
+        livePicks.innerHTML = fallbackPicks
+          .map((card) => {
+            const image = card.imageUrl;
+            const title = escapeHtml(card.title);
+            return `
+              <a
+                class="pick-card"
+                href="${escapeHtml(card.detailUrl)}"
+                style="--image: url('${escapeHtml(image)}')"
+                aria-label="${title}"
+              >
+                <strong class="pick-title">${title}</strong>
+              </a>
+            `;
+          })
+          .join("");
+      }
+
       async function loadLivePicks(cityName = "Ontario", coords) {
         if (!livePicks) return;
         const key = `${cityName}:${coords?.lat || ""}:${coords?.lng || ""}`;
@@ -1408,7 +1634,7 @@
 
         const url = new URL(DISCOVER_FEED_URL);
         url.searchParams.set("city", cityName || "Ontario");
-        url.searchParams.set("limit", "4");
+        url.searchParams.set("limit", "12");
         if (coords?.lat && coords?.lng) {
           url.searchParams.set("lat", String(coords.lat));
           url.searchParams.set("lng", String(coords.lng));
@@ -1425,8 +1651,11 @@
           const cards = lanes
             .flatMap((lane) => lane.cards || [])
             .filter(Boolean)
-            .slice(0, 2);
-          if (!cards.length) return;
+            .slice(0, 10);
+          if (!cards.length) {
+            renderFallbackPicks();
+            return;
+          }
 
           if (livePicksTitle) {
             livePicksTitle.textContent = coords
@@ -1452,11 +1681,55 @@
             .join("");
         } catch (error) {
           console.warn(
-            "Echoo: discover-feed unavailable, keeping static picks.",
+            "Echoo: discover-feed unavailable, falling back to local picks.",
             error,
           );
+          renderFallbackPicks();
         }
       }
+
+      // Initialize control events for Vibes expander and Carousel arrows
+      (function initHomeControls() {
+        const moreVibesBtn = document.getElementById("more-vibes-btn");
+        const moreVibesContainer = document.getElementById("more-vibes-container");
+        const moreVibeIcon = document.getElementById("more-vibe-icon");
+
+        if (moreVibesBtn && moreVibesContainer) {
+          moreVibesBtn.addEventListener("click", () => {
+            const isExpanded = moreVibesBtn.getAttribute("aria-expanded") === "true";
+            moreVibesBtn.setAttribute("aria-expanded", !isExpanded);
+            moreVibesContainer.classList.toggle("open");
+            
+            if (moreVibeIcon) {
+              if (!isExpanded) {
+                moreVibeIcon.innerHTML = `
+                  <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+                  <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+                `;
+                moreVibesBtn.querySelector("span:not(.vibe-icon)").textContent = "Close";
+              } else {
+                moreVibeIcon.innerHTML = `
+                  <path d="M5 12h.01" />
+                  <path d="M12 12h.01" />
+                  <path d="M19 12h.01" />
+                `;
+                moreVibesBtn.querySelector("span:not(.vibe-icon)").textContent = "More";
+              }
+            }
+          });
+        }
+
+        const picksPrev = document.getElementById("picks-prev");
+        const picksNext = document.getElementById("picks-next");
+        if (picksPrev && picksNext && livePicks) {
+          picksPrev.addEventListener("click", () => {
+            livePicks.scrollBy({ left: -220, behavior: "smooth" });
+          });
+          picksNext.addEventListener("click", () => {
+            livePicks.scrollBy({ left: 220, behavior: "smooth" });
+          });
+        }
+      })();
 
       function showCanadaPreviewModal(title, copy) {
         if (modalTitle) modalTitle.textContent = title;
