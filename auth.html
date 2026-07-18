@@ -865,6 +865,108 @@
         border-color: var(--line-strong);
       }
 
+      /* ── Account Settings Dashboard ── */
+      .settings-section-title {
+        color: var(--peach);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin: 24px 0 10px;
+      }
+      .settings-row {
+        background: rgba(25, 25, 24, 0.45);
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .settings-row-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .settings-label {
+        font-size: 11px;
+        font-weight: 650;
+        text-transform: uppercase;
+        color: rgba(248, 245, 239, 0.48);
+        letter-spacing: 0.04em;
+      }
+      .settings-input {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        border-radius: 10px;
+        color: var(--ink);
+        padding: 10px 14px;
+        font-size: 14px;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.2s, background 0.2s;
+      }
+      .settings-input:focus {
+        border-color: var(--peach);
+        background: rgba(0, 0, 0, 0.5);
+      }
+      .settings-segmented {
+        display: flex;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 2px;
+        border: 1px solid rgba(248, 245, 239, 0.08);
+      }
+      .settings-segment-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        color: rgba(248, 245, 239, 0.6);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 0;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .settings-segment-btn.active {
+        background: var(--peach);
+        color: var(--black);
+        font-weight: 700;
+      }
+      .settings-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      .settings-tag {
+        background: rgba(247, 213, 178, 0.06);
+        border: 1px solid rgba(247, 213, 178, 0.12);
+        border-radius: 20px;
+        padding: 6px 12px;
+        font-size: 12px;
+        color: var(--peach);
+        font-weight: 550;
+      }
+      .action-link-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(25, 25, 24, 0.45);
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 14px;
+        padding: 14px 18px;
+        min-height: 54px;
+        transition: all 0.2s;
+        cursor: pointer;
+        margin-bottom: 8px;
+      }
+      .action-link-card:hover {
+        background: rgba(248, 245, 239, 0.08);
+      }
+
       /* ── Bottom navigation ── */
       .bottom-nav {
         position: fixed;
@@ -2153,6 +2255,31 @@
       /* ═══════════════════════════════════════════════
          PROFILE DASHBOARD
          ═══════════════════════════════════════════════ */
+      async function updateSetting(key, value) {
+        state[key] = value;
+        let prefs = {};
+        try {
+          prefs = JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
+        } catch (_) {}
+        
+        if (key === 'interests') {
+          prefs.interests = value;
+        } else {
+          prefs[key] = value;
+        }
+        
+        localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
+        
+        if (window.EchooAuth?.saveOnboardingProfile) {
+          try {
+            await window.EchooAuth.saveOnboardingProfile(prefs);
+            console.log(`Saved settings: ${key} = ${value}`);
+          } catch (e) {
+            console.warn("Failed to update profile to Supabase:", e);
+          }
+        }
+      }
+
       function showProfileDashboard(prefs) {
         authPanel.style.display = "none";
         onboarding.classList.remove("visible");
@@ -2171,61 +2298,70 @@
         document.getElementById("profile-name").textContent = name;
         document.getElementById("profile-email").textContent = email;
 
-        const budgetMap = {
-          $: "Low-key",
-          $$: "Curated",
-          $$$: "Premium",
-        };
-        const energyMap = {
-          chill: "Chill and intimate",
-          hype: "Active and social",
-          curious: "Open-ended",
-        };
-        const toneMap = {
-          direct: "Direct",
-          detailed: "Contextual",
-        };
+        const currentCity = prefs?.city || state.city || "Ontario";
+        const currentBudget = prefs?.budget || state.budget || "$";
+        const currentEnergy = prefs?.energy || state.energy || "chill";
+        const currentTone = prefs?.tone || state.tone || "direct";
+        const interests = prefs?.interests || Array.from(state.vibes) || [];
 
-        const interestCount = prefs?.interests?.length || 0;
-
-        const cards = [
-          { label: "City", value: prefs?.city || "Ontario" },
-          {
-            label: "Budget",
-            value: budgetMap[prefs?.budget] || prefs?.budget || "$",
-          },
-          {
-            label: "Energy",
-            value: energyMap[prefs?.energy] || prefs?.energy || "Chill",
-          },
-          {
-            label: "Interests",
-            value: interestCount
-              ? `${interestCount} signal${interestCount !== 1 ? "s" : ""}`
-              : "None yet",
-          },
-          {
-            label: "Tone",
-            value: toneMap[prefs?.tone] || prefs?.tone || "Direct",
-          },
-        ];
-
-        let cardsHtml = cards
-          .map(
-            (card) => `
-          <div class="profile-card">
-            <span class="profile-card-label">${card.label}</span>
-            <span class="profile-card-value">${card.value}</span>
+        let dashboardHtml = `
+          <div class="settings-section-title">Account Preferences</div>
+          
+          <div class="settings-row">
+            <div class="settings-row-header">
+              <span class="settings-label">City Base</span>
+            </div>
+            <input type="text" class="settings-input" id="settings-city-input" value="${escapeHtml(currentCity)}">
           </div>
-        `,
-          )
-          .join("");
 
-        cardsHtml += `
-          <a href="compliance.html" class="profile-card" style="border: 1px dashed var(--peach); background: rgba(247, 213, 178, 0.04); display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 14px 18px; border-radius: 14px; transition: background 180ms ease;">
-            <span class="profile-card-label" style="color: var(--peach);">Legal Compliance</span>
-            <span class="profile-card-value" style="color: var(--peach); display: flex; align-items: center; gap: 4px;">
-              Checklist
+          <div class="settings-row">
+            <div class="settings-row-header">
+              <span class="settings-label">Budget Range</span>
+            </div>
+            <div class="settings-segmented">
+              <button class="settings-segment-btn ${currentBudget === '$' ? 'active' : ''}" data-value="$">$</button>
+              <button class="settings-segment-btn ${currentBudget === '$$' ? 'active' : ''}" data-value="$$">$$</button>
+              <button class="settings-segment-btn ${currentBudget === '$$$' ? 'active' : ''}" data-value="$$$">$$$</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-header">
+              <span class="settings-label">Energy Level</span>
+            </div>
+            <div class="settings-segmented">
+              <button class="settings-segment-btn ${currentEnergy === 'chill' ? 'active' : ''}" data-value="chill">Chill</button>
+              <button class="settings-segment-btn ${currentEnergy === 'hype' ? 'active' : ''}" data-value="hype">Hype</button>
+              <button class="settings-segment-btn ${currentEnergy === 'curious' ? 'active' : ''}" data-value="curious">Curious</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-header">
+              <span class="settings-label">AI Planning Tone</span>
+            </div>
+            <div class="settings-segmented">
+              <button class="settings-segment-btn ${currentTone === 'direct' ? 'active' : ''}" data-value="direct">Direct</button>
+              <button class="settings-segment-btn ${currentTone === 'detailed' ? 'active' : ''}" data-value="detailed">Detailed</button>
+            </div>
+          </div>
+
+          <div class="settings-section-title">My Vibe Signals</div>
+          <div style="background: rgba(25, 25, 24, 0.45); border: 1px solid rgba(248, 245, 239, 0.06); border-radius: 14px; padding: 16px; margin-bottom: 12px;">
+            <div class="settings-tags">
+              ${interests.length ? interests.map(i => `<span class="settings-tag">${escapeHtml(i)}</span>`).join('') : '<span style="color:var(--muted); font-size:13px;">No vibes configured.</span>'}
+            </div>
+            <button class="signout-btn" id="refine-vibes-btn" type="button" style="margin-top: 16px; border-color: var(--peach); color: var(--peach); background: rgba(247, 213, 178, 0.04);">
+              Refine Vibe Profile
+            </button>
+          </div>
+
+          <div class="settings-section-title">Resources</div>
+          
+          <a href="compliance.html" class="action-link-card">
+            <span class="profile-card-label" style="color: var(--peach); text-transform: none; font-size: 13px; font-weight: 600;">Legal Compliance Checklist</span>
+            <span style="color: var(--peach); display: flex; align-items: center; gap: 4px; font-size: 13px;">
+              View
               <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;" aria-hidden="true">
                 <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -2233,7 +2369,48 @@
           </a>
         `;
 
-        document.getElementById("profile-cards").innerHTML = cardsHtml;
+        const container = document.getElementById("profile-cards");
+        container.innerHTML = dashboardHtml;
+
+        // Bind interactive event listeners
+        const cityInput = document.getElementById("settings-city-input");
+        if (cityInput) {
+          cityInput.addEventListener("change", (e) => {
+            updateSetting("city", e.target.value);
+          });
+          cityInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              cityInput.blur();
+            }
+          });
+        }
+
+        // Segmented controls
+        container.querySelectorAll(".settings-segmented").forEach((segmented) => {
+          segmented.addEventListener("click", (e) => {
+            const btn = e.target.closest(".settings-segment-btn");
+            if (!btn) return;
+            
+            const labelEl = segmented.closest(".settings-row").querySelector(".settings-label");
+            const key = labelEl.textContent.toLowerCase().includes("budget") ? "budget" :
+                        labelEl.textContent.toLowerCase().includes("energy") ? "energy" : "tone";
+            
+            segmented.querySelectorAll(".settings-segment-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            
+            updateSetting(key, btn.dataset.value);
+          });
+        });
+
+        // Refine vibes button
+        const refineBtn = document.getElementById("refine-vibes-btn");
+        if (refineBtn) {
+          refineBtn.addEventListener("click", () => {
+            profileDashboard.classList.remove("visible");
+            onboarding.classList.add("visible");
+            renderObStep(0);
+          });
+        }
       }
 
       document
@@ -2272,8 +2449,20 @@
         if (state.userName) nameInput.value = state.userName;
         if (state.userEmail) emailInput.value = state.userEmail;
 
+        // Copy preferences to local onboarding state to support Refine Vibe
+        if (profileState.preferences) {
+          Object.assign(state, profileState.preferences);
+          if (Array.isArray(profileState.preferences.interests)) {
+            state.vibes = new Set(profileState.preferences.interests);
+          }
+        }
+
         if (profileState.ok) {
-          redirectAfterAuth(profileState.preferences);
+          if (authParams.has("next")) {
+            redirectAfterAuth(profileState.preferences);
+          } else {
+            showProfileDashboard(profileState.preferences);
+          }
           return;
         }
         setStatus("Finish onboarding to unlock Echoo planning.");
