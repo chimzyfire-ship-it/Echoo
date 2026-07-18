@@ -926,6 +926,42 @@
           font-size: 12px;
         }
       }
+      /* ── Floating Action Button (FAB) ── */
+      .fab-chat {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        z-index: 25;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(25, 25, 24, 0.85);
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(12px);
+        transition: all 0.2s ease;
+        animation: fab-pulse 2s ease-in-out 1s 1;
+      }
+      .fab-chat:hover {
+        transform: scale(1.08);
+        border-color: var(--peach);
+        box-shadow: 0 8px 28px rgba(247, 213, 178, 0.15);
+      }
+      .fab-chat svg {
+        width: 26px;
+        height: 26px;
+        fill: none;
+        stroke: var(--peach);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      @keyframes fab-pulse {
+        0%, 100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+        50% { box-shadow: 0 8px 28px rgba(247, 213, 178, 0.25); }
+      }
     </style>
   </head>
   <body>
@@ -1176,6 +1212,16 @@
           </footer>
         </main>
       </div>
+
+      <!-- Floating Action Button for AI Chat -->
+      <a class="fab-chat" href="app.html" aria-label="Open AI chat">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
+          <circle cx="8.5" cy="10.5" r="1" />
+          <circle cx="12" cy="10.5" r="1" />
+          <circle cx="15.5" cy="10.5" r="1" />
+        </svg>
+      </a>
 
       <nav class="bottom-nav" aria-label="Main navigation">
         <a class="nav-link active" href="index.html" aria-current="page">

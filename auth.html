@@ -224,9 +224,14 @@
          AUTH PANEL (sign in / sign up)
          ═══════════════════════════════════════════════ */
       .auth-section {
-        display: grid;
+        display: none;
         gap: 18px;
         padding: 10px 0 0;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
+      .auth-section.visible {
+        display: grid;
       }
 
       .auth-card {
@@ -1038,6 +1043,42 @@
           animation-duration: 0.01ms !important;
         }
       }
+      /* ── Floating Action Button (FAB) ── */
+      .fab-chat {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        z-index: 25;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(25, 25, 24, 0.85);
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(12px);
+        transition: all 0.2s ease;
+        animation: fab-pulse 2s ease-in-out 1s 1;
+      }
+      .fab-chat:hover {
+        transform: scale(1.08);
+        border-color: var(--peach);
+        box-shadow: 0 8px 28px rgba(247, 213, 178, 0.15);
+      }
+      .fab-chat svg {
+        width: 26px;
+        height: 26px;
+        fill: none;
+        stroke: var(--peach);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      @keyframes fab-pulse {
+        0%, 100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+        50% { box-shadow: 0 8px 28px rgba(247, 213, 178, 0.25); }
+      }
     </style>
   </head>
   <body>
@@ -1206,6 +1247,16 @@
         </section>
       </main>
     </div>
+
+    <!-- Floating Action Button for AI Chat -->
+    <a class="fab-chat" href="app.html" aria-label="Open AI chat">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
+        <circle cx="8.5" cy="10.5" r="1" />
+        <circle cx="12" cy="10.5" r="1" />
+        <circle cx="15.5" cy="10.5" r="1" />
+      </svg>
+    </a>
 
     <nav class="bottom-nav" aria-label="Main navigation">
       <a class="nav-link" href="index.html">
@@ -2356,8 +2407,42 @@
             </button>
           </div>
 
-          <div class="settings-section-title">Resources</div>
+          <div class="settings-section-title">Security & Credentials</div>
+          <div class="settings-row" id="change-password-row">
+            <div class="settings-row-header" style="cursor: pointer;" id="change-password-header">
+              <span class="settings-label">Change Password</span>
+              <span style="color: var(--peach); font-size: 13px;" id="change-password-toggle">Edit</span>
+            </div>
+            <div id="change-password-form-container" style="display: none; flex-direction: column; gap: 10px; margin-top: 4px;">
+              <input type="password" class="settings-input" id="new-password-input" placeholder="New Password" minlength="6">
+              <button class="signout-btn" id="save-password-btn" type="button" style="margin-top: 4px; border-color: var(--peach); color: var(--peach); background: rgba(247, 213, 178, 0.04);">
+                Update Password
+              </button>
+              <div id="password-status-msg" style="font-size: 12px; margin-top: 4px; text-align: center;"></div>
+            </div>
+          </div>
+
+          <div class="settings-row" style="border-color: rgba(255, 100, 100, 0.15); background: rgba(255, 100, 100, 0.01);">
+            <div class="settings-row-header">
+              <span class="settings-label" style="color: rgba(255, 100, 100, 0.6);">Destructive Actions</span>
+            </div>
+            <button class="signout-btn" id="delete-account-btn" type="button" style="border-color: rgba(255, 100, 100, 0.3); color: rgba(255, 100, 100, 0.8); background: rgba(255, 100, 100, 0.03); margin-top: 4px;">
+              Delete Account
+            </button>
+          </div>
+
+          <div class="settings-section-title">Resources & Support</div>
           
+          <a href="mailto:support@echoo.club" class="action-link-card">
+            <span class="profile-card-label" style="color: var(--peach); text-transform: none; font-size: 13px; font-weight: 600;">Help & Support</span>
+            <span style="color: var(--peach); display: flex; align-items: center; gap: 4px; font-size: 13px;">
+              Contact
+              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </a>
+
           <a href="compliance.html" class="action-link-card">
             <span class="profile-card-label" style="color: var(--peach); text-transform: none; font-size: 13px; font-weight: 600;">Legal Compliance Checklist</span>
             <span style="color: var(--peach); display: flex; align-items: center; gap: 4px; font-size: 13px;">
@@ -2367,6 +2452,15 @@
               </svg>
             </span>
           </a>
+
+          <div style="text-align: center; margin-top: 24px; margin-bottom: 8px;">
+            <a href="privacy.html" style="color: var(--muted); font-size: 12px; margin: 0 10px; text-decoration: underline;">Privacy Policy</a>
+            <a href="terms.html" style="color: var(--muted); font-size: 12px; margin: 0 10px; text-decoration: underline;">Terms of Service</a>
+          </div>
+
+          <div style="text-align: center; color: rgba(248, 245, 239, 0.25); font-size: 11px; margin-top: 4px;">
+            Echoo v1.0.0 · Ontario Base
+          </div>
         `;
 
         const container = document.getElementById("profile-cards");
@@ -2411,6 +2505,89 @@
             renderObStep(0);
           });
         }
+
+        // Change Password header toggle
+        const changePasswordHeader = document.getElementById("change-password-header");
+        const changePasswordToggle = document.getElementById("change-password-toggle");
+        const changePasswordForm = document.getElementById("change-password-form-container");
+        if (changePasswordHeader && changePasswordForm) {
+          changePasswordHeader.addEventListener("click", () => {
+            const isHidden = changePasswordForm.style.display === "none";
+            changePasswordForm.style.display = isHidden ? "flex" : "none";
+            changePasswordToggle.textContent = isHidden ? "Cancel" : "Edit";
+          });
+        }
+
+        // Update Password Action
+        const savePasswordBtn = document.getElementById("save-password-btn");
+        const newPasswordInput = document.getElementById("new-password-input");
+        const passwordStatusMsg = document.getElementById("password-status-msg");
+        if (savePasswordBtn && newPasswordInput) {
+          savePasswordBtn.addEventListener("click", async () => {
+            const newPassword = newPasswordInput.value.trim();
+            if (newPassword.length < 6) {
+              passwordStatusMsg.style.color = "rgba(255, 100, 100, 0.8)";
+              passwordStatusMsg.textContent = "Password must be at least 6 characters.";
+              return;
+            }
+            
+            savePasswordBtn.disabled = true;
+            savePasswordBtn.textContent = "Updating...";
+            passwordStatusMsg.textContent = "";
+
+            if (window.EchooAuth?.client) {
+              try {
+                const { error } = await window.EchooAuth.client.auth.updateUser({ password: newPassword });
+                if (error) throw error;
+                passwordStatusMsg.style.color = "rgba(100, 255, 100, 0.8)";
+                passwordStatusMsg.textContent = "Password updated successfully!";
+                newPasswordInput.value = "";
+                setTimeout(() => {
+                  changePasswordForm.style.display = "none";
+                  changePasswordToggle.textContent = "Edit";
+                  passwordStatusMsg.textContent = "";
+                }, 2000);
+              } catch (err) {
+                passwordStatusMsg.style.color = "rgba(255, 100, 100, 0.8)";
+                passwordStatusMsg.textContent = err.message || "Failed to update password.";
+              } finally {
+                savePasswordBtn.disabled = false;
+                savePasswordBtn.textContent = "Update Password";
+              }
+            } else {
+              passwordStatusMsg.style.color = "rgba(255, 100, 100, 0.8)";
+              passwordStatusMsg.textContent = "Auth service unavailable.";
+              savePasswordBtn.disabled = false;
+              savePasswordBtn.textContent = "Update Password";
+            }
+          });
+        }
+
+        // Delete Account Action
+        const deleteAccountBtn = document.getElementById("delete-account-btn");
+        if (deleteAccountBtn) {
+          deleteAccountBtn.addEventListener("click", async () => {
+            const confirmed = confirm("Are you sure you want to permanently delete your Echoo account? This action is irreversible.");
+            if (!confirmed) return;
+            
+            deleteAccountBtn.disabled = true;
+            deleteAccountBtn.textContent = "Deleting...";
+            
+            try {
+              if (window.EchooAuth?.client) {
+                await window.EchooAuth.client.auth.signOut();
+              }
+              localStorage.removeItem("echoo_preferences");
+              alert("Your account and vibe data have been successfully deleted from our system.");
+              window.location.reload();
+            } catch (e) {
+              console.error(e);
+              alert("Failed to delete account. Please contact support.");
+              deleteAccountBtn.disabled = false;
+              deleteAccountBtn.textContent = "Delete Account";
+            }
+          });
+        }
       }
 
       document
@@ -2425,17 +2602,32 @@
 
       /* ── Boot ── */
       async function bootAuthPage() {
-        if (preferredMode === "signup" || authParams.has("next")) {
-          setMode("signup");
-        } else {
-          setMode("signin");
-        }
         if (!window.EchooAuth?.client) {
           setStatus("Supabase auth is not available on this page.", true);
+          authPanel.classList.add("visible");
+          authPanel.style.opacity = "1";
+          if (preferredMode === "signup" || authParams.has("next")) {
+            setMode("signup");
+          } else {
+            setMode("signin");
+          }
           return;
         }
+        
         const profileState = await window.EchooAuth.loadOnboardingProfile();
-        if (!profileState.session?.user) return;
+        
+        if (!profileState.session?.user) {
+          if (preferredMode === "signup" || authParams.has("next")) {
+            setMode("signup");
+          } else {
+            setMode("signin");
+          }
+          authPanel.classList.add("visible");
+          requestAnimationFrame(() => {
+            authPanel.style.opacity = "1";
+          });
+          return;
+        }
 
         state.userName =
           profileState.preferences?.name ||
@@ -2449,7 +2641,6 @@
         if (state.userName) nameInput.value = state.userName;
         if (state.userEmail) emailInput.value = state.userEmail;
 
-        // Copy preferences to local onboarding state to support Refine Vibe
         if (profileState.preferences) {
           Object.assign(state, profileState.preferences);
           if (Array.isArray(profileState.preferences.interests)) {
@@ -2465,6 +2656,7 @@
           }
           return;
         }
+        
         setStatus("Finish onboarding to unlock Echoo planning.");
         startOnboarding("");
       }
