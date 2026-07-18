@@ -962,6 +962,14 @@
         stroke-linejoin: round;
         filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.22));
       }
+      .fab-chat img {
+        width: 58px;
+        height: 58px;
+        max-width: none;
+        object-fit: cover;
+        mix-blend-mode: multiply;
+        transform: scale(1.12);
+      }
       @keyframes fab-pulse {
         0%, 100% { box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.24), 0 10px 28px rgba(20, 47, 132, 0.52); }
         50% { box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 10px 34px rgba(59, 106, 245, 0.7); }
@@ -1218,9 +1226,7 @@
       </div>
 
       <a class="fab-chat" href="app.html" aria-label="Open Echo A.I.">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M7 8v8M12 5v14M17 8v8" />
-        </svg>
+        <img src="assets/echoo-waitlist-logo.jpg" alt="" />
       </a>
 
       <nav class="bottom-nav" aria-label="Main navigation">

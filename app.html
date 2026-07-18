@@ -1731,39 +1731,33 @@
       }
 
       /* ── Echo A.I. arrival state ── */
+      body { background: #0b1426; }
       .topbar { position: absolute; inset: 0 0 auto; z-index: 2; background: transparent; border: 0; opacity: 0; pointer-events: none; }
       .bottom-nav { display: none; }
-      .shell.companion-landing {
-        width: min(100vw, 430px); min-height: 100svh; display: flex; flex-direction: column; justify-content: center;
-        padding: max(28px, env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom)); overflow: hidden;
-        background: radial-gradient(ellipse 90% 40% at 50% 103%, rgba(40, 90, 209, 0.55), transparent 72%), radial-gradient(ellipse 65% 28% at 52% 88%, rgba(80, 44, 179, 0.22), transparent 74%), #030304;
-      }
-      .companion-landing::before { position: absolute; inset: 0; content: ""; pointer-events: none; background: radial-gradient(ellipse 74% 42% at 50% 46%, transparent 20%, rgba(0, 0, 0, 0.4) 100%); }
-      .companion-welcome { position: relative; z-index: 1; display: flex; flex: 1; flex-direction: column; justify-content: center; align-items: center; gap: 26px; width: 100%; margin: 0; text-align: center; }
-      .echo-mark { position: relative; display: grid; width: 76px; aspect-ratio: 1; place-items: center; filter: drop-shadow(0 10px 22px rgba(65, 104, 255, 0.22)); animation: mark-breathe 4s ease-in-out infinite; }
-      .echo-mark::before { position: absolute; width: 64px; height: 64px; border-radius: 50%; content: ""; background: radial-gradient(circle, rgba(130, 183, 255, 0.26), transparent 68%); filter: blur(7px); }
-      .echo-mark svg { position: relative; width: 58px; height: 58px; }
-      @keyframes mark-breathe { 50% { transform: translateY(-7px) scale(1.06); } }
-      .companion-welcome h1 { margin: 0; color: #f7f7f8; font-size: clamp(42px, 12.8vw, 58px); font-weight: 720; letter-spacing: -0.055em; line-height: 0.98; }
-      .companion-welcome p { max-width: 270px; margin: -12px 0 0; color: rgba(248, 245, 239, 0.52); font-size: 14px; line-height: 1.45; }
-      .companion-composer { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 78px; padding: 9px 10px 9px 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 999px; background: rgba(31, 31, 38, 0.93); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 18px 44px rgba(0, 0, 0, 0.28); backdrop-filter: blur(22px); transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
+      .shell.companion-landing { width: 100%; min-height: 100svh; display: flex; padding: max(24px, env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom)); overflow: hidden; background: radial-gradient(ellipse 90% 42% at 50% 105%, rgba(32, 54, 104, 0.72), transparent 74%), radial-gradient(circle at 50% 44%, rgba(247, 213, 178, 0.055), transparent 24rem), #0b1426; opacity: 1; transform: scale(1); transition: opacity 280ms ease, transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+      body.chat-open .companion-landing { opacity: 0; transform: scale(0.985); pointer-events: none; }
+      .companion-landing::before { position: absolute; inset: 0; content: ""; pointer-events: none; background: linear-gradient(180deg, rgba(1, 5, 14, 0.28), transparent 38%, rgba(1, 5, 14, 0.2)); }
+      .companion-welcome { position: relative; z-index: 1; display: flex; flex: 1; flex-direction: column; justify-content: center; align-items: center; gap: 18px; width: 100%; margin: 0; text-align: center; }
+      .echo-mark { display: grid; width: 82px; height: 82px; place-items: center; overflow: hidden; border-radius: 24px; background: #0b1426; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24); animation: mark-breathe 4s ease-in-out infinite; }
+      .echo-mark img { width: 104px; height: 104px; max-width: none; object-fit: cover; mix-blend-mode: multiply; transform: scale(1.08); }
+      @keyframes mark-breathe { 50% { transform: translateY(-5px); } }
+      .companion-welcome h1 { margin: 0; color: #f8f5ef; font-size: clamp(32px, 9vw, 42px); font-weight: 690; letter-spacing: -0.045em; line-height: 1; }
+      .companion-composer { position: relative; z-index: 1; width: 100%; }
       .ask-card.companion-composer { margin-top: auto; padding: 0; border: 0; background: transparent; box-shadow: none; }
-      .companion-composer form { display: flex; grid-template-columns: none; align-items: center; gap: 10px; width: 100%; min-height: 78px; padding: 9px 10px 9px 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 999px; background: rgba(31, 31, 38, 0.93); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 18px 44px rgba(0, 0, 0, 0.28); backdrop-filter: blur(22px); }
-      .companion-composer:focus-within { border-color: rgba(116, 150, 255, 0.58); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 4px rgba(76, 116, 255, 0.13); transform: translateY(-2px); }
-      .companion-add, .companion-voice, .companion-submit { display: grid; flex: 0 0 auto; place-items: center; border: 0; color: #f4f3f4; background: transparent; }
-      .companion-add { width: 42px; height: 42px; }
-      .companion-add::before, .companion-add::after { position: absolute; width: 28px; height: 3px; border-radius: 3px; content: ""; background: currentColor; }
+      .companion-composer form { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 62px; padding: 6px 7px 6px 14px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 999px; background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055); backdrop-filter: blur(16px); transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease; }
+      .companion-composer form:focus-within { border-color: rgba(247, 213, 178, 0.45); background: rgba(255, 255, 255, 0.085); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 3px rgba(247, 213, 178, 0.08); }
+      .companion-add, .companion-submit { display: grid; flex: 0 0 auto; place-items: center; border: 0; color: #f8f5ef; background: transparent; }
+      .companion-add { position: relative; width: 34px; height: 34px; opacity: 0.9; }
+      .companion-add::before, .companion-add::after { position: absolute; width: 20px; height: 2px; border-radius: 2px; content: ""; background: currentColor; }
       .companion-add::after { transform: rotate(90deg); }
-      .companion-composer input { flex: 1; min-width: 0; border: 0; outline: 0; color: #f8f5ef; background: transparent; font-size: clamp(18px, 5vw, 22px); font-weight: 470; }
-      .companion-composer input::placeholder { color: rgba(248, 245, 239, 0.53); }
-      .companion-voice { width: 36px; height: 48px; }
-      .companion-voice svg { width: 28px; height: 28px; }
-      .companion-submit { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(145deg, #294dbe, #172b75); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 8px 18px rgba(15, 41, 125, 0.46); transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 180ms ease; }
-      .companion-submit:hover { transform: scale(1.08); filter: brightness(1.13); }
-      .companion-submit svg { width: 32px; height: 32px; }
+      .companion-composer input { flex: 1; min-width: 0; border: 0; outline: 0; color: #ffffff; background: transparent; font-size: 16px; font-weight: 480; }
+      .companion-composer input::placeholder { color: #6a7585; }
+      .companion-submit { width: 48px; height: 48px; border-radius: 50%; color: #1a1a1a; background: linear-gradient(135deg, #f7d5b2, #e0b88c); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22); transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 180ms ease; }
+      .companion-submit:hover { transform: scale(1.06); filter: brightness(1.04); }
+      .companion-submit svg { width: 22px; height: 22px; }
       .landing-accessibility-copy, .landing-surprise { display: none; }
       .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-      @media (max-width: 360px) { .companion-composer { min-height: 68px; padding-left: 10px; gap: 4px; } .companion-submit { width: 48px; height: 48px; } .companion-add { width: 36px; } .companion-welcome { gap: 20px; } }
+      @media (max-width: 360px) { .shell.companion-landing { padding-inline: 16px; } .companion-welcome h1 { font-size: 32px; } .companion-composer form { min-height: 58px; } .companion-submit { width: 44px; height: 44px; } }
     </style>
     <link
       rel="stylesheet"
@@ -1784,7 +1778,7 @@
       <section class="welcome companion-welcome">
         <div>
           <div class="echo-mark" aria-hidden="true">
-            <svg viewBox="0 0 64 64" fill="none"><path d="M32 3c4.5 18.7 10.3 25.5 29 29-18.7 3.5-25.3 10.3-29 29C28.3 42.3 21.7 35.5 3 32 21.7 28.5 28.3 21.7 32 3Z" fill="url(#echo-mark-gradient)"/><defs><linearGradient id="echo-mark-gradient" x1="9" y1="8" x2="57" y2="57" gradientUnits="userSpaceOnUse"><stop stop-color="#F1A74B"/><stop offset=".28" stop-color="#FD5A69"/><stop offset=".55" stop-color="#5585FF"/><stop offset=".78" stop-color="#75DE7C"/><stop offset="1" stop-color="#1EAD94"/></linearGradient></defs></svg>
+            <img src="assets/echoo-waitlist-logo.jpg" alt="" />
           </div>
           <h1 id="companion-title">Hear The City</h1>
           <span class="landing-accessibility-copy" id="headline" aria-hidden="true"></span>
@@ -1805,8 +1799,7 @@
             <button class="companion-add" type="button" aria-label="Add details"></button>
             <label class="sr-only" for="plan-query">Ask Echo A.I. for a plan</label>
             <input id="plan-query" autocomplete="off" placeholder="Ask for a plan" />
-            <button class="companion-voice" type="button" aria-label="Use voice input"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/></svg></button>
-            <button class="companion-submit" type="submit" aria-label="Create plan"><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M11 11v14M18 7v22M25 11v14"/></svg></button>
+            <button class="companion-submit" type="submit" aria-label="Create plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           </form>
           <button class="ghost landing-surprise" id="surprise">Surprise me</button>
         </div>
