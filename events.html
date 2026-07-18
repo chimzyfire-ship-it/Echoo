@@ -404,7 +404,7 @@
         position: relative;
         display: grid;
         grid-template-columns: 116px 1fr;
-        min-height: 148px;
+        min-height: 116px;
         overflow: hidden;
         border: 1px solid rgba(248, 245, 239, 0.11);
         border-radius: 19px;
@@ -528,16 +528,16 @@
         font-weight: 800;
         letter-spacing: 0.04em;
       }
-      .trending-fire-badge {
+      .trending-minimalist {
         flex: 0 0 auto;
-        padding: 4px 6px;
-        border-radius: 6px;
-        background: rgba(255, 110, 64, 0.16);
-        color: #ffaa88;
-        font-size: 9px;
-        font-weight: 760;
-        letter-spacing: 0.04em;
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
+      }
+      .trending-rank-badge + .trending-minimalist {
+        margin-left: 6px;
       }
       .card-body h3 {
         margin: 0;
@@ -1270,16 +1270,14 @@
         const community = item.community;
         const rating = community?.ratingAverage
           ? `${Number(community.ratingAverage).toFixed(1)} Echoo rating`
-          : "New to Echoo";
+          : "";
         const distance = item.distanceMeters
           ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away`
-          : item.city || city;
-        const feature = item.features?.[0]
-          ? item.features[0].replace(/_/g, " ")
-          : item.category || "Local pick";
+          : "";
         let badge = "";
         if (activeQuery === "trending") {
-          badge = `<span class="trending-rank-badge">#${index + 1}</span><span class="trending-fire-badge">🔥 Trending</span>`;
+          const rank = index < 5 ? `<span class="trending-rank-badge">#${index + 1}</span>` : "";
+          badge = `${rank}<span class="trending-minimalist">Trending</span>`;
         } else {
           badge =
             item.source === "google_places"
@@ -1288,7 +1286,14 @@
                 ? `<span class="hot-badge">Hot</span>`
                 : "";
         }
-        return `<article class="explore-card" tabindex="0" data-index="${index}"><div class="card-art" data-kind="${esc(categoryArt(item))}"><span class="card-art-label">${esc(feature)}</span></div><div class="card-body"><div class="card-top"><span class="card-kicker">${esc(item.category || "place")}</span>${badge}</div><h3>${esc(item.title)}</h3><p>${esc(item.description || "A place worth opening for the details.")}</p><div class="card-meta"><span>${esc(rating)}</span><span>${esc(distance)}</span></div>${item.source === "google_places" ? `<div class="provider-note">Google Maps</div>` : ""}</div></article>`;
+        
+        const ratingSpan = rating && rating !== "New to Echoo" ? `<span>${esc(rating)}</span>` : "";
+        const distanceSpan = distance ? `<span>${esc(distance)}</span>` : "";
+        const metaHtml = (ratingSpan || distanceSpan)
+          ? `<div class="card-meta">${ratingSpan}${distanceSpan}</div>`
+          : "";
+
+        return `<article class="explore-card" tabindex="0" data-index="${index}"><div class="card-art" data-kind="${esc(categoryArt(item))}"></div><div class="card-body"><div class="card-top"><span class="card-kicker">${esc(item.category || "place")}</span>${badge}</div><h3>${esc(item.title)}</h3><p>${esc(item.description || "A place worth opening for the details.")}</p>${metaHtml}</div></article>`;
       }
       function renderItems() {
         section.setAttribute("aria-busy", "false");
