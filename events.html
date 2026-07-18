@@ -404,7 +404,7 @@
         position: relative;
         display: grid;
         grid-template-columns: 116px 1fr;
-        min-height: 148px;
+        min-height: 116px;
         overflow: hidden;
         border: 1px solid rgba(248, 245, 239, 0.11);
         border-radius: 19px;
@@ -517,6 +517,27 @@
       .hot-badge {
         background: rgba(255, 137, 88, 0.16);
         color: #ffc09d;
+      }
+      .trending-rank-badge {
+        flex: 0 0 auto;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: var(--peach);
+        color: var(--deep);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
+      .trending-minimalist {
+        flex: 0 0 auto;
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .trending-rank-badge + .trending-minimalist {
+        margin-left: 6px;
       }
       .card-body h3 {
         margin: 0;
@@ -925,6 +946,42 @@
           transition-duration: 0.01ms !important;
         }
       }
+      /* ── Floating Action Button (FAB) ── */
+      .fab-chat {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        z-index: 25;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(25, 25, 24, 0.85);
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(12px);
+        transition: all 0.2s ease;
+        animation: fab-pulse 2s ease-in-out 1s 1;
+      }
+      .fab-chat:hover {
+        transform: scale(1.08);
+        border-color: var(--peach);
+        box-shadow: 0 8px 28px rgba(247, 213, 178, 0.15);
+      }
+      .fab-chat svg {
+        width: 26px;
+        height: 26px;
+        fill: none;
+        stroke: var(--peach);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      @keyframes fab-pulse {
+        0%, 100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+        50% { box-shadow: 0 8px 28px rgba(247, 213, 178, 0.25); }
+      }
     </style>
   </head>
   <body>
@@ -978,7 +1035,7 @@
           <div class="location-line" id="location-note">Exploring Ontario</div>
         </section>
         <div class="chips" id="chips" aria-label="Explore categories">
-          <button class="chip active" data-query="">For you</button
+          <button class="chip active" data-query="trending">Top Trending</button
           ><button class="chip" data-query="rooftop view">Rooftop views</button
           ><button class="chip" data-query="date night">Date night</button
           ><button class="chip" data-query="live music">Live music</button
@@ -1011,6 +1068,16 @@
           </button>
         </section>
       </main>
+      <!-- Floating Action Button for AI Chat -->
+      <a class="fab-chat" href="app.html" aria-label="Open AI chat">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
+          <circle cx="8.5" cy="10.5" r="1" />
+          <circle cx="12" cy="10.5" r="1" />
+          <circle cx="15.5" cy="10.5" r="1" />
+        </svg>
+      </a>
+
       <nav class="bottom-nav" aria-label="Main navigation">
         <a class="nav-link" href="index.html"
           ><svg viewBox="0 0 24 24">
@@ -1084,8 +1151,9 @@
         mapPins = document.getElementById("map-pins"),
         loadMore = document.getElementById("load-more"),
         section = document.getElementById("explore-section");
-      let activeQuery = params.get("query") || "",
+      let activeQuery = params.get("query") || "trending",
         nextCursor = null,
+        nextLivePageToken = null,
         items = [],
         view = "list",
         suggestionTimer;
@@ -1121,24 +1189,157 @@
             `<article class="explore-card skeleton"><div class="card-art"></div><div class="card-body"><span class="sk-line short"></span><span class="sk-line big"></span><span class="sk-line medium"></span><span class="sk-line short"></span></div></article>`,
         ).join("");
       }
+      const trendingPlaces = [
+        {
+          title: "CN Tower & EdgeWalk",
+          category: "Landmark",
+          description: "Canada's iconic national tower offering panoramic views of Toronto, fine dining, and the thrill of the EdgeWalk.",
+          latitude: 43.6426,
+          longitude: -79.3871,
+          community: { ratingAverage: 4.8, isHot: true, verifiedVisitCount: 1420 },
+          features: ["rooftop_view", "landmark", "scenic"],
+          source: "echoo"
+        },
+        {
+          title: "Ripley's Aquarium of Canada",
+          category: "Experience",
+          description: "Stunning underwater museum featuring a walk-through lagoon, jellyfish displays, and interactive touch pools.",
+          latitude: 43.6422,
+          longitude: -79.3860,
+          community: { ratingAverage: 4.7, isHot: true, verifiedVisitCount: 980 },
+          features: ["family_friendly", "indoor", "popular"],
+          source: "echoo"
+        },
+        {
+          title: "St. Lawrence Market",
+          category: "Food Hall",
+          description: "Historic market dating back to 1803, world-famous for its peameal bacon sandwiches, fresh local produce, and artisan vendors.",
+          latitude: 43.6487,
+          longitude: -79.3715,
+          community: { ratingAverage: 4.6, isHot: true, verifiedVisitCount: 1205 },
+          features: ["local_eats", "historic", "shopping"],
+          source: "echoo"
+        },
+        {
+          title: "Distillery Historic District",
+          category: "Arts & Culture",
+          description: "Charming pedestrian-only village set in 19th-century industrial buildings, filled with galleries, boutiques, and cafes.",
+          latitude: 43.6503,
+          longitude: -79.3596,
+          community: { ratingAverage: 4.7, isHot: false, verifiedVisitCount: 850 },
+          features: ["historic", "scenic", "artisan"],
+          source: "echoo"
+        },
+        {
+          title: "Royal Ontario Museum (ROM)",
+          category: "Museum",
+          description: "Art, culture, and natural history museum showcasing world-class exhibitions, dinosaur skeletons, and the iconic Crystal entrance.",
+          latitude: 43.6677,
+          longitude: -79.3948,
+          community: { ratingAverage: 4.5, isHot: false, verifiedVisitCount: 710 },
+          features: ["museum", "landmark", "indoor"],
+          source: "echoo"
+        },
+        {
+          title: "Kensington Market",
+          category: "Neighborhood",
+          description: "Vibrant, multicultural neighborhood known for its bohemian vibe, vintage clothing stores, street art, and eclectic food stalls.",
+          latitude: 43.6547,
+          longitude: -79.4007,
+          community: { ratingAverage: 4.8, isHot: true, verifiedVisitCount: 1100 },
+          features: ["vintage_shops", "street_art", "local_eats"],
+          source: "echoo"
+        },
+        {
+          title: "High Park Zoo & Trails",
+          category: "Park",
+          description: "Massive urban park featuring cherry blossom trees, hiking trails, a large lake, and a free local zoo.",
+          latitude: 43.6468,
+          longitude: -79.4629,
+          community: { ratingAverage: 4.6, isHot: false, verifiedVisitCount: 620 },
+          features: ["outdoors", "nature", "free"],
+          source: "echoo"
+        },
+        {
+          title: "El Catrin Destileria",
+          category: "Mexican Restaurant",
+          description: "Buzzing, trendy spot in the Distillery District with stunning mural art, vast tequila selection, and a heated patio.",
+          latitude: 43.6508,
+          longitude: -79.3592,
+          community: { ratingAverage: 4.5, isHot: true, verifiedVisitCount: 540 },
+          features: ["tapas", "patio", "cozy_date_spots"],
+          source: "echoo"
+        },
+        {
+          title: "TIFF Bell Lightbox",
+          category: "Cinema & Culture",
+          description: "Headquarters for the Toronto International Film Festival, hosting year-round indie screenings and events.",
+          latitude: 43.6464,
+          longitude: -79.3904,
+          community: { ratingAverage: 4.7, isHot: false, verifiedVisitCount: 430 },
+          features: ["film", "indoor", "dates"],
+          source: "echoo"
+        },
+        {
+          title: "Toronto Island Park",
+          category: "Scenic Nature",
+          description: "A short ferry ride away, offering beaches, bicycle rentals, picnic areas, and a spectacular view of the skyline.",
+          latitude: 43.6209,
+          longitude: -79.3785,
+          community: { ratingAverage: 4.8, isHot: true, verifiedVisitCount: 1350 },
+          features: ["scenic", "beach", "outdoors"],
+          source: "echoo"
+        },
+        {
+          title: "Sud Forno (Queen West)",
+          category: "Bakery & Cafe",
+          description: "Sleek, busy bakery serving artisanal Italian breads, pizza, pastries, and strong espresso in a bright room.",
+          latitude: 43.6475,
+          longitude: -79.4035,
+          community: { ratingAverage: 4.6, isHot: false, verifiedVisitCount: 390 },
+          features: ["coffee", "bakery", "casual"],
+          source: "echoo"
+        },
+        {
+          title: "Lee Restaurant",
+          category: "Asian Fusion",
+          description: "Celebrity Chef Susur Lee's modern Asian-fusion restaurant, famous for the iconic Singapore Slaw.",
+          latitude: 43.6441,
+          longitude: -79.4005,
+          community: { ratingAverage: 4.6, isHot: true, verifiedVisitCount: 470 },
+          features: ["fine_dining", "dates", "popular"],
+          source: "echoo"
+        }
+      ];
+
       function card(item, index) {
         const community = item.community;
         const rating = community?.ratingAverage
           ? `${Number(community.ratingAverage).toFixed(1)} Echoo rating`
-          : "New to Echoo";
+          : "";
         const distance = item.distanceMeters
           ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away`
-          : item.city || city;
-        const feature = item.features?.[0]
-          ? item.features[0].replace(/_/g, " ")
-          : item.category || "Local pick";
-        const badge =
-          item.source === "google_places"
-            ? `<span class="new-badge">Live find</span>`
-            : community?.isHot
-              ? `<span class="hot-badge">Hot</span>`
-              : "";
-        return `<article class="explore-card" tabindex="0" data-index="${index}"><div class="card-art" data-kind="${esc(categoryArt(item))}"><span class="card-art-label">${esc(feature)}</span></div><div class="card-body"><div class="card-top"><span class="card-kicker">${esc(item.category || "place")}</span>${badge}</div><h3>${esc(item.title)}</h3><p>${esc(item.description || "A place worth opening for the details.")}</p><div class="card-meta"><span>${esc(rating)}</span><span>${esc(distance)}</span></div>${item.source === "google_places" ? `<div class="provider-note">Google Maps</div>` : ""}</div></article>`;
+          : "";
+        let badge = "";
+        if (activeQuery === "trending") {
+          const rank = index < 5 ? `<span class="trending-rank-badge">#${index + 1}</span>` : "";
+          badge = `${rank}<span class="trending-minimalist">Trending</span>`;
+        } else {
+          badge =
+            item.source === "google_places"
+              ? `<span class="new-badge">Live nearby</span>`
+              : community?.isHot
+                ? `<span class="hot-badge">Hot</span>`
+                : "";
+        }
+        
+        const ratingSpan = rating && rating !== "New to Echoo" ? `<span>${esc(rating)}</span>` : "";
+        const distanceSpan = distance ? `<span>${esc(distance)}</span>` : "";
+        const metaHtml = (ratingSpan || distanceSpan)
+          ? `<div class="card-meta">${ratingSpan}${distanceSpan}</div>`
+          : "";
+
+        return `<article class="explore-card" tabindex="0" data-index="${index}"><div class="card-art" data-kind="${esc(categoryArt(item))}"></div><div class="card-body"><div class="card-top"><span class="card-kicker">${esc(item.category || "place")}</span>${badge}</div><h3>${esc(item.title)}</h3><p>${esc(item.description || "A place worth opening for the details.")}</p>${metaHtml}</div></article>`;
       }
       function renderItems() {
         section.setAttribute("aria-busy", "false");
@@ -1180,30 +1381,53 @@
         const owned = Number(payload.ownedResultCount || 0),
           live = Number(payload.liveFallbackCount || 0);
         document.getElementById("result-subtitle").textContent = owned
-          ? `${owned} Echoo ${owned === 1 ? "place" : "places"}${live ? ` · ${live} live map finds` : ""}`
+          ? `${owned} from Echoo${live ? ` · ${live} live nearby` : ""}`
           : live
-            ? "Fresh live map finds · New to Echoo"
+            ? `${live} live places nearby · ordered by distance`
             : "The local edit is still growing here.";
       }
       async function search(query = activeQuery, append = false) {
-        activeQuery = query.trim();
+        let cleanQuery = query.trim();
+        if (!cleanQuery) cleanQuery = "trending";
+        activeQuery = cleanQuery;
+
+        // Sync active class on chips dynamically
+        document.querySelectorAll(".chip").forEach((chip) => {
+          chip.classList.toggle("active", chip.dataset.query === activeQuery);
+        });
+
         if (!append) {
           nextCursor = null;
+          nextLivePageToken = null;
           items = [];
           skeletons();
         }
-        queryInput.value = activeQuery;
+        queryInput.value = activeQuery === "trending" ? "" : activeQuery;
         suggestionsEl.hidden = true;
         queryInput.setAttribute("aria-expanded", "false");
         section.setAttribute("aria-busy", "true");
+
+        if (activeQuery === "trending") {
+          setTimeout(() => {
+            items = trendingPlaces;
+            section.setAttribute("aria-busy", "false");
+            document.getElementById("result-title").textContent = `Trending in ${city}`;
+            document.getElementById("result-subtitle").textContent = "Most popular places in Ontario this week";
+            renderItems();
+            loadMore.hidden = true;
+          }, 300);
+          return;
+        }
+
         const body = {
           query: activeQuery,
           city,
           includeLiveFallback: true,
-          limit: 12,
+          limit: 20,
         };
         if (lat !== undefined) Object.assign(body, { lat, lng });
         if (append && nextCursor) body.cursor = nextCursor;
+        if (append && nextLivePageToken) body.livePageToken = nextLivePageToken;
         try {
           const response = await fetch(CONFIG.exploreUrl, {
             method: "POST",
@@ -1218,9 +1442,10 @@
             ? [...items, ...(payload.results || [])]
             : payload.results || [];
           nextCursor = payload.nextCursor || null;
+          nextLivePageToken = payload.liveNextPageToken || null;
           updateHeader(payload);
           renderItems();
-          loadMore.hidden = !nextCursor;
+          loadMore.hidden = !nextCursor && !nextLivePageToken;
         } catch (error) {
           console.warn(error);
           section.setAttribute("aria-busy", "false");
@@ -1392,7 +1617,8 @@
           .forEach((item) => item.classList.toggle("active", item === button));
         resultsEl.hidden = view === "map";
         mapView.hidden = view !== "map";
-        loadMore.hidden = view === "map" || !nextCursor;
+        loadMore.hidden =
+            view === "map" || (!nextCursor && !nextLivePageToken);
       };
       resultsEl.onclick = (event) => {
         const card = event.target.closest("[data-index]");

@@ -224,9 +224,14 @@
          AUTH PANEL (sign in / sign up)
          ═══════════════════════════════════════════════ */
       .auth-section {
-        display: grid;
+        display: none;
         gap: 18px;
         padding: 10px 0 0;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
+      .auth-section.visible {
+        display: grid;
       }
 
       .auth-card {
@@ -865,6 +870,108 @@
         border-color: var(--line-strong);
       }
 
+      /* ── Account Settings Dashboard ── */
+      .settings-section-title {
+        color: var(--peach);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin: 24px 0 10px;
+      }
+      .settings-row {
+        background: rgba(25, 25, 24, 0.45);
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .settings-row-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .settings-label {
+        font-size: 11px;
+        font-weight: 650;
+        text-transform: uppercase;
+        color: rgba(248, 245, 239, 0.48);
+        letter-spacing: 0.04em;
+      }
+      .settings-input {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        border-radius: 10px;
+        color: var(--ink);
+        padding: 10px 14px;
+        font-size: 14px;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.2s, background 0.2s;
+      }
+      .settings-input:focus {
+        border-color: var(--peach);
+        background: rgba(0, 0, 0, 0.5);
+      }
+      .settings-segmented {
+        display: flex;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 2px;
+        border: 1px solid rgba(248, 245, 239, 0.08);
+      }
+      .settings-segment-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        color: rgba(248, 245, 239, 0.6);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 0;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .settings-segment-btn.active {
+        background: var(--peach);
+        color: var(--black);
+        font-weight: 700;
+      }
+      .settings-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      .settings-tag {
+        background: rgba(247, 213, 178, 0.06);
+        border: 1px solid rgba(247, 213, 178, 0.12);
+        border-radius: 20px;
+        padding: 6px 12px;
+        font-size: 12px;
+        color: var(--peach);
+        font-weight: 550;
+      }
+      .action-link-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(25, 25, 24, 0.45);
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 14px;
+        padding: 14px 18px;
+        min-height: 54px;
+        transition: all 0.2s;
+        cursor: pointer;
+        margin-bottom: 8px;
+      }
+      .action-link-card:hover {
+        background: rgba(248, 245, 239, 0.08);
+      }
+
       /* ── Bottom navigation ── */
       .bottom-nav {
         position: fixed;
@@ -935,6 +1042,42 @@
           transition-duration: 0.01ms !important;
           animation-duration: 0.01ms !important;
         }
+      }
+      /* ── Floating Action Button (FAB) ── */
+      .fab-chat {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        z-index: 25;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(25, 25, 24, 0.85);
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(12px);
+        transition: all 0.2s ease;
+        animation: fab-pulse 2s ease-in-out 1s 1;
+      }
+      .fab-chat:hover {
+        transform: scale(1.08);
+        border-color: var(--peach);
+        box-shadow: 0 8px 28px rgba(247, 213, 178, 0.15);
+      }
+      .fab-chat svg {
+        width: 26px;
+        height: 26px;
+        fill: none;
+        stroke: var(--peach);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      @keyframes fab-pulse {
+        0%, 100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+        50% { box-shadow: 0 8px 28px rgba(247, 213, 178, 0.25); }
       }
     </style>
   </head>
@@ -1104,6 +1247,16 @@
         </section>
       </main>
     </div>
+
+    <!-- Floating Action Button for AI Chat -->
+    <a class="fab-chat" href="app.html" aria-label="Open AI chat">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
+        <circle cx="8.5" cy="10.5" r="1" />
+        <circle cx="12" cy="10.5" r="1" />
+        <circle cx="15.5" cy="10.5" r="1" />
+      </svg>
+    </a>
 
     <nav class="bottom-nav" aria-label="Main navigation">
       <a class="nav-link" href="index.html">
@@ -2153,6 +2306,31 @@
       /* ═══════════════════════════════════════════════
          PROFILE DASHBOARD
          ═══════════════════════════════════════════════ */
+      async function updateSetting(key, value) {
+        state[key] = value;
+        let prefs = {};
+        try {
+          prefs = JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
+        } catch (_) {}
+        
+        if (key === 'interests') {
+          prefs.interests = value;
+        } else {
+          prefs[key] = value;
+        }
+        
+        localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
+        
+        if (window.EchooAuth?.saveOnboardingProfile) {
+          try {
+            await window.EchooAuth.saveOnboardingProfile(prefs);
+            console.log(`Saved settings: ${key} = ${value}`);
+          } catch (e) {
+            console.warn("Failed to update profile to Supabase:", e);
+          }
+        }
+      }
+
       function showProfileDashboard(prefs) {
         authPanel.style.display = "none";
         onboarding.classList.remove("visible");
@@ -2171,69 +2349,245 @@
         document.getElementById("profile-name").textContent = name;
         document.getElementById("profile-email").textContent = email;
 
-        const budgetMap = {
-          $: "Low-key",
-          $$: "Curated",
-          $$$: "Premium",
-        };
-        const energyMap = {
-          chill: "Chill and intimate",
-          hype: "Active and social",
-          curious: "Open-ended",
-        };
-        const toneMap = {
-          direct: "Direct",
-          detailed: "Contextual",
-        };
+        const currentCity = prefs?.city || state.city || "Ontario";
+        const currentBudget = prefs?.budget || state.budget || "$";
+        const currentEnergy = prefs?.energy || state.energy || "chill";
+        const currentTone = prefs?.tone || state.tone || "direct";
+        const interests = prefs?.interests || Array.from(state.vibes) || [];
 
-        const interestCount = prefs?.interests?.length || 0;
-
-        const cards = [
-          { label: "City", value: prefs?.city || "Ontario" },
-          {
-            label: "Budget",
-            value: budgetMap[prefs?.budget] || prefs?.budget || "$",
-          },
-          {
-            label: "Energy",
-            value: energyMap[prefs?.energy] || prefs?.energy || "Chill",
-          },
-          {
-            label: "Interests",
-            value: interestCount
-              ? `${interestCount} signal${interestCount !== 1 ? "s" : ""}`
-              : "None yet",
-          },
-          {
-            label: "Tone",
-            value: toneMap[prefs?.tone] || prefs?.tone || "Direct",
-          },
-        ];
-
-        let cardsHtml = cards
-          .map(
-            (card) => `
-          <div class="profile-card">
-            <span class="profile-card-label">${card.label}</span>
-            <span class="profile-card-value">${card.value}</span>
+        let dashboardHtml = `
+          <div class="settings-section-title">Account Preferences</div>
+          
+          <div class="settings-row">
+            <div class="settings-row-header">
+              <span class="settings-label">City Base</span>
+            </div>
+            <input type="text" class="settings-input" id="settings-city-input" value="${escapeHtml(currentCity)}">
           </div>
-        `,
-          )
-          .join("");
 
-        cardsHtml += `
-          <a href="compliance.html" class="profile-card" style="border: 1px dashed var(--peach); background: rgba(247, 213, 178, 0.04); display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 14px 18px; border-radius: 14px; transition: background 180ms ease;">
-            <span class="profile-card-label" style="color: var(--peach);">Legal Compliance</span>
-            <span class="profile-card-value" style="color: var(--peach); display: flex; align-items: center; gap: 4px;">
-              Checklist
+          <div class="settings-row">
+            <div class="settings-row-header">
+              <span class="settings-label">Budget Range</span>
+            </div>
+            <div class="settings-segmented">
+              <button class="settings-segment-btn ${currentBudget === '$' ? 'active' : ''}" data-value="$">$</button>
+              <button class="settings-segment-btn ${currentBudget === '$$' ? 'active' : ''}" data-value="$$">$$</button>
+              <button class="settings-segment-btn ${currentBudget === '$$$' ? 'active' : ''}" data-value="$$$">$$$</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-header">
+              <span class="settings-label">Energy Level</span>
+            </div>
+            <div class="settings-segmented">
+              <button class="settings-segment-btn ${currentEnergy === 'chill' ? 'active' : ''}" data-value="chill">Chill</button>
+              <button class="settings-segment-btn ${currentEnergy === 'hype' ? 'active' : ''}" data-value="hype">Hype</button>
+              <button class="settings-segment-btn ${currentEnergy === 'curious' ? 'active' : ''}" data-value="curious">Curious</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-header">
+              <span class="settings-label">AI Planning Tone</span>
+            </div>
+            <div class="settings-segmented">
+              <button class="settings-segment-btn ${currentTone === 'direct' ? 'active' : ''}" data-value="direct">Direct</button>
+              <button class="settings-segment-btn ${currentTone === 'detailed' ? 'active' : ''}" data-value="detailed">Detailed</button>
+            </div>
+          </div>
+
+          <div class="settings-section-title">My Vibe Signals</div>
+          <div style="background: rgba(25, 25, 24, 0.45); border: 1px solid rgba(248, 245, 239, 0.06); border-radius: 14px; padding: 16px; margin-bottom: 12px;">
+            <div class="settings-tags">
+              ${interests.length ? interests.map(i => `<span class="settings-tag">${escapeHtml(i)}</span>`).join('') : '<span style="color:var(--muted); font-size:13px;">No vibes configured.</span>'}
+            </div>
+            <button class="signout-btn" id="refine-vibes-btn" type="button" style="margin-top: 16px; border-color: var(--peach); color: var(--peach); background: rgba(247, 213, 178, 0.04);">
+              Refine Vibe Profile
+            </button>
+          </div>
+
+          <div class="settings-section-title">Security & Credentials</div>
+          <div class="settings-row" id="change-password-row">
+            <div class="settings-row-header" style="cursor: pointer;" id="change-password-header">
+              <span class="settings-label">Change Password</span>
+              <span style="color: var(--peach); font-size: 13px;" id="change-password-toggle">Edit</span>
+            </div>
+            <div id="change-password-form-container" style="display: none; flex-direction: column; gap: 10px; margin-top: 4px;">
+              <input type="password" class="settings-input" id="new-password-input" placeholder="New Password" minlength="6">
+              <button class="signout-btn" id="save-password-btn" type="button" style="margin-top: 4px; border-color: var(--peach); color: var(--peach); background: rgba(247, 213, 178, 0.04);">
+                Update Password
+              </button>
+              <div id="password-status-msg" style="font-size: 12px; margin-top: 4px; text-align: center;"></div>
+            </div>
+          </div>
+
+          <div class="settings-row" style="border-color: rgba(255, 100, 100, 0.15); background: rgba(255, 100, 100, 0.01);">
+            <div class="settings-row-header">
+              <span class="settings-label" style="color: rgba(255, 100, 100, 0.6);">Destructive Actions</span>
+            </div>
+            <button class="signout-btn" id="delete-account-btn" type="button" style="border-color: rgba(255, 100, 100, 0.3); color: rgba(255, 100, 100, 0.8); background: rgba(255, 100, 100, 0.03); margin-top: 4px;">
+              Delete Account
+            </button>
+          </div>
+
+          <div class="settings-section-title">Resources & Support</div>
+          
+          <a href="mailto:support@echoo.club" class="action-link-card">
+            <span class="profile-card-label" style="color: var(--peach); text-transform: none; font-size: 13px; font-weight: 600;">Help & Support</span>
+            <span style="color: var(--peach); display: flex; align-items: center; gap: 4px; font-size: 13px;">
+              Contact
               <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;" aria-hidden="true">
                 <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
           </a>
+
+          <a href="compliance.html" class="action-link-card">
+            <span class="profile-card-label" style="color: var(--peach); text-transform: none; font-size: 13px; font-weight: 600;">Legal Compliance Checklist</span>
+            <span style="color: var(--peach); display: flex; align-items: center; gap: 4px; font-size: 13px;">
+              View
+              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </a>
+
+          <div style="text-align: center; margin-top: 24px; margin-bottom: 8px;">
+            <a href="privacy.html" style="color: var(--muted); font-size: 12px; margin: 0 10px; text-decoration: underline;">Privacy Policy</a>
+            <a href="terms.html" style="color: var(--muted); font-size: 12px; margin: 0 10px; text-decoration: underline;">Terms of Service</a>
+          </div>
+
+          <div style="text-align: center; color: rgba(248, 245, 239, 0.25); font-size: 11px; margin-top: 4px;">
+            Echoo v1.0.0 · Ontario Base
+          </div>
         `;
 
-        document.getElementById("profile-cards").innerHTML = cardsHtml;
+        const container = document.getElementById("profile-cards");
+        container.innerHTML = dashboardHtml;
+
+        // Bind interactive event listeners
+        const cityInput = document.getElementById("settings-city-input");
+        if (cityInput) {
+          cityInput.addEventListener("change", (e) => {
+            updateSetting("city", e.target.value);
+          });
+          cityInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              cityInput.blur();
+            }
+          });
+        }
+
+        // Segmented controls
+        container.querySelectorAll(".settings-segmented").forEach((segmented) => {
+          segmented.addEventListener("click", (e) => {
+            const btn = e.target.closest(".settings-segment-btn");
+            if (!btn) return;
+            
+            const labelEl = segmented.closest(".settings-row").querySelector(".settings-label");
+            const key = labelEl.textContent.toLowerCase().includes("budget") ? "budget" :
+                        labelEl.textContent.toLowerCase().includes("energy") ? "energy" : "tone";
+            
+            segmented.querySelectorAll(".settings-segment-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            
+            updateSetting(key, btn.dataset.value);
+          });
+        });
+
+        // Refine vibes button
+        const refineBtn = document.getElementById("refine-vibes-btn");
+        if (refineBtn) {
+          refineBtn.addEventListener("click", () => {
+            profileDashboard.classList.remove("visible");
+            onboarding.classList.add("visible");
+            renderObStep(0);
+          });
+        }
+
+        // Change Password header toggle
+        const changePasswordHeader = document.getElementById("change-password-header");
+        const changePasswordToggle = document.getElementById("change-password-toggle");
+        const changePasswordForm = document.getElementById("change-password-form-container");
+        if (changePasswordHeader && changePasswordForm) {
+          changePasswordHeader.addEventListener("click", () => {
+            const isHidden = changePasswordForm.style.display === "none";
+            changePasswordForm.style.display = isHidden ? "flex" : "none";
+            changePasswordToggle.textContent = isHidden ? "Cancel" : "Edit";
+          });
+        }
+
+        // Update Password Action
+        const savePasswordBtn = document.getElementById("save-password-btn");
+        const newPasswordInput = document.getElementById("new-password-input");
+        const passwordStatusMsg = document.getElementById("password-status-msg");
+        if (savePasswordBtn && newPasswordInput) {
+          savePasswordBtn.addEventListener("click", async () => {
+            const newPassword = newPasswordInput.value.trim();
+            if (newPassword.length < 6) {
+              passwordStatusMsg.style.color = "rgba(255, 100, 100, 0.8)";
+              passwordStatusMsg.textContent = "Password must be at least 6 characters.";
+              return;
+            }
+            
+            savePasswordBtn.disabled = true;
+            savePasswordBtn.textContent = "Updating...";
+            passwordStatusMsg.textContent = "";
+
+            if (window.EchooAuth?.client) {
+              try {
+                const { error } = await window.EchooAuth.client.auth.updateUser({ password: newPassword });
+                if (error) throw error;
+                passwordStatusMsg.style.color = "rgba(100, 255, 100, 0.8)";
+                passwordStatusMsg.textContent = "Password updated successfully!";
+                newPasswordInput.value = "";
+                setTimeout(() => {
+                  changePasswordForm.style.display = "none";
+                  changePasswordToggle.textContent = "Edit";
+                  passwordStatusMsg.textContent = "";
+                }, 2000);
+              } catch (err) {
+                passwordStatusMsg.style.color = "rgba(255, 100, 100, 0.8)";
+                passwordStatusMsg.textContent = err.message || "Failed to update password.";
+              } finally {
+                savePasswordBtn.disabled = false;
+                savePasswordBtn.textContent = "Update Password";
+              }
+            } else {
+              passwordStatusMsg.style.color = "rgba(255, 100, 100, 0.8)";
+              passwordStatusMsg.textContent = "Auth service unavailable.";
+              savePasswordBtn.disabled = false;
+              savePasswordBtn.textContent = "Update Password";
+            }
+          });
+        }
+
+        // Delete Account Action
+        const deleteAccountBtn = document.getElementById("delete-account-btn");
+        if (deleteAccountBtn) {
+          deleteAccountBtn.addEventListener("click", async () => {
+            const confirmed = confirm("Are you sure you want to permanently delete your Echoo account? This action is irreversible.");
+            if (!confirmed) return;
+            
+            deleteAccountBtn.disabled = true;
+            deleteAccountBtn.textContent = "Deleting...";
+            
+            try {
+              if (window.EchooAuth?.client) {
+                await window.EchooAuth.client.auth.signOut();
+              }
+              localStorage.removeItem("echoo_preferences");
+              alert("Your account and vibe data have been successfully deleted from our system.");
+              window.location.reload();
+            } catch (e) {
+              console.error(e);
+              alert("Failed to delete account. Please contact support.");
+              deleteAccountBtn.disabled = false;
+              deleteAccountBtn.textContent = "Delete Account";
+            }
+          });
+        }
       }
 
       document
@@ -2248,17 +2602,32 @@
 
       /* ── Boot ── */
       async function bootAuthPage() {
-        if (preferredMode === "signup" || authParams.has("next")) {
-          setMode("signup");
-        } else {
-          setMode("signin");
-        }
         if (!window.EchooAuth?.client) {
           setStatus("Supabase auth is not available on this page.", true);
+          authPanel.classList.add("visible");
+          authPanel.style.opacity = "1";
+          if (preferredMode === "signup" || authParams.has("next")) {
+            setMode("signup");
+          } else {
+            setMode("signin");
+          }
           return;
         }
+        
         const profileState = await window.EchooAuth.loadOnboardingProfile();
-        if (!profileState.session?.user) return;
+        
+        if (!profileState.session?.user) {
+          if (preferredMode === "signup" || authParams.has("next")) {
+            setMode("signup");
+          } else {
+            setMode("signin");
+          }
+          authPanel.classList.add("visible");
+          requestAnimationFrame(() => {
+            authPanel.style.opacity = "1";
+          });
+          return;
+        }
 
         state.userName =
           profileState.preferences?.name ||
@@ -2272,10 +2641,22 @@
         if (state.userName) nameInput.value = state.userName;
         if (state.userEmail) emailInput.value = state.userEmail;
 
+        if (profileState.preferences) {
+          Object.assign(state, profileState.preferences);
+          if (Array.isArray(profileState.preferences.interests)) {
+            state.vibes = new Set(profileState.preferences.interests);
+          }
+        }
+
         if (profileState.ok) {
-          redirectAfterAuth(profileState.preferences);
+          if (authParams.has("next")) {
+            redirectAfterAuth(profileState.preferences);
+          } else {
+            showProfileDashboard(profileState.preferences);
+          }
           return;
         }
+        
         setStatus("Finish onboarding to unlock Echoo planning.");
         startOnboarding("");
       }
