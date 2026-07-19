@@ -373,9 +373,13 @@ Deno.serve(async (req) => {
       : { results: [], nextPageToken: null };
     const last = page.at(-1);
     const ownedCards = page.map(ownedCard);
-    const merged = [...ownedCards, ...live.results].filter((item, index, all) =>
-      all.findIndex((candidate) => candidate.id === item.id) === index,
-    );
+    // The explore UI promises real place photography. Do not show a generic
+    // decorative placeholder when neither Echoo nor Google can provide one.
+    const merged = [...ownedCards, ...live.results]
+      .filter((item, index, all) =>
+        all.findIndex((candidate) => candidate.id === item.id) === index,
+      )
+      .filter((item: any) => Boolean(item.image?.url || item.image?.storagePath));
     if (lat !== undefined && lng !== undefined) {
       merged.sort((a: any, b: any) => (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER));
     }
