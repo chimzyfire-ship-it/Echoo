@@ -1424,15 +1424,19 @@
         });
       }
       function updateHeader(payload) {
-        document.getElementById("result-title").textContent = activeQuery
-          ? `Results for “${activeQuery}”`
-          : "Explore nearby";
+        document.getElementById("result-title").textContent = activeQuery === "trending"
+          ? `Trending in ${city}`
+          : activeQuery
+            ? `Results for “${activeQuery}”`
+            : "Explore nearby";
         const owned = Number(payload.ownedResultCount || 0),
           live = Number(payload.liveFallbackCount || 0);
         document.getElementById("result-subtitle").textContent = owned
           ? `${owned} from Echoo${live ? ` · ${live} live nearby` : ""}`
           : live
-            ? `${live} live places nearby · ordered by distance`
+            ? activeQuery === "trending"
+              ? "Popular places with real photos from Google Maps"
+              : `${live} live places nearby · ordered by distance`
             : "The local edit is still growing here.";
       }
       async function search(query = activeQuery, append = false) {
@@ -1456,20 +1460,11 @@
         queryInput.setAttribute("aria-expanded", "false");
         section.setAttribute("aria-busy", "true");
 
-        if (activeQuery === "trending") {
-          setTimeout(() => {
-            items = trendingPlaces;
-            section.setAttribute("aria-busy", "false");
-            document.getElementById("result-title").textContent = `Trending in ${city}`;
-            document.getElementById("result-subtitle").textContent = "Most popular places in Ontario this week";
-            renderItems();
-            loadMore.hidden = true;
-          }, 300);
-          return;
-        }
-
         const body = {
-          query: activeQuery,
+          // Trending used to render a local array with decorative placeholders.
+          // Use the live service so it receives the same verified place photos
+          // as every other category and search.
+          query: activeQuery === "trending" ? "top attractions" : activeQuery,
           city,
           includeLiveFallback: true,
           limit: 20,
