@@ -188,6 +188,14 @@ async function googleLiveSearch(input: {
     const latitude = optionalDiscoveryNumber(place.location?.latitude);
     const longitude = optionalDiscoveryNumber(place.location?.longitude);
     const photoName = cleanDiscoveryText(place.photos?.[0]?.name, 500);
+    const photoAuthors = Array.isArray(place.photos?.[0]?.authorAttributions)
+      ? place.photos[0].authorAttributions
+        .map((author: any) => ({
+          displayName: cleanDiscoveryText(author?.displayName, 160),
+          uri: cleanDiscoveryText(author?.uri, 500),
+        }))
+        .filter((author: { displayName: string }) => Boolean(author.displayName))
+      : [];
     // The Places API returns a resource name, not a directly displayable image.
     // The media endpoint redirects the browser to the actual photo asset.
     const imageUrl = photoName
@@ -207,7 +215,12 @@ async function googleLiveSearch(input: {
     longitude,
     distanceMeters: metersBetween(input.lat, input.lng, latitude, longitude),
     image: imageUrl
-      ? { url: imageUrl, alt: cleanDiscoveryText(place.displayName?.text, 160), source: "google_places" }
+      ? {
+        url: imageUrl,
+        alt: cleanDiscoveryText(place.displayName?.text, 160),
+        source: "google_places",
+        authors: photoAuthors,
+      }
       : null,
     features: [],
     community: null,
