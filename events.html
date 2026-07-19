@@ -428,6 +428,8 @@
         min-height: 100%;
         overflow: hidden;
         background: linear-gradient(145deg, #775a44, #171616);
+        background-position: center;
+        background-size: cover;
       }
       .card-art::before {
         content: "";
@@ -824,6 +826,8 @@
         margin-bottom: 17px;
         border-radius: 17px;
         background: linear-gradient(135deg, #805b41, #1b1715 68%);
+        background-position: center;
+        background-size: cover;
         position: relative;
         overflow: hidden;
       }
@@ -837,6 +841,15 @@
         border: 1px solid rgba(255, 255, 255, 0.23);
         border-radius: 50%;
         box-shadow: -48px 45px 0 -2px rgba(247, 213, 178, 0.5);
+      }
+      .photo-attribution {
+        margin: -9px 0 14px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+      .photo-attribution a {
+        color: var(--peach);
       }
       .detail-kicker {
         color: var(--peach);
@@ -1174,6 +1187,42 @@
         apikey: CONFIG.anonKey,
         Authorization: `Bearer ${CONFIG.anonKey}`,
       };
+      function imageUrlFor(item) {
+        const image = item?.image;
+        const rawUrl = image?.url || (image?.storagePath
+          ? `https://chimzyfire-ship-it.supabase.co/storage/v1/object/public/discovery-covers/${image.storagePath}`
+          : "");
+        // Only permit web URLs in an inline CSS URL, including Google Places media URLs.
+        return /^https?:\/\//i.test(rawUrl) ? rawUrl : "";
+      }
+      function imageStyleFor(item) {
+        const imageUrl = imageUrlFor(item);
+        return imageUrl
+          ? ` style="background-image: url('${esc(imageUrl)}');"`
+          : "";
+      }
+      function imageAttributionFor(item) {
+        const authors = Array.isArray(item?.image?.authors) ? item.image.authors : [];
+        const credits = authors
+          .map((author) => {
+            const name = esc(author?.displayName);
+            const rawUrl = String(author?.uri || "");
+            const href = /^https?:\/\//i.test(rawUrl)
+              ? esc(rawUrl)
+              : /^\/\//.test(rawUrl)
+                ? `https:${esc(rawUrl)}`
+                : "";
+            return name
+              ? href
+                ? `<a href="${href}" target="_blank" rel="noopener">${name}</a>`
+                : name
+              : "";
+          })
+          .filter(Boolean);
+        return credits.length
+          ? `<p class="photo-attribution">Photo by ${credits.join(", ")}</p>`
+          : "";
+      }
       function categoryArt(item) {
         const value = `${item.category || ""} ${item.type || ""}`.toLowerCase();
         if (item.source === "google_places") return "google";
@@ -1339,7 +1388,7 @@
           ? `<div class="card-meta">${ratingSpan}${distanceSpan}</div>`
           : "";
 
-        return `<article class="explore-card" tabindex="0" data-index="${index}"><div class="card-art" data-kind="${esc(categoryArt(item))}"></div><div class="card-body"><div class="card-top"><span class="card-kicker">${esc(item.category || "place")}</span>${badge}</div><h3>${esc(item.title)}</h3><p>${esc(item.description || "A place worth opening for the details.")}</p>${metaHtml}</div></article>`;
+        return `<article class="explore-card" tabindex="0" data-index="${index}"><div class="card-art" data-kind="${esc(categoryArt(item))}"${imageStyleFor(item)}></div><div class="card-body"><div class="card-top"><span class="card-kicker">${esc(item.category || "place")}</span>${badge}</div><h3>${esc(item.title)}</h3><p>${esc(item.description || "A place worth opening for the details.")}</p>${metaHtml}</div></article>`;
       }
       function renderItems() {
         section.setAttribute("aria-busy", "false");
@@ -1561,7 +1610,7 @@
             ? `<button data-community-action="save">Save</button><button data-community-action="visit">Visited</button><button data-community-action="rate">Rate</button><button data-community-action="review">Review</button>`
             : "";
         document.getElementById("detail-content").innerHTML =
-          `<div class="detail-art"></div><span class="detail-kicker">${esc(item.source === "google_places" ? "Live result · Google Maps" : item.category || "Echoo place")}</span><h2 class="detail-title">${esc(item.title)}</h2><p class="detail-copy">${esc(item.description || "A newly discovered local place.")}</p><div class="detail-stats"><span>${esc(rating)}</span>${community?.verifiedVisitCount ? `<span>${community.verifiedVisitCount} verified visits</span>` : ""}${features.map((value) => `<span>${esc(value)}</span>`).join("")}</div><div class="detail-actions">${actions}${directions ? `<a class="primary" href="${esc(directions)}" target="_blank" rel="noopener">Directions</a>` : `<button class="primary" data-local-action="open">Open place</button>`}</div>${item.source === "google_places" ? `<p class="provider-note">Live Google Maps result. It has no Echoo rating or history yet.</p>` : ""}`;
+          `<div class="detail-art"${imageStyleFor(item)}></div>${imageAttributionFor(item)}<span class="detail-kicker">${esc(item.source === "google_places" ? "Live result · Google Maps" : item.category || "Echoo place")}</span><h2 class="detail-title">${esc(item.title)}</h2><p class="detail-copy">${esc(item.description || "A newly discovered local place.")}</p><div class="detail-stats"><span>${esc(rating)}</span>${community?.verifiedVisitCount ? `<span>${community.verifiedVisitCount} verified visits</span>` : ""}${features.map((value) => `<span>${esc(value)}</span>`).join("")}</div><div class="detail-actions">${actions}${directions ? `<a class="primary" href="${esc(directions)}" target="_blank" rel="noopener">Directions</a>` : `<button class="primary" data-local-action="open">Open place</button>`}</div>${item.source === "google_places" ? `<p class="provider-note">Live Google Maps result. It has no Echoo rating or history yet.</p>` : ""}`;
         const sheet = document.getElementById("detail-sheet");
         sheet.classList.add("open");
         sheet.setAttribute("aria-hidden", "false");

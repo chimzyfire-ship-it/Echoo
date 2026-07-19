@@ -174,7 +174,7 @@ async function googleLiveSearch(input: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri",
+          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri,places.photos",
       },
       body: JSON.stringify(body),
     },
@@ -187,6 +187,20 @@ async function googleLiveSearch(input: {
   const results = (data.places || []).map((place: any) => {
     const latitude = optionalDiscoveryNumber(place.location?.latitude);
     const longitude = optionalDiscoveryNumber(place.location?.longitude);
+    const photoName = cleanDiscoveryText(place.photos?.[0]?.name, 500);
+    const photoAuthors = Array.isArray(place.photos?.[0]?.authorAttributions)
+      ? place.photos[0].authorAttributions
+        .map((author: any) => ({
+          displayName: cleanDiscoveryText(author?.displayName, 160),
+          uri: cleanDiscoveryText(author?.uri, 500),
+        }))
+        .filter((author: { displayName: string }) => Boolean(author.displayName))
+      : [];
+    // The Places API returns a resource name, not a directly displayable image.
+    // The media endpoint redirects the browser to the actual photo asset.
+    const imageUrl = photoName
+      ? `https://places.googleapis.com/v1/${photoName}/media?key=${encodeURIComponent(key)}&maxWidthPx=400`
+      : null;
     return {
     id: `google:${cleanDiscoveryText(place.id, 160)}`,
     source: "google_places",
@@ -200,7 +214,14 @@ async function googleLiveSearch(input: {
     latitude,
     longitude,
     distanceMeters: metersBetween(input.lat, input.lng, latitude, longitude),
-    image: null,
+    image: imageUrl
+      ? {
+        url: imageUrl,
+        alt: cleanDiscoveryText(place.displayName?.text, 160),
+        source: "google_places",
+        authors: photoAuthors,
+      }
+      : null,
     features: [],
     community: null,
     actionUrl: cleanDiscoveryText(place.googleMapsUri, 500) || null,
