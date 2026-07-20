@@ -1,0 +1,371 @@
+/* Echoo Party Drops & Radar Component - Clean Minimalist Dark Luxury Design */
+:root {
+  --party-card-radius: 16px;
+  --party-glass-bg: rgba(22, 22, 21, 0.78);
+  --party-border: rgba(248, 245, 239, 0.1);
+  --party-border-hover: rgba(247, 213, 178, 0.35);
+}
+
+.party-radar-section {
+  margin: 18px 0 24px;
+  padding: 0 16px;
+}
+
+.party-radar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(248, 245, 239, 0.08);
+}
+
+.party-radar-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--peach);
+}
+
+.party-radar-subtitle {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+/* Horizontal Scroll Strip */
+.party-cards-strip {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.party-cards-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual Party Card */
+.party-card {
+  flex: 0 0 min(280px, 78vw);
+  scroll-snap-align: start;
+  background: var(--party-glass-bg);
+  border: 1px solid var(--party-border);
+  border-radius: var(--party-card-radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.party-card:hover,
+.party-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--party-border-hover);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  outline: none;
+}
+
+.party-poster-box {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  position: relative;
+  overflow: hidden;
+  background: #111;
+}
+
+.party-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.85) contrast(1.05);
+  transition: transform 0.4s ease;
+}
+
+.party-card:hover .party-poster-img {
+  transform: scale(1.03);
+}
+
+.party-card-body {
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.party-date-time {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--peach);
+}
+
+.party-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.party-venue-line {
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.party-lineup-preview {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(248, 245, 239, 0.6);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.party-card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(248, 245, 239, 0.06);
+}
+
+.party-tag-clean {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.party-action-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--peach);
+  letter-spacing: 0.02em;
+}
+
+/* Modal / Bottom Detail Sheet */
+.party-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.party-modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.party-modal-sheet {
+  width: min(100vw, 430px);
+  max-height: 88vh;
+  background: #111110;
+  border: 1px solid rgba(248, 245, 239, 0.14);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+}
+
+.party-modal-backdrop.active .party-modal-sheet {
+  transform: translateY(0);
+}
+
+.party-modal-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.party-modal-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.party-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.15s ease;
+}
+
+.party-modal-close:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.party-modal-body {
+  padding: 22px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.party-modal-date {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--peach);
+}
+
+.party-modal-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.party-modal-venue {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: -10px;
+}
+
+.party-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(248, 245, 239, 0.035);
+  border: 1px solid rgba(248, 245, 239, 0.08);
+  border-radius: 12px;
+}
+
+.party-meta-item-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.party-meta-item-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.party-modal-desc {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(248, 245, 239, 0.82);
+  margin: 0;
+  font-weight: 400;
+}
+
+.party-modal-lineup-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.party-modal-lineup-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--peach);
+}
+
+.party-modal-lineup-names {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.party-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.party-btn-whatsapp {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: var(--peach);
+  color: #111110;
+  border: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  text-decoration: none;
+}
+
+.party-btn-whatsapp:hover {
+  opacity: 0.93;
+  transform: scale(1.01);
+}
+
+.party-btn-map {
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 12px;
+  background: rgba(248, 245, 239, 0.06);
+  color: var(--ink);
+  border: 1px solid rgba(248, 245, 239, 0.14);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.party-btn-map:hover {
+  background: rgba(248, 245, 239, 0.1);
+}
