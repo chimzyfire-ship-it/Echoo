@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#090909" />
     <title>Explore · echoo</title>
+    <link rel="stylesheet" href="assets/party-radar.css" />
     <style>
       :root {
         color-scheme: dark;
@@ -1053,8 +1054,9 @@
           ><button class="chip" data-query="date night">Date night</button
           ><button class="chip" data-query="live music">Live music</button
           ><button class="chip" data-query="museum">Culture</button
-          ><button class="chip" data-query="coffee">Coffee</button>
         </div>
+        <!-- Echoo Party Drops & Radar Mount -->
+        <div id="party-radar-mount"></div>
         <section aria-live="polite" aria-busy="true" id="explore-section">
           <div class="result-head">
             <div>
@@ -1690,5 +1692,6 @@
       skeletons();
       search(activeQuery);
     </script>
+    <script src="assets/party-radar.js"></script>
   </body>
 </html>
