@@ -20,8 +20,8 @@
     entry: "FREE · Bring Mat or Chairs",
     lineup: "OBA THE DJ · Hosts: Yumu of Toronto, Tina, Tmore, Tummy, MkO, ChefKiki",
     description: "Summer Beach Time 2.0 at Woodbine Beach featuring OBA THE DJ! Enjoy water gun battles, painting fun, puzzle challenges, table tennis, draft & ludo, non-stop games, free food, and good music. Free entry — come along with your chairs or mat!",
-    image: "assets/echoo_party_aura.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
+    image: "assets/sammy.jpeg",
+    fallbackImage: "assets/echoo_party_aura.jpg"
   };
 
   function escapeHtml(str) {
