@@ -10,18 +10,18 @@
     id: "party-flex-feast-sammy",
     title: "Flex Feast x Sammy: Summer Beach Time 2.0",
     venue: "Woodbine Beach",
-    address: "1675 Lake Shore Blvd E, Toronto",
+    address: "1675 Lake Shore Blvd E, Toronto, ON",
     lat: 43.6635,
     lng: -79.3080,
     date: "25 JULY",
     time: "11:00 AM",
-    fullTime: "11:00 AM – Late",
+    fullTime: "11:00 AM (No African time)",
     dressCode: "Beach Outfit Only",
-    entry: "Free Entrance · Bring Mat/Chairs",
-    lineup: "Oba The DJ, Sammy, Yumu of Toronto, Tina, Tmore, Tummy, MkO, ChefKiki",
-    description: "The ultimate Toronto beach time experience featuring Oba The DJ, water gun battles, painting fun, puzzle challenges, table tennis, games, free food, and nonstop music at Woodbine Beach.",
+    entry: "FREE · Bring Mat or Chairs",
+    lineup: "OBA THE DJ · Hosts: Yumu of Toronto, Tina, Tmore, Tummy, MkO, ChefKiki",
+    description: "Summer Beach Time 2.0 at Woodbine Beach featuring OBA THE DJ! Enjoy water gun battles, painting fun, puzzle challenges, table tennis, draft & ludo, non-stop games, free food, and good music. Free entry — come along with your chairs or mat!",
     image: "assets/echoo_party_aura.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80"
+    fallbackImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
   };
 
   function escapeHtml(str) {
