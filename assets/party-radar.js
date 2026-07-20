@@ -1,5 +1,5 @@
 /**
- * Echoo Party Drops & Radar Component
+ * Echoo Party Drops Component - Native 430px Mobile Alignment
  * Minimalist, elegant upcoming parties module with WhatsApp Concierge & Map overlay integration.
  */
 
@@ -22,7 +22,7 @@
       description: "An exclusive high-fashion rooftop experience featuring panoramic city views, deep house rhythms, and curated cocktails. Limited table reservations available via Echoo Concierge.",
       image: "assets/echoo_party_noir.jpg",
       fallbackImage: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
-      tags: "Rooftop · House · Table RSVP"
+      tags: "Rooftop · House · RSVP"
     },
     {
       id: "party-aura-afrobeats",
@@ -66,23 +66,24 @@
             <span class="party-radar-subtitle">Echoo Curated Parties</span>
           </div>
         </div>
-        <div class="party-cards-strip">
+        <div class="party-cards-stack">
     `;
 
     ECHOO_UPCOMING_PARTIES.forEach((party, idx) => {
       html += `
         <div class="party-card" role="button" tabindex="0" data-party-index="${idx}">
           <div class="party-poster-box">
-            <img class="party-poster-img" src="${escapeHtml(party.image)}" data-fallback="${escapeHtml(party.fallbackImage)}" alt="${escapeHtml(party.title)}" loading="lazy" onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display='none';}" />
+            <img class="party-poster-img" src="${escapeHtml(party.image)}" data-fallback="${escapeHtml(party.fallbackImage)}" alt="${escapeHtml(party.title)}" loading="lazy" onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}" />
           </div>
           <div class="party-card-body">
-            <span class="party-date-time">${escapeHtml(party.date)} · ${escapeHtml(party.time.split('–')[0].trim())}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="party-date-time">${escapeHtml(party.date)} · ${escapeHtml(party.time.split('–')[0].trim())}</span>
+            </div>
             <h3 class="party-name">${escapeHtml(party.title)}</h3>
             <span class="party-venue-line">${escapeHtml(party.venue)}</span>
-            <span class="party-lineup-preview">${escapeHtml(party.lineup)}</span>
             <div class="party-card-footer">
               <span class="party-tag-clean">${escapeHtml(party.tags)}</span>
-              <span class="party-action-link">Details & RSVP ↗</span>
+              <span class="party-action-link">RSVP ↗</span>
             </div>
           </div>
         </div>
