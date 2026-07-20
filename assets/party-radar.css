@@ -1,32 +1,33 @@
-/* Echoo Party Drops & Radar Component - Clean Minimalist Dark Luxury Design */
+/* Echoo Party Drops Component - Native 430px Mobile Alignment */
 :root {
-  --party-card-radius: 16px;
-  --party-glass-bg: rgba(22, 22, 21, 0.78);
-  --party-border: rgba(248, 245, 239, 0.1);
-  --party-border-hover: rgba(247, 213, 178, 0.35);
+  --party-card-radius: 18px;
+  --party-glass-bg: rgba(26, 26, 25, 0.82);
+  --party-border: rgba(248, 245, 239, 0.12);
+  --party-border-hover: rgba(247, 213, 178, 0.45);
 }
 
 #party-radar-mount {
   width: 100%;
   display: block;
   clear: both;
+  box-sizing: border-box;
 }
 
 .party-radar-section {
   width: 100%;
   box-sizing: border-box;
-  margin: 20px 0 26px;
+  margin: 18px 0 20px;
   padding: 0;
-  display: block;
-  clear: both;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .party-radar-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid rgba(248, 245, 239, 0.08);
 }
 
@@ -46,132 +47,119 @@
   letter-spacing: 0.02em;
 }
 
-/* Horizontal Scroll Strip */
-.party-cards-strip {
+/* Vertical Cards Stack - 100% Mobile Flow (No Horizontal Scroll) */
+.party-cards-stack {
   display: flex;
-  flex-direction: row;
-  gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 6px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  flex-direction: column;
+  gap: 11px;
   width: 100%;
   box-sizing: border-box;
 }
-.party-cards-strip::-webkit-scrollbar {
-  display: none;
-}
 
-/* Individual Party Card */
+/* Individual Party Card - 100% Width matching Discover card layout */
 .party-card {
-  flex: 0 0 min(265px, 78vw);
-  width: min(265px, 78vw);
-  scroll-snap-align: start;
+  width: 100%;
   background: var(--party-glass-bg);
   border: 1px solid var(--party-border);
   border-radius: var(--party-card-radius);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  display: grid;
+  grid-template-columns: 116px 1fr;
+  min-height: 124px;
   box-sizing: border-box;
+  position: relative;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
 }
 
 .party-card:hover,
 .party-card:focus-visible {
-  transform: translateY(-2px);
+  transform: translateY(-1.5px);
   border-color: var(--party-border-hover);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
   outline: none;
 }
 
 .party-poster-box {
-  width: 100%;
-  aspect-ratio: 16 / 9;
   position: relative;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  background: linear-gradient(145deg, #2a201b, #0f0f0e);
+  background: #121211;
 }
 
 .party-poster-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: saturate(0.88) contrast(1.05);
-  transition: transform 0.4s ease;
+  object-position: center;
+  filter: saturate(0.9) contrast(1.05);
   display: block;
 }
 
-.party-card:hover .party-poster-img {
-  transform: scale(1.03);
-}
-
 .party-card-body {
-  padding: 13px 13px 15px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  flex: 1;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 0;
 }
 
 .party-date-time {
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--peach);
 }
 
 .party-name {
   margin: 0;
-  font-size: 17px;
-  font-weight: 720;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
   color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .party-venue-line {
   font-size: 12px;
   font-weight: 500;
   color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.party-lineup-preview {
-  font-size: 11px;
-  font-weight: 400;
-  color: rgba(248, 245, 239, 0.65);
-  margin-top: 2px;
-  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .party-card-footer {
-  margin-top: auto;
-  padding-top: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 2px;
+  padding-top: 6px;
   border-top: 1px solid rgba(248, 245, 239, 0.06);
 }
 
 .party-tag-clean {
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--muted);
+  color: rgba(248, 245, 239, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .party-action-link {
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 10px;
+  font-weight: 750;
   color: var(--peach);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 /* Modal / Bottom Detail Sheet */
