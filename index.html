@@ -546,35 +546,48 @@
 
       .vibe-row {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 12px;
-        margin-top: 18px;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-top: 14px;
+        width: 100%;
       }
 
       .vibe {
-        display: grid;
-        justify-items: center;
-        gap: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
         min-width: 0;
-        color: #fff;
-        font-size: 14px;
-        font-weight: 540;
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 560;
+        text-decoration: none;
       }
 
       .vibe-icon {
-        width: clamp(54px, 15vw, 66px);
+        width: min(52px, 14vw);
+        height: min(52px, 14vw);
         aspect-ratio: 1;
         display: grid;
         place-items: center;
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.055);
+        border: 1px solid rgba(248, 245, 239, 0.1);
         color: var(--peach);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+      }
+
+      .vibe:hover .vibe-icon,
+      .vibe:focus-visible .vibe-icon {
+        transform: translateY(-2px);
+        background: rgba(247, 213, 178, 0.12);
+        border-color: rgba(247, 213, 178, 0.4);
       }
 
       .vibe svg {
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
         stroke: currentColor;
         stroke-width: 1.8;
         fill: none;

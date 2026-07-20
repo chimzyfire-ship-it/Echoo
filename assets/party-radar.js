@@ -20,7 +20,8 @@
       entry: "Guestlist / Table RSVP",
       lineup: "DJ Julian, Noir Beats, Special Guest",
       description: "An exclusive high-fashion rooftop experience featuring panoramic city views, deep house rhythms, and curated cocktails. Limited table reservations available via Echoo Concierge.",
-      image: "assets/echoo-party-noir.jpg",
+      image: "assets/echoo_party_noir.jpg",
+      fallbackImage: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
       tags: "Rooftop · House · Table RSVP"
     },
     {
@@ -36,7 +37,8 @@
       entry: "RSVP Direct",
       lineup: "DJ Spinall, Major Soundz, Amapiano Kings",
       description: "Immerse yourself in heavy basslines, authentic Amapiano grooves, and Afrobeats energy. Curated by Echoo for night owls and music purists.",
-      image: "assets/echoo-party-aura.jpg",
+      image: "assets/echoo_party_aura.jpg",
+      fallbackImage: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80",
       tags: "Afrobeats · Amapiano · Nightlife"
     }
   ];
@@ -71,7 +73,7 @@
       html += `
         <div class="party-card" role="button" tabindex="0" data-party-index="${idx}">
           <div class="party-poster-box">
-            <img class="party-poster-img" src="${escapeHtml(party.image)}" alt="${escapeHtml(party.title)}" loading="lazy" />
+            <img class="party-poster-img" src="${escapeHtml(party.image)}" data-fallback="${escapeHtml(party.fallbackImage)}" alt="${escapeHtml(party.title)}" loading="lazy" onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display='none';}" />
           </div>
           <div class="party-card-body">
             <span class="party-date-time">${escapeHtml(party.date)} · ${escapeHtml(party.time.split('–')[0].trim())}</span>
@@ -153,8 +155,14 @@
 
     function openModal(party) {
       currentParty = party;
-      document.getElementById("party-modal-img").src = party.image;
-      document.getElementById("party-modal-img").alt = party.title;
+      const modalImg = document.getElementById("party-modal-img");
+      modalImg.src = party.image;
+      modalImg.dataset.fallback = party.fallbackImage;
+      modalImg.onerror = function() {
+        if (this.src !== this.dataset.fallback) this.src = this.dataset.fallback;
+      };
+      modalImg.alt = party.title;
+
       document.getElementById("party-modal-date").textContent = party.date;
       document.getElementById("party-modal-title").textContent = party.title;
       document.getElementById("party-modal-venue").textContent = `${party.venue} · ${party.address}`;
@@ -202,7 +210,6 @@
       if (!currentParty) return;
       closeModal();
 
-      // Check if global EchooMap or slide-up #map-overlay is available
       const mapOverlay = document.getElementById("map-overlay");
       if (mapOverlay) {
         mapOverlay.classList.add("open");
@@ -213,7 +220,6 @@
           window.EchooMap.focusLocation(currentParty.lat, currentParty.lng, currentParty.title);
         }
       } else {
-        // Fallback to Google Maps directions link if map overlay container not present
         window.open(`https://www.google.com/maps/search/?api=1&query=${currentParty.lat},${currentParty.lng}`, "_blank");
       }
     };

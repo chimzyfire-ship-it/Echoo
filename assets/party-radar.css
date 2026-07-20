@@ -6,16 +6,26 @@
   --party-border-hover: rgba(247, 213, 178, 0.35);
 }
 
+#party-radar-mount {
+  width: 100%;
+  display: block;
+  clear: both;
+}
+
 .party-radar-section {
-  margin: 18px 0 24px;
-  padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 20px 0 26px;
+  padding: 0;
+  display: block;
+  clear: both;
 }
 
 .party-radar-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(248, 245, 239, 0.08);
 }
@@ -23,7 +33,7 @@
 .party-radar-title {
   margin: 0;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 750;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--peach);
@@ -39,12 +49,15 @@
 /* Horizontal Scroll Strip */
 .party-cards-strip {
   display: flex;
-  gap: 14px;
+  flex-direction: row;
+  gap: 12px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 .party-cards-strip::-webkit-scrollbar {
   display: none;
@@ -52,7 +65,8 @@
 
 /* Individual Party Card */
 .party-card {
-  flex: 0 0 min(280px, 78vw);
+  flex: 0 0 min(265px, 78vw);
+  width: min(265px, 78vw);
   scroll-snap-align: start;
   background: var(--party-glass-bg);
   border: 1px solid var(--party-border);
@@ -63,6 +77,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .party-card:hover,
@@ -78,15 +93,16 @@
   aspect-ratio: 16 / 9;
   position: relative;
   overflow: hidden;
-  background: #111;
+  background: linear-gradient(145deg, #2a201b, #0f0f0e);
 }
 
 .party-poster-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: saturate(0.85) contrast(1.05);
+  filter: saturate(0.88) contrast(1.05);
   transition: transform 0.4s ease;
+  display: block;
 }
 
 .party-card:hover .party-poster-img {
@@ -94,16 +110,16 @@
 }
 
 .party-card-body {
-  padding: 14px 14px 16px;
+  padding: 13px 13px 15px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   flex: 1;
 }
 
 .party-date-time {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--peach);
@@ -111,16 +127,16 @@
 
 .party-name {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 720;
   line-height: 1.2;
   letter-spacing: -0.015em;
   color: var(--ink);
 }
 
 .party-venue-line {
-  font-size: 13px;
-  font-weight: 450;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -128,9 +144,9 @@
 }
 
 .party-lineup-preview {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
-  color: rgba(248, 245, 239, 0.6);
+  color: rgba(248, 245, 239, 0.65);
   margin-top: 2px;
   line-height: 1.35;
 }
@@ -153,7 +169,7 @@
 
 .party-action-link {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 650;
   color: var(--peach);
   letter-spacing: 0.02em;
 }
@@ -202,13 +218,14 @@
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #000;
+  background: linear-gradient(145deg, #2a201b, #0f0f0e);
 }
 
 .party-modal-hero img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .party-modal-close {
@@ -235,10 +252,10 @@
 }
 
 .party-modal-body {
-  padding: 22px 20px 32px;
+  padding: 20px 18px 30px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .party-modal-date {
@@ -250,8 +267,8 @@
 }
 
 .party-modal-title {
-  margin: 0;
-  font-size: 24px;
+  margin: 4px 0 0;
+  font-size: 22px;
   font-weight: 750;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -259,17 +276,18 @@
 }
 
 .party-modal-venue {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--muted);
-  margin-top: -10px;
+  margin-top: 2px;
+  display: block;
 }
 
 .party-modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 12px 14px;
   background: rgba(248, 245, 239, 0.035);
   border: 1px solid rgba(248, 245, 239, 0.08);
   border-radius: 12px;
@@ -277,7 +295,7 @@
 
 .party-meta-item-title {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
@@ -285,14 +303,14 @@
 }
 
 .party-meta-item-val {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink);
 }
 
 .party-modal-desc {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.48;
   color: rgba(248, 245, 239, 0.82);
   margin: 0;
   font-weight: 400;
@@ -301,7 +319,7 @@
 .party-modal-lineup-box {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .party-modal-lineup-label {
@@ -313,7 +331,7 @@
 }
 
 .party-modal-lineup-names {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--ink);
   line-height: 1.4;
@@ -322,18 +340,18 @@
 .party-modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 9px;
+  margin-top: 6px;
 }
 
 .party-btn-whatsapp {
   width: 100%;
-  padding: 14px 18px;
+  padding: 13px 16px;
   border-radius: 12px;
   background: var(--peach);
   color: #111110;
   border: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
   text-align: center;
@@ -344,6 +362,7 @@
   gap: 8px;
   transition: transform 0.15s ease, opacity 0.15s ease;
   text-decoration: none;
+  box-sizing: border-box;
 }
 
 .party-btn-whatsapp:hover {
@@ -353,17 +372,18 @@
 
 .party-btn-map {
   width: 100%;
-  padding: 13px 18px;
+  padding: 12px 16px;
   border-radius: 12px;
   background: rgba(248, 245, 239, 0.06);
   color: var(--ink);
   border: 1px solid rgba(248, 245, 239, 0.14);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
   text-align: center;
   cursor: pointer;
   transition: background 0.15s ease;
+  box-sizing: border-box;
 }
 
 .party-btn-map:hover {
