@@ -1,6 +1,6 @@
 /**
  * Echoo Featured Party Drop Component - Native 430px Mobile Alignment
- * Minimalist, elegant single party card with WhatsApp Concierge & Map overlay integration.
+ * Minimalist, elegant full cover poster card with WhatsApp Concierge & Map overlay integration.
  */
 
 (function () {
@@ -20,8 +20,8 @@
     entry: "FREE · Bring Mat or Chairs",
     lineup: "OBA THE DJ · Hosts: Yumu of Toronto, Tina, Tmore, Tummy, MkO, ChefKiki",
     description: "Summer Beach Time 2.0 at Woodbine Beach featuring OBA THE DJ! Enjoy water gun battles, painting fun, puzzle challenges, table tennis, draft & ludo, non-stop games, free food, and good music. Free entry — come along with your chairs or mat!",
-    image: "assets/echoo_party_aura.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
+    image: "assets/sammy.jpeg",
+    fallbackImage: "assets/echoo_party_aura.jpg"
   };
 
   function escapeHtml(str) {
@@ -54,13 +54,14 @@
             <div class="party-poster-box">
               <img class="party-poster-img" src="${escapeHtml(party.image)}" data-fallback="${escapeHtml(party.fallbackImage)}" alt="${escapeHtml(party.title)}" loading="lazy" onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}" />
             </div>
-            <div class="party-card-body">
-              <span class="party-date-time">${escapeHtml(party.date)} · ${escapeHtml(party.time)}</span>
-              <h3 class="party-name">${escapeHtml(party.title)}</h3>
-              <span class="party-venue-line">${escapeHtml(party.venue)}</span>
-              <span class="party-lineup-preview">${escapeHtml(party.lineup)}</span>
-              <div class="party-card-footer">
-                <span class="party-action-link">RSVP ↗</span>
+            <div class="party-card-overlay">
+              <div class="party-card-top-badge">UPCOMING DROP</div>
+              <div class="party-card-bottom-info">
+                <div class="party-card-text-block">
+                  <span class="party-card-date-line">${escapeHtml(party.date)} · ${escapeHtml(party.time)}</span>
+                  <h3 class="party-card-title-line">${escapeHtml(party.title)}</h3>
+                </div>
+                <div class="party-card-rsvp-pill">RSVP ↗</div>
               </div>
             </div>
           </div>
