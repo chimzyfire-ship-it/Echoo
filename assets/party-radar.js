@@ -1,6 +1,6 @@
 /**
  * Echoo Featured Party Drop Component - Native 430px Mobile Alignment
- * Minimalist, elegant single party card with WhatsApp Concierge & Map overlay integration.
+ * Minimalist, elegant full cover poster card with WhatsApp Concierge & Map overlay integration.
  */
 
 (function () {
@@ -54,13 +54,14 @@
             <div class="party-poster-box">
               <img class="party-poster-img" src="${escapeHtml(party.image)}" data-fallback="${escapeHtml(party.fallbackImage)}" alt="${escapeHtml(party.title)}" loading="lazy" onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}" />
             </div>
-            <div class="party-card-body">
-              <span class="party-date-time">${escapeHtml(party.date)} · ${escapeHtml(party.time)}</span>
-              <h3 class="party-name">${escapeHtml(party.title)}</h3>
-              <span class="party-venue-line">${escapeHtml(party.venue)}</span>
-              <span class="party-lineup-preview">${escapeHtml(party.lineup)}</span>
-              <div class="party-card-footer">
-                <span class="party-action-link">RSVP ↗</span>
+            <div class="party-card-overlay">
+              <div class="party-card-top-badge">UPCOMING DROP</div>
+              <div class="party-card-bottom-info">
+                <div class="party-card-text-block">
+                  <span class="party-card-date-line">${escapeHtml(party.date)} · ${escapeHtml(party.time)}</span>
+                  <h3 class="party-card-title-line">${escapeHtml(party.title)}</h3>
+                </div>
+                <div class="party-card-rsvp-pill">RSVP ↗</div>
               </div>
             </div>
           </div>
