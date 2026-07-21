@@ -547,19 +547,13 @@
       .vibe-row {
         display: flex;
         flex-direction: row;
-        justify-content: space-between;
+        justify-content: center;
         align-items: flex-start;
-        gap: 6px;
+        gap: 10px;
         margin-top: 14px;
         width: 100%;
         box-sizing: border-box;
         padding: 0;
-        overflow-x: auto;
-        scrollbar-width: none;
-      }
-
-      .vibe-row::-webkit-scrollbar {
-        display: none;
       }
 
       .vibe {
@@ -568,15 +562,35 @@
         align-items: center;
         justify-content: flex-start;
         gap: 5px;
-        flex: 1 1 0;
-        min-width: 48px;
-        max-width: 64px;
+        width: 52px;
+        flex: 0 0 52px;
         color: var(--ink);
         font-size: 10px;
         font-weight: 560;
         text-decoration: none;
         box-sizing: border-box;
         text-align: center;
+      }
+
+      .vibe-icon {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        max-width: 44px;
+        min-height: 44px;
+        max-height: 44px;
+        aspect-ratio: 1 / 1;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.055);
+        border: 1px solid rgba(248, 245, 239, 0.1);
+        color: var(--peach);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        flex-shrink: 0;
+        box-sizing: border-box;
+        margin: 0 auto;
+        transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
       }
 
       .vibe-icon {
@@ -976,50 +990,26 @@
       /* ── Echo A.I. floating companion ── */
       .fab-chat {
         position: fixed;
-        right: 20px;
-        bottom: 100px;
-        z-index: 25;
-        display: grid;
-        overflow: hidden;
-        width: 62px;
-        height: 62px;
-        place-items: center;
-        border: 1px solid rgba(196, 216, 255, 0.26);
+        bottom: calc(96px + env(safe-area-inset-bottom));
+        right: max(16px, calc((100vw - 430px) / 2 + 16px));
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
-        background: linear-gradient(145deg, #3e64da, #172b75 76%);
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.24), 0 10px 28px rgba(20, 47, 132, 0.52);
-        cursor: grab;
-        touch-action: none;
-        user-select: none;
-        animation: fab-pulse 3s ease-in-out infinite;
-        transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+        background: var(--peach);
+        color: #050505;
+        display: grid;
+        place-items: center;
+        z-index: 45;
+        box-shadow: 0 8px 24px rgba(247, 213, 178, 0.35);
+        transition: transform 0.2s ease;
       }
-      .fab-chat:hover {
-        border-color: rgba(226, 235, 255, 0.7);
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 12px 32px rgba(48, 91, 223, 0.64);
-        transform: scale(1.08);
+      .fab-chat:active {
+        transform: scale(0.93);
       }
-      .fab-chat:active { cursor: grabbing; transform: scale(0.92); }
       .fab-chat svg {
-        width: 34px;
-        height: 34px;
-        fill: none;
-        stroke: #f7f8ff;
-        stroke-width: 2.6;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.22));
-      }
-      .fab-chat img {
-        width: 94px;
-        height: auto;
-        max-width: none;
-        object-fit: contain;
-        transform: translateX(-10px);
-      }
-      @keyframes fab-pulse {
-        0%, 100% { box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.24), 0 10px 28px rgba(20, 47, 132, 0.52); }
-        50% { box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 10px 34px rgba(59, 106, 245, 0.7); }
+        width: 22px;
+        height: 22px;
+        fill: currentColor;
       }
     </style>
   </head>
@@ -1273,7 +1263,9 @@
       </div>
 
       <a class="fab-chat" href="app.html" aria-label="Open Echo A.I.">
-        <img src="assets/landing-page-logo-3d.webp" alt="" />
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
+        </svg>
       </a>
 
       <nav class="bottom-nav" aria-label="Main navigation">
