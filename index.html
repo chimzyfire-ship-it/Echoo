@@ -363,6 +363,8 @@
         position: relative;
         margin-top: 16px;
         width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
       }
 
       .pick-carousel {
@@ -375,6 +377,9 @@
         scroll-behavior: smooth;
         padding: 4px 2px;
         margin: -4px -2px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
       }
 
       .pick-carousel::-webkit-scrollbar {
@@ -384,6 +389,41 @@
       .pick-carousel .pick-card {
         flex: 0 0 calc(50% - 6px);
         scroll-snap-align: start;
+      }
+
+      /* Skeleton Loader Styles */
+      .pick-card.skeleton-card {
+        position: relative;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(248, 245, 239, 0.08) !important;
+        box-shadow: none !important;
+        min-height: 156px;
+      }
+
+      .pick-card.skeleton-card::before {
+        display: none !important;
+      }
+
+      .skeleton-card::after {
+        content: "" !important;
+        display: block !important;
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.08) 50%,
+          transparent 100%
+        );
+        animation: skeleton-shimmer 1.5s infinite;
+      }
+
+      @keyframes skeleton-shimmer {
+        100% {
+          transform: translateX(100%);
+        }
       }
 
       .carousel-arrow {
@@ -1082,7 +1122,7 @@
           <section class="content" aria-label="Tonight on Echoo">
             <div>
               <div class="section-head">
-                <h2 id="live-picks-title">Tonight's picks</h2>
+                <h2 id="live-picks-title">Live Ontario picks</h2>
                 <a class="see-all" href="events.html">See all</a>
               </div>
               <div class="pick-carousel-container">
@@ -1090,22 +1130,8 @@
                   <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <div class="pick-carousel" id="live-picks">
-                  <a
-                    class="pick-card"
-                    href="music.html"
-                    style="--image: url(&quot;assets/news-music.png&quot;)"
-                    aria-label="Live rooms nearby"
-                  >
-                    <strong class="pick-title">Live rooms nearby</strong>
-                  </a>
-                  <a
-                    class="pick-card"
-                    href="dates.html"
-                    style="--image: url(&quot;assets/news-date.png&quot;)"
-                    aria-label="Date-night energy"
-                  >
-                    <strong class="pick-title">Date-night energy</strong>
-                  </a>
+                  <div class="pick-card skeleton-card"></div>
+                  <div class="pick-card skeleton-card"></div>
                 </div>
                 <button class="carousel-arrow next" id="picks-next" aria-label="Next pick" type="button">
                   <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
