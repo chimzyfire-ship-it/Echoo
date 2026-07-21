@@ -1,0 +1,55 @@
+html.echoo-page-loading {
+  background: #050505;
+}
+
+html.echoo-page-loading body {
+  min-height: 100vh;
+  overflow: hidden;
+  background: #050505;
+}
+
+html.echoo-page-loading body > * {
+  visibility: hidden !important;
+}
+
+html.echoo-page-loading body::before {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  background-color: #050505;
+  background-image:
+    linear-gradient(100deg, #141414 20%, #292929 43%, #141414 66%),
+    linear-gradient(100deg, #141414 20%, #292929 43%, #141414 66%),
+    linear-gradient(100deg, #141414 20%, #292929 43%, #141414 66%),
+    linear-gradient(100deg, #141414 20%, #292929 43%, #141414 66%);
+  background-position:
+    20px max(24px, env(safe-area-inset-top)),
+    20px calc(max(24px, env(safe-area-inset-top)) + 42px),
+    20px calc(max(24px, env(safe-area-inset-top)) + 176px),
+    20px calc(max(24px, env(safe-area-inset-top)) + 250px);
+  background-repeat: no-repeat;
+  background-size:
+    min(42vw, 180px) 24px,
+    calc(100vw - 40px) 110px,
+    calc(100vw - 40px) 56px,
+    min(68vw, 280px) 18px;
+  animation: echoo-page-loader-shimmer 1.25s ease-in-out infinite;
+  content: "";
+}
+
+@keyframes echoo-page-loader-shimmer {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.echoo-page-loading body::before {
+    animation: none;
+  }
+}
