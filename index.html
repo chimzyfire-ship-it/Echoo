@@ -547,13 +547,19 @@
       .vibe-row {
         display: flex;
         flex-direction: row;
-        justify-content: center;
+        justify-content: space-between;
         align-items: flex-start;
-        gap: 12px;
+        gap: 6px;
         margin-top: 14px;
         width: 100%;
         box-sizing: border-box;
-        padding: 0 4px;
+        padding: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .vibe-row::-webkit-scrollbar {
+        display: none;
       }
 
       .vibe {
@@ -562,8 +568,9 @@
         align-items: center;
         justify-content: flex-start;
         gap: 5px;
-        flex: 0 0 54px;
-        width: 54px;
+        flex: 1 1 0;
+        min-width: 48px;
+        max-width: 64px;
         color: var(--ink);
         font-size: 10px;
         font-weight: 560;
