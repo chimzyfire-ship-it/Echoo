@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#050505" />
-    <title>Explore · echoo</title>
+    <title>Discover · echoo</title>
     <link rel="stylesheet" href="assets/party-radar.css" />
     <style>
       :root {
@@ -66,7 +66,7 @@
         text-decoration: none;
       }
 
-      /* App Shell Container - Apple-esque standard mobile width */
+      /* App Shell Container - Standard 430px mobile width */
       .app-shell {
         width: min(100vw, 430px);
         min-height: 100svh;
@@ -76,7 +76,7 @@
           radial-gradient(circle at 50% -2%, rgba(247, 213, 178, 0.1), transparent 22rem),
           radial-gradient(circle at 15% 45%, rgba(120, 140, 180, 0.06), transparent 18rem),
           linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
-        padding-bottom: calc(100px + env(safe-area-inset-bottom));
+        padding-bottom: calc(110px + env(safe-area-inset-bottom));
       }
 
       /* Header Bar */
@@ -88,7 +88,7 @@
         justify-content: space-between;
         align-items: center;
         padding: calc(18px + env(safe-area-inset-top)) 24px 16px;
-        background: rgba(5, 5, 5, 0.78);
+        background: rgba(5, 5, 5, 0.82);
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
       }
@@ -134,14 +134,27 @@
         padding: 12px 24px 24px;
         display: flex;
         flex-direction: column;
-        gap: 32px;
+        gap: 28px;
+      }
+
+      /* Location Badge */
+      .location-badge {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--peach);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 2px;
       }
 
       /* Hero Section */
       .hero {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
         margin-top: 4px;
       }
 
@@ -171,7 +184,7 @@
       .search-wrap {
         position: relative;
         width: 100%;
-        margin-top: 4px;
+        margin-top: 6px;
       }
 
       .search-form {
@@ -240,7 +253,7 @@
         fill: none;
       }
 
-      /* Auto Suggestions */
+      /* Auto Suggestions Popover */
       .suggestions-popover {
         position: absolute;
         top: calc(100% + 8px);
@@ -257,6 +270,10 @@
         flex-direction: column;
         gap: 2px;
         box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      }
+
+      .suggestions-popover[hidden] {
+        display: none !important;
       }
 
       .suggestion-item {
@@ -450,7 +467,7 @@
         fill: none;
       }
 
-      /* Horizontal Scroll Carousels for Popular Nearby & Events */
+      /* Horizontal Scroll Carousels */
       .horizontal-carousel {
         display: flex;
         gap: 14px;
@@ -466,7 +483,7 @@
         display: none;
       }
 
-      /* Location Card (Popular Nearby) */
+      /* Location Card */
       .location-card {
         flex: 0 0 160px;
         height: 215px;
@@ -533,13 +550,6 @@
       }
 
       /* View Toggle Switch (List / Map) */
-      .view-switch-wrap {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 8px;
-      }
-
       .view-switch {
         display: flex;
         background: rgba(248, 245, 239, 0.06);
@@ -549,9 +559,9 @@
       }
 
       .view-switch button {
-        padding: 6px 14px;
+        padding: 4px 12px;
         border-radius: var(--pill-radius);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 550;
         color: var(--muted);
         transition: all 0.2s ease;
@@ -602,62 +612,64 @@
         border: 2px solid #050505;
       }
 
-      /* Floating Navigation Bar (Apple Music style) */
+      /* Canonical Bottom Navigation Bar */
       .bottom-nav {
         position: fixed;
-        bottom: calc(16px + env(safe-area-inset-bottom));
         left: 50%;
-        transform: translateX(-50%);
-        width: min(calc(100vw - 36px), 390px);
-        height: 64px;
-        background: rgba(18, 18, 18, 0.85);
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        border: 1px solid var(--line-strong);
-        border-radius: 9999px;
-        display: flex;
-        justify-around: space-around;
-        align-items: center;
+        bottom: calc(12px + env(safe-area-inset-bottom));
         z-index: 50;
-        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
-        padding: 0 10px;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
+        background: rgba(25, 25, 24, 0.85);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
+        -webkit-backdrop-filter: blur(26px);
+        transform: translateX(-50%);
       }
 
       .nav-link {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 3px;
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 500;
-        transition: color 0.2s ease, transform 0.15s ease;
-        padding: 6px 14px;
-        border-radius: 20px;
-      }
-
-      .nav-link:active {
-        transform: scale(0.93);
-      }
-
-      .nav-link svg {
-        width: 22px;
-        height: 22px;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        fill: none;
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 5px;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
       }
 
       .nav-link.active {
         color: var(--peach);
-        font-weight: 650;
+      }
+
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .nav-link.active svg {
+        fill: currentColor;
+        stroke-width: 0;
       }
 
       /* Floating AI Chat FAB */
       .fab-chat {
         position: fixed;
-        bottom: calc(92px + env(safe-area-inset-bottom));
-        right: max(20px, calc((100vw - 430px) / 2 + 20px));
+        bottom: calc(96px + env(safe-area-inset-bottom));
+        right: max(16px, calc((100vw - 430px) / 2 + 16px));
         width: 48px;
         height: 48px;
         border-radius: 50%;
@@ -823,6 +835,10 @@
       <main class="shell">
         <!-- Hero Section -->
         <section class="hero">
+          <div class="location-badge" id="location-note">
+            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span>
+            <span>VANCOUVER TODAY</span>
+          </div>
           <h1>Discover your next favorite place<span class="accent-dot">.</span></h1>
           <p>Thoughtful places, plans, and experiences — all grounded in what Echoo knows locally.</p>
           
@@ -837,7 +853,7 @@
                 id="query"
                 class="search-input"
                 autocomplete="off"
-                placeholder="Search places, events or ask Echoo"
+                placeholder="Search and discover places"
                 aria-controls="suggestions"
                 aria-expanded="false"
               />
@@ -885,14 +901,21 @@
           </div>
         </section>
 
-        <!-- Popular Nearby Section -->
+        <!-- Popular Nearby Section with inline List/Map View Switch -->
         <section aria-label="Popular Nearby">
           <div class="section-header">
             <h2>Popular nearby</h2>
-            <a href="#" class="see-all" id="see-all-nearby">View all ›</a>
+            <div class="view-switch" aria-label="Result layout">
+              <button class="active" data-view="list">List</button>
+              <button data-view="map">Map</button>
+            </div>
           </div>
           <div class="horizontal-carousel" id="popular-nearby-container">
             <!-- Rendered dynamically -->
+          </div>
+          <div class="map-view" id="map-view" hidden>
+            <span class="map-caption">Explore map</span>
+            <div id="map-pins"></div>
           </div>
         </section>
 
@@ -905,23 +928,9 @@
           <div id="party-radar-mount"></div>
         </section>
 
-        <!-- Filtered Search / Map Results Section (When searching or switching view) -->
-        <section id="explore-section" aria-live="polite">
-          <div class="view-switch-wrap">
-            <span id="location-note" style="font-size: 13px; color: var(--muted);">Exploring Ontario</span>
-            <div class="view-switch" aria-label="Result layout">
-              <button class="active" data-view="list">List</button>
-              <button data-view="map">Map</button>
-            </div>
-          </div>
-
-          <div id="results" style="display: flex; flex-direction: column; gap: 14px; margin-top: 16px;"></div>
-
-          <div class="map-view" id="map-view" hidden>
-            <span class="map-caption">Explore map</span>
-            <div id="map-pins"></div>
-          </div>
-
+        <!-- Search Results (Shown dynamically when searching) -->
+        <section id="search-results-section" hidden>
+          <div id="results" style="display: flex; flex-direction: column; gap: 14px; margin-top: 12px;"></div>
           <button id="load-more" style="width: 100%; padding: 14px; margin-top: 16px; border-radius: var(--pill-radius); background: rgba(248,245,239,0.06); border: 1px solid var(--line); font-weight: 600;" hidden>
             Show more places
           </button>
@@ -948,7 +957,7 @@
             <circle cx="11" cy="11" r="7" />
             <path d="m16 16 4 4" />
           </svg>
-          <span>Explore</span>
+          <span>Discover</span>
         </a>
         <a class="nav-link" href="tickets.html">
           <svg viewBox="0 0 24 24">
@@ -1005,8 +1014,6 @@
         popularContainer = document.getElementById("popular-nearby-container");
 
       let activeQuery = params.get("query") || "trending",
-        nextCursor = null,
-        nextLivePageToken = null,
         items = [],
         view = "list",
         suggestionTimer;
@@ -1030,7 +1037,6 @@
         return /^https?:\/\//i.test(rawUrl) ? rawUrl : "";
       }
 
-      // Seeded fallback places matching Vancouver / Ontario clean reference standard
       const defaultPlaces = [
         {
           title: "Science World",
@@ -1194,9 +1200,19 @@
         if (chip) search(chip.dataset.query);
       };
 
+      document.querySelector(".view-switch").onclick = (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        document.querySelectorAll(".view-switch button").forEach(b => b.classList.toggle("active", b === btn));
+        const isMap = btn.dataset.view === "map";
+        popularContainer.hidden = isMap;
+        mapView.hidden = !isMap;
+      };
+
       document.querySelectorAll("[data-close-sheet]").forEach((btn) => btn.onclick = closeDetail);
 
-      // Initial load
+      // Initial setup
+      document.getElementById("location-note").innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span><span>${city.toUpperCase()} TODAY</span>`;
       renderPopularNearby(defaultPlaces);
       search(activeQuery);
     </script>
