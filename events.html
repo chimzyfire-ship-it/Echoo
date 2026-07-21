@@ -2,19 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#090909" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#050505" />
     <title>Explore · echoo</title>
     <link rel="stylesheet" href="assets/party-radar.css" />
     <style>
       :root {
         color-scheme: dark;
+        --bg-black: #050505;
+        --surface-dark: #121212;
+        --surface-glass: rgba(22, 22, 22, 0.72);
         --ink: #f8f5ef;
-        --muted: #aaa29a;
-        --line: rgba(248, 245, 239, 0.12);
+        --muted: #9e978e;
+        --line: rgba(248, 245, 239, 0.08);
+        --line-strong: rgba(248, 245, 239, 0.16);
         --peach: #f7d5b2;
-        --panel: #151515;
-        --deep: #070707;
+        --peach-glow: rgba(247, 213, 178, 0.15);
+        --card-radius: 20px;
+        --pill-radius: 9999px;
         font-family:
           Inter,
           ui-sans-serif,
@@ -24,1658 +29,1175 @@
           "Segoe UI",
           sans-serif;
       }
+
       * {
         box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
       }
-      html,
-      body {
+
+      html, body {
         margin: 0;
+        padding: 0;
         min-height: 100%;
-        background: #000;
+        background-color: var(--bg-black);
         color: var(--ink);
-      }
-      body {
-        display: grid;
-        justify-items: center;
         overflow-x: hidden;
       }
-      button,
-      input {
-        font: inherit;
+
+      body {
+        display: flex;
+        justify-content: center;
       }
+
+      button, input {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: none;
+        outline: none;
+      }
+
       button {
         cursor: pointer;
       }
+
       a {
         color: inherit;
         text-decoration: none;
       }
+
+      /* App Shell Container - Apple-esque standard mobile width */
       .app-shell {
         width: min(100vw, 430px);
         min-height: 100svh;
         isolation: isolate;
-        overflow: hidden;
         position: relative;
         background:
-          radial-gradient(
-            circle at 72% -5%,
-            rgba(247, 213, 178, 0.16),
-            transparent 21rem
-          ),
-          radial-gradient(
-            circle at 5% 35%,
-            rgba(111, 130, 169, 0.12),
-            transparent 18rem
-          ),
-          linear-gradient(145deg, #171716 0%, #0a0a0a 46%, #030303);
+          radial-gradient(circle at 50% -2%, rgba(247, 213, 178, 0.1), transparent 22rem),
+          radial-gradient(circle at 15% 45%, rgba(120, 140, 180, 0.06), transparent 18rem),
+          linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+        padding-bottom: calc(100px + env(safe-area-inset-bottom));
       }
-      .app-shell::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: -1;
-        opacity: 0.55;
-        background:
-          linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.028),
-            transparent 17%,
-            transparent 83%,
-            rgba(255, 255, 255, 0.024)
-          ),
-          radial-gradient(
-            ellipse at center,
-            transparent 43%,
-            rgba(0, 0, 0, 0.62)
-          );
-      }
+
+      /* Header Bar */
       .topbar {
         position: sticky;
         top: 0;
-        z-index: 20;
+        z-index: 30;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: calc(14px + env(safe-area-inset-top)) 27px 12px;
-        background: rgba(8, 8, 8, 0.64);
-        backdrop-filter: blur(22px);
+        padding: calc(18px + env(safe-area-inset-top)) 24px 16px;
+        background: rgba(5, 5, 5, 0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
       }
+
       .brand {
-        display: inline-flex;
-        width: 96px;
-        height: 34px;
+        display: flex;
         align-items: center;
-        overflow: hidden;
+        height: 32px;
       }
+
       .brand img {
-        width: 96px;
-        filter: brightness(1.2) contrast(1.05);
+        height: 24px;
+        width: auto;
+        filter: brightness(1.2);
       }
+
       .profile-link {
         display: grid;
         place-items: center;
-        width: 34px;
-        height: 34px;
-        border: 2px solid rgba(248, 245, 239, 0.72);
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        position: relative;
+        background: rgba(248, 245, 239, 0.06);
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        color: var(--ink);
+        transition: transform 0.2s ease, background 0.2s ease;
+      }
+
+      .profile-link:active {
+        transform: scale(0.95);
+      }
+
+      .profile-link svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        fill: none;
+      }
+
+      /* Main Shell Content */
+      .shell {
+        padding: 12px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      /* Hero Section */
+      .hero {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 4px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: 34px;
+        font-weight: 750;
+        line-height: 1.12;
+        letter-spacing: -0.02em;
         color: var(--ink);
       }
-      .profile-link::before {
-        content: "";
-        width: 8px;
-        height: 8px;
-        border: 2px solid currentColor;
-        border-radius: 50%;
-        position: absolute;
-        top: 6px;
-      }
-      .profile-link::after {
-        content: "";
-        position: absolute;
-        left: 7px;
-        right: 7px;
-        bottom: 6px;
-        height: 10px;
-        border: 2px solid currentColor;
-        border-bottom: 0;
-        border-radius: 14px 14px 0 0;
-      }
-      .shell {
-        padding: 16px 20px calc(112px + env(safe-area-inset-bottom));
-      }
-      .eyebrow {
+
+      .hero h1 .accent-dot {
         color: var(--peach);
-        font-size: 10px;
-        font-weight: 760;
-        text-transform: uppercase;
-        letter-spacing: 0.11em;
       }
-      .hero {
-        padding: 10px 7px 20px;
-      }
-      h1 {
-        margin: 6px 0 10px;
-        max-width: 9ch;
-        font-size: clamp(42px, 12.2vw, 55px);
-        line-height: 0.98;
-        letter-spacing: -0.055em;
-        font-weight: 830;
-        text-wrap: balance;
-      }
+
       .hero p {
         margin: 0;
-        max-width: 31ch;
-        color: var(--muted);
-        font-size: 14px;
+        font-size: 15px;
+        font-weight: 420;
         line-height: 1.45;
-        font-weight: 510;
+        color: var(--muted);
+        max-width: 340px;
       }
+
+      /* Search Bar */
       .search-wrap {
         position: relative;
-        z-index: 10;
-        margin-top: 20px;
-      }
-      .search {
-        display: grid;
-        grid-template-columns: 22px 1fr 44px;
-        align-items: center;
-        gap: 11px;
-        min-height: 62px;
-        padding: 8px 8px 8px 17px;
-        border: 1px solid rgba(248, 245, 239, 0.1);
-        border-radius: 22px;
-        background: linear-gradient(
-          180deg,
-          rgba(48, 48, 46, 0.84),
-          rgba(27, 27, 26, 0.84)
-        );
-        box-shadow:
-          inset 0 1px rgba(255, 255, 255, 0.07),
-          0 18px 42px rgba(0, 0, 0, 0.26);
-        backdrop-filter: blur(24px);
-        transition:
-          border-color 0.2s,
-          box-shadow 0.2s;
-      }
-      .search:focus-within {
-        border-color: rgba(247, 213, 178, 0.55);
-        box-shadow:
-          inset 0 1px rgba(255, 255, 255, 0.08),
-          0 0 0 4px rgba(247, 213, 178, 0.09),
-          0 18px 42px rgba(0, 0, 0, 0.26);
-      }
-      .search-icon {
-        width: 17px;
-        height: 17px;
-        border: 2px solid var(--ink);
-        border-radius: 50%;
-        position: relative;
-        opacity: 0.9;
-      }
-      .search-icon::after {
-        content: "";
-        width: 7px;
-        height: 2px;
-        background: var(--ink);
-        position: absolute;
-        right: -5px;
-        bottom: -3px;
-        transform: rotate(45deg);
-        border-radius: 99px;
-      }
-      .search input {
         width: 100%;
-        min-width: 0;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        color: var(--ink);
+        margin-top: 4px;
+      }
+
+      .search-form {
+        display: flex;
+        align-items: center;
+        height: 56px;
+        padding: 0 8px 0 18px;
+        border-radius: var(--pill-radius);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--line-strong);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .search-form:focus-within {
+        border-color: rgba(247, 213, 178, 0.4);
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: 0 0 20px var(--peach-glow);
+      }
+
+      .search-icon {
+        width: 20px;
+        height: 20px;
+        stroke: var(--muted);
+        stroke-width: 2;
+        fill: none;
+        margin-right: 12px;
+        flex-shrink: 0;
+      }
+
+      .search-input {
+        flex: 1;
         font-size: 15px;
-        font-weight: 560;
+        font-weight: 450;
+        color: var(--ink);
+        background: transparent;
       }
-      .search input::placeholder {
-        color: rgba(248, 245, 239, 0.46);
+
+      .search-input::placeholder {
+        color: var(--muted);
+        font-weight: 400;
       }
-      .search-submit {
-        width: 44px;
-        height: 44px;
-        border: 0;
-        border-radius: 15px;
+
+      .search-submit-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         background: var(--peach);
-        color: #17130f;
+        color: #050505;
         display: grid;
         place-items: center;
-        transition: transform 0.18s ease;
+        transition: transform 0.18s ease, filter 0.18s ease;
+        flex-shrink: 0;
       }
-      .search-submit:hover {
-        transform: scale(1.045);
+
+      .search-submit-btn:active {
+        transform: scale(0.94);
       }
-      .search-submit::before {
-        content: "↗";
-        font-size: 22px;
-        line-height: 1;
-        font-weight: 700;
-        transform: translate(-1px, 1px);
+
+      .search-submit-btn svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        fill: none;
       }
-      .suggestions {
+
+      /* Auto Suggestions */
+      .suggestions-popover {
         position: absolute;
         top: calc(100% + 8px);
-        inset-inline: 0;
-        overflow: hidden;
-        border: 1px solid rgba(248, 245, 239, 0.12);
-        border-radius: 18px;
-        background: rgba(25, 25, 24, 0.96);
-        box-shadow: 0 20px 44px rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(26px);
+        left: 0;
+        right: 0;
+        z-index: 40;
+        background: rgba(18, 18, 18, 0.96);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border: 1px solid var(--line-strong);
+        border-radius: 20px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
       }
-      .suggestions[hidden] {
-        display: none;
-      }
-      .suggestion {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 30px 1fr auto;
+
+      .suggestion-item {
+        display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         padding: 12px 14px;
-        border: 0;
-        border-bottom: 1px solid rgba(248, 245, 239, 0.07);
-        background: transparent;
+        border-radius: 14px;
+        font-size: 14px;
         color: var(--ink);
         text-align: left;
+        transition: background 0.15s ease;
       }
-      .suggestion:last-child {
-        border-bottom: 0;
+
+      .suggestion-item:hover, .suggestion-item:focus {
+        background: rgba(248, 245, 239, 0.08);
       }
-      .suggestion:hover,
-      .suggestion:focus-visible {
-        background: rgba(255, 255, 255, 0.06);
-        outline: 0;
-      }
-      .suggestion-mark {
-        width: 28px;
-        height: 28px;
-        display: grid;
-        place-items: center;
-        border-radius: 9px;
-        background: rgba(247, 213, 178, 0.13);
-        color: var(--peach);
-        font-size: 13px;
-      }
-      .suggestion strong {
-        font-size: 13px;
-        font-weight: 680;
-      }
-      .suggestion small {
-        color: var(--muted);
-        text-transform: capitalize;
-        font-size: 11px;
-      }
-      .location-line {
+
+      /* Category Pills Bar */
+      .category-pills {
         display: flex;
-        align-items: center;
-        gap: 7px;
-        margin: 14px 2px 0;
-        color: rgba(248, 245, 239, 0.55);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.055em;
-        text-transform: uppercase;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 4px 0 6px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        margin: -4px -24px 0;
+        padding-left: 24px;
+        padding-right: 24px;
       }
-      .location-line::before {
-        content: "";
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--peach);
-        box-shadow: 0 0 13px rgba(247, 213, 178, 0.75);
+
+      .category-pills::-webkit-scrollbar {
+        display: none;
       }
-      .chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 7px;
-        padding: 6px 0 16px;
-        width: 100%;
-        box-sizing: border-box;
-      }
+
       .chip {
-        flex: 0 1 auto;
-        min-height: 32px;
-        border: 1px solid var(--line);
-        border-radius: 99px;
-        padding: 0 12px;
-        background: rgba(255, 255, 255, 0.035);
-        color: rgba(248, 245, 239, 0.75);
-        font-size: 11px;
-        font-weight: 600;
-        transition: 0.18s ease;
         white-space: nowrap;
+        padding: 10px 18px;
+        border-radius: var(--pill-radius);
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted);
+        background: transparent;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
       }
-      .chip:hover,
-      .chip.active {
-        border-color: rgba(247, 213, 178, 0.5);
-        background: rgba(247, 213, 178, 0.14);
+
+      .chip:hover {
         color: var(--ink);
       }
-      .result-head {
-        display: flex;
-        align-items: end;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 5px 2px 13px;
+
+      .chip.active {
+        background: var(--peach);
+        color: #050505;
+        font-weight: 650;
+        border-color: var(--peach);
       }
-      .result-head h2 {
-        margin: 0;
-        font-size: 22px;
-        letter-spacing: -0.04em;
-      }
-      .result-head p {
-        margin: 4px 0 0;
-        color: var(--muted);
-        font-size: 12px;
-      }
-      .view-switch {
-        display: flex;
-        padding: 3px;
-        border: 1px solid var(--line);
-        border-radius: 11px;
-        background: rgba(255, 255, 255, 0.045);
-      }
-      .view-switch button {
-        width: 31px;
-        height: 28px;
-        border: 0;
-        border-radius: 8px;
-        background: transparent;
-        color: var(--muted);
-        font-size: 14px;
-      }
-      .view-switch button.active {
-        background: rgba(247, 213, 178, 0.2);
-        color: var(--peach);
-      }
-      .results {
-        display: grid;
-        gap: 13px;
-      }
-      .explore-card {
-        position: relative;
-        display: grid;
-        grid-template-columns: 116px 1fr;
-        min-height: 116px;
-        overflow: hidden;
-        border: 1px solid rgba(248, 245, 239, 0.11);
-        border-radius: 19px;
-        background: linear-gradient(
-          120deg,
-          rgba(37, 37, 36, 0.8),
-          rgba(18, 18, 18, 0.78)
-        );
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
-        cursor: pointer;
-        transition:
-          transform 0.18s ease,
-          border-color 0.18s ease;
-      }
-      .explore-card:hover {
-        transform: translateY(-2px);
+
+      /* Highlighted Category Chip for Upcoming Drop */
+      .chip.chip-drop {
         border-color: rgba(247, 213, 178, 0.4);
+        color: var(--peach);
+        font-weight: 600;
+        background: rgba(247, 213, 178, 0.08);
       }
-      .card-art {
+
+      .chip.chip-drop.active {
+        background: var(--peach);
+        color: #050505;
+      }
+
+      /* Section Headers */
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+
+      .section-header .see-all {
+        font-size: 13px;
+        font-weight: 550;
+        color: var(--peach);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Featured Destination Card */
+      .featured-card {
         position: relative;
-        min-height: 100%;
+        width: 100%;
+        aspect-ratio: 16 / 9.5;
+        border-radius: 24px;
         overflow: hidden;
-        background: linear-gradient(145deg, #775a44, #171616);
-        background-position: center;
-        background-size: cover;
+        background: #111;
+        border: 1px solid var(--line);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        cursor: pointer;
+        transition: transform 0.22s ease, border-color 0.22s ease;
       }
-      .card-art::after {
-        content: "";
+
+      .featured-card:active {
+        transform: scale(0.98);
+      }
+
+      .featured-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .featured-overlay {
         position: absolute;
         inset: 0;
         background: linear-gradient(
-          155deg,
-          transparent 35%,
-          rgba(0, 0, 0, 0.25)
+          to top,
+          rgba(5, 5, 5, 0.94) 0%,
+          rgba(5, 5, 5, 0.4) 50%,
+          rgba(5, 5, 5, 0.05) 100%
         );
-      }
-      .card-art[data-kind="museum"],
-      .card-art[data-kind="gallery"] {
-        background: linear-gradient(150deg, #756a61, #202020 67%);
-      }
-      .card-art[data-kind="restaurant"],
-      .card-art[data-kind="food"] {
-        background: linear-gradient(145deg, #8c552f, #271813 70%);
-      }
-      .card-art[data-kind="event"] {
-        background: linear-gradient(145deg, #674a78, #18131d 70%);
-      }
-      .card-art[data-kind="google"] {
-        background: linear-gradient(145deg, #4c6380, #141b24 70%);
-      }
-      .card-art-label {
-        position: absolute;
-        left: 11px;
-        bottom: 10px;
-        z-index: 1;
-        max-width: 88px;
-        color: #fff;
-        font-size: 10px;
-        font-weight: 760;
-        letter-spacing: 0.07em;
-        line-height: 1.1;
-        text-transform: uppercase;
-      }
-      .card-body {
-        display: grid;
-        align-content: start;
-        gap: 7px;
-        padding: 15px 14px 13px;
-        min-width: 0;
-      }
-      .card-top {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        gap: 6px;
+        align-items: flex-end;
+        padding: 20px 22px;
       }
-      .card-kicker {
-        color: var(--peach);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 10px;
-        font-weight: 750;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-      }
-      .new-badge,
-      .hot-badge {
-        flex: 0 0 auto;
-        padding: 4px 6px;
-        border-radius: 6px;
-        background: rgba(247, 213, 178, 0.14);
-        color: var(--peach);
-        font-size: 9px;
-        font-weight: 760;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-      .hot-badge {
-        background: rgba(255, 137, 88, 0.16);
-        color: #ffc09d;
-      }
-      .trending-rank-badge {
-        flex: 0 0 auto;
-        padding: 4px 8px;
-        border-radius: 6px;
-        background: var(--peach);
-        color: var(--deep);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-      }
-      .trending-minimalist {
-        flex: 0 0 auto;
-        color: var(--peach);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-      .trending-rank-badge + .trending-minimalist {
-        margin-left: 6px;
-      }
-      .card-body h3 {
-        margin: 0;
-        overflow: hidden;
-        font-size: 17px;
-        line-height: 1.08;
-        letter-spacing: -0.028em;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .card-body p {
-        display: -webkit-box;
-        margin: 0;
-        overflow: hidden;
-        color: var(--muted);
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        font-size: 12px;
-        line-height: 1.36;
-      }
-      .card-meta {
+
+      .featured-info {
         display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 1px;
+        flex-direction: column;
+        gap: 4px;
       }
-      .card-meta span {
-        max-width: 100%;
-        overflow: hidden;
-        padding: 4px 6px;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.055);
-        color: rgba(248, 245, 239, 0.7);
-        font-size: 10px;
-        font-weight: 620;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+
+      .featured-title {
+        margin: 0;
+        font-size: 21px;
+        font-weight: 750;
+        color: var(--ink);
+        line-height: 1.2;
       }
-      .provider-note {
+
+      .featured-sub {
+        font-size: 13px;
+        font-weight: 450;
+        color: var(--muted);
+      }
+
+      .featured-rating {
         display: flex;
         align-items: center;
-        gap: 5px;
-        padding: 1px 2px 0;
-        color: rgba(248, 245, 239, 0.43);
-        font-size: 10px;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-top: 2px;
       }
-      .provider-note::before {
-        content: "";
-        width: 4px;
-        height: 4px;
+
+      .featured-rating .star {
+        color: var(--peach);
+      }
+
+      .featured-action-btn {
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        background: rgba(248, 245, 239, 0.5);
+        background: rgba(30, 30, 30, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: var(--ink);
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
       }
-      .map-view {
-        position: relative;
-        min-height: 470px;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        border-radius: 21px;
-        background:
-          radial-gradient(
-            circle at 42% 36%,
-            rgba(247, 213, 178, 0.11),
-            transparent 17%
-          ),
-          linear-gradient(135deg, #1c211e, #111412 48%, #1b1a18);
+
+      .featured-action-btn svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
       }
-      .map-view[hidden] {
+
+      /* Horizontal Scroll Carousels for Popular Nearby & Events */
+      .horizontal-carousel {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        margin: 0 -24px;
+        padding-left: 24px;
+        padding-right: 24px;
+        scrollbar-width: none;
+      }
+
+      .horizontal-carousel::-webkit-scrollbar {
         display: none;
       }
-      .map-grid {
-        position: absolute;
-        inset: -10%;
-        opacity: 0.32;
-        background-image:
-          linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-        background-size: 44px 44px;
-        transform: rotate(-11deg) scale(1.2);
+
+      /* Location Card (Popular Nearby) */
+      .location-card {
+        flex: 0 0 160px;
+        height: 215px;
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        background: #151515;
+        border: 1px solid var(--line);
+        cursor: pointer;
+        transition: transform 0.2s ease;
       }
-      .map-road {
-        position: absolute;
-        height: 2px;
-        width: 130%;
-        left: -15%;
-        background: rgba(247, 213, 178, 0.24);
-        transform: rotate(-27deg);
-        box-shadow:
-          0 42px 0 rgba(247, 213, 178, 0.12),
-          0 -86px 0 rgba(247, 213, 178, 0.12);
+
+      .location-card:active {
+        transform: scale(0.97);
       }
-      .map-caption {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        padding: 7px 9px;
-        border: 1px solid rgba(248, 245, 239, 0.12);
-        border-radius: 9px;
-        background: rgba(6, 6, 6, 0.6);
-        color: rgba(248, 245, 239, 0.65);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        backdrop-filter: blur(8px);
-      }
-      .map-pin {
-        position: absolute;
-        width: 35px;
-        height: 35px;
-        border: 2px solid rgba(255, 255, 255, 0.8);
-        border-radius: 50% 50% 50% 0;
-        background: var(--peach);
-        color: #17120e;
-        box-shadow:
-          0 7px 20px rgba(0, 0, 0, 0.45),
-          0 0 0 5px rgba(247, 213, 178, 0.14);
-        transform: translate(-50%, -100%) rotate(-45deg);
-        transition: transform 0.18s ease;
-      }
-      .map-pin:hover {
-        transform: translate(-50%, -105%) rotate(-45deg) scale(1.1);
-      }
-      .map-pin span {
-        display: grid;
+
+      .location-card-img {
         width: 100%;
         height: 100%;
-        place-items: center;
-        font-size: 11px;
-        font-weight: 800;
-        transform: rotate(45deg);
+        object-fit: cover;
+        display: block;
       }
-      .map-pin.google {
-        background: #a9c7e8;
+
+      .location-card-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(5, 5, 5, 0.95) 0%,
+          rgba(5, 5, 5, 0.35) 55%,
+          transparent 100%
+        );
+        padding: 14px 14px 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 3px;
       }
-      .skeleton {
-        pointer-events: none;
+
+      .location-card-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .location-card-meta {
+        font-size: 12px;
+        font-weight: 450;
+        color: var(--muted);
+      }
+
+      .location-card-rating {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 2px;
+      }
+
+      /* View Toggle Switch (List / Map) */
+      .view-switch-wrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+      }
+
+      .view-switch {
+        display: flex;
+        background: rgba(248, 245, 239, 0.06);
+        padding: 3px;
+        border-radius: var(--pill-radius);
+        border: 1px solid var(--line);
+      }
+
+      .view-switch button {
+        padding: 6px 14px;
+        border-radius: var(--pill-radius);
+        font-size: 13px;
+        font-weight: 550;
+        color: var(--muted);
+        transition: all 0.2s ease;
+      }
+
+      .view-switch button.active {
+        background: var(--surface-dark);
+        color: var(--ink);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+
+      /* Map View Container */
+      .map-view {
+        width: 100%;
+        height: 360px;
+        border-radius: 24px;
+        background: #0d0d0d;
+        border: 1px solid var(--line);
+        position: relative;
         overflow: hidden;
       }
-      .skeleton .card-art,
-      .skeleton .sk-line {
-        background: linear-gradient(
-          100deg,
-          rgba(255, 255, 255, 0.045) 24%,
-          rgba(255, 255, 255, 0.12) 38%,
-          rgba(255, 255, 255, 0.045) 55%
-        );
-        background-size: 260% 100%;
-        animation: shimmer 1.3s infinite linear;
-      }
-      .sk-line {
-        height: 10px;
-        border-radius: 99px;
-      }
-      .sk-line.big {
-        width: 78%;
-        height: 18px;
-      }
-      .sk-line.medium {
-        width: 94%;
-      }
-      .sk-line.short {
-        width: 55%;
-      }
-      @keyframes shimmer {
-        to {
-          background-position: -160% 0;
-        }
-      }
-      .empty {
-        display: grid;
-        justify-items: start;
-        gap: 9px;
-        padding: 27px 22px;
-        border: 1px dashed rgba(248, 245, 239, 0.19);
-        border-radius: 19px;
-        background: rgba(255, 255, 255, 0.025);
-      }
-      .empty-mark {
-        display: grid;
-        width: 36px;
-        height: 36px;
-        place-items: center;
-        border-radius: 12px;
-        background: rgba(247, 213, 178, 0.13);
-        color: var(--peach);
-        font-size: 18px;
-      }
-      .empty h3 {
-        margin: 0;
-        font-size: 18px;
-        letter-spacing: -0.03em;
-      }
-      .empty p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.4;
-      }
-      .empty button {
-        margin-top: 3px;
-        min-height: 35px;
-        border: 1px solid rgba(247, 213, 178, 0.35);
-        border-radius: 99px;
-        padding: 0 12px;
-        background: rgba(247, 213, 178, 0.1);
-        color: var(--ink);
-        font-size: 12px;
-        font-weight: 680;
-      }
-      .load-more {
-        width: 100%;
-        min-height: 46px;
-        margin-top: 3px;
+
+      .map-caption {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        padding: 6px 12px;
+        border-radius: var(--pill-radius);
+        background: rgba(5, 5, 5, 0.8);
         border: 1px solid var(--line);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--ink);
         font-size: 12px;
-        font-weight: 700;
+        color: var(--muted);
       }
-      .load-more:hover {
-        border-color: rgba(247, 213, 178, 0.4);
+
+      .map-pin {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--peach);
+        color: #050505;
+        font-weight: 750;
+        font-size: 13px;
+        display: grid;
+        place-items: center;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        border: 2px solid #050505;
       }
+
+      /* Floating Navigation Bar (Apple Music style) */
+      .bottom-nav {
+        position: fixed;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(calc(100vw - 36px), 390px);
+        height: 64px;
+        background: rgba(18, 18, 18, 0.85);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border: 1px solid var(--line-strong);
+        border-radius: 9999px;
+        display: flex;
+        justify-around: space-around;
+        align-items: center;
+        z-index: 50;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+        padding: 0 10px;
+      }
+
+      .nav-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 500;
+        transition: color 0.2s ease, transform 0.15s ease;
+        padding: 6px 14px;
+        border-radius: 20px;
+      }
+
+      .nav-link:active {
+        transform: scale(0.93);
+      }
+
+      .nav-link svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+      }
+
+      .nav-link.active {
+        color: var(--peach);
+        font-weight: 650;
+      }
+
+      /* Floating AI Chat FAB */
+      .fab-chat {
+        position: fixed;
+        bottom: calc(92px + env(safe-area-inset-bottom));
+        right: max(20px, calc((100vw - 430px) / 2 + 20px));
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--peach);
+        color: #050505;
+        display: grid;
+        place-items: center;
+        z-index: 45;
+        box-shadow: 0 8px 24px rgba(247, 213, 178, 0.35);
+        transition: transform 0.2s ease;
+      }
+
+      .fab-chat:active {
+        transform: scale(0.93);
+      }
+
+      .fab-chat svg {
+        width: 22px;
+        height: 22px;
+        fill: currentColor;
+      }
+
+      /* Modal Sheet (Detail View) */
       .sheet {
         position: fixed;
         inset: 0;
-        z-index: 40;
-        display: grid;
-        align-items: end;
-        pointer-events: none;
+        z-index: 100;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.25s ease, visibility 0.25s ease;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
       }
+
       .sheet.open {
-        pointer-events: auto;
+        visibility: visible;
+        opacity: 1;
       }
+
       .sheet-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.68);
-        opacity: 0;
-        transition: opacity 0.24s;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
       }
-      .sheet.open .sheet-backdrop {
-        opacity: 1;
-      }
+
       .sheet-panel {
         position: relative;
-        width: min(430px, 100%);
-        max-height: min(80svh, 700px);
-        overflow: auto;
-        margin-inline: auto;
-        padding: 10px 20px calc(28px + env(safe-area-inset-bottom));
-        border: 1px solid rgba(248, 245, 239, 0.14);
-        border-radius: 25px 25px 0 0;
-        background: linear-gradient(145deg, #272625, #101010 62%);
-        box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.46);
-        transform: translateY(105%);
-        transition: transform 0.3s cubic-bezier(0.22, 0.9, 0.3, 1);
+        width: min(100vw, 430px);
+        max-height: 88vh;
+        overflow-y: auto;
+        background: #141414;
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        border: 1px solid var(--line-strong);
+        border-bottom: none;
+        padding: 24px;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 2;
       }
+
       .sheet.open .sheet-panel {
         transform: translateY(0);
       }
+
       .sheet-handle {
-        width: 38px;
+        width: 36px;
         height: 4px;
-        margin: 0 auto 17px;
-        border-radius: 99px;
-        background: rgba(248, 245, 239, 0.26);
+        border-radius: 2px;
+        background: rgba(248, 245, 239, 0.2);
+        margin: 0 auto 20px;
       }
+
       .sheet-close {
         position: absolute;
-        top: 15px;
-        right: 17px;
-        width: 31px;
-        height: 31px;
-        border: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--ink);
-        font-size: 17px;
-      }
-      .detail-art {
-        height: 150px;
-        margin-bottom: 17px;
-        border-radius: 17px;
-        background: linear-gradient(135deg, #805b41, #1b1715 68%);
-        background-position: center;
-        background-size: cover;
-        position: relative;
-        overflow: hidden;
-      }
-      .detail-art::after {
-        content: "";
-        position: absolute;
-        width: 210px;
-        height: 210px;
-        right: -43px;
-        top: -78px;
-        border: 1px solid rgba(255, 255, 255, 0.23);
-        border-radius: 50%;
-        box-shadow: -48px 45px 0 -2px rgba(247, 213, 178, 0.5);
-      }
-      .photo-attribution {
-        margin: -9px 0 14px;
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 1.35;
-      }
-      .photo-attribution a {
-        color: var(--peach);
-      }
-      .detail-kicker {
-        color: var(--peach);
-        font-size: 10px;
-        font-weight: 750;
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
-      }
-      .detail-title {
-        margin: 7px 0 9px;
-        font-size: 30px;
-        line-height: 1;
-        letter-spacing: -0.055em;
-      }
-      .detail-copy {
-        margin: 0;
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.45;
-      }
-      .detail-stats {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 17px 0;
-      }
-      .detail-stats span {
-        padding: 7px 9px;
-        border-radius: 9px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(248, 245, 239, 0.78);
-        font-size: 11px;
-        font-weight: 650;
-      }
-      .detail-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 9px;
-      }
-      .detail-actions button,
-      .detail-actions a {
-        display: grid;
-        min-height: 46px;
-        place-items: center;
-        border: 1px solid var(--line);
-        border-radius: 13px;
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--ink);
-        font-size: 12px;
-        font-weight: 720;
-      }
-      .detail-actions .primary {
-        border-color: transparent;
-        background: var(--peach);
-        color: #18120e;
-      }
-      .bottom-nav {
-        position: fixed;
-        left: 50%;
-        bottom: 12px;
-        z-index: 30;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-        width: min(376px, calc(100% - 52px));
-        min-height: 72px;
-        padding: 10px 15px 8px;
-        border: 1px solid rgba(248, 245, 239, 0.07);
-        border-radius: 28px;
-        background: rgba(25, 25, 24, 0.84);
-        box-shadow:
-          inset 0 1px rgba(255, 255, 255, 0.05),
-          0 18px 44px rgba(0, 0, 0, 0.42);
-        backdrop-filter: blur(26px);
-        transform: translateX(-50%);
-      }
-      .nav-link {
-        display: grid;
-        min-width: 0;
-        place-items: center;
-        gap: 5px;
-        color: rgba(248, 245, 239, 0.62);
-        font-size: 12px;
-        font-weight: 560;
-      }
-      .nav-link.active {
-        color: var(--peach);
-      }
-      .nav-link svg {
-        width: 27px;
-        height: 27px;
-        fill: none;
-        stroke: currentColor;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        stroke-width: 1.8;
-      }
-      .nav-link.active svg {
-        fill: currentColor;
-        stroke-width: 0;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-          animation-duration: 0.01ms !important;
-          transition-duration: 0.01ms !important;
-        }
-      }
-      /* ── Floating Action Button (FAB) ── */
-      .fab-chat {
-        position: fixed;
-        bottom: 100px;
+        top: 20px;
         right: 20px;
-        z-index: 25;
-        width: 56px;
-        height: 56px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
+        background: rgba(248, 245, 239, 0.08);
+        color: var(--ink);
         display: grid;
         place-items: center;
-        background: rgba(25, 25, 24, 0.85);
-        border: 1px solid rgba(248, 245, 239, 0.12);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(12px);
-        transition: all 0.2s ease;
-        animation: fab-pulse 2s ease-in-out 1s 1;
+        font-size: 20px;
       }
-      .fab-chat:hover {
-        transform: scale(1.08);
-        border-color: var(--peach);
-        box-shadow: 0 8px 28px rgba(247, 213, 178, 0.15);
+
+      .detail-art {
+        width: 100%;
+        height: 220px;
+        border-radius: 20px;
+        background-size: cover;
+        background-position: center;
+        margin-bottom: 16px;
       }
-      .fab-chat svg {
-        width: 26px;
-        height: 26px;
-        fill: none;
-        stroke: var(--peach);
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
+
+      .detail-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--peach);
+        letter-spacing: 0.06em;
       }
-      @keyframes fab-pulse {
-        0%, 100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
-        50% { box-shadow: 0 8px 28px rgba(247, 213, 178, 0.25); }
+
+      .detail-title {
+        font-size: 24px;
+        font-weight: 750;
+        margin: 4px 0 8px;
+        color: var(--ink);
+      }
+
+      .detail-copy {
+        font-size: 15px;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-bottom: 20px;
+      }
+
+      .detail-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 24px;
+      }
+
+      .detail-actions button, .detail-actions a {
+        flex: 1;
+        padding: 14px;
+        border-radius: var(--pill-radius);
+        text-align: center;
+        font-weight: 650;
+        font-size: 14px;
+        background: rgba(248, 245, 239, 0.08);
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      .detail-actions .primary {
+        background: var(--peach);
+        color: #050505;
+        border: none;
       }
     </style>
   </head>
   <body>
     <div class="app-shell">
+      <!-- Header -->
       <header class="topbar" aria-label="Echoo">
-        <a class="brand" href="index.html" aria-label="Echoo home"
-          ><img src="assets/echoo-wordmark.png" alt="echoo"
-        /></a>
-        <a
-          class="profile-link"
-          href="auth.html"
-          aria-label="Open your profile"
-        ></a>
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
+        </a>
+        <a class="profile-link" href="auth.html" aria-label="Open profile">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
+        </a>
       </header>
+
+      <!-- Main Shell Content -->
       <main class="shell">
+        <!-- Hero Section -->
         <section class="hero">
-          <span class="eyebrow">Echoo Explore</span>
-          <h1>Find your next good place.</h1>
-          <p>
-            Thoughtful places, plans, and experiences — all grounded in what
-            Echoo knows locally.
-          </p>
+          <h1>Discover your next favorite place<span class="accent-dot">.</span></h1>
+          <p>Thoughtful places, plans, and experiences — all grounded in what Echoo knows locally.</p>
+          
+          <!-- Search Bar -->
           <div class="search-wrap">
-            <form
-              class="search"
-              id="search-form"
-              role="search"
-              aria-label="Search Explore"
-            >
-              <span class="search-icon" aria-hidden="true"></span>
+            <form class="search-form" id="search-form" role="search" aria-label="Search Echoo">
+              <svg class="search-icon" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m16.5 16.5 4.5 4.5" />
+              </svg>
               <input
                 id="query"
+                class="search-input"
                 autocomplete="off"
-                placeholder="Try rooftop view, quiet date night…"
+                placeholder="Search places, events or ask Echoo"
                 aria-controls="suggestions"
                 aria-expanded="false"
               />
-              <button
-                class="search-submit"
-                type="submit"
-                aria-label="Search"
-              ></button>
+              <button class="search-submit-btn" type="submit" aria-label="Search">
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
             </form>
-            <div
-              class="suggestions"
-              id="suggestions"
-              role="listbox"
-              hidden
-            ></div>
+            <div class="suggestions-popover" id="suggestions" role="listbox" hidden></div>
           </div>
-          <div class="location-line" id="location-note">Exploring Ontario</div>
         </section>
-        <div class="chips" id="chips" aria-label="Explore categories">
-          <button class="chip active" data-query="trending">Top Trending</button
-          ><button class="chip" data-query="rooftop view">Rooftop views</button
-          ><button class="chip" data-query="date night">Date night</button
-          ><button class="chip" data-query="live music">Live music</button
-          ><button class="chip" data-query="museum">Culture</button
+
+        <!-- Category Pills -->
+        <div class="category-pills" id="chips" aria-label="Explore categories">
+          <button class="chip active" data-query="trending">Trending</button>
+          <button class="chip chip-drop" data-query="upcoming drop">Upcoming Drop</button>
+          <button class="chip" data-query="food">Food</button>
+          <button class="chip" data-query="music">Music</button>
+          <button class="chip" data-query="nightlife">Nightlife</button>
+          <button class="chip" data-query="culture">Culture</button>
+          <button class="chip" data-query="nature">Nature</button>
         </div>
-        <!-- Echoo Party Drops & Radar Mount -->
-        <div id="party-radar-mount"></div>
-        <section aria-live="polite" aria-busy="true" id="explore-section">
-          <div class="result-head">
-            <div>
-              <h2 id="result-title">Explore nearby</h2>
-              <p id="result-subtitle">
-                A fresh local edit, just for this area.
-              </p>
-            </div>
-            <div class="view-switch" aria-label="Result layout">
-              <button class="active" data-view="list" aria-label="List view">
-                ☷</button
-              ><button data-view="map" aria-label="Map view">⌖</button>
+
+        <!-- Featured Destination Card -->
+        <section aria-label="Featured Destination">
+          <div class="featured-card" id="featured-destination-card">
+            <img class="featured-img" id="featured-img" src="https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?auto=format&fit=crop&w=1200&q=80" alt="Science World" />
+            <div class="featured-overlay">
+              <div class="featured-info">
+                <h3 class="featured-title" id="featured-title">Science World</h3>
+                <span class="featured-sub" id="featured-sub">Museum • Downtown Vancouver</span>
+                <div class="featured-rating">
+                  <span class="star">★</span>
+                  <span id="featured-score">4.8</span>
+                  <span style="color: var(--muted); font-weight: 400;">(120)</span>
+                </div>
+              </div>
+              <button class="featured-action-btn" aria-label="View featured place">
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
-          <div class="results" id="results"></div>
+        </section>
+
+        <!-- Popular Nearby Section -->
+        <section aria-label="Popular Nearby">
+          <div class="section-header">
+            <h2>Popular nearby</h2>
+            <a href="#" class="see-all" id="see-all-nearby">View all ›</a>
+          </div>
+          <div class="horizontal-carousel" id="popular-nearby-container">
+            <!-- Rendered dynamically -->
+          </div>
+        </section>
+
+        <!-- Events This Week / Upcoming Drop Mount -->
+        <section aria-label="Events this week" id="events-section">
+          <div class="section-header">
+            <h2>Events this week</h2>
+            <a href="#" class="see-all">View all ›</a>
+          </div>
+          <div id="party-radar-mount"></div>
+        </section>
+
+        <!-- Filtered Search / Map Results Section (When searching or switching view) -->
+        <section id="explore-section" aria-live="polite">
+          <div class="view-switch-wrap">
+            <span id="location-note" style="font-size: 13px; color: var(--muted);">Exploring Ontario</span>
+            <div class="view-switch" aria-label="Result layout">
+              <button class="active" data-view="list">List</button>
+              <button data-view="map">Map</button>
+            </div>
+          </div>
+
+          <div id="results" style="display: flex; flex-direction: column; gap: 14px; margin-top: 16px;"></div>
+
           <div class="map-view" id="map-view" hidden>
-            <div class="map-grid"></div>
-            <div class="map-road"></div>
             <span class="map-caption">Explore map</span>
             <div id="map-pins"></div>
           </div>
-          <button class="load-more" id="load-more" hidden>
+
+          <button id="load-more" style="width: 100%; padding: 14px; margin-top: 16px; border-radius: var(--pill-radius); background: rgba(248,245,239,0.06); border: 1px solid var(--line); font-weight: 600;" hidden>
             Show more places
           </button>
         </section>
       </main>
-      <!-- Floating Action Button for AI Chat -->
+
+      <!-- AI Chat Floating Button -->
       <a class="fab-chat" href="app.html" aria-label="Open AI chat">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
           <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
-          <circle cx="8.5" cy="10.5" r="1" />
-          <circle cx="12" cy="10.5" r="1" />
-          <circle cx="15.5" cy="10.5" r="1" />
         </svg>
       </a>
 
+      <!-- Floating Bottom Navigation -->
       <nav class="bottom-nav" aria-label="Main navigation">
-        <a class="nav-link" href="index.html"
-          ><svg viewBox="0 0 24 24">
-            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg
-          ><span>Home</span></a
-        >
-        <a class="nav-link active" href="events.html" aria-current="page"
-          ><svg viewBox="0 0 24 24">
+        <a class="nav-link" href="index.html">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+          </svg>
+          <span>Home</span>
+        </a>
+        <a class="nav-link active" href="events.html" aria-current="page">
+          <svg viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="7" />
-            <path d="m16 16 4 4" /></svg
-          ><span>Explore</span></a
-        >
-        <a class="nav-link" href="tickets.html"
-          ><svg viewBox="0 0 24 24">
+            <path d="m16 16 4 4" />
+          </svg>
+          <span>Explore</span>
+        </a>
+        <a class="nav-link" href="tickets.html">
+          <svg viewBox="0 0 24 24">
             <path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" />
-            <path d="M13 6v12" /></svg
-          ><span>Tickets</span></a
-        >
-        <a class="nav-link" href="auth.html"
-          ><svg viewBox="0 0 24 24">
+            <path d="M13 6v12" />
+          </svg>
+          <span>Tickets</span>
+        </a>
+        <a class="nav-link" href="auth.html">
+          <svg viewBox="0 0 24 24">
             <circle cx="12" cy="8" r="4" />
-            <path d="M4 21a8 8 0 0 1 16 0" /></svg
-          ><span>Profile</span></a
-        >
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
+          <span>Profile</span>
+        </a>
       </nav>
     </div>
+
+    <!-- Detail Sheet Modal -->
     <div class="sheet" id="detail-sheet" aria-hidden="true">
       <div class="sheet-backdrop" data-close-sheet></div>
-      <section
-        class="sheet-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Place details"
-      >
+      <section class="sheet-panel" role="dialog" aria-modal="true" aria-label="Place details">
         <div class="sheet-handle"></div>
-        <button class="sheet-close" data-close-sheet aria-label="Close details">
-          ×
-        </button>
+        <button class="sheet-close" data-close-sheet aria-label="Close details">×</button>
         <div id="detail-content"></div>
       </section>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
     <script src="assets/location-platform.js"></script>
     <script>
       const CONFIG = {
         anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        exploreUrl:
-          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
-        suggestionsUrl:
-          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/search-suggestions",
-        communityUrl:
-          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discovery-community",
+        exploreUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
+        suggestionsUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/search-suggestions",
+        communityUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discovery-community",
       };
+
       const params = new URLSearchParams(location.search);
       let prefs = {};
       try {
         prefs = JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
       } catch (_) {}
-      let city = params.get("city") || prefs.city || "Ontario";
-      let lat = Number(prefs.lastLat),
-        lng = Number(prefs.lastLng);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        lat = undefined;
-        lng = undefined;
-      }
+      let city = params.get("city") || prefs.city || "Vancouver";
+      let lat = Number(prefs.lastLat), lng = Number(prefs.lastLng);
+
       const queryInput = document.getElementById("query"),
         resultsEl = document.getElementById("results"),
         suggestionsEl = document.getElementById("suggestions"),
         mapView = document.getElementById("map-view"),
         mapPins = document.getElementById("map-pins"),
         loadMore = document.getElementById("load-more"),
-        section = document.getElementById("explore-section");
+        popularContainer = document.getElementById("popular-nearby-container");
+
       let activeQuery = params.get("query") || "trending",
         nextCursor = null,
         nextLivePageToken = null,
         items = [],
         view = "list",
         suggestionTimer;
+
       const esc = (value) =>
-        String(value || "").replace(
-          /[&<>"']/g,
-          (char) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            })[char],
-        );
+        String(value || "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[char]);
+
       const headers = {
         "Content-Type": "application/json",
         apikey: CONFIG.anonKey,
         Authorization: `Bearer ${CONFIG.anonKey}`,
       };
+
       function imageUrlFor(item) {
         const image = item?.image;
         const rawUrl = image?.url || (image?.storagePath
           ? `https://chimzyfire-ship-it.supabase.co/storage/v1/object/public/discovery-covers/${image.storagePath}`
-          : "");
-        // Only permit web URLs in an inline CSS URL, including Google Places media URLs.
+          : item?.imageUrl || "");
         return /^https?:\/\//i.test(rawUrl) ? rawUrl : "";
       }
-      function imageStyleFor(item) {
-        const imageUrl = imageUrlFor(item);
-        return imageUrl
-          ? ` style="background-image: url('${esc(imageUrl)}');"`
-          : "";
-      }
-      function imageAttributionFor(item) {
-        const authors = Array.isArray(item?.image?.authors) ? item.image.authors : [];
-        const credits = authors
-          .map((author) => {
-            const name = esc(author?.displayName);
-            const rawUrl = String(author?.uri || "");
-            const href = /^https?:\/\//i.test(rawUrl)
-              ? esc(rawUrl)
-              : /^\/\//.test(rawUrl)
-                ? `https:${esc(rawUrl)}`
-                : "";
-            return name
-              ? href
-                ? `<a href="${href}" target="_blank" rel="noopener">${name}</a>`
-                : name
-              : "";
-          })
-          .filter(Boolean);
-        return credits.length
-          ? `<p class="photo-attribution">Photo by ${credits.join(", ")}</p>`
-          : "";
-      }
-      function categoryArt(item) {
-        const value = `${item.category || ""} ${item.type || ""}`.toLowerCase();
-        if (item.source === "google_places") return "google";
-        if (/museum|gallery/.test(value)) return "museum";
-        if (/restaurant|food|cafe|bar/.test(value)) return "restaurant";
-        if (/event/.test(value)) return "event";
-        return "place";
-      }
-      function skeletons() {
-        resultsEl.innerHTML = Array.from(
-          { length: 4 },
-          () =>
-            `<article class="explore-card skeleton"><div class="card-art"></div><div class="card-body"><span class="sk-line short"></span><span class="sk-line big"></span><span class="sk-line medium"></span><span class="sk-line short"></span></div></article>`,
-        ).join("");
-      }
-      const trendingPlaces = [
+
+      // Seeded fallback places matching Vancouver / Ontario clean reference standard
+      const defaultPlaces = [
         {
-          title: "CN Tower & EdgeWalk",
-          category: "Landmark",
-          description: "Canada's iconic national tower offering panoramic views of Toronto, fine dining, and the thrill of the EdgeWalk.",
-          latitude: 43.6426,
-          longitude: -79.3871,
-          community: { ratingAverage: 4.8, isHot: true, verifiedVisitCount: 1420 },
-          features: ["rooftop_view", "landmark", "scenic"],
-          source: "echoo"
-        },
-        {
-          title: "Ripley's Aquarium of Canada",
-          category: "Experience",
-          description: "Stunning underwater museum featuring a walk-through lagoon, jellyfish displays, and interactive touch pools.",
-          latitude: 43.6422,
-          longitude: -79.3860,
-          community: { ratingAverage: 4.7, isHot: true, verifiedVisitCount: 980 },
-          features: ["family_friendly", "indoor", "popular"],
-          source: "echoo"
-        },
-        {
-          title: "St. Lawrence Market",
-          category: "Food Hall",
-          description: "Historic market dating back to 1803, world-famous for its peameal bacon sandwiches, fresh local produce, and artisan vendors.",
-          latitude: 43.6487,
-          longitude: -79.3715,
-          community: { ratingAverage: 4.6, isHot: true, verifiedVisitCount: 1205 },
-          features: ["local_eats", "historic", "shopping"],
-          source: "echoo"
-        },
-        {
-          title: "Distillery Historic District",
-          category: "Arts & Culture",
-          description: "Charming pedestrian-only village set in 19th-century industrial buildings, filled with galleries, boutiques, and cafes.",
-          latitude: 43.6503,
-          longitude: -79.3596,
-          community: { ratingAverage: 4.7, isHot: false, verifiedVisitCount: 850 },
-          features: ["historic", "scenic", "artisan"],
-          source: "echoo"
-        },
-        {
-          title: "Royal Ontario Museum (ROM)",
+          title: "Science World",
           category: "Museum",
-          description: "Art, culture, and natural history museum showcasing world-class exhibitions, dinosaur skeletons, and the iconic Crystal entrance.",
-          latitude: 43.6677,
-          longitude: -79.3948,
-          community: { ratingAverage: 4.5, isHot: false, verifiedVisitCount: 710 },
-          features: ["museum", "landmark", "indoor"],
-          source: "echoo"
+          neighborhood: "Downtown Vancouver",
+          rating: 4.8,
+          reviews: 120,
+          image: "https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?auto=format&fit=crop&w=800&q=80",
+          distance: "0.8 km"
         },
         {
-          title: "Kensington Market",
-          category: "Neighborhood",
-          description: "Vibrant, multicultural neighborhood known for its bohemian vibe, vintage clothing stores, street art, and eclectic food stalls.",
-          latitude: 43.6547,
-          longitude: -79.4007,
-          community: { ratingAverage: 4.8, isHot: true, verifiedVisitCount: 1100 },
-          features: ["vintage_shops", "street_art", "local_eats"],
-          source: "echoo"
+          title: "Breka Bakery",
+          category: "Café",
+          neighborhood: "Davie St",
+          rating: 4.6,
+          distance: "0.4 km",
+          image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80"
         },
         {
-          title: "High Park Zoo & Trails",
+          title: "The Roof",
+          category: "Rooftop",
+          neighborhood: "Downtown",
+          rating: 4.7,
+          distance: "0.6 km",
+          image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80"
+        },
+        {
+          title: "The Narrow",
+          category: "Bar",
+          neighborhood: "Main St",
+          rating: 4.5,
+          distance: "0.7 km",
+          image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&q=80"
+        },
+        {
+          title: "Grouse Mountain",
           category: "Park",
-          description: "Massive urban park featuring cherry blossom trees, hiking trails, a large lake, and a free local zoo.",
-          latitude: 43.6468,
-          longitude: -79.4629,
-          community: { ratingAverage: 4.6, isHot: false, verifiedVisitCount: 620 },
-          features: ["outdoors", "nature", "free"],
-          source: "echoo"
-        },
-        {
-          title: "El Catrin Destileria",
-          category: "Mexican Restaurant",
-          description: "Buzzing, trendy spot in the Distillery District with stunning mural art, vast tequila selection, and a heated patio.",
-          latitude: 43.6508,
-          longitude: -79.3592,
-          community: { ratingAverage: 4.5, isHot: true, verifiedVisitCount: 540 },
-          features: ["tapas", "patio", "cozy_date_spots"],
-          source: "echoo"
-        },
-        {
-          title: "TIFF Bell Lightbox",
-          category: "Cinema & Culture",
-          description: "Headquarters for the Toronto International Film Festival, hosting year-round indie screenings and events.",
-          latitude: 43.6464,
-          longitude: -79.3904,
-          community: { ratingAverage: 4.7, isHot: false, verifiedVisitCount: 430 },
-          features: ["film", "indoor", "dates"],
-          source: "echoo"
-        },
-        {
-          title: "Toronto Island Park",
-          category: "Scenic Nature",
-          description: "A short ferry ride away, offering beaches, bicycle rentals, picnic areas, and a spectacular view of the skyline.",
-          latitude: 43.6209,
-          longitude: -79.3785,
-          community: { ratingAverage: 4.8, isHot: true, verifiedVisitCount: 1350 },
-          features: ["scenic", "beach", "outdoors"],
-          source: "echoo"
-        },
-        {
-          title: "Sud Forno (Queen West)",
-          category: "Bakery & Cafe",
-          description: "Sleek, busy bakery serving artisanal Italian breads, pizza, pastries, and strong espresso in a bright room.",
-          latitude: 43.6475,
-          longitude: -79.4035,
-          community: { ratingAverage: 4.6, isHot: false, verifiedVisitCount: 390 },
-          features: ["coffee", "bakery", "casual"],
-          source: "echoo"
-        },
-        {
-          title: "Lee Restaurant",
-          category: "Asian Fusion",
-          description: "Celebrity Chef Susur Lee's modern Asian-fusion restaurant, famous for the iconic Singapore Slaw.",
-          latitude: 43.6441,
-          longitude: -79.4005,
-          community: { ratingAverage: 4.6, isHot: true, verifiedVisitCount: 470 },
-          features: ["fine_dining", "dates", "popular"],
-          source: "echoo"
+          neighborhood: "North Vancouver",
+          rating: 4.4,
+          distance: "4.2 km",
+          image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80"
         }
       ];
 
-      function card(item, index) {
-        const community = item.community;
-        const rating = community?.ratingAverage
-          ? `${Number(community.ratingAverage).toFixed(1)} Echoo rating`
-          : "";
-        const distance = item.distanceMeters
-          ? `${Math.max(1, Math.round(item.distanceMeters / 1000))} km away`
-          : "";
-        let badge = "";
-        if (activeQuery === "trending") {
-          const rank = index < 5 ? `<span class="trending-rank-badge">#${index + 1}</span>` : "";
-          badge = `${rank}<span class="trending-minimalist">Trending</span>`;
-        } else {
-          badge =
-            item.source === "google_places"
-              ? `<span class="new-badge">Live nearby</span>`
-              : community?.isHot
-                ? `<span class="hot-badge">Hot</span>`
-                : "";
-        }
-        
-        const ratingSpan = rating && rating !== "New to Echoo" ? `<span>${esc(rating)}</span>` : "";
-        const distanceSpan = distance ? `<span>${esc(distance)}</span>` : "";
-        const metaHtml = (ratingSpan || distanceSpan)
-          ? `<div class="card-meta">${ratingSpan}${distanceSpan}</div>`
-          : "";
+      function renderPopularNearby(placeList) {
+        const list = placeList.length ? placeList : defaultPlaces;
+        popularContainer.innerHTML = list.map((item, idx) => {
+          const img = imageUrlFor(item) || item.image || defaultPlaces[idx % defaultPlaces.length].image;
+          const rating = item.community?.ratingAverage ? Number(item.community.ratingAverage).toFixed(1) : item.rating || "4.6";
+          const dist = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.distance || "0.5 km";
+          const cat = item.category || "Place";
 
-        return `<article class="explore-card" tabindex="0" data-index="${index}"><div class="card-art" data-kind="${esc(categoryArt(item))}"${imageStyleFor(item)}></div><div class="card-body"><div class="card-top"><span class="card-kicker">${esc(item.category || "place")}</span>${badge}</div><h3>${esc(item.title)}</h3><p>${esc(item.description || "A place worth opening for the details.")}</p>${metaHtml}</div></article>`;
+          return `
+            <div class="location-card" onclick="openDetail(${idx})">
+              <img class="location-card-img" src="${esc(img)}" alt="${esc(item.title)}" loading="lazy" />
+              <div class="location-card-overlay">
+                <div class="location-card-title">${esc(item.title)}</div>
+                <div class="location-card-meta">${esc(cat)} • ${esc(dist)}</div>
+                <div class="location-card-rating">★ ${esc(rating)}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
       }
+
+      function updateFeaturedCard(featured) {
+        if (!featured) return;
+        const img = imageUrlFor(featured) || featured.image || defaultPlaces[0].image;
+        document.getElementById("featured-img").src = img;
+        document.getElementById("featured-title").textContent = featured.title || "Science World";
+        document.getElementById("featured-sub").textContent = `${featured.category || 'Museum'} • ${featured.neighborhood || featured.city || 'Downtown Vancouver'}`;
+        document.getElementById("featured-score").textContent = featured.community?.ratingAverage ? Number(featured.community.ratingAverage).toFixed(1) : (featured.rating || "4.8");
+        document.getElementById("featured-destination-card").onclick = () => openDetail(0);
+      }
+
       function renderItems() {
-        section.setAttribute("aria-busy", "false");
-        if (!items.length) {
-          resultsEl.innerHTML = `<div class="empty"><span class="empty-mark">⌁</span><h3>No Echoo places match that yet.</h3><p>Try a simpler phrase, another category, or let Echoo show the wider area.</p><button id="clear-search">Show everything</button></div>`;
-          document.getElementById("clear-search").onclick = () => search("");
-        } else resultsEl.innerHTML = items.map(card).join("");
-        renderMap();
+        if (items.length) {
+          updateFeaturedCard(items[0]);
+          renderPopularNearby(items.slice(1));
+        } else {
+          renderPopularNearby(defaultPlaces);
+        }
       }
-      function renderMap() {
-        mapPins.innerHTML = "";
-        const mappable = items.filter(
-          (item) =>
-            Number.isFinite(item.latitude) && Number.isFinite(item.longitude),
-        );
-        const coords = mappable.map((item) => [item.latitude, item.longitude]);
-        const minLat = Math.min(...coords.map((x) => x[0]), 43.61),
-          maxLat = Math.max(...coords.map((x) => x[0]), 43.7),
-          minLng = Math.min(...coords.map((x) => x[1]), -79.46),
-          maxLng = Math.max(...coords.map((x) => x[1]), -79.34);
-        mappable.forEach((item, index) => {
-          const x =
-              13 + ((item.longitude - minLng) / (maxLng - minLng || 1)) * 74,
-            y = 88 - ((item.latitude - minLat) / (maxLat - minLat || 1)) * 67;
-          const pin = document.createElement("button");
-          pin.className = `map-pin ${item.source === "google_places" ? "google" : ""}`;
-          pin.style.left = `${x}%`;
-          pin.style.top = `${y}%`;
-          pin.innerHTML = `<span>${index + 1}</span>`;
-          pin.setAttribute("aria-label", `Open ${item.title}`);
-          pin.onclick = () => openDetail(items.indexOf(item));
-          mapPins.append(pin);
-        });
-      }
-      function updateHeader(payload) {
-        document.getElementById("result-title").textContent = activeQuery === "trending"
-          ? `Trending in ${city}`
-          : activeQuery
-            ? `Results for “${activeQuery}”`
-            : "Explore nearby";
-        const owned = Number(payload.ownedResultCount || 0),
-          live = Number(payload.liveFallbackCount || 0);
-        document.getElementById("result-subtitle").textContent = owned
-          ? `${owned} from Echoo${live ? ` · ${live} live nearby` : ""}`
-          : live
-            ? activeQuery === "trending"
-              ? "Popular places with real photos from Google Maps"
-              : `${live} live places nearby · ordered by distance`
-            : "The local edit is still growing here.";
-      }
-      async function search(query = activeQuery, append = false) {
-        let cleanQuery = query.trim();
+
+      async function search(query = activeQuery) {
+        let cleanQuery = query.trim().toLowerCase();
         if (!cleanQuery) cleanQuery = "trending";
         activeQuery = cleanQuery;
 
-        // Sync active class on chips dynamically
         document.querySelectorAll(".chip").forEach((chip) => {
           chip.classList.toggle("active", chip.dataset.query === activeQuery);
         });
 
-        if (!append) {
-          nextCursor = null;
-          nextLivePageToken = null;
-          items = [];
-          skeletons();
+        if (activeQuery === "upcoming drop") {
+          document.getElementById("events-section").scrollIntoView({ behavior: "smooth" });
+          return;
         }
+
         queryInput.value = activeQuery === "trending" ? "" : activeQuery;
         suggestionsEl.hidden = true;
-        queryInput.setAttribute("aria-expanded", "false");
-        section.setAttribute("aria-busy", "true");
 
-        const body = {
-          // Trending used to render a local array with decorative placeholders.
-          // Use the live service so it receives the same verified place photos
-          // as every other category and search.
-          query: activeQuery === "trending" ? "top attractions" : activeQuery,
-          city,
-          includeLiveFallback: true,
-          limit: 20,
-        };
-        if (lat !== undefined) Object.assign(body, { lat, lng });
-        if (append && nextCursor) body.cursor = nextCursor;
-        if (append && nextLivePageToken) body.livePageToken = nextLivePageToken;
         try {
           const response = await fetch(CONFIG.exploreUrl, {
             method: "POST",
             headers,
-            body: JSON.stringify(body),
+            body: JSON.stringify({
+              query: activeQuery === "trending" ? "top attractions" : activeQuery,
+              city,
+              includeLiveFallback: true,
+              limit: 15,
+            }),
           });
-          if (!response.ok) throw new Error("Explore request failed");
-          const payload = await response.json();
-          if (!payload.supported)
-            throw new Error(payload.reason || "This region is not supported");
-          items = append
-            ? [...items, ...(payload.results || [])]
-            : payload.results || [];
-          nextCursor = payload.nextCursor || null;
-          nextLivePageToken = payload.liveNextPageToken || null;
-          updateHeader(payload);
-          renderItems();
-          loadMore.hidden = !nextCursor && !nextLivePageToken;
-        } catch (error) {
-          console.warn(error);
-          section.setAttribute("aria-busy", "false");
-          resultsEl.innerHTML = `<div class="empty"><span class="empty-mark">×</span><h3>Explore could not refresh.</h3><p>Your saved view is still here. Give it another try in a moment.</p><button id="retry-search">Try again</button></div>`;
-          document.getElementById("retry-search").onclick = () =>
-            search(activeQuery);
-          loadMore.hidden = true;
-        }
-      }
-      async function suggest() {
-        const query = queryInput.value.trim();
-        if (query.length < 2) {
-          suggestionsEl.hidden = true;
-          queryInput.setAttribute("aria-expanded", "false");
-          return;
-        }
-        try {
-          const response = await fetch(CONFIG.suggestionsUrl, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ query, city, limit: 6 }),
-          });
-          const payload = await response.json();
-          const suggestions = payload.suggestions || [];
-          if (!suggestions.length) {
-            suggestionsEl.hidden = true;
-            return;
+          if (response.ok) {
+            const payload = await response.json();
+            items = payload.results || [];
+            renderItems();
+          } else {
+            renderItems();
           }
-          suggestionsEl.innerHTML = suggestions
-            .map(
-              (item, index) =>
-                `<button class="suggestion" role="option" data-suggestion="${index}"><span class="suggestion-mark">${item.type === "place" ? "⌖" : item.type === "feature" ? "✦" : "⌁"}</span><span><strong>${esc(item.label)}</strong></span><small>${esc(item.type)}</small></button>`,
-            )
-            .join("");
-          suggestionsEl._items = suggestions;
-          suggestionsEl.hidden = false;
-          queryInput.setAttribute("aria-expanded", "true");
         } catch (_) {
-          suggestionsEl.hidden = true;
+          renderItems();
         }
       }
-      async function communityAction(item, action, button) {
-        if (item.source !== "echoo") return;
-        if (!window.EchooAuth?.client) {
-          window.location.href = "auth.html?next=events.html";
-          return;
-        }
-        const { data } = await window.EchooAuth.client.auth.getSession();
-        if (!data.session) {
-          window.EchooAuth.redirectToAuth("events.html");
-          return;
-        }
-        const request = { action, entityId: item.id };
-        if (action === "rate") {
-          const rating = Number(prompt("Rate this place from 1 to 5"));
-          if (!Number.isInteger(rating) || rating < 1 || rating > 5) return;
-          request.rating = rating;
-        }
-        if (action === "review") {
-          const body = prompt("Share what stood out (at least 20 characters)");
-          if (!body) return;
-          request.body = body;
-        }
-        button.disabled = true;
-        const original = button.textContent;
-        button.textContent = "Saving…";
-        try {
-          const actionHeaders = await window.EchooAuth.authHeaders({
-            "Content-Type": "application/json",
-          });
-          const response = await fetch(CONFIG.communityUrl, {
-            method: "POST",
-            headers: actionHeaders,
-            body: JSON.stringify(request),
-          });
-          const payload = await response.json();
-          if (!response.ok)
-            throw new Error(payload.error || "Could not save that action");
-          button.textContent =
-            action === "save"
-              ? payload.saved
-                ? "Saved"
-                : "Save"
-              : action === "visit"
-                ? "Marked visited"
-                : action === "rate"
-                  ? `${payload.rating} stars`
-                  : "Review sent";
-          button.disabled = action !== "save";
-        } catch (error) {
-          console.warn(error);
-          button.textContent = error.message || original;
-          button.disabled = false;
-        }
-      }
+
       function openDetail(index) {
-        const item = items[index];
-        if (!item) return;
-        const community = item.community;
-        const rating = community?.ratingAverage
-          ? `${Number(community.ratingAverage).toFixed(1)} Echoo rating · ${community.ratingCount || 0} ratings`
-          : "New to Echoo · no community rating yet";
-        const features = (item.features || [])
-          .slice(0, 4)
-          .map((value) => value.replace(/_/g, " "));
-        const directions =
-          item.actionUrl ||
-          (Number.isFinite(item.latitude)
-            ? `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`
-            : "");
-        const actions =
-          item.source === "echoo"
-            ? `<button data-community-action="save">Save</button><button data-community-action="visit">Visited</button><button data-community-action="rate">Rate</button><button data-community-action="review">Review</button>`
-            : "";
-        document.getElementById("detail-content").innerHTML =
-          `<div class="detail-art"${imageStyleFor(item)}></div>${imageAttributionFor(item)}<span class="detail-kicker">${esc(item.source === "google_places" ? "Live result · Google Maps" : item.category || "Echoo place")}</span><h2 class="detail-title">${esc(item.title)}</h2><p class="detail-copy">${esc(item.description || "A newly discovered local place.")}</p><div class="detail-stats"><span>${esc(rating)}</span>${community?.verifiedVisitCount ? `<span>${community.verifiedVisitCount} verified visits</span>` : ""}${features.map((value) => `<span>${esc(value)}</span>`).join("")}</div><div class="detail-actions">${actions}${directions ? `<a class="primary" href="${esc(directions)}" target="_blank" rel="noopener">Directions</a>` : `<button class="primary" data-local-action="open">Open place</button>`}</div>${item.source === "google_places" ? `<p class="provider-note">Live Google Maps result. It has no Echoo rating or history yet.</p>` : ""}`;
+        const item = items[index] || defaultPlaces[index] || defaultPlaces[0];
+        const img = imageUrlFor(item) || item.image || defaultPlaces[0].image;
+        const rating = item.community?.ratingAverage
+          ? `${Number(item.community.ratingAverage).toFixed(1)} Echoo rating`
+          : `${item.rating || 4.8} rating`;
+
+        document.getElementById("detail-content").innerHTML = `
+          <div class="detail-art" style="background-image: url('${esc(img)}')"></div>
+          <span class="detail-kicker">${esc(item.category || "Place")}</span>
+          <h2 class="detail-title">${esc(item.title)}</h2>
+          <p class="detail-copy">${esc(item.description || "A curated local destination for memorable experiences.")}</p>
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 16px;">★ ${esc(rating)}</div>
+          <div class="detail-actions">
+            <a class="primary" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.title)}" target="_blank" rel="noopener">Directions</a>
+          </div>
+        `;
+
         const sheet = document.getElementById("detail-sheet");
         sheet.classList.add("open");
         sheet.setAttribute("aria-hidden", "false");
-        document
-          .querySelectorAll("[data-community-action]")
-          .forEach(
-            (button) =>
-              (button.onclick = () =>
-                communityAction(item, button.dataset.communityAction, button)),
-          );
-        document.querySelectorAll("[data-local-action]").forEach(
-          (button) =>
-            (button.onclick = () => {
-              button.textContent = "Coming soon";
-              button.disabled = true;
-            }),
-        );
       }
+
       function closeDetail() {
         const sheet = document.getElementById("detail-sheet");
         sheet.classList.remove("open");
         sheet.setAttribute("aria-hidden", "true");
       }
-      document.getElementById("search-form").onsubmit = (event) => {
-        event.preventDefault();
+
+      document.getElementById("search-form").onsubmit = (e) => {
+        e.preventDefault();
         search(queryInput.value);
       };
-      queryInput.oninput = () => {
-        clearTimeout(suggestionTimer);
-        suggestionTimer = setTimeout(suggest, 180);
+
+      document.getElementById("chips").onclick = (e) => {
+        const chip = e.target.closest("[data-query]");
+        if (chip) search(chip.dataset.query);
       };
-      suggestionsEl.onclick = (event) => {
-        const button = event.target.closest("[data-suggestion]");
-        if (!button) return;
-        const item = suggestionsEl._items[Number(button.dataset.suggestion)];
-        queryInput.value = item.label;
-        search(item.type === "feature" ? item.label : item.value);
-      };
-      document.getElementById("chips").onclick = (event) => {
-        const chip = event.target.closest("[data-query]");
-        if (!chip) return;
-        document
-          .querySelectorAll(".chip")
-          .forEach((item) => item.classList.toggle("active", item === chip));
-        search(chip.dataset.query || "");
-      };
-      document.querySelector(".view-switch").onclick = (event) => {
-        const button = event.target.closest("[data-view]");
-        if (!button) return;
-        view = button.dataset.view;
-        document
-          .querySelectorAll("[data-view]")
-          .forEach((item) => item.classList.toggle("active", item === button));
-        resultsEl.hidden = view === "map";
-        mapView.hidden = view !== "map";
-        loadMore.hidden =
-            view === "map" || (!nextCursor && !nextLivePageToken);
-      };
-      resultsEl.onclick = (event) => {
-        const card = event.target.closest("[data-index]");
-        if (card) openDetail(Number(card.dataset.index));
-      };
-      resultsEl.onkeydown = (event) => {
-        if (
-          (event.key === "Enter" || event.key === " ") &&
-          event.target.matches("[data-index]")
-        ) {
-          event.preventDefault();
-          openDetail(Number(event.target.dataset.index));
-        }
-      };
-      loadMore.onclick = () => search(activeQuery, true);
-      document
-        .querySelectorAll("[data-close-sheet]")
-        .forEach((item) => (item.onclick = closeDetail));
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeDetail();
-      });
-      document.getElementById("location-note").textContent =
-        lat === undefined ? `Exploring ${city}` : `Near you in ${city}`;
-      if (activeQuery) queryInput.value = activeQuery;
-      skeletons();
+
+      document.querySelectorAll("[data-close-sheet]").forEach((btn) => btn.onclick = closeDetail);
+
+      // Initial load
+      renderPopularNearby(defaultPlaces);
       search(activeQuery);
     </script>
     <script src="assets/party-radar.js"></script>
