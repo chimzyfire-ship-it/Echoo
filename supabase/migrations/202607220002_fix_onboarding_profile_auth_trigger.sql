@@ -1,3 +1,5 @@
+-- auth.users stores provider metadata in raw_app_meta_data (not app_metadata).
+-- Referencing the wrong field makes every email signup fail before an OTP can be sent.
 create or replace function public.handle_new_user_onboarding_profile()
 returns trigger
 language plpgsql
@@ -37,30 +39,4 @@ begin
 
   return new;
 end;
-$$;
-
-alter table public.user_onboarding_profiles
-  add column if not exists username text not null default '';
-
-create unique index if not exists user_onboarding_profiles_username_key
-  on public.user_onboarding_profiles (lower(username))
-  where username <> '';
-
-drop trigger if exists on_auth_user_created_onboarding_profile on auth.users;
-create trigger on_auth_user_created_onboarding_profile
-after insert on auth.users
-for each row execute function public.handle_new_user_onboarding_profile();
-
-create or replace function public.lookup_email_by_username(p_username text)
-returns text
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select email
-  from public.user_onboarding_profiles
-  where lower(username) = lower(trim(p_username))
-    and username <> ''
-  limit 1;
 $$;
