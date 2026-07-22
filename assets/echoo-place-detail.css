@@ -336,40 +336,128 @@
 .echoo-place-auth {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 18px;
-  border-radius: 24px;
-  background:
-    linear-gradient(160deg, rgba(247, 213, 178, 0.14), rgba(255, 255, 255, 0.04)),
-    rgba(20, 20, 19, 0.94);
-  border: 1px solid rgba(247, 213, 178, 0.16);
+  padding: 28px 24px 28px;
+  border-radius: 28px;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  position: relative;
+}
+
+.echoo-place-auth-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.echoo-place-auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.echoo-place-auth-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(231, 201, 142, 0.35);
+  background: rgba(231, 201, 142, 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.echoo-place-auth-label {
+  color: #E7C98E;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .echoo-place-auth-title {
-  margin: 0;
-  font-size: 24px;
-  line-height: 1.06;
-  letter-spacing: -0.03em;
-  color: #fff;
+  margin: 0 0 16px;
+  font-size: 32px;
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
 }
 
-.echoo-place-auth-caption {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: rgba(248, 245, 239, 0.82);
+.echoo-place-auth-divider {
+  width: 32px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 1px;
+  margin-bottom: 20px;
+}
+
+.echoo-place-auth-subhead {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .echoo-place-auth-note {
-  margin: 0;
-  font-size: 12px;
+  margin: 0 0 28px;
+  font-size: 14px;
   line-height: 1.45;
-  color: rgba(248, 245, 239, 0.62);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .echoo-place-auth-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  width: 100%;
+}
+
+.echoo-place-auth-actions a,
+.echoo-place-auth-actions button {
+  flex: 1;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.echoo-place-auth-actions a.primary,
+.echoo-place-auth-actions button.primary {
+  background: #F7D5B2;
+  color: #121212;
+  border: none;
+  box-shadow: 0 4px 16px rgba(247, 213, 178, 0.15);
+}
+
+.echoo-place-auth-actions a.primary:hover,
+.echoo-place-auth-actions button.primary:hover {
+  background: #f4c89c;
+  transform: translateY(-1px);
+}
+
+.echoo-place-auth-actions a.secondary,
+.echoo-place-auth-actions button.secondary {
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-weight: 600;
+}
+
+.echoo-place-auth-actions a.secondary:hover,
+.echoo-place-auth-actions button.secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .echoo-place-empty {
