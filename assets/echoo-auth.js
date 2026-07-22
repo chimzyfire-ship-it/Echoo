@@ -66,7 +66,7 @@
     return `${file}${window.location.search}${window.location.hash}`;
   }
 
-  function normalizeNext(next, fallback = "app.html") {
+  function normalizeNext(next, fallback = "index.html") {
     if (!next) return fallback;
     try {
       const url = new URL(next, window.location.href);

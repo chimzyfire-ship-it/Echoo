@@ -341,7 +341,7 @@
           if (authState && authState.ok === false) {
             const next = window.EchooAuth
               ? encodeURIComponent(window.EchooAuth.currentRelativeUrl())
-              : "app.html";
+              : "index.html";
             box.innerHTML = `<div class="empty"><a href="auth.html?next=${next}&mode=signup">Sign up to see AI-matched nearby plans.</a></div>`;
             return;
           }
