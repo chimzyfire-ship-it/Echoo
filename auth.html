@@ -1111,6 +1111,15 @@
                 <input id="name" autocomplete="name" placeholder="Your name" />
               </div>
               <div class="field">
+                <label for="username">Username</label>
+                <input
+                  id="username"
+                  autocomplete="username"
+                  placeholder="yourname"
+                  required
+                />
+              </div>
+              <div class="field">
                 <label for="email">Email</label>
                 <input
                   id="email"
@@ -1127,8 +1136,17 @@
                   type="password"
                   autocomplete="current-password"
                   placeholder="Password"
-                  minlength="6"
+                  minlength="8"
                   required
+                />
+              </div>
+              <div class="field">
+                <label for="otp-code">One-time code</label>
+                <input
+                  id="otp-code"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  placeholder="Enter the 6-digit code"
                 />
               </div>
               <div class="field signup-only" style="margin: 6px 0">
@@ -1194,6 +1212,22 @@
                 formnovalidate
               >
                 Open my city
+              </button>
+              <button
+                class="provider-btn"
+                type="button"
+                id="send-code-btn"
+                style="margin-top: -4px"
+              >
+                Send code
+              </button>
+              <button
+                class="provider-btn"
+                type="button"
+                id="reset-password-btn"
+                style="margin-top: -4px"
+              >
+                Reset password
               </button>
               <div class="divider">or</div>
               <button class="provider-btn" type="button" data-provider="Google">
@@ -1306,7 +1340,7 @@
       const redirectParams = new URL(redirectTarget, window.location.href)
         .searchParams;
       const preferredMode = authParams.get("mode");
-      const OPEN_AUTH_BUTTONS_DIRECTLY_TO_APP = true;
+      const OPEN_AUTH_BUTTONS_DIRECTLY_TO_APP = false;
       let initialStoredPrefs = {};
 
       /* Check stored preference for pre-detected city */
@@ -1325,7 +1359,7 @@
 
       /* ── State ── */
       const state = {
-        mode: "signin",
+        mode: authParams.get("type") === "recovery" ? "recovery" : "signin",
         obStep: 0,
         vibes: new Set(),
         eventStyles: new Set(),
@@ -1344,6 +1378,7 @@
         tone: initialStoredPrefs.tone || "direct",
         userName: initialStoredPrefs.name || "",
         userEmail: initialStoredPrefs.email || "",
+        username: initialStoredPrefs.username || "",
         city_intel_consent: "",
         casl_push_consent: "",
       };
@@ -1359,8 +1394,12 @@
       const submitLabel = document.getElementById("submit-label");
       const authStatus = document.getElementById("auth-status");
       const nameInput = document.getElementById("name");
+      const usernameInput = document.getElementById("username");
       const emailInput = document.getElementById("email");
       const passwordInput = document.getElementById("password");
+      const otpInput = document.getElementById("otp-code");
+      const sendCodeBtn = document.getElementById("send-code-btn");
+      const resetPasswordBtn = document.getElementById("reset-password-btn");
       const obTitle = document.getElementById("ob-title");
       const obSub = document.getElementById("ob-sub");
       const obNext = document.getElementById("ob-next");
@@ -1380,6 +1419,7 @@
 
       function setBusy(isBusy, label) {
         submitLabel.disabled = isBusy;
+        if (sendCodeBtn) sendCodeBtn.disabled = isBusy;
         obNext.disabled = isBusy;
         document
           .querySelectorAll("[data-provider]")
@@ -1435,6 +1475,11 @@
           title: "Make your city feel closer.",
           sub: "Curate your taste, sync with friends, and discover plans worth saying yes to.",
           btn: "Start exploring",
+        },
+        reset: {
+          title: "Reset your password.",
+          sub: "We’ll send a secure recovery email to the address tied to your username.",
+          btn: "Send reset link",
         },
       };
 
@@ -1866,22 +1911,29 @@
       function setMode(mode) {
         state.mode = mode;
         const joining = mode === "signup";
+        const resetting = mode === "reset";
+        const recovering = mode === "recovery";
         authPanel.classList.toggle("signup", joining);
         signInTab.classList.toggle("active", !joining);
         signUpTab.classList.toggle("active", joining);
 
-        const c = joining ? COPY.signup : COPY.signin;
+        const c = recovering ? COPY.reset : resetting ? COPY.reset : joining ? COPY.signup : COPY.signin;
         title.textContent = c.title;
         copy.textContent = c.sub;
-        submitLabel.textContent = c.btn;
-        passwordInput.autocomplete = joining
-          ? "new-password"
-          : "current-password";
+        submitLabel.textContent = recovering ? "Update password" : c.btn;
+        sendCodeBtn.textContent = joining ? "Send join code" : "Send sign-in code";
+        sendCodeBtn.style.display = joining ? "block" : "none";
+        resetPasswordBtn.style.display = resetting || recovering ? "none" : "block";
+        usernameInput.autocomplete = "username";
+        passwordInput.autocomplete = joining ? "new-password" : "current-password";
         setStatus("");
       }
 
       signInTab.addEventListener("click", () => setMode("signin"));
       signUpTab.addEventListener("click", () => setMode("signup"));
+      if (resetPasswordBtn) {
+        resetPasswordBtn.addEventListener("click", () => setMode("reset"));
+      }
 
       /* ── Auth submit ── */
       function captureUser(providerName) {
@@ -1902,16 +1954,19 @@
           setStatus("Supabase auth is not available on this page.", true);
           return;
         }
-        const email = emailInput.value.trim();
+        const username = usernameInput.value.trim();
         const password = passwordInput.value;
-        if (!email || !password) {
-          setStatus("Use your email and password to continue.", true);
+        if (!username || !password) {
+          setStatus("Enter your username and password.", true);
           return;
         }
-
-        setBusy(true, "Opening…");
-        setStatus("Checking your Echoo account…");
+        setBusy(true, "Signing in…");
+        setStatus("Checking your credentials…");
         try {
+          const email = await window.EchooAuth.lookupEmailByUsername(username);
+          if (!email) {
+            throw new Error("We could not find that username.");
+          }
           const { data, error } =
             await window.EchooAuth.client.auth.signInWithPassword({
               email,
@@ -1920,6 +1975,7 @@
           if (error) throw error;
           state.userName =
             data.user?.user_metadata?.display_name ||
+            username ||
             email.split("@")[0] ||
             "User";
           state.userEmail = data.user?.email || email;
@@ -1929,12 +1985,63 @@
             redirectAfterAuth(profileState.preferences);
             return;
           }
-          setStatus(
-            "Finish your Echoo personality once, then it stays with your account.",
-          );
+          setStatus("You’re in. Let’s finish onboarding.");
           startOnboarding("");
         } catch (error) {
           setStatus(error.message || "Could not sign in.", true);
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function finishRecovery() {
+        if (!window.EchooAuth?.client) {
+          setStatus("Supabase auth is not available on this page.", true);
+          return;
+        }
+        const password = passwordInput.value;
+        if (!password || password.length < 8) {
+          setStatus("Choose a new password with at least 8 characters.", true);
+          return;
+        }
+        setBusy(true, "Updating…");
+        setStatus("Saving your new password…");
+        try {
+          const { error } = await window.EchooAuth.client.auth.updateUser({
+            password,
+          });
+          if (error) throw error;
+          setStatus("Password updated. You can now sign in with your username.");
+          setMode("signin");
+        } catch (error) {
+          setStatus(error.message || "Could not update your password.", true);
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function sendResetLink() {
+        if (!window.EchooAuth?.client) {
+          setStatus("Supabase auth is not available on this page.", true);
+          return;
+        }
+        const username = usernameInput.value.trim();
+        if (!username) {
+          setStatus("Enter your username to reset the password.", true);
+          return;
+        }
+        setBusy(true, "Sending…");
+        setStatus("Finding your account and sending recovery email…");
+        try {
+          const email = await window.EchooAuth.lookupEmailByUsername(username);
+          if (!email) throw new Error("We could not find that username.");
+          const { error } = await window.EchooAuth.client.auth.resetPasswordForEmail(email, {
+            redirectTo: authResetRedirect(),
+          });
+          if (error) throw error;
+          setStatus("Recovery email sent. Open the link to set a new password.");
+        } catch (error) {
+          setStatus(error.message || "Could not send reset link.", true);
         } finally {
           setBusy(false);
         }
@@ -1955,15 +2062,22 @@
           setStatus("Supabase auth is not available on this page.", true);
           return;
         }
+        const username = usernameInput.value.trim();
         const email = emailInput.value.trim();
         const password = passwordInput.value;
+        const token = otpInput.value.trim();
         const displayName =
           nameInput.value.trim() || email.split("@")[0] || "Echoo User";
-        if (!email || !password) {
-          setStatus(
-            "Add an email and password to create your free account.",
-            true,
-          );
+        if (!username) {
+          setStatus("Choose a username first.", true);
+          return;
+        }
+        if (!email) {
+          setStatus("Add an email to create your free account.", true);
+          return;
+        }
+        if (!password || password.length < 8) {
+          setStatus("Choose a password with at least 8 characters.", true);
           return;
         }
 
@@ -1980,35 +2094,43 @@
           new Date().toISOString(),
         );
 
-        setBusy(true, "Creating…");
-        setStatus("Creating your free Echoo account…");
+        if (token) {
+          setBusy(true, "Verifying…");
+          setStatus("Checking your code…");
+        } else {
+          setBusy(true, "Sending…");
+          setStatus("Sending your Echoo code…");
+        }
         try {
-          const { data, error } = await window.EchooAuth.client.auth.signUp({
-            email,
-            password,
-            options: {
-              data: { display_name: displayName },
-              emailRedirectTo: authRedirectForProvider(),
-            },
-          });
+          const { data, error } = token
+            ? await window.EchooAuth.client.auth.verifyOtp({
+                email,
+                token,
+                type: "email",
+              })
+            : await window.EchooAuth.client.auth.signInWithOtp({
+                email,
+                options: {
+                  shouldCreateUser: true,
+                  emailRedirectTo: authRedirectForProvider(),
+                  data: { display_name: displayName, username },
+                },
+              });
           if (error) throw error;
 
-          let session = data.session;
-          if (!session) {
-            const signIn =
-              await window.EchooAuth.client.auth.signInWithPassword({
-                email,
-                password,
-              });
-            if (signIn.error) {
-              throw new Error(
-                "The account was created, but Supabase email confirmation is still enabled for this project. Disable email confirmations so signup opens immediately.",
-              );
-            }
-            session = signIn.data.session;
+          if (!token) {
+            setStatus("We emailed you a code. Enter it to continue.");
+            otpInput.focus();
+            return;
           }
 
-          state.userName = displayName;
+          const { error: updateError } = await window.EchooAuth.client.auth.updateUser({
+            password,
+            data: { display_name: displayName, username },
+          });
+          if (updateError) throw updateError;
+          state.userName =
+            data.user?.user_metadata?.display_name || displayName || "User";
           state.userEmail = data.user?.email || email;
           setStatus(
             "Account ready. Now choose the signals Echoo should remember.",
@@ -2029,10 +2151,64 @@
         }
         if (state.mode === "signup") {
           startSignup();
+        } else if (state.mode === "reset") {
+          sendResetLink();
+        } else if (state.mode === "recovery") {
+          finishRecovery();
         } else {
           finishSignIn();
         }
       });
+
+      if (sendCodeBtn) {
+        sendCodeBtn.addEventListener("click", async () => {
+          if (!window.EchooAuth?.client) {
+            setStatus("Supabase auth is not available on this page.", true);
+            return;
+          }
+          const email = emailInput.value.trim();
+          if (!email) {
+            setStatus("Add your email first.", true);
+            return;
+          }
+          const joining = state.mode === "signup";
+          if (joining) {
+            const consentCheckbox = document.getElementById("pipeda-consent");
+            if (consentCheckbox && !consentCheckbox.checked) {
+              setStatus(
+                "You must agree to the Privacy Policy and Terms of Service to sign up.",
+                true,
+              );
+              return;
+            }
+            localStorage.setItem(
+              "echoo_pipeda_consent_at",
+              new Date().toISOString(),
+            );
+          }
+          setBusy(true, "Sending…");
+          setStatus("Sending your Echoo code…");
+          const { error } = await window.EchooAuth.client.auth.signInWithOtp({
+            email,
+            options: {
+              shouldCreateUser: true,
+              emailRedirectTo: authRedirectForProvider(),
+              data: {
+                display_name:
+                  nameInput.value.trim() || email.split("@")[0] || "Echoo User",
+                username: usernameInput.value.trim() || email.split("@")[0],
+              },
+            },
+          });
+          setBusy(false);
+          if (error) {
+            setStatus(error.message || "Could not send code.", true);
+            return;
+          }
+          setStatus("Check your inbox for the 6-digit Echoo code.");
+          otpInput.focus();
+        });
+      }
 
       document.querySelectorAll("[data-provider]").forEach((btn) => {
         btn.addEventListener("click", async () => {
@@ -2056,6 +2232,14 @@
           if (error) setStatus(error.message, true);
         });
       });
+
+      function authResetRedirect() {
+        const url = new URL("auth.html", window.location.href);
+        url.searchParams.set("type", "recovery");
+        url.searchParams.set("mode", "recovery");
+        url.searchParams.set("next", redirectTarget);
+        return url.toString();
+      }
 
       /* ── Onboarding steps ── */
       function renderObStep(index) {
@@ -2235,6 +2419,7 @@
         };
 
         const prefs = {
+          username: state.username || usernameInput.value.trim(),
           name,
           email,
           vibes,
@@ -2606,9 +2791,15 @@
         }
         
         const profileState = await window.EchooAuth.loadOnboardingProfile();
+        if (profileState.preferences?.username) {
+          state.username = profileState.preferences.username;
+          usernameInput.value = profileState.preferences.username;
+        }
         
         if (!profileState.session?.user) {
-          if (preferredMode === "signup" || authParams.has("next")) {
+          if (authParams.get("type") === "recovery") {
+            setMode("recovery");
+          } else if (preferredMode === "signup" || authParams.has("next")) {
             setMode("signup");
           } else {
             setMode("signin");
@@ -2625,18 +2816,30 @@
           profileState.session.user.user_metadata?.display_name ||
           profileState.session.user.email?.split("@")[0] ||
           "User";
+        state.username =
+          profileState.preferences?.username ||
+          profileState.profile?.username ||
+          usernameInput.value.trim() ||
+          "";
         state.userEmail =
           profileState.preferences?.email ||
           profileState.session.user.email ||
           "";
         if (state.userName) nameInput.value = state.userName;
         if (state.userEmail) emailInput.value = state.userEmail;
+        if (state.username) usernameInput.value = state.username;
 
         if (profileState.preferences) {
           Object.assign(state, profileState.preferences);
           if (Array.isArray(profileState.preferences.interests)) {
             state.vibes = new Set(profileState.preferences.interests);
           }
+        }
+
+        if (authParams.get("type") === "recovery") {
+          setMode("recovery");
+          setStatus("Set a new password to finish recovering your account.");
+          return;
         }
 
         if (profileState.ok) {
@@ -2647,7 +2850,7 @@
           }
           return;
         }
-        
+
         setStatus("Finish onboarding to unlock Echoo planning.");
         startOnboarding("");
       }

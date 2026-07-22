@@ -1,5 +1,6 @@
 create table if not exists public.user_onboarding_profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
+  username text not null default '',
   display_name text not null default '',
   email text not null default '',
   interests text[] not null default '{}',
@@ -27,6 +28,10 @@ create table if not exists public.user_onboarding_profiles (
   constraint user_onboarding_profiles_profile_version_check
     check (profile_version > 0)
 );
+
+create unique index if not exists user_onboarding_profiles_username_key
+  on public.user_onboarding_profiles (lower(username))
+  where username <> '';
 
 create index if not exists user_onboarding_profiles_home_city_idx
   on public.user_onboarding_profiles (home_city);
