@@ -2566,6 +2566,9 @@
         if (!detailModalContent) return;
         detailModalContent.innerHTML = html;
         bindPlaceDetailCloseButtons();
+        if (window.EchooPlaceDetail?.bindGalleryInteractions) {
+          window.EchooPlaceDetail.bindGalleryInteractions();
+        }
       }
 
       function clearPendingPlaceDetail() {
