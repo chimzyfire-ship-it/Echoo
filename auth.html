@@ -1120,6 +1120,17 @@
                 />
               </div>
               <div class="field">
+                <label for="password">Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Password"
+                  minlength="8"
+                  required
+                />
+              </div>
+              <div class="field">
                 <label for="email">Email</label>
                 <div style="display: flex; gap: 8px; align-items: center;">
                   <input
@@ -1141,23 +1152,13 @@
                 </div>
               </div>
               <div class="field" id="otp-field-group" style="display: none;">
-                <label for="otp-code">One-time code</label>
+                <label for="otp-code">Verification code</label>
                 <input
                   id="otp-code"
                   inputmode="numeric"
                   autocomplete="one-time-code"
+                  maxlength="6"
                   placeholder="Enter the 6-digit code"
-                />
-              </div>
-              <div class="field">
-                <label for="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  autocomplete="current-password"
-                  placeholder="Password"
-                  minlength="8"
-                  required
                 />
               </div>
               <div class="field signup-only" style="margin: 6px 0">
@@ -1418,6 +1419,23 @@
       function setStatus(message = "", isError = false) {
         authStatus.textContent = message;
         authStatus.classList.toggle("error", Boolean(isError));
+      }
+
+      function authErrorMessage(error, fallback) {
+        const candidates = [
+          error?.message,
+          error?.error_description,
+          error?.details,
+          error?.hint,
+        ];
+        const message = candidates.find(
+          (value) =>
+            typeof value === "string" &&
+            value.trim() &&
+            value.trim() !== "{}" &&
+            value.trim() !== "[object Object]",
+        );
+        return message ? message.trim() : fallback;
       }
 
       function setBusy(isBusy, label) {
@@ -1910,17 +1928,14 @@
         bindOnboardingControls();
       }
 
-      /* ── Mode switching ── */
       let codeSent = false;
       let cooldownTimer = null;
-
       const otpFieldGroup = document.getElementById("otp-field-group");
 
       function startCooldownTimer(seconds = 30) {
         let remaining = seconds;
         sendCodeBtn.disabled = true;
-        sendCodeBtn.textContent = `Resend (${remaining}s)`;
-        
+        sendCodeBtn.textContent = `Send again (${remaining}s)`;
         if (cooldownTimer) clearInterval(cooldownTimer);
         cooldownTimer = setInterval(() => {
           remaining -= 1;
@@ -1930,7 +1945,7 @@
             sendCodeBtn.disabled = false;
             sendCodeBtn.textContent = "Send code";
           } else {
-            sendCodeBtn.textContent = `Resend (${remaining}s)`;
+            sendCodeBtn.textContent = `Send again (${remaining}s)`;
           }
         }, 1000);
       }
@@ -1948,19 +1963,17 @@
         title.textContent = c.title;
         copy.textContent = c.sub;
         submitLabel.textContent = recovering ? "Update password" : c.btn;
-        
         if (sendCodeBtn) {
-          sendCodeBtn.textContent = "Send code";
           sendCodeBtn.style.display = joining ? "inline-block" : "none";
           if (!joining && cooldownTimer) {
             clearInterval(cooldownTimer);
             cooldownTimer = null;
             sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = "Send code";
           }
         }
-        
         if (otpFieldGroup) {
-          otpFieldGroup.style.display = (joining && codeSent) ? "grid" : "none";
+          otpFieldGroup.style.display = joining && codeSent ? "grid" : "none";
         }
         
         resetPasswordBtn.style.display = resetting || recovering ? "none" : "block";
@@ -2134,41 +2147,28 @@
           new Date().toISOString(),
         );
 
-        if (!token) {
-          if (!codeSent) {
-            setStatus("Please click 'Send code' first to receive your 6-digit email code.", true);
-            sendCodeBtn.focus();
-          } else {
-            setStatus("Enter the 6-digit verification code sent to your email.", true);
-            otpInput.focus();
-          }
+        if (!codeSent || !token) {
+          setStatus("Send a verification code, then enter the 6-digit code from your email.", true);
+          if (!codeSent) sendCodeBtn.focus();
+          else otpInput.focus();
           return;
         }
 
         setBusy(true, "Verifying…");
-        setStatus("Checking your code…");
+        setStatus("Verifying your Echoo code…");
         try {
           const { data, error } = await window.EchooAuth.client.auth.verifyOtp({
             email,
             token,
-            type: "email",
+            type: "signup",
           });
           if (error) throw error;
-
-          const { error: updateError } = await window.EchooAuth.client.auth.updateUser({
-            password,
-            data: { display_name: displayName, username },
-          });
-          if (updateError) throw updateError;
-          state.userName =
-            data.user?.user_metadata?.display_name || displayName || "User";
+          state.userName = data.user?.user_metadata?.display_name || displayName;
           state.userEmail = data.user?.email || email;
-          setStatus(
-            "Account ready. Now choose the signals Echoo should remember.",
-          );
+          setStatus("Account verified. Let’s personalize Echoo for you.");
           startOnboarding("");
         } catch (error) {
-          setStatus(error.message || "Could not create your account.", true);
+          setStatus(authErrorMessage(error, "That code is invalid or expired. Request a new one and try again."), true);
         } finally {
           setBusy(false);
         }
@@ -2197,51 +2197,54 @@
             setStatus("Supabase auth is not available on this page.", true);
             return;
           }
+          const username = usernameInput.value.trim();
           const email = emailInput.value.trim();
+          const password = passwordInput.value;
+          const displayName = nameInput.value.trim() || email.split("@")[0] || "Echoo User";
+          const consentCheckbox = document.getElementById("pipeda-consent");
+
+          if (!username) {
+            setStatus("Choose a username before sending your code.", true);
+            usernameInput.focus();
+            return;
+          }
           if (!email) {
-            setStatus("Add your email first.", true);
+            setStatus("Add your email before sending your code.", true);
             emailInput.focus();
             return;
           }
-          const joining = state.mode === "signup";
-          if (joining) {
-            const consentCheckbox = document.getElementById("pipeda-consent");
-            if (consentCheckbox && !consentCheckbox.checked) {
-              setStatus(
-                "You must agree to the Privacy Policy and Terms of Service to sign up.",
-                true,
-              );
-              return;
-            }
-            localStorage.setItem(
-              "echoo_pipeda_consent_at",
-              new Date().toISOString(),
-            );
-          }
-          setBusy(true, "Sending…");
-          setStatus("Sending your Echoo code…");
-          const { error } = await window.EchooAuth.client.auth.signInWithOtp({
-            email,
-            options: {
-              shouldCreateUser: true,
-              emailRedirectTo: authRedirectForProvider(),
-              data: {
-                display_name:
-                  nameInput.value.trim() || email.split("@")[0] || "Echoo User",
-                username: usernameInput.value.trim() || email.split("@")[0],
-              },
-            },
-          });
-          setBusy(false);
-          if (error) {
-            setStatus(error.message || "Could not send code.", true);
+          if (!password || password.length < 8) {
+            setStatus("Choose a password with at least 8 characters before sending your code.", true);
+            passwordInput.focus();
             return;
           }
-          codeSent = true;
-          if (otpFieldGroup) otpFieldGroup.style.display = "grid";
-          setStatus("Code sent! Check your inbox for the 6-digit code.");
-          otpInput.focus();
-          startCooldownTimer(30);
+          if (consentCheckbox && !consentCheckbox.checked) {
+            setStatus("You must agree to the Privacy Policy and Terms of Service to sign up.", true);
+            return;
+          }
+
+          localStorage.setItem("echoo_pipeda_consent_at", new Date().toISOString());
+          setBusy(true, "Sending…");
+          setStatus("Sending your 6-digit verification code…");
+          try {
+            const { error } = await window.EchooAuth.client.auth.signUp({
+              email,
+              password,
+              options: {
+                data: { display_name: displayName, username },
+              },
+            });
+            if (error) throw error;
+            codeSent = true;
+            otpFieldGroup.style.display = "grid";
+            setStatus("Code sent. Check your inbox, then enter the 6-digit code below.");
+            otpInput.focus();
+            startCooldownTimer(30);
+          } catch (error) {
+            setStatus(authErrorMessage(error, "We couldn’t send the code. Please try again."), true);
+          } finally {
+            setBusy(false);
+          }
         });
       }
 
