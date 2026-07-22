@@ -1095,6 +1095,9 @@
       function setDetailContent(html) {
         document.getElementById("detail-content").innerHTML = html;
         bindDetailCloseButtons();
+        if (window.EchooPlaceDetail?.bindGalleryInteractions) {
+          window.EchooPlaceDetail.bindGalleryInteractions();
+        }
       }
 
       function buildFallbackDetail(item) {
