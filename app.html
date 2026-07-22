@@ -1781,6 +1781,7 @@
     />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="assets/party-radar.css" />
+    <link rel="stylesheet" href="assets/echoo-place-detail.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
     <script>document.documentElement.classList.add("echoo-page-loading");</script>
   </head>
@@ -1989,6 +1990,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
+    <script src="assets/echoo-place-detail.js"></script>
     <script src="assets/location-platform.js"></script>
     <script src="assets/activity-context.js"></script>
     <script>
@@ -2507,6 +2509,10 @@
       const detailModalBackdrop = document.getElementById(
         "card-detail-modal-backdrop",
       );
+      const detailModalContent = document.getElementById(
+        "card-detail-modal-content",
+      );
+      const DETAIL_PENDING_KEY = "echoo_pending_place_detail";
 
       /* ── FAB Map Drag & Transparency Logic ── */
       let isDraggingFab = false;
@@ -2534,6 +2540,135 @@
         fab.style.top = "";
         fab.style.right = "";
         fab.style.bottom = "";
+      }
+
+      function openPlaceDetailModal() {
+        detailModal.classList.add("open");
+      }
+
+      function closePlaceDetailModal() {
+        detailModal.classList.remove("open");
+      }
+
+      function bindPlaceDetailCloseButtons() {
+        if (!detailModalContent) return;
+        detailModalContent
+          .querySelectorAll("[data-close-sheet]")
+          .forEach((button) => {
+            button.onclick = () => {
+              clearPendingPlaceDetail();
+              closePlaceDetailModal();
+            };
+          });
+      }
+
+      function setPlaceDetailContent(html) {
+        if (!detailModalContent) return;
+        detailModalContent.innerHTML = html;
+        bindPlaceDetailCloseButtons();
+      }
+
+      function clearPendingPlaceDetail() {
+        sessionStorage.removeItem(DETAIL_PENDING_KEY);
+      }
+
+      function savePendingPlaceDetail(payload) {
+        sessionStorage.setItem(
+          DETAIL_PENDING_KEY,
+          JSON.stringify({
+            payload,
+            createdAt: Date.now(),
+          }),
+        );
+      }
+
+      function buildFallbackPlaceDetail(payload = {}) {
+        const rating = Number(
+          payload.rating || payload.community?.ratingAverage || 3.6,
+        );
+        const confidence = Math.min(1, Math.max(0.45, rating / 5));
+        return {
+          place: {
+            id: payload.placeId || "",
+            name: payload.title || "Verified place",
+            category: payload.category || "Place",
+            municipality: payload.city || payload.neighborhood || city || "Ontario",
+            city: payload.city || city || "Ontario",
+            formatted_address:
+              payload.neighborhood ||
+              payload.address ||
+              payload.city ||
+              city ||
+              "Ontario",
+            latitude: payload.latitude || null,
+            longitude: payload.longitude || null,
+            timezone: "America/Toronto",
+            image_url: payload.image || "",
+          },
+          profile: {
+            summary:
+              payload.copy ||
+              payload.vibe ||
+              "A curated local destination for memorable experiences.",
+            good_for: payload.good_for || [],
+            vibe_tags: payload.vibe_tags || payload.tags || [],
+            activity_tags: payload.activity_tags || [],
+            meal_tags: payload.meal_tags || [],
+            price_band: payload.price_band || "",
+            noise_level: payload.noise_level || "",
+            confidence_score: confidence,
+          },
+          hours: [],
+          sources: [],
+          relatedEvents: [],
+          alternatives: [],
+          sourceStatus: {
+            sourceCount: payload.placeId ? 1 : 0,
+            confidenceScore: confidence,
+          },
+        };
+      }
+
+      async function fetchPlaceDetail(placeId) {
+        const headers = window.EchooAuth
+          ? await window.EchooAuth.authHeaders({
+              "Content-Type": "application/json",
+            })
+          : {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+              apikey: CONFIG.supabaseAnonKey,
+            };
+        const response = await fetch(
+          `${CONFIG.placeDetailUrl}?id=${encodeURIComponent(placeId)}`,
+          { headers },
+        );
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error || "Place detail failed");
+        }
+        return payload?.data || null;
+      }
+
+      async function resumePendingPlaceDetail() {
+        const raw = sessionStorage.getItem(DETAIL_PENDING_KEY);
+        if (!raw || !window.EchooAuth?.getAuthState) return;
+        let pending;
+        try {
+          pending = JSON.parse(raw);
+        } catch (_) {
+          clearPendingPlaceDetail();
+          return;
+        }
+        const authState = await window.EchooAuth.getAuthState({
+          requireFresh: true,
+        });
+        if (!authState.ok) return;
+        clearPendingPlaceDetail();
+        await addPlaceDetailBubble(
+          pending.payload?.placeId || "",
+          pending.payload || {},
+        );
       }
 
       if (overlay) {
@@ -2599,12 +2734,14 @@
 
       if (detailModalClose) {
         detailModalClose.addEventListener("click", () => {
-          detailModal.classList.remove("open");
+          clearPendingPlaceDetail();
+          closePlaceDetailModal();
         });
       }
       if (detailModalBackdrop) {
         detailModalBackdrop.addEventListener("click", () => {
-          detailModal.classList.remove("open");
+          clearPendingPlaceDetail();
+          closePlaceDetailModal();
         });
       }
 
@@ -2938,7 +3075,18 @@
         if (detailsBtn) {
           detailsBtn.addEventListener("click", () => {
             detailModal.classList.remove("open");
-            addPlaceDetailBubble(detailId);
+            const payload = {
+              placeId: detailId,
+              title: stop.name,
+              image: stop.img,
+              category: stop.tags || "Place",
+              city: stop.city || "",
+              neighborhood: stop.neighborhood || "",
+              copy: stop.vibe || "",
+              vibe: stop.vibe || "",
+            };
+            savePendingPlaceDetail(payload);
+            addPlaceDetailBubble(detailId, payload);
           });
         }
 
@@ -3164,62 +3312,79 @@
         scrollChat();
       }
 
-      async function addPlaceDetailBubble(placeId) {
+      async function addPlaceDetailBubble(placeId, payload = {}) {
         if (!placeId) return;
-        const loading = addBubble("ai", "Opening verified place details...");
-        try {
-          const headers = window.EchooAuth
-            ? await window.EchooAuth.authHeaders({
-                "Content-Type": "application/json",
-              })
-            : {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
-                apikey: CONFIG.supabaseAnonKey,
-              };
-          const response = await fetch(
-            `${CONFIG.placeDetailUrl}?id=${encodeURIComponent(placeId)}`,
-            { headers },
+        const authState = window.EchooAuth?.getAuthState
+          ? await window.EchooAuth.getAuthState({ requireFresh: true })
+          : { ok: false, signedIn: false, needsLogin: true, needsReauth: false };
+        const nextUrl =
+          `${window.location.pathname.split("/").pop() || "app.html"}${window.location.search}${window.location.hash}`;
+        const caption = window.EchooPlaceDetail?.pickCaption(
+          payload.title || payload.name || placeId,
+        );
+
+        if (!authState.ok) {
+          savePendingPlaceDetail({ placeId, ...payload });
+          setPlaceDetailContent(
+            window.EchooPlaceDetail.renderAuthPrompt({
+              title: "Sign in to unlock this place",
+              caption,
+              note: "We’ll pull the full detail panel after a quick sign-in.",
+              nextUrl,
+              seed: payload.title || payload.name || placeId,
+              primaryLabel: "Sign in",
+              secondaryLabel: "Not now",
+            }),
           );
-          const payload = await response.json().catch(() => ({}));
-          if (!response.ok) {
-            throw new Error(payload?.error || "Place detail failed");
-          }
-          const detail = payload?.data || {};
-          const place = detail.place || {};
-          const profile = detail.profile || {};
-          const sources = Array.isArray(detail.sources) ? detail.sources : [];
-          const sourceNames = sources
-            .map((source) => source.source_name)
-            .filter(Boolean)
-            .slice(0, 2)
-            .join(", ");
-          if (loading) loading.remove();
-          addDetailCard({
-            title: place.name || place.formatted_address || "Verified place",
-            kicker: [
-              place.category || "Place",
-              place.municipality || place.city || "Ontario",
-            ]
-              .filter(Boolean)
-              .join(" · "),
-            copy:
-              profile.summary ||
-              place.metadata?.description ||
-              "Echoo has this as a verified Ontario place record.",
-            meta: sourceNames
-              ? `Source: ${sourceNames}`
-              : "Verified place record",
-            image: "assets/optimized/news-date-768.jpg",
-          });
+          openPlaceDetailModal();
+          return;
+        }
+
+        openPlaceDetailModal();
+        setPlaceDetailContent(
+          window.EchooPlaceDetail.renderAuthPrompt({
+            title: "Opening the full place profile",
+            caption: "Echoo is pulling together the richer context now.",
+            note: "One moment while we build the panel.",
+            nextUrl,
+            seed: payload.title || payload.name || placeId,
+            primaryLabel: "Working on it",
+            secondaryLabel: "Close",
+          }),
+        );
+
+        try {
+          const detail = await fetchPlaceDetail(placeId);
+          const heroImage =
+            payload.image ||
+            payload.img ||
+            detail?.place?.image_url ||
+            detail?.place?.imageUrl ||
+            "assets/optimized/news-date-768.jpg";
+          setPlaceDetailContent(
+            window.EchooPlaceDetail.renderPlaceDetail(
+              detail || buildFallbackPlaceDetail({ ...payload, placeId }),
+              {
+                heroImage,
+              },
+            ),
+          );
+          clearPendingPlaceDetail();
         } catch (error) {
           console.warn("Echoo: place detail failed.", error);
-          if (loading) {
-            loading.textContent =
-              "This is a verified Ontario place stop, but Echoo could not open its detail panel yet.";
-          }
+          setPlaceDetailContent(
+            window.EchooPlaceDetail.renderPlaceDetail(
+              buildFallbackPlaceDetail({ ...payload, placeId }),
+              {
+                heroImage:
+                  payload.image ||
+                  payload.img ||
+                  "assets/optimized/news-date-768.jpg",
+              },
+            ),
+          );
+          clearPendingPlaceDetail();
         }
-        scrollChat();
       }
 
       function addDetailCard({ title, kicker, copy, meta, image, url }) {
@@ -4224,6 +4389,10 @@
       if (incomingQuery) {
         openChat(incomingQuery);
       }
+
+      resumePendingPlaceDetail().catch((error) =>
+        console.warn("Echoo: pending place detail resume failed.", error),
+      );
     </script>
     <script src="assets/party-radar.js"></script>
     <script src="assets/page-loader.js"></script>

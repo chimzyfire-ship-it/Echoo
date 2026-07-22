@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#050505" />
     <title>Discover · echoo</title>
     <link rel="stylesheet" href="assets/party-radar.css" />
+    <link rel="stylesheet" href="assets/echoo-place-detail.css" />
     <style>
       :root {
         color-scheme: dark;
@@ -790,7 +791,7 @@
 
       .detail-art {
         width: 100%;
-        height: 220px;
+        aspect-ratio: 16 / 10;
         border-radius: 20px;
         background-size: cover;
         background-position: center;
@@ -1018,16 +1019,18 @@
       </section>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/echoo-auth.js"></script>
-    <script src="assets/location-platform.js"></script>
-    <script>
-      const CONFIG = {
-        anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        exploreUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
-        suggestionsUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/search-suggestions",
-        communityUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discovery-community",
-      };
+      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+      <script src="assets/echoo-auth.js"></script>
+      <script src="assets/echoo-place-detail.js"></script>
+      <script src="assets/location-platform.js"></script>
+      <script>
+        const CONFIG = {
+          anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+          exploreUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
+          suggestionsUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/search-suggestions",
+          communityUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discovery-community",
+          placeDetailUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
+        };
 
       const params = new URLSearchParams(location.search);
       let prefs = {};
@@ -1061,12 +1064,193 @@
         Authorization: `Bearer ${CONFIG.anonKey}`,
       };
 
+      const DETAIL_PENDING_KEY = "echoo_pending_place_detail";
+
       function imageUrlFor(item) {
         const image = item?.image;
         const rawUrl = image?.url || (image?.storagePath
           ? `https://chimzyfire-ship-it.supabase.co/storage/v1/object/public/discovery-covers/${image.storagePath}`
           : item?.imageUrl || "");
         return /^https?:\/\//i.test(rawUrl) ? rawUrl : "";
+      }
+
+      function openDetailSheet() {
+        const sheet = document.getElementById("detail-sheet");
+        sheet.classList.add("open");
+        sheet.setAttribute("aria-hidden", "false");
+      }
+
+      function closeDetailSheet() {
+        const sheet = document.getElementById("detail-sheet");
+        sheet.classList.remove("open");
+        sheet.setAttribute("aria-hidden", "true");
+      }
+
+      function bindDetailCloseButtons() {
+        document
+          .querySelectorAll("#detail-content [data-close-sheet]")
+          .forEach((btn) => (btn.onclick = closeDetailSheet));
+      }
+
+      function setDetailContent(html) {
+        document.getElementById("detail-content").innerHTML = html;
+        bindDetailCloseButtons();
+      }
+
+      function buildFallbackDetail(item) {
+        const rating = item.community?.ratingAverage
+          ? Number(item.community.ratingAverage)
+          : item.rating
+            ? Number(item.rating)
+            : 0.68;
+        return {
+          place: {
+            id: item.id || "",
+            name: item.title || item.name || "Echoo place",
+            category: item.category || "Place",
+            subcategory: item.subcategory || "",
+            municipality: item.neighborhood || item.city || city,
+            city: item.city || city,
+            formatted_address: item.neighborhood || item.address || city,
+            latitude: item.latitude || null,
+            longitude: item.longitude || null,
+            timezone: "America/Toronto",
+            image_url: imageUrlFor(item) || item.image || "",
+          },
+          profile: {
+            summary:
+              item.description ||
+              item.vibe ||
+              "A curated local destination for memorable experiences.",
+            good_for: item.good_for || item.bestFor || [],
+            vibe_tags: item.vibe_tags || item.tags || [],
+            activity_tags: item.activity_tags || [],
+            meal_tags: item.meal_tags || [],
+            price_band: item.price_band || item.priceBand || "",
+            noise_level: item.noise_level || "",
+            confidence_score: Math.min(1, Math.max(0.45, rating / 5)),
+          },
+          hours: [],
+          sources: [],
+          relatedEvents: [],
+          alternatives: [],
+          sourceStatus: {
+            sourceCount: item.id ? 1 : 0,
+            confidenceScore: Math.min(1, Math.max(0.45, rating / 5)),
+          },
+        };
+      }
+
+      async function fetchPlaceDetail(item) {
+        if (!item?.id) return buildFallbackDetail(item);
+        const headersForDetail = window.EchooAuth?.authHeaders
+          ? await window.EchooAuth.authHeaders({
+              "Content-Type": "application/json",
+            })
+          : headers;
+        const response = await fetch(
+          `${CONFIG.placeDetailUrl}?id=${encodeURIComponent(item.id)}`,
+          { headers: headersForDetail },
+        );
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error || "Place detail failed");
+        }
+        return payload?.data || buildFallbackDetail(item);
+      }
+
+      function savePendingDetail(item) {
+        sessionStorage.setItem(
+          DETAIL_PENDING_KEY,
+          JSON.stringify({
+            item,
+            city,
+            createdAt: Date.now(),
+          }),
+        );
+      }
+
+      function clearPendingDetail() {
+        sessionStorage.removeItem(DETAIL_PENDING_KEY);
+      }
+
+      async function resumePendingDetail() {
+        const raw = sessionStorage.getItem(DETAIL_PENDING_KEY);
+        if (!raw || !window.EchooAuth?.getAuthState) return;
+        let pending;
+        try {
+          pending = JSON.parse(raw);
+        } catch (_) {
+          clearPendingDetail();
+          return;
+        }
+        const authState = await window.EchooAuth.getAuthState({
+          requireFresh: true,
+        });
+        if (!authState.ok) return;
+        clearPendingDetail();
+        await openDetailByItem(pending.item, { resume: true });
+      }
+
+      async function openDetailByItem(item, options = {}) {
+        const authState = window.EchooAuth?.getAuthState
+          ? await window.EchooAuth.getAuthState({ requireFresh: true })
+          : { ok: false, signedIn: false, needsLogin: true, needsReauth: false };
+        const heroImage = imageUrlFor(item) || item?.image || defaultPlaces[0].image;
+
+        if (!authState.ok) {
+          savePendingDetail(item);
+          setDetailContent(
+            window.EchooPlaceDetail.renderAuthPrompt({
+              title: "Sign in to unlock this place",
+              caption: window.EchooPlaceDetail.pickCaption(
+                item?.title || item?.name || item?.city || "Echoo",
+              ),
+              note: "We’ll bring you back here after a quick sign-in.",
+              nextUrl: `${window.location.pathname.split("/").pop() || "events.html"}${window.location.search}${window.location.hash}`,
+              seed: item?.title || item?.name || "place",
+              primaryLabel: "Sign in",
+              secondaryLabel: "Keep browsing",
+            }),
+          );
+          openDetailSheet();
+          return;
+        }
+
+        openDetailSheet();
+        setDetailContent(
+          window.EchooPlaceDetail.renderAuthPrompt({
+            title: "Opening the full place profile",
+            caption: "A smarter sheet is loading now.",
+            note: "Just a second while Echoo pulls the details together.",
+            nextUrl: `${window.location.pathname.split("/").pop() || "events.html"}${window.location.search}${window.location.hash}`,
+            seed: item?.title || item?.name || "place",
+            primaryLabel: "Working on it",
+            secondaryLabel: "Close",
+          }),
+        );
+
+        try {
+          const detail = await fetchPlaceDetail(item);
+          setDetailContent(
+            window.EchooPlaceDetail.renderPlaceDetail(detail, {
+              heroImage,
+              directionsHref:
+                item?.id && Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude))
+                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.latitude},${item.longitude}`)}`
+                  : undefined,
+            }),
+          );
+          clearPendingDetail();
+        } catch (error) {
+          console.warn("Echoo: place detail load failed.", error);
+          setDetailContent(
+            window.EchooPlaceDetail.renderPlaceDetail(buildFallbackDetail(item), {
+              heroImage,
+            }),
+          );
+          clearPendingDetail();
+        }
       }
 
       const defaultPlaces = [
@@ -1195,31 +1379,13 @@
 
       function openDetail(index) {
         const item = items[index] || defaultPlaces[index] || defaultPlaces[0];
-        const img = imageUrlFor(item) || item.image || defaultPlaces[0].image;
-        const rating = item.community?.ratingAverage
-          ? `${Number(item.community.ratingAverage).toFixed(1)} Echoo rating`
-          : `${item.rating || 4.8} rating`;
-
-        document.getElementById("detail-content").innerHTML = `
-          <div class="detail-art" style="background-image: url('${esc(img)}')"></div>
-          <span class="detail-kicker">${esc(item.category || "Place")}</span>
-          <h2 class="detail-title">${esc(item.title)}</h2>
-          <p class="detail-copy">${esc(item.description || "A curated local destination for memorable experiences.")}</p>
-          <div style="font-size: 14px; font-weight: 600; margin-bottom: 16px;">★ ${esc(rating)}</div>
-          <div class="detail-actions">
-            <a class="primary" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.title)}" target="_blank" rel="noopener">Directions</a>
-          </div>
-        `;
-
-        const sheet = document.getElementById("detail-sheet");
-        sheet.classList.add("open");
-        sheet.setAttribute("aria-hidden", "false");
+        savePendingDetail(item);
+        openDetailByItem(item);
       }
 
       function closeDetail() {
-        const sheet = document.getElementById("detail-sheet");
-        sheet.classList.remove("open");
-        sheet.setAttribute("aria-hidden", "true");
+        clearPendingDetail();
+        closeDetailSheet();
       }
 
       document.getElementById("search-form").onsubmit = (e) => {
@@ -1247,6 +1413,7 @@
       document.getElementById("location-note").innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span><span>${city.toUpperCase()} TODAY</span>`;
       renderPopularNearby(defaultPlaces);
       search(activeQuery);
+      resumePendingDetail();
     </script>
     <script src="assets/party-radar.js"></script>
     <script src="assets/page-loader.js"></script>

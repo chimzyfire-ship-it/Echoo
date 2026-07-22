@@ -78,11 +78,17 @@
     }
   }
 
-  function redirectToAuth(next = currentRelativeUrl(), mode = "signup") {
+  function redirectToAuth(next = currentRelativeUrl(), mode = "signup", meta = {}) {
     const params = new URLSearchParams({
       next: normalizeNext(next),
       mode,
     });
+    const intent = clean(meta.intent);
+    const reason = clean(meta.reason);
+    const caption = clean(meta.caption);
+    if (intent) params.set("intent", intent);
+    if (reason) params.set("reason", reason);
+    if (caption) params.set("caption", caption);
     window.location.href = `auth.html?${params.toString()}`;
   }
 
@@ -217,6 +223,53 @@
     return { session: data?.session || null, error };
   }
 
+  function sessionFreshness(session, graceMinutes = 5) {
+    const expiresAt = Number(session?.expires_at || 0);
+    if (!Number.isFinite(expiresAt) || expiresAt <= 0) {
+      return {
+        expiresAt: null,
+        expiresInMs: null,
+        expiresSoon: true,
+      };
+    }
+    const expiresInMs = expiresAt * 1000 - Date.now();
+    return {
+      expiresAt,
+      expiresInMs,
+      expiresSoon: expiresInMs <= graceMinutes * 60 * 1000,
+    };
+  }
+
+  async function getAuthState(options = {}) {
+    let { session, error } = await getSession();
+    let freshness = sessionFreshness(session, options.graceMinutes || 5);
+    let refreshAttempted = false;
+
+    // Renew a near-expiry session before interrupting a detail view with auth.
+    if (session?.user && options.requireFresh && freshness.expiresSoon && client) {
+      refreshAttempted = true;
+      const refreshed = await client.auth.refreshSession();
+      session = refreshed.data?.session || session;
+      error = refreshed.error || error;
+      freshness = sessionFreshness(session, options.graceMinutes || 5);
+    }
+
+    const signedIn = Boolean(session?.user);
+    const needsLogin = !signedIn || Boolean(error);
+    const needsReauth = Boolean(options.requireFresh && freshness.expiresSoon);
+    return {
+      ok: signedIn && !needsReauth && !error,
+      signedIn,
+      needsLogin,
+      needsReauth,
+      session,
+      user: session?.user || null,
+      error: error || null,
+      refreshAttempted,
+      ...freshness,
+    };
+  }
+
   async function loadOnboardingProfile() {
     const { session, error: sessionError } = await getSession();
     if (sessionError || !session?.user) {
@@ -279,6 +332,11 @@
       redirectToAuth(
         options.next || currentRelativeUrl(),
         options.mode || "signup",
+        {
+          intent: options.intent || "onboarding",
+          reason: options.reason || "onboarding_required",
+          caption: options.caption || "",
+        },
       );
     }
     return state;
@@ -339,6 +397,7 @@
     client,
     authHeaders,
     currentRelativeUrl,
+    getAuthState,
     loadOnboardingProfile,
     lookupEmailByUsername,
     normalizeNext,

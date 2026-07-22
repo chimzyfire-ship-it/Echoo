@@ -6,6 +6,79 @@
   --party-border-hover: rgba(247, 213, 178, 0.55);
 }
 
+/* Weekly event art always lands in the same poster frame, even when a source
+   supplies landscape, portrait, or square images. */
+.event-card {
+  position: relative;
+  flex: 0 0 clamp(218px, 68vw, 270px);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #151515;
+  border: 1px solid var(--line, rgba(248, 245, 239, 0.12));
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+  isolation: isolate;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.event-card:active {
+  transform: scale(0.98);
+}
+
+.event-card-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(1.06) contrast(1.03);
+}
+
+.event-card-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 7px;
+  padding: 14px;
+  background: linear-gradient(to top, rgba(9, 9, 8, 0.94) 0%, rgba(9, 9, 8, 0.42) 48%, rgba(9, 9, 8, 0.05) 100%);
+}
+
+.event-date-badge {
+  align-self: flex-start;
+  padding: 5px 9px;
+  border: 1px solid rgba(247, 213, 178, 0.28);
+  border-radius: 999px;
+  background: rgba(10, 10, 9, 0.6);
+  color: var(--peach, #f7d5b2);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+
+.event-card-title {
+  width: 100%;
+  color: var(--ink, #f8f5ef);
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.event-card-time {
+  width: 100%;
+  overflow: hidden;
+  color: rgba(248, 245, 239, 0.78);
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 #party-radar-mount {
   width: 100%;
   display: block;

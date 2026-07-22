@@ -1344,6 +1344,8 @@
       const redirectParams = new URL(redirectTarget, window.location.href)
         .searchParams;
       const preferredMode = authParams.get("mode");
+      const authIntent = authParams.get("intent");
+      const isPlaceDetailReturn = authIntent === "place_detail";
       const OPEN_AUTH_BUTTONS_DIRECTLY_TO_APP = false;
       let initialStoredPrefs = {};
 
@@ -1454,7 +1456,10 @@
       function authRedirectForProvider() {
         const url = new URL("auth.html", window.location.href);
         url.searchParams.set("next", redirectTarget);
-        url.searchParams.set("mode", "signup");
+        url.searchParams.set("mode", isPlaceDetailReturn ? "signin" : "signup");
+        if (authIntent) url.searchParams.set("intent", authIntent);
+        if (authParams.get("reason")) url.searchParams.set("reason", authParams.get("reason"));
+        if (authParams.get("caption")) url.searchParams.set("caption", authParams.get("caption"));
         return url.toString();
       }
 
@@ -1496,6 +1501,11 @@
           title: "Make your city feel closer.",
           sub: "Curate your taste, sync with friends, and discover plans worth saying yes to.",
           btn: "Start exploring",
+        },
+        detailSignin: {
+          title: "One quick sign-in.",
+          sub: "Then we’ll take you straight back to that place.",
+          btn: "Sign in and return",
         },
         reset: {
           title: "Reset your password.",
@@ -1959,7 +1969,15 @@
         signInTab.classList.toggle("active", !joining);
         signUpTab.classList.toggle("active", joining);
 
-        const c = recovering ? COPY.reset : resetting ? COPY.reset : joining ? COPY.signup : COPY.signin;
+        const c = recovering
+          ? COPY.reset
+          : resetting
+            ? COPY.reset
+            : joining
+              ? COPY.signup
+              : isPlaceDetailReturn
+                ? COPY.detailSignin
+                : COPY.signin;
         title.textContent = c.title;
         copy.textContent = c.sub;
         submitLabel.textContent = recovering ? "Update password" : c.btn;
@@ -2036,6 +2054,14 @@
           const profileState = await window.EchooAuth.loadOnboardingProfile();
           if (profileState.ok) {
             redirectAfterAuth(profileState.preferences);
+            return;
+          }
+          if (isPlaceDetailReturn) {
+            redirectAfterAuth({
+              name: state.userName,
+              email: state.userEmail,
+              city: state.city,
+            });
             return;
           }
           setStatus("You’re in. Let’s finish onboarding.");
@@ -2820,7 +2846,7 @@
           setStatus("Supabase auth is not available on this page.", true);
           authPanel.classList.add("visible");
           authPanel.style.opacity = "1";
-          if (preferredMode === "signup" || authParams.has("next")) {
+          if (preferredMode === "signup" && !isPlaceDetailReturn) {
             setMode("signup");
           } else {
             setMode("signin");
@@ -2837,7 +2863,7 @@
         if (!profileState.session?.user) {
           if (authParams.get("type") === "recovery") {
             setMode("recovery");
-          } else if (preferredMode === "signup" || authParams.has("next")) {
+          } else if (preferredMode === "signup" && !isPlaceDetailReturn) {
             setMode("signup");
           } else {
             setMode("signin");
@@ -2886,6 +2912,15 @@
           } else {
             showProfileDashboard(profileState.preferences);
           }
+          return;
+        }
+
+        if (isPlaceDetailReturn) {
+          redirectAfterAuth({
+            name: state.userName,
+            email: state.userEmail,
+            city: state.city,
+          });
           return;
         }
 
