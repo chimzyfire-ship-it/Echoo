@@ -1370,9 +1370,13 @@
       });
 
       const authParams = new URLSearchParams(window.location.search);
+      const DEFAULT_AUTH_DESTINATION = "index.html";
       const redirectTarget = window.EchooAuth
-        ? window.EchooAuth.normalizeNext(authParams.get("next"), "app.html")
-        : "app.html";
+        ? window.EchooAuth.normalizeNext(
+            authParams.get("next"),
+            DEFAULT_AUTH_DESTINATION,
+          )
+        : DEFAULT_AUTH_DESTINATION;
       const redirectParams = new URL(redirectTarget, window.location.href)
         .searchParams;
       const preferredMode = authParams.get("mode");
@@ -1534,7 +1538,8 @@
         if (preferences.budget && !target.searchParams.has("budget")) {
           target.searchParams.set("budget", preferences.budget);
         }
-        const file = target.pathname.split("/").pop() || "app.html";
+        const file =
+          target.pathname.split("/").pop() || DEFAULT_AUTH_DESTINATION;
         window.location.href = `${file}${target.search}${target.hash}`;
       }
 
