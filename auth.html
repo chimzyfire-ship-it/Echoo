@@ -1121,12 +1121,32 @@
               </div>
               <div class="field">
                 <label for="email">Email</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input
+                    id="email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="name@example.com"
+                    required
+                    style="flex: 1;"
+                  />
+                  <button
+                    class="provider-btn"
+                    type="button"
+                    id="send-code-btn"
+                    style="width: auto; min-width: 105px; padding: 0 16px; min-height: 54px; white-space: nowrap; font-size: 13px;"
+                  >
+                    Send code
+                  </button>
+                </div>
+              </div>
+              <div class="field" id="otp-field-group" style="display: none;">
+                <label for="otp-code">One-time code</label>
                 <input
-                  id="email"
-                  type="email"
-                  autocomplete="email"
-                  placeholder="name@example.com"
-                  required
+                  id="otp-code"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  placeholder="Enter the 6-digit code"
                 />
               </div>
               <div class="field">
@@ -1138,15 +1158,6 @@
                   placeholder="Password"
                   minlength="8"
                   required
-                />
-              </div>
-              <div class="field">
-                <label for="otp-code">One-time code</label>
-                <input
-                  id="otp-code"
-                  inputmode="numeric"
-                  autocomplete="one-time-code"
-                  placeholder="Enter the 6-digit code"
                 />
               </div>
               <div class="field signup-only" style="margin: 6px 0">
@@ -1212,14 +1223,6 @@
                 formnovalidate
               >
                 Open my city
-              </button>
-              <button
-                class="provider-btn"
-                type="button"
-                id="send-code-btn"
-                style="margin-top: -4px"
-              >
-                Send code
               </button>
               <button
                 class="provider-btn"
@@ -1908,6 +1911,30 @@
       }
 
       /* ── Mode switching ── */
+      let codeSent = false;
+      let cooldownTimer = null;
+
+      const otpFieldGroup = document.getElementById("otp-field-group");
+
+      function startCooldownTimer(seconds = 30) {
+        let remaining = seconds;
+        sendCodeBtn.disabled = true;
+        sendCodeBtn.textContent = `Resend (${remaining}s)`;
+        
+        if (cooldownTimer) clearInterval(cooldownTimer);
+        cooldownTimer = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(cooldownTimer);
+            cooldownTimer = null;
+            sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = "Send code";
+          } else {
+            sendCodeBtn.textContent = `Resend (${remaining}s)`;
+          }
+        }, 1000);
+      }
+
       function setMode(mode) {
         state.mode = mode;
         const joining = mode === "signup";
@@ -1921,8 +1948,21 @@
         title.textContent = c.title;
         copy.textContent = c.sub;
         submitLabel.textContent = recovering ? "Update password" : c.btn;
-        sendCodeBtn.textContent = joining ? "Send join code" : "Send sign-in code";
-        sendCodeBtn.style.display = joining ? "block" : "none";
+        
+        if (sendCodeBtn) {
+          sendCodeBtn.textContent = "Send code";
+          sendCodeBtn.style.display = joining ? "inline-block" : "none";
+          if (!joining && cooldownTimer) {
+            clearInterval(cooldownTimer);
+            cooldownTimer = null;
+            sendCodeBtn.disabled = false;
+          }
+        }
+        
+        if (otpFieldGroup) {
+          otpFieldGroup.style.display = (joining && codeSent) ? "grid" : "none";
+        }
+        
         resetPasswordBtn.style.display = resetting || recovering ? "none" : "block";
         usernameInput.autocomplete = "username";
         passwordInput.autocomplete = joining ? "new-password" : "current-password";
@@ -2094,35 +2134,26 @@
           new Date().toISOString(),
         );
 
-        if (token) {
-          setBusy(true, "Verifying…");
-          setStatus("Checking your code…");
-        } else {
-          setBusy(true, "Sending…");
-          setStatus("Sending your Echoo code…");
-        }
-        try {
-          const { data, error } = token
-            ? await window.EchooAuth.client.auth.verifyOtp({
-                email,
-                token,
-                type: "email",
-              })
-            : await window.EchooAuth.client.auth.signInWithOtp({
-                email,
-                options: {
-                  shouldCreateUser: true,
-                  emailRedirectTo: authRedirectForProvider(),
-                  data: { display_name: displayName, username },
-                },
-              });
-          if (error) throw error;
-
-          if (!token) {
-            setStatus("We emailed you a code. Enter it to continue.");
+        if (!token) {
+          if (!codeSent) {
+            setStatus("Please click 'Send code' first to receive your 6-digit email code.", true);
+            sendCodeBtn.focus();
+          } else {
+            setStatus("Enter the 6-digit verification code sent to your email.", true);
             otpInput.focus();
-            return;
           }
+          return;
+        }
+
+        setBusy(true, "Verifying…");
+        setStatus("Checking your code…");
+        try {
+          const { data, error } = await window.EchooAuth.client.auth.verifyOtp({
+            email,
+            token,
+            type: "email",
+          });
+          if (error) throw error;
 
           const { error: updateError } = await window.EchooAuth.client.auth.updateUser({
             password,
@@ -2169,6 +2200,7 @@
           const email = emailInput.value.trim();
           if (!email) {
             setStatus("Add your email first.", true);
+            emailInput.focus();
             return;
           }
           const joining = state.mode === "signup";
@@ -2205,8 +2237,11 @@
             setStatus(error.message || "Could not send code.", true);
             return;
           }
-          setStatus("Check your inbox for the 6-digit Echoo code.");
+          codeSent = true;
+          if (otpFieldGroup) otpFieldGroup.style.display = "grid";
+          setStatus("Code sent! Check your inbox for the 6-digit code.");
           otpInput.focus();
+          startCooldownTimer(30);
         });
       }
 
