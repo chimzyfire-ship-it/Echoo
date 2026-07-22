@@ -4393,6 +4393,13 @@
       resumePendingPlaceDetail().catch((error) =>
         console.warn("Echoo: pending place detail resume failed.", error),
       );
+
+      /* Retry any onboarding profile that was saved only to localStorage */
+      if (window.EchooAuth?.syncPendingProfile) {
+        window.EchooAuth.syncPendingProfile().catch((e) =>
+          console.warn("Echoo: background profile sync failed.", e),
+        );
+      }
     </script>
     <script src="assets/party-radar.js"></script>
     <script src="assets/page-loader.js"></script>

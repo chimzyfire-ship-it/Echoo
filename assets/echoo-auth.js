@@ -391,6 +391,26 @@
     };
   }
 
+  /**
+   * Retry profile sync if onboarding saved preferences only to localStorage.
+   * Call this on pages that load after auth (e.g. app.html).
+   */
+  async function syncPendingProfile() {
+    if (localStorage.getItem("echoo_profile_pending_sync") !== "true") return;
+    try {
+      const prefs = readLocalPreferences();
+      if (!prefs || !Object.keys(prefs).length) {
+        localStorage.removeItem("echoo_profile_pending_sync");
+        return;
+      }
+      await saveOnboardingProfile({ ...prefs, source: "web_onboarding_retry" });
+      localStorage.removeItem("echoo_profile_pending_sync");
+      console.log("Echoo: pending profile synced to database.");
+    } catch (e) {
+      console.warn("Echoo: pending profile sync failed, will retry later.", e);
+    }
+  }
+
   window.EchooAuth = {
     CONFIG,
     PROFILE_TABLE,
@@ -405,6 +425,7 @@
     redirectToAuth,
     requireOnboarding,
     saveOnboardingProfile,
+    syncPendingProfile,
     updateOnboardingPatch,
     writeLocalPreferences,
   };

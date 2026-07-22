@@ -729,6 +729,31 @@
         line-height: 1.45;
       }
 
+      .ob-status {
+        display: none;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.45;
+        text-align: center;
+        background: rgba(247, 213, 178, 0.08);
+        color: rgba(248, 245, 239, 0.8);
+        border: 1px solid rgba(247, 213, 178, 0.15);
+        margin-bottom: 6px;
+        transition: opacity 0.3s ease;
+      }
+
+      .ob-status.visible {
+        display: block;
+      }
+
+      .ob-status.error {
+        background: rgba(255, 80, 60, 0.1);
+        color: #ff8a78;
+        border-color: rgba(255, 80, 60, 0.2);
+      }
+
       .ob-continue {
         width: 100%;
         min-height: 50px;
@@ -745,7 +770,13 @@
         margin-top: 4px;
       }
 
-      .ob-continue:hover {
+      .ob-continue:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .ob-continue:hover:not(:disabled) {
         transform: translateY(-2px);
       }
 
@@ -1256,6 +1287,7 @@
             </div>
             <div class="ob-body">
               <div id="ob-steps"></div>
+              <div class="ob-status" id="ob-status" role="status" aria-live="polite"></div>
               <button type="button" class="ob-continue" id="ob-next">
                 Next
               </button>
@@ -1421,6 +1453,22 @@
       function setStatus(message = "", isError = false) {
         authStatus.textContent = message;
         authStatus.classList.toggle("error", Boolean(isError));
+      }
+
+      /* ── Onboarding-visible status (shown even when auth panel is hidden) ── */
+      const obStatusEl = document.getElementById("ob-status");
+      function setObStatus(message = "", isError = false) {
+        if (!obStatusEl) return;
+        obStatusEl.textContent = message;
+        obStatusEl.classList.toggle("error", isError);
+        obStatusEl.classList.toggle("visible", Boolean(message));
+        if (isError && message) {
+          clearTimeout(obStatusEl._timer);
+          obStatusEl._timer = setTimeout(() => {
+            obStatusEl.classList.remove("visible");
+            obStatusEl.textContent = "";
+          }, 8000);
+        }
       }
 
       function authErrorMessage(error, fallback) {
@@ -1799,7 +1847,9 @@
       }
 
       function chip(label, key) {
-        return `<button type="button" class="chip" data-multi="${escapeHtml(key)}" data-value="${escapeHtml(label)}" aria-pressed="false">${escapeHtml(label)}</button>`;
+        const bucket = state[key];
+        const isSelected = bucket && typeof bucket.has === "function" ? bucket.has(label) : false;
+        return `<button type="button" class="chip${isSelected ? " selected" : ""}" data-multi="${escapeHtml(key)}" data-value="${escapeHtml(label)}" aria-pressed="${isSelected ? "true" : "false"}">${escapeHtml(label)}</button>`;
       }
 
       function renderCustomInput(id, label) {
@@ -2343,14 +2393,16 @@
           setTimeout(() => focusTarget.focus({ preventScroll: true }), 80);
       }
 
-      obNext.addEventListener("click", () => {
+      let obNextBusy = false;
+      obNext.addEventListener("click", async () => {
+        if (obNextBusy) return;
         const currentStep = OB_STEPS[state.obStep];
         if (
           currentStep &&
           currentStep.key === "city_intel_consent" &&
           !state.city_intel_consent
         ) {
-          alert("Please select one of the choices to continue.");
+          setObStatus("Please select one of the choices to continue.", true);
           return;
         }
         if (
@@ -2358,13 +2410,19 @@
           currentStep.key === "casl_push_consent" &&
           !state.casl_push_consent
         ) {
-          alert("Please select one of the choices to continue.");
+          setObStatus("Please select one of the choices to continue.", true);
           return;
         }
         if (state.obStep < OB_STEPS.length - 1) {
+          setObStatus("");
           renderObStep(state.obStep + 1);
         } else {
-          finishOnboarding();
+          obNextBusy = true;
+          try {
+            await finishOnboarding();
+          } finally {
+            obNextBusy = false;
+          }
         }
       });
 
@@ -2457,19 +2515,22 @@
         const customMotivation = state.customMotivation
           ? [state.customMotivation]
           : [];
-        const interests = [...state.vibes, ...customInterest];
-        const eventStyles = [...state.eventStyles, ...customEventStyle];
-        const audiences = [...state.audiences, ...customAudience];
-        const motivations = [...state.motivations, ...customMotivation];
+        const vibesArr = state.vibes instanceof Set ? [...state.vibes] : (Array.isArray(state.vibes) ? state.vibes : []);
+        const esArr = state.eventStyles instanceof Set ? [...state.eventStyles] : (Array.isArray(state.eventStyles) ? state.eventStyles : []);
+        const auArr = state.audiences instanceof Set ? [...state.audiences] : (Array.isArray(state.audiences) ? state.audiences : []);
+        const moArr = state.motivations instanceof Set ? [...state.motivations] : (Array.isArray(state.motivations) ? state.motivations : []);
+        const interests = [...vibesArr, ...customInterest];
+        const eventStyles = [...esArr, ...customEventStyle];
+        const audiences = [...auArr, ...customAudience];
+        const motivations = [...moArr, ...customMotivation];
         const vibes = interests.join(",");
         const budget = state.budget || "$";
         const energy = state.energy || "chill";
-        const selectedCity = window.EchooLocationPlatform.cityByName(
-          state.city || cityInput.value,
-        );
-        const city = selectedCity
-          ? selectedCity.name
-          : (state.city || cityInput?.value || "Ontario").trim();
+        let city = (state.city || cityInput?.value || "Ontario").trim();
+        try {
+          const selectedCity = window.EchooLocationPlatform?.cityByName(city);
+          if (selectedCity) city = selectedCity.name;
+        } catch (_) { /* location platform may not be loaded */ }
         const tone = state.tone || "direct";
         const gender = state.gender || "Prefer not to say";
         const dob = state.dob || "";
@@ -2529,22 +2590,45 @@
             prefs.casl_push_consent_at,
           );
 
-        setStatus("Saving your Echoo personality…");
+        setObStatus("Saving your Echoo personality…");
         obNext.disabled = true;
+        obNext.textContent = "Saving…";
+
+        /* Attempt 1: Try to persist profile to Supabase */
         try {
           const saved = await window.EchooAuth.saveOnboardingProfile({
             ...prefs,
             source: "web_onboarding",
           });
           redirectAfterAuth(saved.preferences || prefs);
-        } catch (error) {
-          obNext.disabled = false;
-          setStatus(
-            error.message ||
-              "Could not save onboarding. Please try again so Echoo can remember this profile.",
-            true,
-          );
+          return;
+        } catch (primaryError) {
+          console.warn("Echoo: primary profile save failed.", primaryError);
         }
+
+        /* Attempt 2: Refresh the session and retry once */
+        try {
+          if (window.EchooAuth?.client) {
+            const refreshed = await window.EchooAuth.client.auth.refreshSession();
+            if (refreshed.data?.session) {
+              const saved = await window.EchooAuth.saveOnboardingProfile({
+                ...prefs,
+                source: "web_onboarding",
+              });
+              redirectAfterAuth(saved.preferences || prefs);
+              return;
+            }
+          }
+        } catch (retryError) {
+          console.warn("Echoo: session refresh + retry failed.", retryError);
+        }
+
+        /* Fallback: Preferences are already in localStorage.
+           Redirect to the app so the user isn't stuck.
+           The profile will sync on the next authenticated page load. */
+        localStorage.setItem("echoo_profile_pending_sync", "true");
+        setObStatus("Your preferences were saved locally. Redirecting…");
+        setTimeout(() => redirectAfterAuth(prefs), 600);
       }
 
       /* ═══════════════════════════════════════════════
@@ -2899,9 +2983,28 @@
 
         if (profileState.preferences) {
           Object.assign(state, profileState.preferences);
-          if (Array.isArray(profileState.preferences.interests)) {
-            state.vibes = new Set(profileState.preferences.interests);
-          }
+          /* Restore Set types for multi-select fields — Object.assign
+             overwrites them with plain Arrays from the profile payload. */
+          state.vibes = new Set(
+            Array.isArray(profileState.preferences.interests)
+              ? profileState.preferences.interests
+              : [],
+          );
+          state.eventStyles = new Set(
+            Array.isArray(profileState.preferences.eventStyles)
+              ? profileState.preferences.eventStyles
+              : [],
+          );
+          state.audiences = new Set(
+            Array.isArray(profileState.preferences.audiences)
+              ? profileState.preferences.audiences
+              : [],
+          );
+          state.motivations = new Set(
+            Array.isArray(profileState.preferences.motivations)
+              ? profileState.preferences.motivations
+              : [],
+          );
         }
 
         if (authParams.get("type") === "recovery") {
