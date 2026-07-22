@@ -1203,9 +1203,7 @@
           setDetailContent(
             window.EchooPlaceDetail.renderAuthPrompt({
               title: "Sign in to unlock this place",
-              caption: window.EchooPlaceDetail.pickCaption(
-                item?.title || item?.name || item?.city || "Echoo",
-              ),
+              subhead: "Back in a sec.",
               note: "We’ll bring you back here after a quick sign-in.",
               nextUrl: `${window.location.pathname.split("/").pop() || "events.html"}${window.location.search}${window.location.hash}`,
               seed: item?.title || item?.name || "place",

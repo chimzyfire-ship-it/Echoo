@@ -3328,12 +3328,12 @@
           setPlaceDetailContent(
             window.EchooPlaceDetail.renderAuthPrompt({
               title: "Sign in to unlock this place",
-              caption,
-              note: "We’ll pull the full detail panel after a quick sign-in.",
+              subhead: "Back in a sec.",
+              note: "We’ll bring you back here after a quick sign-in.",
               nextUrl,
               seed: payload.title || payload.name || placeId,
               primaryLabel: "Sign in",
-              secondaryLabel: "Not now",
+              secondaryLabel: "Keep browsing",
             }),
           );
           openPlaceDetailModal();

@@ -1157,8 +1157,8 @@
                   id="otp-code"
                   inputmode="numeric"
                   autocomplete="one-time-code"
-                  maxlength="6"
-                  placeholder="Enter the 6-digit code"
+                  maxlength="8"
+                  placeholder="Enter 8-digit verification code"
                 />
               </div>
               <div class="field signup-only" style="margin: 6px 0">
@@ -2034,9 +2034,11 @@
         setBusy(true, "Signing in…");
         setStatus("Checking your credentials…");
         try {
-          const email = await window.EchooAuth.lookupEmailByUsername(username);
+          const email = username.includes("@")
+            ? username
+            : await window.EchooAuth.lookupEmailByUsername(username);
           if (!email) {
-            throw new Error("We could not find that username.");
+            throw new Error("We could not find an account with that username or email.");
           }
           const { data, error } =
             await window.EchooAuth.client.auth.signInWithPassword({
@@ -2112,8 +2114,10 @@
         setBusy(true, "Sending…");
         setStatus("Finding your account and sending recovery email…");
         try {
-          const email = await window.EchooAuth.lookupEmailByUsername(username);
-          if (!email) throw new Error("We could not find that username.");
+          const email = username.includes("@")
+            ? username
+            : await window.EchooAuth.lookupEmailByUsername(username);
+          if (!email) throw new Error("We could not find an account with that username or email.");
           const { error } = await window.EchooAuth.client.auth.resetPasswordForEmail(email, {
             redirectTo: authResetRedirect(),
           });
@@ -2174,7 +2178,7 @@
         );
 
         if (!codeSent || !token) {
-          setStatus("Send a verification code, then enter the 6-digit code from your email.", true);
+          setStatus("Send a verification code, then enter the verification code from your email.", true);
           if (!codeSent) sendCodeBtn.focus();
           else otpInput.focus();
           return;
@@ -2251,7 +2255,7 @@
 
           localStorage.setItem("echoo_pipeda_consent_at", new Date().toISOString());
           setBusy(true, "Sending…");
-          setStatus("Sending your 6-digit verification code…");
+          setStatus("Sending your verification code…");
           try {
             const { error } = await window.EchooAuth.client.auth.signUp({
               email,
@@ -2263,7 +2267,7 @@
             if (error) throw error;
             codeSent = true;
             otpFieldGroup.style.display = "grid";
-            setStatus("Code sent. Check your inbox, then enter the 6-digit code below.");
+            setStatus("Code sent. Check your inbox, then enter the verification code below.");
             otpInput.focus();
             startCooldownTimer(30);
           } catch (error) {

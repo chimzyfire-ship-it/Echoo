@@ -603,27 +603,45 @@
 
   function renderAuthPrompt(options = {}) {
     const title = cleanText(options.title, "Sign in to unlock this place");
-    const caption = cleanText(options.caption, pickCaption(options.seed || options.title || options.nextUrl || ""));
+    const subhead = cleanText(options.subhead, "Back in a sec.");
     const note = cleanText(
       options.note,
-      "We’ll bring you right back here after a quick sign-in.",
+      "We’ll bring you back here after a quick sign-in.",
     );
     const nextUrl = options.nextUrl || `${window.location.pathname.split("/").pop() || "index.html"}${window.location.search}${window.location.hash}`;
     const authHref = options.authHref || buildAuthUrl(nextUrl, options);
     const secondaryHref = options.secondaryHref || nextUrl;
-    const secondaryLabel = cleanText(options.secondaryLabel, "Not now");
+    const secondaryLabel = cleanText(options.secondaryLabel, "Keep browsing");
     const primaryLabel = cleanText(options.primaryLabel, "Sign in");
 
     return `
       <section class="echoo-place-detail">
         <div class="echoo-place-auth">
-          <div class="echoo-place-hero-chip">Echoo pass required</div>
+          <div class="echoo-place-auth-top">
+            <div class="echoo-place-auth-badge">
+              <span class="echoo-place-auth-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E7C98E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </span>
+              <span class="echoo-place-auth-label">ECHOO PASS REQUIRED</span>
+            </div>
+          </div>
           <h2 class="echoo-place-auth-title">${escapeHtml(title)}</h2>
-          <p class="echoo-place-auth-caption">${escapeHtml(caption)}</p>
+          <div class="echoo-place-auth-divider"></div>
+          <p class="echoo-place-auth-subhead">${escapeHtml(subhead)}</p>
           <p class="echoo-place-auth-note">${escapeHtml(note)}</p>
           <div class="echoo-place-auth-actions">
-            <a class="primary" href="${escapeHtml(authHref)}">${escapeHtml(primaryLabel)}</a>
-            <a href="${escapeHtml(secondaryHref)}">${escapeHtml(secondaryLabel)}</a>
+            <a class="primary" href="${escapeHtml(authHref)}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+              </svg>
+              <span>${escapeHtml(primaryLabel)}</span>
+            </a>
+            <a class="secondary" href="${escapeHtml(secondaryHref)}" data-close-sheet>${escapeHtml(secondaryLabel)}</a>
           </div>
         </div>
       </section>
