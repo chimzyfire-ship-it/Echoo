@@ -124,6 +124,7 @@
     const gender = clean(row.gender, "Prefer not to say");
     const dob = row.date_of_birth || "";
     const tone = safeTone(row.tone);
+    const username = clean(row.username);
     const personalizationProfile = {
       interests,
       eventStyles,
@@ -138,6 +139,7 @@
     };
     return {
       userId: row.user_id || user?.id,
+      username,
       name,
       email,
       vibes: interests.join(","),
@@ -169,6 +171,10 @@
     const tone = safeTone(profile.tone);
     return {
       user_id: user.id,
+      username: clean(profile.username || profile.handle || profile.name)
+        .toLowerCase()
+        .replace(/[^a-z0-9_]+/g, "")
+        .slice(0, 24),
       display_name:
         clean(profile.name || profile.displayName) ||
         clean(user.user_metadata?.display_name) ||
@@ -257,6 +263,16 @@
     };
   }
 
+  async function lookupEmailByUsername(username) {
+    const value = clean(username).toLowerCase();
+    if (!value) return null;
+    const { data, error } = await client.rpc("lookup_email_by_username", {
+      p_username: value,
+    });
+    if (error) throw error;
+    return clean(data) || null;
+  }
+
   async function requireOnboarding(options = {}) {
     const state = await loadOnboardingProfile();
     if (!state.ok && options.redirect !== false) {
@@ -324,6 +340,7 @@
     authHeaders,
     currentRelativeUrl,
     loadOnboardingProfile,
+    lookupEmailByUsername,
     normalizeNext,
     readLocalPreferences,
     redirectToAuth,
