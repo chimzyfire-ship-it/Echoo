@@ -18,6 +18,34 @@ import { WebView } from 'react-native-webview';
  */
 const ECHOO_WEB_URL = process.env.EXPO_PUBLIC_ECHOO_WEB_URL;
 
+const MOBILE_CHROME_SCRIPT = `
+  (function () {
+    var path = window.location.pathname.replace(/\\/$/, '');
+    var isHomeOrDiscover =
+      path === '' ||
+      path === '/index' ||
+      path === '/index.html' ||
+      path === '/events' ||
+      path === '/events.html';
+
+    document.documentElement.classList.toggle(
+      'echoo-native-hide-account',
+      isHomeOrDiscover,
+    );
+
+    if (!document.getElementById('echoo-native-mobile-chrome')) {
+      var style = document.createElement('style');
+      style.id = 'echoo-native-mobile-chrome';
+      style.textContent =
+        '.echoo-native-hide-account .profile-link { display: none !important; }' +
+        '.bottom-nav { bottom: 12px !important; }';
+      document.head.appendChild(style);
+    }
+
+    true;
+  })();
+`;
+
 function isInternalEchooLink(url: string) {
   if (!ECHOO_WEB_URL) return false;
 
@@ -63,7 +91,9 @@ export default function App() {
     returnToHome();
   }, [canGoBack, returnToHome]);
 
-  const showBackButton = canGoBack || !isEchooHome(currentUrl);
+  // Home is the root of the app. A redirect or a prior browser session must
+  // never make a Back control appear over its header.
+  const showBackButton = !isEchooHome(currentUrl);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return undefined;
@@ -103,6 +133,7 @@ export default function App() {
         thirdPartyCookiesEnabled
         allowsBackForwardNavigationGestures
         setSupportMultipleWindows={false}
+        injectedJavaScript={MOBILE_CHROME_SCRIPT}
         startInLoadingState
         renderLoading={() => (
           <View style={styles.loading}>
@@ -162,33 +193,30 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 54,
-    left: 18,
+    top: 92,
+    left: 22,
     zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 40,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.18)',
-    borderRadius: 20,
-    backgroundColor: 'rgba(5, 5, 5, 0.78)',
+    minHeight: 36,
+    paddingVertical: 4,
+    paddingRight: 8,
   },
   backButtonPressed: {
     opacity: 0.72,
   },
   backChevron: {
-    marginTop: -2,
-    marginRight: 5,
+    marginTop: -3,
+    marginRight: 4,
     color: '#f8f5ef',
-    fontSize: 28,
-    fontWeight: '400',
-    lineHeight: 28,
+    fontSize: 32,
+    fontWeight: '300',
+    lineHeight: 32,
   },
   backLabel: {
     color: '#f8f5ef',
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
   },
   configurationScreen: {
     flex: 1,
