@@ -2583,33 +2583,47 @@
       }
 
       function buildFallbackPlaceDetail(payload = {}) {
+        const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
         const rating = Number(
-          payload.rating || payload.community?.ratingAverage || 3.6,
+          payload.community?.ratingAverage ||
+            payload.rating ||
+            payload.rating_average ||
+            "",
         );
-        const confidence = Math.min(1, Math.max(0.45, rating / 5));
+        const ratingCount = Number(
+          payload.community?.ratingCount ||
+            payload.rating_count ||
+            payload.reviews ||
+            0,
+        );
+        const hasRating = Number.isFinite(rating);
+        const confidence = hasRating ? Math.min(1, Math.max(0.45, rating / 5)) : null;
         return {
           place: {
             id: payload.placeId || "",
-            name: payload.title || "Verified place",
+            name: normalize(payload.title || payload.name || "This place"),
             category: payload.category || "Place",
-            municipality: payload.city || payload.neighborhood || city || "Ontario",
-            city: payload.city || city || "Ontario",
+            municipality: normalize(payload.city || payload.neighborhood || city || "Ontario"),
+            city: normalize(payload.city || city || "Ontario"),
             formatted_address:
-              payload.neighborhood ||
-              payload.address ||
-              payload.city ||
-              city ||
-              "Ontario",
+              normalize(payload.neighborhood || payload.address || payload.city || city || "Ontario"),
             latitude: payload.latitude || null,
             longitude: payload.longitude || null,
             timezone: "America/Toronto",
-            image_url: payload.image || "",
+            image_url: payload.image || payload.img || "",
+            phone: normalize(payload.phone || payload.contactPhone || ""),
+            website: normalize(payload.website || ""),
+            rating_average: hasRating ? rating : null,
+            rating_count: ratingCount > 0 ? ratingCount : null,
           },
+          community: hasRating
+            ? {
+                ratingAverage: rating,
+                ratingCount,
+              }
+            : null,
           profile: {
-            summary:
-              payload.copy ||
-              payload.vibe ||
-              "A curated local destination for memorable experiences.",
+            summary: normalize(payload.description || ""),
             good_for: payload.good_for || [],
             vibe_tags: payload.vibe_tags || payload.tags || [],
             activity_tags: payload.activity_tags || [],
@@ -2623,7 +2637,7 @@
           relatedEvents: [],
           alternatives: [],
           sourceStatus: {
-            sourceCount: payload.placeId ? 1 : 0,
+            sourceCount: 0,
             confidenceScore: confidence,
           },
         };
@@ -3319,9 +3333,8 @@
           : { ok: false, signedIn: false, needsLogin: true, needsReauth: false };
         const nextUrl =
           `${window.location.pathname.split("/").pop() || "app.html"}${window.location.search}${window.location.hash}`;
-        const caption = window.EchooPlaceDetail?.pickCaption(
-          payload.title || payload.name || placeId,
-        );
+        const heroImage =
+          payload.image || payload.img || "assets/optimized/news-date-768.jpg";
 
         if (!authState.ok) {
           savePendingPlaceDetail({ placeId, ...payload });
@@ -3342,30 +3355,30 @@
 
         openPlaceDetailModal();
         setPlaceDetailContent(
-          window.EchooPlaceDetail.renderAuthPrompt({
-            title: "Opening the full place profile",
-            caption: "Echoo is pulling together the richer context now.",
-            note: "One moment while we build the panel.",
-            nextUrl,
-            seed: payload.title || payload.name || placeId,
-            primaryLabel: "Working on it",
-            secondaryLabel: "Close",
-          }),
+          window.EchooPlaceDetail.renderPlaceDetail(
+            buildFallbackPlaceDetail({ ...payload, placeId }),
+            {
+              heroImage,
+              preview: true,
+              directionsHref:
+                Number.isFinite(Number(payload.latitude)) && Number.isFinite(Number(payload.longitude))
+                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${payload.latitude},${payload.longitude}`)}`
+                  : undefined,
+            },
+          ),
         );
 
         try {
           const detail = await fetchPlaceDetail(placeId);
-          const heroImage =
-            payload.image ||
-            payload.img ||
+          const resolvedHeroImage =
             detail?.place?.image_url ||
             detail?.place?.imageUrl ||
-            "assets/optimized/news-date-768.jpg";
+            heroImage;
           setPlaceDetailContent(
             window.EchooPlaceDetail.renderPlaceDetail(
               detail || buildFallbackPlaceDetail({ ...payload, placeId }),
               {
-                heroImage,
+                heroImage: resolvedHeroImage,
               },
             ),
           );
@@ -3376,10 +3389,7 @@
             window.EchooPlaceDetail.renderPlaceDetail(
               buildFallbackPlaceDetail({ ...payload, placeId }),
               {
-                heroImage:
-                  payload.image ||
-                  payload.img ||
-                  "assets/optimized/news-date-768.jpg",
+                heroImage,
               },
             ),
           );
