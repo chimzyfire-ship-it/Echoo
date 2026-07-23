@@ -39,7 +39,7 @@ If the site does not load, first open the same `http://YOUR-MAC-IP:8080/index.ht
 
 The app always opens on Echoo home (`index.html`), never the AI companion. Home has no Back control. Other screens use a minimal native chevron-and-label Back control positioned above the page header. It returns to the previous in-app screen; when a screen was opened directly and has no history, it returns to Echoo home instead. iOS swipe-back and Android's system Back action follow the same behavior.
 
-In the mobile shell, the home and Discover headers intentionally omit their account shortcut. Every screen's bottom navigation uses the same 12px bottom spacing as Echoo home.
+In the mobile shell, the home and Discover headers intentionally omit their account shortcut. The main bottom navigation is rendered once by the native shell, outside the changing web page. It uses Echoo home's 12px bottom spacing and remains in one rigid position while screens load or change.
 
 ## Platform path
 
