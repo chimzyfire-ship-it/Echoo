@@ -424,6 +424,11 @@ verify_jwt = false
 [functions.discovery-community]
 verify_jwt = false
 
+# Photo requests originate from <img> elements, which cannot send Supabase
+# auth headers. The function validates its own five-minute signed media token.
+[functions.place-photo]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
