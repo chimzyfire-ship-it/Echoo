@@ -523,20 +523,20 @@
     const primaryLabel = cleanText(options.primaryLabel, "Sign in");
 
     return `
-      <section class="echoo-place-detail">
-        <div class="echoo-place-body" style="padding-top: 40px; text-align: center; align-items: center;">
-          <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(231, 201, 142, 0.1); border: 1px solid rgba(231, 201, 142, 0.3); display: grid; place-items: center; margin-bottom: 12px;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E7C98E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <section class="echoo-place-detail echoo-auth-prompt-sheet">
+        <div class="echoo-place-body" style="padding-top: 32px; padding-bottom: 36px; text-align: center; align-items: center;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(231, 201, 142, 0.12); border: 1px solid rgba(231, 201, 142, 0.35); display: grid; place-items: center; margin-bottom: 16px; box-shadow: 0 0 20px rgba(231, 201, 142, 0.15);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E7C98E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </div>
-          <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #fff;">${escapeHtml(title)}</h2>
-          <p style="margin: 6px 0 0; font-size: 14px; color: rgba(248, 245, 239, 0.7);">${escapeHtml(subhead)}</p>
-          <p style="margin: 4px 0 20px; font-size: 13px; color: rgba(248, 245, 239, 0.5);">${escapeHtml(note)}</p>
-          <div class="echoo-place-actions" style="width: 100%;">
-            <a class="echoo-place-btn-primary" href="${escapeHtml(authHref)}">${escapeHtml(primaryLabel)}</a>
-            <a class="echoo-place-btn-secondary" href="${escapeHtml(secondaryHref)}" data-close-sheet>${escapeHtml(secondaryLabel)}</a>
+          <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.02em;">${escapeHtml(title)}</h2>
+          <p style="margin: 8px 0 0; font-size: 14px; font-weight: 600; color: rgba(248, 245, 239, 0.75);">${escapeHtml(subhead)}</p>
+          <p style="margin: 4px 0 24px; font-size: 13px; color: rgba(248, 245, 239, 0.52); max-width: 280px; line-height: 1.4;">${escapeHtml(note)}</p>
+          <div class="echoo-place-actions" style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+            <a class="echoo-place-btn-primary" style="height: 50px; font-size: 15px; font-weight: 750;" href="${escapeHtml(authHref)}">${escapeHtml(primaryLabel)}</a>
+            <a class="echoo-place-btn-secondary" style="height: 44px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;" href="${escapeHtml(secondaryHref)}" data-close-sheet>${escapeHtml(secondaryLabel)}</a>
           </div>
         </div>
       </section>

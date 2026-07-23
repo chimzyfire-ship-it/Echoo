@@ -756,7 +756,7 @@
         border-top-right-radius: 28px;
         border: 1px solid var(--line-strong);
         border-bottom: none;
-        padding: 24px;
+        padding: 24px 24px calc(28px + env(safe-area-inset-bottom, 0px));
         transform: translateY(100%);
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         z-index: 2;
@@ -764,6 +764,20 @@
 
       .sheet.open .sheet-panel {
         transform: translateY(0);
+      }
+
+      /* Hide floating bottom nav and FAB when sheet modal is active */
+      body.sheet-open .bottom-nav {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transform: translate(-50%, 40px) !important;
+        transition: transform 0.25s ease, opacity 0.2s ease;
+      }
+
+      body.sheet-open .fab-chat {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.2s ease;
       }
 
       .sheet-handle {
@@ -1071,12 +1085,14 @@
         const sheet = document.getElementById("detail-sheet");
         sheet.classList.add("open");
         sheet.setAttribute("aria-hidden", "false");
+        document.body.classList.add("sheet-open");
       }
 
       function closeDetailSheet() {
         const sheet = document.getElementById("detail-sheet");
         sheet.classList.remove("open");
         sheet.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("sheet-open");
       }
 
       function bindDetailCloseButtons() {
