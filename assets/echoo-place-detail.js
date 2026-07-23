@@ -77,6 +77,9 @@
         url: cleanText(photo?.image_url || photo?.url),
         alt: cleanText(photo?.alt_text || photo?.caption),
         credit: cleanText(photo?.attribution || photo?.source_name),
+        creditUrl: /^https?:\/\//i.test(cleanText(photo?.attribution_url))
+          ? cleanText(photo.attribution_url)
+          : "",
       }))
       .filter((photo) => /^https?:\/\//i.test(photo.url))
       .filter((photo) => {
@@ -194,6 +197,15 @@
     `;
   }
 
+  function photoCreditMarkup(photo) {
+    if (!photo?.credit) return "";
+    const content = escapeHtml(photo.credit);
+    const credit = photo.creditUrl
+      ? `<a href="${escapeHtml(photo.creditUrl)}" target="_blank" rel="noopener">${content}</a>`
+      : content;
+    return `<p id="echoo-place-photo-credit" class="echoo-place-photo-credit">Photo: ${credit}</p>`;
+  }
+
   function renderPlaceDetail(detail = {}, options = {}) {
     if (!isDetailReady(detail)) return renderUnavailablePlaceDetail(detail);
 
@@ -251,12 +263,12 @@
               </div>
               <div class="echoo-place-gallery" aria-label="Verified place photos">
                 ${photos.map((photo, index) => `
-                  <button class="echoo-place-gallery-item${index === 0 ? " active" : ""}" type="button" data-photo-src="${escapeHtml(photo.url)}" data-photo-alt="${escapeHtml(photo.alt || title)}" aria-label="View photo ${index + 1}">
+                  <button class="echoo-place-gallery-item${index === 0 ? " active" : ""}" type="button" data-photo-src="${escapeHtml(photo.url)}" data-photo-alt="${escapeHtml(photo.alt || title)}" data-photo-credit="${escapeHtml(photo.credit)}" data-photo-credit-url="${escapeHtml(photo.creditUrl)}" aria-label="View photo ${index + 1}">
                     <img src="${escapeHtml(photo.url)}" alt="" loading="lazy" decoding="async">
                   </button>
                 `).join("")}
               </div>
-              ${photos[0].credit ? `<p class="echoo-place-photo-credit">Photo: ${escapeHtml(photos[0].credit)}</p>` : ""}
+              ${photoCreditMarkup(photos[0])}
             </section>
           ` : ""}
 
@@ -307,6 +319,22 @@
         mainImage.src = src;
         mainImage.alt = item.getAttribute("data-photo-alt") || "Place photo";
         mainImage.onload = () => { mainImage.style.opacity = "1"; };
+        const credit = document.getElementById("echoo-place-photo-credit");
+        if (credit) {
+          const text = item.getAttribute("data-photo-credit") || "";
+          const url = item.getAttribute("data-photo-credit-url") || "";
+          credit.replaceChildren("Photo: ");
+          if (/^https?:\/\//i.test(url)) {
+            const link = document.createElement("a");
+            link.href = url;
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.textContent = text;
+            credit.appendChild(link);
+          } else {
+            credit.append(text);
+          }
+        }
         items.forEach((candidate) => candidate.classList.toggle("active", candidate === item));
       };
     });
