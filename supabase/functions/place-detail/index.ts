@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ data: null, error: "Place not found.", meta: {} }, 404);
     }
 
-    const [profile, hours, sources, relatedEvents, alternatives] =
+    const [profile, hours, sources, photos, relatedEvents, alternatives] =
       await Promise.all([
         supabase
           .from("place_profiles")
@@ -65,6 +65,16 @@ Deno.serve(async (req) => {
           .eq("place_id", place.id)
           .order("fetched_at", { ascending: false }),
         supabase
+          .from("place_photos")
+          .select(
+            "id, image_url, alt_text, caption, attribution, source_name, source_url, sort_order",
+          )
+          .eq("place_id", place.id)
+          .eq("approval_status", "approved")
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true })
+          .limit(8),
+        supabase
           .from("ontario_events")
           .select("*")
           .eq("place_id", place.id)
@@ -83,7 +93,7 @@ Deno.serve(async (req) => {
         }),
       ]);
 
-    for (const result of [profile, hours, sources, relatedEvents, alternatives]) {
+    for (const result of [profile, hours, sources, photos, relatedEvents, alternatives]) {
       if (result.error) throw result.error;
     }
 
@@ -116,6 +126,7 @@ Deno.serve(async (req) => {
         placeId: place.id,
         hasProfile: Boolean(profile.data),
         sourceCount: sources.data?.length || 0,
+        photoCount: photos.data?.length || 0,
         relatedEventCount: relatedEvents.data?.length || 0,
       },
     });
@@ -127,6 +138,7 @@ Deno.serve(async (req) => {
           profile: profile.data || null,
           hours: hours.data || [],
           sources: sources.data || [],
+          photos: photos.data || [],
           relatedEvents: relatedEvents.data || [],
           alternatives: nearbyAlternatives,
           sourceStatus: {
@@ -136,6 +148,15 @@ Deno.serve(async (req) => {
               Number(place.confidence_score || 0),
               Number(profile.data?.confidence_score || 0),
             ),
+          },
+          detailStatus: {
+            isFeatureReady: Boolean(
+              place.name &&
+                (place.formatted_address || place.address) &&
+                (sources.data?.length || 0) > 0 &&
+                (photos.data?.length || 0) > 0,
+            ),
+            photoCount: photos.data?.length || 0,
           },
         },
         { durationMs: Date.now() - startedAt },

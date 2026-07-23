@@ -5,6 +5,17 @@ export type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
 export type IngestionSource =
   "osm" | "open_data" | "ticketmaster" | "echoo_partner" | "echoo_manual";
 
+export type PlacePhotoInput = {
+  imageUrl: string;
+  altText?: string;
+  caption?: string;
+  attribution?: string;
+  sourceUrl?: string;
+  sourcePhotoId?: string;
+  sortOrder?: number;
+  approvalStatus?: "pending" | "approved" | "rejected";
+};
+
 export type PlaceInput = {
   source: IngestionSource;
   sourceName: string;
@@ -27,6 +38,7 @@ export type PlaceInput = {
   editorialBoost?: number;
   popularityScore?: number;
   trustScore?: number;
+  photos?: PlacePhotoInput[];
 };
 
 export type IngestionRun = {
@@ -373,6 +385,30 @@ export function partnerRecordToPlace(
   const sourceId =
     optionalText(record.sourceId || record.id) ||
     `${sourceName}:${name}:${lat.toFixed(6)},${lng.toFixed(6)}`;
+  const rawPhotos = Array.isArray(record.photos)
+    ? record.photos
+    : Array.isArray(record.images)
+      ? record.images
+      : [record.imageUrl || record.image_url].filter(Boolean);
+  const photos = rawPhotos
+    .map((photo, index) => {
+      const value = typeof photo === "string"
+        ? { imageUrl: photo }
+        : photo as Record<string, unknown>;
+      return {
+        imageUrl: optionalText(value.imageUrl || value.image_url || value.url) || "",
+        altText: optionalText(value.altText || value.alt_text),
+        caption: optionalText(value.caption),
+        attribution: optionalText(value.attribution || value.credit),
+        sourceUrl: optionalText(value.sourceUrl || value.source_url || record.sourceUrl),
+        sourcePhotoId: optionalText(value.sourcePhotoId || value.source_photo_id || value.id),
+        sortOrder: Number(value.sortOrder ?? value.sort_order ?? index),
+        approvalStatus: value.approved === true || value.approvalStatus === "approved"
+          ? "approved" as const
+          : "pending" as const,
+      };
+    })
+    .filter((photo) => Boolean(photo.imageUrl));
 
   return {
     source,
@@ -396,6 +432,7 @@ export function partnerRecordToPlace(
     editorialBoost: Number(record.editorialBoost ?? 0.45),
     popularityScore: Number(record.popularityScore ?? 0.72),
     trustScore: Number(record.trustScore ?? 0.96),
+    photos,
   };
 }
 
@@ -498,6 +535,29 @@ export async function upsertCanonicalPlace(
     },
     { onConflict: "source_name,source_record_id" },
   );
+
+  const photos = (place.photos || [])
+    .filter((photo) => /^https?:\/\//i.test(cleanText(photo.imageUrl)))
+    .slice(0, 8)
+    .map((photo, index) => ({
+      place_id: placeId,
+      image_url: cleanText(photo.imageUrl),
+      alt_text: cleanText(photo.altText) || null,
+      caption: cleanText(photo.caption) || null,
+      attribution: cleanText(photo.attribution) || null,
+      source_name: place.sourceName,
+      source_url: cleanText(photo.sourceUrl || place.sourceUrl) || null,
+      source_photo_id: cleanText(photo.sourcePhotoId) || photo.imageUrl,
+      sort_order: Number.isFinite(photo.sortOrder) ? Number(photo.sortOrder) : index,
+      approval_status: photo.approvalStatus || "pending",
+    }));
+  if (photos.length) {
+    const { error: photoError } = await supabase.from("place_photos").upsert(
+      photos,
+      { onConflict: "place_id,source_name,source_photo_id" },
+    );
+    if (photoError) throw photoError;
+  }
 
   await mirrorPlaceToLocationEntity(supabase, placeId, place);
   return placeId;
