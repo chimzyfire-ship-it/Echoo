@@ -356,12 +356,8 @@ Deno.serve(async (req) => {
             ),
           },
           detailStatus: {
-            isFeatureReady: Boolean(
-              place.name &&
-                (place.formatted_address || place.address) &&
-                (sources.data?.length || 0) > 0 &&
-                displayPhotos.length > 0,
-            ),
+            isFeatureReady: Boolean(place.name && (place.formatted_address || place.address)),
+            hasVerifiedPhotos: displayPhotos.length > 0,
             photoCount: displayPhotos.length,
             photoOrigin: approvedPhotos.length ? "approved" : livePhotoResult.status,
           },

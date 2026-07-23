@@ -57,9 +57,10 @@
     return WEEKDAY_LABELS.indexOf(weekday);
   }
 
-  function confidenceLabel(score) {
+  function confidenceLabel(score, sourceCount = 0) {
     const value = Number(score);
-    if (!Number.isFinite(value)) return "Verified detail";
+    if (sourceCount <= 0) return "Core profile";
+    if (!Number.isFinite(value)) return "Source-backed";
     if (value >= 0.9) return "Highly verified";
     if (value >= 0.75) return "Well sourced";
     return "Source-backed";
@@ -67,6 +68,21 @@
 
   function sourceCountFor(detail) {
     return Number(detail?.sourceStatus?.sourceCount || detail?.sources?.length || 0);
+  }
+
+  function heroImageFor(detail = {}, options = {}) {
+    const place = detail.place || {};
+    const candidate = cleanText(
+      options.heroImage ||
+        place.hero_image_url ||
+        place.image_url ||
+        place.imageUrl ||
+        place.photo_url ||
+        "",
+    );
+    if (candidate) return candidate;
+    const photos = verifiedPhotos(detail);
+    return photos[0]?.url || "";
   }
 
   function verifiedPhotos(detail = {}) {
@@ -93,10 +109,7 @@
   function isDetailReady(detail) {
     const place = detail?.place || {};
     return Boolean(
-      cleanText(place.name) &&
-        cleanText(place.formatted_address || place.address) &&
-        sourceCountFor(detail) > 0 &&
-        verifiedPhotos(detail).length > 0,
+      cleanText(place.name) || cleanText(place.formatted_address || place.address),
     );
   }
 
@@ -129,17 +142,20 @@
       .filter(Boolean)
       .sort((a, b) => a.day - b.day);
 
+    const weekdayRows = validRows.filter((row) => row.day >= 1 && row.day <= 5);
+    const rowsToGroup = weekdayRows.length ? weekdayRows : validRows;
     const groups = [];
-    for (const row of validRows) {
+    for (const row of rowsToGroup) {
       const previous = groups.at(-1);
       if (previous && previous.end === row.day - 1 && previous.value === row.value) {
         previous.end = row.day;
         previous.active = previous.active || row.active;
       } else {
-        groups.push({ ...row, end: row.day });
+        groups.push({ ...row, start: row.day, end: row.day });
       }
     }
-    return groups.map((group) => ({
+    const selectedGroups = groups;
+    return selectedGroups.map((group) => ({
       label:
         group.day === group.end
           ? WEEKDAY_LABELS[group.day]
@@ -189,21 +205,21 @@
     return `
       <section class="echoo-place-detail echoo-place-unavailable">
         <div class="echoo-place-unavailable-mark">E</div>
-        <p class="echoo-place-eyebrow">Details in progress</p>
-        <h2>${escapeHtml(name)} is not ready to feature yet.</h2>
-        <p>Echoo only opens profiles with a real photo and source-backed place information.</p>
+        <p class="echoo-place-eyebrow">Couldn’t load details</p>
+        <h2>${escapeHtml(name)} could not load right now.</h2>
+        <p>Try again in a moment. Echoo will keep the profile lean until it has something real to show.</p>
         <button type="button" class="echoo-place-btn-secondary" data-close-sheet>Back to Discover</button>
       </section>
     `;
   }
 
   function photoCreditMarkup(photo) {
-    if (!photo?.credit) return "";
-    const content = escapeHtml(photo.credit);
+    if (!photo) return "";
+    const content = escapeHtml(photo.credit || "");
     const credit = photo.creditUrl
       ? `<a href="${escapeHtml(photo.creditUrl)}" target="_blank" rel="noopener">${content}</a>`
       : content;
-    return `<p id="echoo-place-photo-credit" class="echoo-place-photo-credit">Photo: ${credit}</p>`;
+    return `<p id="echoo-place-photo-credit" class="echoo-place-photo-credit"${photo.credit ? "" : " hidden"}>Photo: ${credit}</p>`;
   }
 
   function renderPlaceDetail(detail = {}, options = {}) {
@@ -225,28 +241,83 @@
     const tags = profile.human_review_status === "approved"
       ? listFrom(profile.good_for).slice(0, 4)
       : [];
-    const directionsHref = options.directionsHref || mapsLinkFor(place);
+    const heroImage = heroImageFor(detail, options);
+    const heroPhoto = photos.find((photo) => photo.url === heroImage) || null;
+    const galleryPhotos = photos.filter((photo) => photo.url !== heroImage);
+    const initialPhotoCredit = heroPhoto || galleryPhotos[0] || null;
+    const phone = cleanText(place.phone);
     const website = cleanText(place.website);
+    const preview = Boolean(options.preview);
+    const directionsHref = options.directionsHref || mapsLinkFor(place);
+    const callHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : "";
+    const rawRating =
+      detail.community?.ratingAverage ??
+      place.rating_average ??
+      place.ratingAverage;
+    const ratingAverage = rawRating === "" || rawRating === null || rawRating === undefined
+      ? Number.NaN
+      : Number(rawRating);
+    const ratingCount = Number(
+      detail.community?.ratingCount ??
+        place.rating_count ??
+        place.ratingCount ??
+        0,
+    );
+    const factRows = [
+      status ? { label: "Status", value: status } : null,
+      phone ? { label: "Phone", value: phone } : null,
+      Number.isFinite(ratingAverage)
+        ? {
+            label: "Rating",
+            value: `${ratingAverage.toFixed(1)}${ratingCount > 0 ? ` · ${ratingCount} reviews` : ""}`,
+          }
+        : null,
+      sourceCount > 0
+        ? { label: "Sources", value: `${sourceCount} ${sourceCount === 1 ? "source" : "sources"}` }
+        : null,
+      photos.length > 1
+        ? { label: "Photos", value: `${photos.length} verified` }
+        : null,
+    ].filter(Boolean);
 
     setTimeout(bindGalleryInteractions, 0);
 
     return `
       <section class="echoo-place-detail">
         <div class="echoo-place-hero">
-          <img id="echoo-place-main-hero-img" class="echoo-place-hero-image" src="${escapeHtml(photos[0].url)}" alt="${escapeHtml(photos[0].alt || title)}" loading="eager" decoding="async">
+          ${heroImage ? `
+            <img id="echoo-place-main-hero-img" class="echoo-place-hero-image" src="${escapeHtml(heroImage)}" alt="${escapeHtml(title)}" loading="eager" decoding="async">
+          ` : `
+            <div class="echoo-place-hero-fallback" aria-hidden="true"></div>
+          `}
           <div class="echoo-place-hero-shade"></div>
           <button type="button" class="echoo-place-close" data-close-sheet aria-label="Close place details">Close</button>
           <div class="echoo-place-hero-copy">
+            ${preview ? `<p class="echoo-place-preview-flag">Live preview</p>` : ""}
             ${kicker ? `<p class="echoo-place-eyebrow">${escapeHtml(kicker)}</p>` : ""}
             <h1>${escapeHtml(title)}</h1>
+            ${address ? `<p class="echoo-place-hero-address">${escapeHtml(address)}</p>` : ""}
           </div>
         </div>
 
         <div class="echoo-place-body">
-          <div class="echoo-place-location-row">
-            <span>${escapeHtml(address)}</span>
-            ${status ? `<span class="echoo-place-open-status">${escapeHtml(status)}</span>` : ""}
-          </div>
+          ${preview ? `
+            <p class="echoo-place-preview-banner">Echoo is pulling verified details now.</p>
+          ` : ""}
+
+          ${factRows.length ? `
+            <section class="echoo-place-section">
+              <p class="echoo-place-eyebrow">Quick facts</p>
+              <div class="echoo-place-facts">
+                ${factRows.map((fact) => `
+                  <div class="echoo-place-fact">
+                    <span>${escapeHtml(fact.label)}</span>
+                    <strong>${escapeHtml(fact.value)}</strong>
+                  </div>
+                `).join("")}
+              </div>
+            </section>
+          ` : ""}
 
           ${summary ? `
             <section class="echoo-place-section">
@@ -255,22 +326,22 @@
             </section>
           ` : ""}
 
-          ${photos.length > 1 ? `
+          ${galleryPhotos.length ? `
             <section class="echoo-place-section echoo-place-photo-section">
               <div class="echoo-place-section-heading">
-                <p class="echoo-place-eyebrow">Photo moments</p>
-                <span>${photos.length} verified</span>
+                <p class="echoo-place-eyebrow">More photos</p>
+                <span>${galleryPhotos.length} more</span>
               </div>
               <div class="echoo-place-gallery" aria-label="Verified place photos">
-                ${photos.map((photo, index) => `
-                  <button class="echoo-place-gallery-item${index === 0 ? " active" : ""}" type="button" data-photo-src="${escapeHtml(photo.url)}" data-photo-alt="${escapeHtml(photo.alt || title)}" data-photo-credit="${escapeHtml(photo.credit)}" data-photo-credit-url="${escapeHtml(photo.creditUrl)}" aria-label="View photo ${index + 1}">
+                ${galleryPhotos.map((photo, index) => `
+                  <button class="echoo-place-gallery-item" type="button" data-photo-src="${escapeHtml(photo.url)}" data-photo-alt="${escapeHtml(photo.alt || title)}" data-photo-credit="${escapeHtml(photo.credit)}" data-photo-credit-url="${escapeHtml(photo.creditUrl)}" aria-label="View photo ${index + 1}">
                     <img src="${escapeHtml(photo.url)}" alt="" loading="lazy" decoding="async">
                   </button>
                 `).join("")}
               </div>
-              ${photoCreditMarkup(photos[0])}
+              ${photoCreditMarkup(initialPhotoCredit)}
             </section>
-          ` : ""}
+          ` : heroPhoto ? photoCreditMarkup(heroPhoto) : ""}
 
           ${tags.length ? `
             <section class="echoo-place-section">
@@ -292,15 +363,19 @@
             </section>
           ` : ""}
 
-          <div class="echoo-place-source-line">
-            <span>${escapeHtml(confidenceLabel(detail.sourceStatus?.confidenceScore || profile.confidence_score))}</span>
-            <span>${escapeHtml(`${sourceCount} ${sourceCount === 1 ? "source" : "sources"}`)}</span>
-            ${sourceNames.length ? `<span>${escapeHtml(sourceNames.join(" · "))}</span>` : ""}
-          </div>
+          ${sourceCount > 0 || sourceNames.length ? `
+            <div class="echoo-place-source-line">
+              <span>${escapeHtml(confidenceLabel(detail.sourceStatus?.confidenceScore || profile.confidence_score, sourceCount))}</span>
+              ${sourceCount > 0 ? `<span>${escapeHtml(`${sourceCount} ${sourceCount === 1 ? "source" : "sources"}`)}</span>` : ""}
+              ${sourceNames.length ? `<span>${escapeHtml(sourceNames.join(" · "))}</span>` : ""}
+            </div>
+          ` : ""}
 
           <div class="echoo-place-actions">
             <a class="echoo-place-btn-primary" href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Directions</a>
-            ${website ? `<a class="echoo-place-btn-secondary" href="${escapeHtml(website)}" target="_blank" rel="noopener">Website</a>` : `<button type="button" class="echoo-place-btn-secondary" data-close-sheet>Close</button>`}
+            ${callHref ? `<a class="echoo-place-btn-secondary" href="${escapeHtml(callHref)}">Call</a>` : ""}
+            ${website ? `<a class="echoo-place-btn-secondary" href="${escapeHtml(website)}" target="_blank" rel="noopener">Website</a>` : ""}
+            ${!callHref && !website ? `<button type="button" class="echoo-place-btn-secondary" data-close-sheet>Close</button>` : ""}
           </div>
         </div>
       </section>
@@ -323,6 +398,7 @@
         if (credit) {
           const text = item.getAttribute("data-photo-credit") || "";
           const url = item.getAttribute("data-photo-credit-url") || "";
+          credit.hidden = !text;
           credit.replaceChildren("Photo: ");
           if (/^https?:\/\//i.test(url)) {
             const link = document.createElement("a");
@@ -380,6 +456,7 @@
     buildAuthUrl,
     confidenceLabel,
     escapeHtml,
+    heroImageFor,
     isDetailReady,
     pickCaption,
     renderAuthPrompt,
