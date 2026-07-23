@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { BlurView } from 'expo-blur';
 import * as Linking from 'expo-linking';
 import {
   ActivityIndicator,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { WebView } from 'react-native-webview';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 /**
  * The native shell deliberately renders Echoo's existing mobile interface.
@@ -25,12 +27,118 @@ const MOBILE_CHROME_SCRIPT = `
       style.id = 'echoo-native-mobile-chrome';
       style.textContent =
         '.profile-link { display: none !important; }' +
-        '.bottom-nav { bottom: 12px !important; position: fixed !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 30 !important; }';
-      document.head.appendChild(style);
+        '.bottom-nav { display: none !important; }';
+      (document.head || document.documentElement).appendChild(style);
     }
     true;
   })();
 `;
+
+type TabKey = 'home' | 'discover' | 'tickets' | 'profile';
+
+const NAVIGATION_ITEMS: ReadonlyArray<{
+  key: TabKey;
+  label: string;
+  target: string;
+}> = [
+  { key: 'home', label: 'Home', target: 'index.html' },
+  { key: 'discover', label: 'Discover', target: 'events.html' },
+  { key: 'tickets', label: 'Tickets', target: 'tickets.html' },
+  { key: 'profile', label: 'Profile', target: 'auth.html' },
+];
+
+function pathnameFor(url: string) {
+  try {
+    return new URL(url).pathname.replace(/\/$/, '');
+  } catch {
+    return '';
+  }
+}
+
+function activeTabFor(url: string): TabKey | null {
+  const path = pathnameFor(url);
+
+  if (path === '' || path === '/index' || path === '/index.html') return 'home';
+  if (
+    [
+      '/events',
+      '/events.html',
+      '/music.html',
+      '/food.html',
+      '/films.html',
+      '/dates.html',
+    ].includes(path)
+  ) {
+    return 'discover';
+  }
+  if (path === '/tickets' || path === '/tickets.html') return 'tickets';
+  if (['/auth', '/auth.html', '/compliance', '/compliance.html'].includes(path)) {
+    return 'profile';
+  }
+
+  return null;
+}
+
+function NavigationIcon({ active, tab }: { active: boolean; tab: TabKey }) {
+  const color = active ? '#f7d5b2' : 'rgba(248, 245, 239, 0.62)';
+  const fill = active ? color : 'none';
+  const strokeWidth = active ? 0 : 1.8;
+
+  if (tab === 'home') {
+    return (
+      <Svg width={27} height={27} viewBox="0 0 24 24" fill={fill}>
+        <Path
+          d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </Svg>
+    );
+  }
+
+  if (tab === 'discover') {
+    return (
+      <Svg width={27} height={27} viewBox="0 0 24 24" fill={fill}>
+        <Circle cx="11" cy="11" r="7" stroke={color} strokeWidth={strokeWidth} />
+        <Path
+          d="m16 16 4 4"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+      </Svg>
+    );
+  }
+
+  if (tab === 'tickets') {
+    return (
+      <Svg width={27} height={27} viewBox="0 0 24 24" fill={fill}>
+        <Path
+          d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path d="M13 6v12" stroke={color} strokeWidth={strokeWidth} />
+      </Svg>
+    );
+  }
+
+  return (
+    <Svg width={27} height={27} viewBox="0 0 24 24" fill={fill}>
+      <Circle cx="12" cy="8" r="4" stroke={color} strokeWidth={strokeWidth} />
+      <Path
+        d="M4 21a8 8 0 0 1 16 0"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
 
 function isInternalEchooLink(url: string) {
   if (!ECHOO_WEB_URL) return false;
@@ -77,9 +185,24 @@ export default function App() {
     returnToHome();
   }, [canGoBack, returnToHome]);
 
+  const navigateToTab = useCallback(
+    (target: string) => {
+      if (!ECHOO_WEB_URL) return;
+
+      const destination = new URL(target, ECHOO_WEB_URL).toString();
+      if (pathnameFor(destination) === pathnameFor(currentUrl)) return;
+
+      webViewRef.current?.injectJavaScript(
+        `window.location.assign(${JSON.stringify(destination)}); true;`,
+      );
+    },
+    [currentUrl],
+  );
+
   // Home is the root of the app. A redirect or a prior browser session must
   // never make a Back control appear over its header.
   const showBackButton = !isEchooHome(currentUrl);
+  const activeTab = activeTabFor(currentUrl);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return undefined;
@@ -119,6 +242,7 @@ export default function App() {
         thirdPartyCookiesEnabled
         allowsBackForwardNavigationGestures
         setSupportMultipleWindows={false}
+        injectedJavaScriptBeforeContentLoaded={MOBILE_CHROME_SCRIPT}
         injectedJavaScript={MOBILE_CHROME_SCRIPT}
         startInLoadingState
         renderLoading={() => (
@@ -153,6 +277,28 @@ export default function App() {
           <Text aria-hidden style={styles.backChevron}>‹</Text>
           <Text style={styles.backLabel}>Back</Text>
         </Pressable>
+      ) : null}
+      {activeTab ? (
+        <BlurView intensity={30} tint="dark" style={styles.nativeBottomNav}>
+          {NAVIGATION_ITEMS.map((item) => {
+            const active = item.key === activeTab;
+            return (
+              <Pressable
+                key={item.key}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={item.label}
+                onPress={() => navigateToTab(item.target)}
+                style={styles.nativeNavItem}
+              >
+                <NavigationIcon active={active} tab={item.key} />
+                <Text style={[styles.nativeNavLabel, active && styles.nativeNavLabelActive]}>
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </BlurView>
       ) : null}
     </View>
   );
@@ -203,6 +349,43 @@ const styles = StyleSheet.create({
     color: '#f8f5ef',
     fontSize: 16,
     fontWeight: '600',
+  },
+  nativeBottomNav: {
+    position: 'absolute',
+    right: 26,
+    bottom: 12,
+    left: 26,
+    zIndex: 20,
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(248, 245, 239, 0.06)',
+    borderRadius: 28,
+    backgroundColor: 'rgba(25, 25, 24, 0.82)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.42,
+    shadowRadius: 22,
+    elevation: 14,
+  },
+  nativeNavItem: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  nativeNavLabel: {
+    color: 'rgba(248, 245, 239, 0.62)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  nativeNavLabelActive: {
+    color: '#f7d5b2',
   },
   configurationScreen: {
     flex: 1,
