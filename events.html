@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#050505" />
     <title>Discover · echoo</title>
     <link rel="stylesheet" href="assets/party-radar.css" />
@@ -645,7 +645,7 @@
       .bottom-nav {
         position: fixed;
         left: 50%;
-        bottom: calc(12px + env(safe-area-inset-bottom));
+        bottom: 12px;
         z-index: 50;
         width: min(376px, calc(100% - 52px));
         min-height: 72px;
@@ -690,8 +690,7 @@
       }
 
       .nav-link.active svg {
-        fill: currentColor;
-        stroke-width: 0;
+        stroke-width: 2.2;
       }
 
       /* Floating AI Chat FAB */
