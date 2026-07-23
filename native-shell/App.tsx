@@ -20,28 +20,14 @@ const ECHOO_WEB_URL = process.env.EXPO_PUBLIC_ECHOO_WEB_URL;
 
 const MOBILE_CHROME_SCRIPT = `
   (function () {
-    var path = window.location.pathname.replace(/\\/$/, '');
-    var isHomeOrDiscover =
-      path === '' ||
-      path === '/index' ||
-      path === '/index.html' ||
-      path === '/events' ||
-      path === '/events.html';
-
-    document.documentElement.classList.toggle(
-      'echoo-native-hide-account',
-      isHomeOrDiscover,
-    );
-
     if (!document.getElementById('echoo-native-mobile-chrome')) {
       var style = document.createElement('style');
       style.id = 'echoo-native-mobile-chrome';
       style.textContent =
-        '.echoo-native-hide-account .profile-link { display: none !important; }' +
-        '.bottom-nav { bottom: 12px !important; position: fixed !important; left: 50% !important; transform: translateX(-50%) !important; }';
+        '.profile-link { display: none !important; }' +
+        '.bottom-nav { bottom: 12px !important; position: fixed !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 30 !important; }';
       document.head.appendChild(style);
     }
-
     true;
   })();
 `;
