@@ -38,7 +38,7 @@ const MOBILE_CHROME_SCRIPT = `
       style.id = 'echoo-native-mobile-chrome';
       style.textContent =
         '.echoo-native-hide-account .profile-link { display: none !important; }' +
-        '.bottom-nav { bottom: 12px !important; }';
+        '.bottom-nav { bottom: 12px !important; position: fixed !important; left: 50% !important; transform: translateX(-50%) !important; }';
       document.head.appendChild(style);
     }
 
