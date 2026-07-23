@@ -1,3 +1,6 @@
 .vercel
 .DS_Store
 .idea/
+native-shell/node_modules/
+native-shell/.expo/
+native-shell/.env
