@@ -72,7 +72,7 @@ function activeTabFor(url: string): TabKey | null {
     return 'discover';
   }
   if (path === '/tickets' || path === '/tickets.html') return 'tickets';
-  if (['/auth', '/auth.html', '/compliance', '/compliance.html'].includes(path)) {
+  if (['/auth', '/auth.html'].includes(path)) {
     return 'profile';
   }
 
