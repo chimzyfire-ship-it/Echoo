@@ -224,7 +224,7 @@
     const query = Number.isFinite(latitude) && Number.isFinite(longitude)
       ? `${latitude},${longitude}`
       : [place?.name, place?.formatted_address || place?.address].filter(Boolean).join(" ");
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&dir_action=navigate`;
   }
 
   function renderUnavailablePlaceDetail(detail = {}) {
@@ -272,12 +272,16 @@
     const galleryPhotos = photos.filter((photo) => photo.url !== heroImage);
     const initialPhotoCredit = heroPhoto || galleryPhotos[0] || null;
     const directionsHref = options.directionsHref || mapsLinkFor(place);
+    const routeLatitude = Number(place.latitude);
+    const routeLongitude = Number(place.longitude);
+    const canRouteInsideEchoo = Number.isFinite(routeLatitude) && Number.isFinite(routeLongitude);
     const pulseItems = pulseItemsFor(detail);
     const quickPlanMessage = `Make me a quick plan around ${title || "this place"}.`;
 
     setTimeout(() => {
       bindGalleryInteractions();
       bindQuickPlanInteractions();
+      bindRouteInteractions();
     }, 0);
 
     return `
@@ -367,8 +371,33 @@
           ` : ""}
 
           <div class="echoo-place-actions">
-            <a class="echoo-place-btn-primary" href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Take me there</a>
-            <button type="button" class="echoo-place-btn-secondary" data-quick-plan-message="${escapeHtml(quickPlanMessage)}">Quick plan</button>
+            ${canRouteInsideEchoo ? `
+              <button
+                type="button"
+                class="echoo-place-btn-primary"
+                data-echoo-route
+                data-route-id="${escapeHtml(cleanText(place.id || place.place_id || place.google_place_id))}"
+                data-route-google-place-id="${escapeHtml(cleanText(place.google_place_id))}"
+                data-route-name="${escapeHtml(title)}"
+                data-route-address="${escapeHtml(address)}"
+                data-route-latitude="${escapeHtml(String(routeLatitude))}"
+                data-route-longitude="${escapeHtml(String(routeLongitude))}"
+                data-route-fallback="${escapeHtml(directionsHref)}"
+              >Take me there</button>
+            ` : `<a class="echoo-place-btn-primary" href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Take me there</a>`}
+            <button
+              type="button"
+              class="echoo-place-btn-secondary"
+              data-quick-plan-message="${escapeHtml(quickPlanMessage)}"
+              data-quick-plan-place-id="${escapeHtml(cleanText(place.id || place.place_id || place.google_place_id))}"
+              data-quick-plan-name="${escapeHtml(title)}"
+              data-quick-plan-category="${escapeHtml(cleanText(place.category))}"
+              data-quick-plan-subcategory="${escapeHtml(cleanText(place.subcategory))}"
+              data-quick-plan-city="${escapeHtml(cleanText(place.municipality || place.city))}"
+              data-quick-plan-address="${escapeHtml(address)}"
+              data-quick-plan-latitude="${escapeHtml(String(routeLatitude))}"
+              data-quick-plan-longitude="${escapeHtml(String(routeLongitude))}"
+            >Quick plan</button>
           </div>
         </div>
       </section>
@@ -414,9 +443,51 @@
       button.onclick = () => {
         const message = cleanText(button.getAttribute("data-quick-plan-message"));
         if (!message) return;
+        const latitude = Number(button.getAttribute("data-quick-plan-latitude"));
+        const longitude = Number(button.getAttribute("data-quick-plan-longitude"));
         window.dispatchEvent(new CustomEvent("echoo:quick-plan", {
-          detail: { message },
+          detail: {
+            message,
+            anchor: {
+              id: cleanText(button.getAttribute("data-quick-plan-place-id")),
+              name: cleanText(button.getAttribute("data-quick-plan-name"), "This place"),
+              category: cleanText(button.getAttribute("data-quick-plan-category")),
+              subcategory: cleanText(button.getAttribute("data-quick-plan-subcategory")),
+              city: cleanText(button.getAttribute("data-quick-plan-city")),
+              address: cleanText(button.getAttribute("data-quick-plan-address")),
+              latitude: Number.isFinite(latitude) ? latitude : null,
+              longitude: Number.isFinite(longitude) ? longitude : null,
+            },
+          },
         }));
+      };
+    });
+  }
+
+  function bindRouteInteractions() {
+    document.querySelectorAll("[data-echoo-route]").forEach((button) => {
+      button.onclick = () => {
+        const latitude = Number(button.getAttribute("data-route-latitude"));
+        const longitude = Number(button.getAttribute("data-route-longitude"));
+        const fallback = button.getAttribute("data-route-fallback") || "";
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          if (fallback) window.open(fallback, "_blank", "noopener,noreferrer");
+          return;
+        }
+
+        const route = {
+          id: cleanText(button.getAttribute("data-route-id")),
+          googlePlaceId: cleanText(button.getAttribute("data-route-google-place-id")),
+          name: cleanText(button.getAttribute("data-route-name"), "This place"),
+          address: cleanText(button.getAttribute("data-route-address")),
+          latitude,
+          longitude,
+        };
+        if (window.ReactNativeWebView?.postMessage) {
+          window.ReactNativeWebView.postMessage(`echoo:route:${JSON.stringify(route)}`);
+          return;
+        }
+        if (fallback) window.open(fallback, "_blank", "noopener,noreferrer");
       };
     });
   }
@@ -460,6 +531,7 @@
   window.EchooPlaceDetail = {
     bindGalleryInteractions,
     bindQuickPlanInteractions,
+    bindRouteInteractions,
     buildAuthUrl,
     confidenceLabel,
     escapeHtml,

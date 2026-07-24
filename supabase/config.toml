@@ -432,6 +432,11 @@ verify_jwt = false
 [functions.place-photo]
 verify_jwt = false
 
+# Quick Plan validates a supplied session itself when one is present so it can
+# safely fall back to local onboarding preferences for preview users.
+[functions.quick-plan]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
