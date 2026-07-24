@@ -401,7 +401,9 @@ function buildProfile(place: CanonicalPlace): ProfileDraft {
   const readableCategory =
     cleanText(place.subcategory) || cleanText(place.category) || "local place";
   const confidence = confidenceFor(place, templateKnown);
-  const reviewStatus = confidence >= 0.78 ? "approved" : "needs_update";
+  // A category template is a useful review draft, not proof about this place.
+  // It must never become a public Echoo Pulse claim without human review.
+  const reviewStatus = "needs_update";
 
   return {
     vibe_tags: uniq([...(template.vibe_tags || []), readableCategory]),

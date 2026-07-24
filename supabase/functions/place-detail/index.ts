@@ -14,8 +14,138 @@ type LivePhotoResult = {
   clientKey?: string;
 };
 
+type PulseItem = {
+  kind: "now" | "tonight" | "best_for" | "notice" | "access" | "experience";
+  label: string;
+  value: string;
+  source: string;
+  observedAt: string | null;
+  expiresAt: string | null;
+};
+
+const PULSE_MIN_CONFIDENCE = 0.85;
+const HOURS_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 21;
+const EVENTS_MAX_AGE_MS = 1000 * 60 * 60 * 36;
+
 function cleanText(value: unknown) {
   return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function safeTimeZone(value: unknown) {
+  const candidate = cleanText(value) || "America/Toronto";
+  try {
+    new Intl.DateTimeFormat("en-CA", { timeZone: candidate }).format();
+    return candidate;
+  } catch {
+    return "America/Toronto";
+  }
+}
+
+function localParts(timeZone: string, date = new Date()) {
+  const safeDate = Number.isFinite(date.getTime()) ? date : new Date();
+  return Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: safeTimeZone(timeZone),
+      weekday: "short",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(safeDate).map((part) => [part.type, part.value]),
+  );
+}
+
+function localDateKey(timeZone: string, date = new Date()) {
+  const parts = localParts(timeZone, date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function localDayIndex(timeZone: string) {
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(
+    localParts(timeZone).weekday,
+  );
+}
+
+function timeInMinutes(value: unknown) {
+  const match = cleanText(value).match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+function formatClock(value: unknown) {
+  const minutes = timeInMinutes(value);
+  if (minutes === null) return "";
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}${minute ? `:${String(minute).padStart(2, "0")}` : ""} ${suffix}`;
+}
+
+function isFresh(timestamp: unknown, maximumAgeMs: number) {
+  const milliseconds = Date.parse(cleanText(timestamp));
+  return Number.isFinite(milliseconds) && milliseconds <= Date.now() && Date.now() - milliseconds <= maximumAgeMs;
+}
+
+function buildPulse(place: any, hours: any[], events: any[], facts: any[]): PulseItem[] {
+  const candidates: Array<PulseItem & { priority: number }> = [];
+  const timezone = safeTimeZone(place.timezone);
+  const today = localDayIndex(timezone);
+  const todayKey = localDateKey(timezone);
+  const clock = localParts(timezone);
+  const nowMinutes = Number(clock.hour) * 60 + Number(clock.minute);
+  const hoursRow = hours.find((row) => Number(row.day_of_week) === today);
+
+  // Hours are shown only when the record identifies its source, is fresh, and
+  // has a high confidence score. Unknown hours are safer than wrong hours.
+  if (hoursRow && cleanText(hoursRow.source) && Number(hoursRow.confidence_score) >= PULSE_MIN_CONFIDENCE &&
+    isFresh(hoursRow.updated_at, HOURS_MAX_AGE_MS) &&
+    (!hoursRow.valid_from || cleanText(hoursRow.valid_from) <= todayKey) &&
+    (!hoursRow.valid_to || cleanText(hoursRow.valid_to) >= todayKey)) {
+    if (hoursRow.is_closed) {
+      candidates.push({ kind: "now", label: "Today", value: "Closed today", source: cleanText(hoursRow.source), observedAt: cleanText(hoursRow.updated_at), expiresAt: null, priority: 100 });
+    } else {
+      const opens = timeInMinutes(hoursRow.opens_at);
+      const closes = timeInMinutes(hoursRow.closes_at);
+      if (opens !== null && closes !== null) {
+        const openNow = closes > opens ? nowMinutes >= opens && nowMinutes < closes : nowMinutes >= opens || nowMinutes < closes;
+        candidates.push({
+          kind: "now", label: "Now",
+          value: openNow ? `Open now · until ${formatClock(hoursRow.closes_at)}` : `Opens at ${formatClock(hoursRow.opens_at)}`,
+          source: cleanText(hoursRow.source), observedAt: cleanText(hoursRow.updated_at), expiresAt: null, priority: 100,
+        });
+      }
+    }
+  }
+
+  const tonight = events.find((event) => {
+    const startsAt = Date.parse(cleanText(event.starts_at));
+    return cleanText(event.source_provider) && Number.isFinite(startsAt) &&
+      isFresh(event.last_seen_at, EVENTS_MAX_AGE_MS) && localDateKey(timezone, new Date(startsAt)) === todayKey;
+  });
+  if (tonight) {
+    const starts = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, hour: "numeric", minute: "2-digit" }).format(new Date(tonight.starts_at));
+    candidates.push({ kind: "tonight", label: "Tonight", value: `${cleanText(tonight.title).slice(0, 100)} · ${starts}`, source: cleanText(tonight.source_provider), observedAt: cleanText(tonight.last_seen_at), expiresAt: cleanText(tonight.ends_at) || null, priority: 90 });
+  }
+
+  const labels: Record<string, PulseItem["label"]> = { best_for: "Best for", notice: "Good to know", access: "Access", experience: "What to expect" };
+  for (const fact of facts) {
+    if (Number(fact.confidence_score) < PULSE_MIN_CONFIDENCE || !cleanText(fact.source_name) || !cleanText(fact.value)) continue;
+    if (Date.parse(cleanText(fact.expires_at)) <= Date.now()) continue;
+    candidates.push({ kind: fact.fact_type, label: labels[fact.fact_type] || "Good to know", value: cleanText(fact.value).slice(0, 180), source: cleanText(fact.source_name), observedAt: cleanText(fact.observed_at) || null, expiresAt: cleanText(fact.expires_at) || null, priority: 80 });
+  }
+
+  const seen = new Set<string>();
+  return candidates.sort((a, b) => b.priority - a.priority).filter((item) => {
+    const identity = `${item.label}:${item.value}`.toLowerCase();
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  }).slice(0, 3).map(({ priority: _priority, ...item }) => item);
 }
 
 function envelope(data: unknown, meta: Record<string, unknown> = {}) {
@@ -233,7 +363,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ data: null, error: "Place not found.", meta: {} }, 404);
     }
 
-    const [profile, hours, sources, photos, relatedEvents, alternatives] =
+    const [profile, hours, sources, photos, relatedEvents, alternatives, pulseFacts] =
       await Promise.all([
         supabase
           .from("place_profiles")
@@ -279,9 +409,18 @@ Deno.serve(async (req) => {
           p_category: place.category,
           p_limit: 6,
         }),
+        supabase
+          .from("place_pulse_facts")
+          .select("fact_type,value,source_name,confidence_score,observed_at,expires_at")
+          .eq("place_id", place.id)
+          .eq("approval_status", "approved")
+          .gt("expires_at", new Date().toISOString())
+          .order("confidence_score", { ascending: false })
+          .order("observed_at", { ascending: false })
+          .limit(6),
       ]);
 
-    for (const result of [profile, hours, sources, photos, relatedEvents, alternatives]) {
+    for (const result of [profile, hours, sources, photos, relatedEvents, alternatives, pulseFacts]) {
       if (result.error) throw result.error;
     }
 
@@ -302,6 +441,7 @@ Deno.serve(async (req) => {
       });
     }
     const displayPhotos = approvedPhotos.length ? approvedPhotos : livePhotoResult.photos;
+    const pulse = buildPulse(place, hours.data || [], relatedEvents.data || [], pulseFacts.data || []);
 
     const nearbyAlternatives = (alternatives.data || [])
       .filter((item: any) => item.id !== place.id)
@@ -347,6 +487,10 @@ Deno.serve(async (req) => {
           photos: displayPhotos,
           relatedEvents: relatedEvents.data || [],
           alternatives: nearbyAlternatives,
+          pulse: {
+            items: pulse,
+            policy: "evidence_first_v1",
+          },
           sourceStatus: {
             hasProfile: Boolean(profile.data),
             sourceCount: sources.data?.length || 0,

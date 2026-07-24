@@ -30,6 +30,23 @@ const MOBILE_CHROME_SCRIPT = `
         '.bottom-nav { display: none !important; }';
       (document.head || document.documentElement).appendChild(style);
     }
+    var reportDetailSheetState = function () {
+      var sheet = document.getElementById('detail-sheet');
+      var isOpen = Boolean(sheet && sheet.classList.contains('open'));
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage('echoo:detail-sheet:' + isOpen);
+      }
+    };
+    if (!window.__echooDetailSheetObserver) {
+      window.__echooDetailSheetObserver = new MutationObserver(reportDetailSheetState);
+      window.__echooDetailSheetObserver.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    }
+    reportDetailSheetState();
     true;
   })();
 `;
@@ -165,6 +182,7 @@ export default function App() {
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(ECHOO_WEB_URL ?? '');
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
   const returnToHome = useCallback(() => {
     if (!ECHOO_WEB_URL) return;
@@ -261,6 +279,15 @@ export default function App() {
         onNavigationStateChange={(navigation) => {
           setCanGoBack(navigation.canGoBack);
           setCurrentUrl(navigation.url);
+          setIsDetailSheetOpen(false);
+        }}
+        onMessage={(event) => {
+          if (event.nativeEvent.data === 'echoo:detail-sheet:true') {
+            setIsDetailSheetOpen(true);
+          }
+          if (event.nativeEvent.data === 'echoo:detail-sheet:false') {
+            setIsDetailSheetOpen(false);
+          }
         }}
       />
       {showBackButton ? (
@@ -278,7 +305,7 @@ export default function App() {
           <Text style={styles.backLabel}>Back</Text>
         </Pressable>
       ) : null}
-      {activeTab ? (
+      {activeTab && !isDetailSheetOpen ? (
         <BlurView intensity={30} tint="dark" style={styles.nativeBottomNav}>
           {NAVIGATION_ITEMS.map((item) => {
             const active = item.key === activeTab;
