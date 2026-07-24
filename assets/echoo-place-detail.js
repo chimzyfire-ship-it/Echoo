@@ -271,13 +271,14 @@
     const heroPhoto = photos.find((photo) => photo.url === heroImage) || null;
     const galleryPhotos = photos.filter((photo) => photo.url !== heroImage);
     const initialPhotoCredit = heroPhoto || galleryPhotos[0] || null;
-    const phone = cleanText(place.phone);
-    const website = cleanText(place.website);
     const directionsHref = options.directionsHref || mapsLinkFor(place);
-    const callHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : "";
     const pulseItems = pulseItemsFor(detail);
+    const quickPlanMessage = `Make me a quick plan around ${title || "this place"}.`;
 
-    setTimeout(bindGalleryInteractions, 0);
+    setTimeout(() => {
+      bindGalleryInteractions();
+      bindQuickPlanInteractions();
+    }, 0);
 
     return `
       <section class="echoo-place-detail">
@@ -366,9 +367,8 @@
           ` : ""}
 
           <div class="echoo-place-actions">
-            <a class="echoo-place-btn-primary" href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Directions</a>
-            ${callHref ? `<a class="echoo-place-btn-secondary" href="${escapeHtml(callHref)}">Call</a>` : ""}
-            ${website ? `<a class="echoo-place-btn-secondary" href="${escapeHtml(website)}" target="_blank" rel="noopener">Website</a>` : ""}
+            <a class="echoo-place-btn-primary" href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Take me there</a>
+            <button type="button" class="echoo-place-btn-secondary" data-quick-plan-message="${escapeHtml(quickPlanMessage)}">Quick plan</button>
           </div>
         </div>
       </section>
@@ -405,6 +405,18 @@
           }
         }
         items.forEach((candidate) => candidate.classList.toggle("active", candidate === item));
+      };
+    });
+  }
+
+  function bindQuickPlanInteractions() {
+    document.querySelectorAll("[data-quick-plan-message]").forEach((button) => {
+      button.onclick = () => {
+        const message = cleanText(button.getAttribute("data-quick-plan-message"));
+        if (!message) return;
+        window.dispatchEvent(new CustomEvent("echoo:quick-plan", {
+          detail: { message },
+        }));
       };
     });
   }
@@ -446,6 +458,8 @@
   }
 
   window.EchooPlaceDetail = {
+    bindGalleryInteractions,
+    bindQuickPlanInteractions,
     buildAuthUrl,
     confidenceLabel,
     escapeHtml,

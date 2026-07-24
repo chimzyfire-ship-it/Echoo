@@ -788,20 +788,6 @@
         margin: 0 auto 20px;
       }
 
-      .sheet-close {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: rgba(248, 245, 239, 0.08);
-        color: var(--ink);
-        display: grid;
-        place-items: center;
-        font-size: 20px;
-      }
-
       .detail-art {
         width: 100%;
         aspect-ratio: 16 / 10;
@@ -1021,7 +1007,6 @@
       <div class="sheet-backdrop" data-close-sheet></div>
       <section class="sheet-panel" role="dialog" aria-modal="true" aria-label="Place details">
         <div class="sheet-handle"></div>
-        <button class="sheet-close" data-close-sheet aria-label="Close details">×</button>
         <div id="detail-content"></div>
       </section>
     </div>
@@ -1419,6 +1404,12 @@
         clearPendingDetail();
         closeDetailSheet();
       }
+
+      window.addEventListener("echoo:quick-plan", (event) => {
+        const message = String(event.detail?.message || "").trim();
+        if (!message) return;
+        window.location.assign(`app.html?q=${encodeURIComponent(message)}`);
+      });
 
       document.getElementById("search-form").onsubmit = (e) => {
         e.preventDefault();
