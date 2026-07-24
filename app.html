@@ -1920,6 +1920,15 @@
       </div>
     </div>
 
+    <!-- Native Quick Plan stays separate from the AI companion. -->
+    <section id="quick-plan-modal" class="echoo-quick-plan-modal" aria-hidden="true" aria-label="Quick Plan">
+      <button id="quick-plan-backdrop" class="echoo-quick-plan-backdrop" type="button" tabindex="-1" aria-label="Close Quick Plan"></button>
+      <div class="echoo-quick-plan-sheet" role="dialog" aria-modal="true" aria-labelledby="quick-plan-title">
+        <div class="echoo-quick-plan-handle" aria-hidden="true"></div>
+        <div id="quick-plan-content"></div>
+      </div>
+    </section>
+
     <!-- Map slide-up overlay -->
     <div class="map-overlay" id="map-overlay">
       <button class="map-close" id="map-close" aria-label="Close map">
@@ -1991,6 +2000,8 @@
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-live",
         placeDetailUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
+        quickPlanUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/quick-plan",
       };
 
       /* ── Preferences retrieval ── */
@@ -2480,6 +2491,9 @@
         "card-detail-modal-content",
       );
       const DETAIL_PENDING_KEY = "echoo_pending_place_detail";
+      const quickPlanModal = document.getElementById("quick-plan-modal");
+      const quickPlanContent = document.getElementById("quick-plan-content");
+      const quickPlanBackdrop = document.getElementById("quick-plan-backdrop");
 
       /* ── FAB Map Drag & Transparency Logic ── */
       let isDraggingFab = false;
@@ -3326,7 +3340,7 @@
               preview: true,
               directionsHref:
                 Number.isFinite(Number(payload.latitude)) && Number.isFinite(Number(payload.longitude))
-                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${payload.latitude},${payload.longitude}`)}`
+                  ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${payload.latitude},${payload.longitude}`)}&dir_action=navigate`
                   : undefined,
             },
           ),
@@ -3360,6 +3374,187 @@
           clearPendingPlaceDetail();
         }
       }
+
+      /* ── Native Quick Plan ──
+       * This is intentionally independent of the companion conversation. The
+       * API returns a grounded itinerary from place/profile/hours data; this
+       * controller only renders it and lets people make the two meaningful
+       * adjustments: length and spend level.
+       */
+      let quickPlanState = null;
+      let quickPlanRequestId = 0;
+
+      function quickPlanDefaultBudget() {
+        return budget === "$" ? "value" : budget === "$$$" ? "elevated" : "balanced";
+      }
+
+      function closeQuickPlan() {
+        quickPlanRequestId += 1;
+        if (!quickPlanModal) return;
+        quickPlanModal.setAttribute("aria-hidden", "true");
+        if (quickPlanContent) quickPlanContent.replaceChildren();
+      }
+
+      function quickPlanStopMarkup(stop, index) {
+        const travel = Number(stop.travelMinutes || 0);
+        const descriptor = index === 0
+          ? `${stop.reason || "Your anchor"}${stop.category ? ` · ${stop.category}` : ""}`
+          : `${travel ? `${travel} min away` : "Nearby"}${stop.reason ? ` · ${stop.reason}` : ""}`;
+        return `
+          <button class="echoo-quick-plan-stop" type="button" data-quick-plan-stop="${escapeHtml(stop.id)}">
+            <span class="echoo-quick-plan-stop-number">${index + 1}</span>
+            <span class="echoo-quick-plan-stop-copy">
+              <strong>${escapeHtml(stop.name)}</strong>
+              <span>${escapeHtml(descriptor)}</span>
+            </span>
+            <span class="echoo-quick-plan-stop-time">${escapeHtml(stop.time || "")}</span>
+          </button>`;
+      }
+
+      function renderQuickPlan() {
+        if (!quickPlanContent || !quickPlanState) return;
+        const { anchor, stopCount, budgetStyle, loading, error, plan } = quickPlanState;
+        const name = String(anchor?.name || "this place").trim() || "this place";
+        const choiceMarkup = (choices) => choices.map(([kind, value, label]) => {
+          const selected = kind === "stops" ? Number(value) === stopCount : value === budgetStyle;
+          return `<button type="button" class="echoo-quick-plan-choice" data-quick-plan-choice="${kind}" data-quick-plan-value="${value}" aria-pressed="${selected}">${label}</button>`;
+        }).join("");
+        const stopControls = choiceMarkup([
+          ["stops", 2, "2 stops"],
+          ["stops", 3, "3 stops"],
+        ]);
+        const budgetControls = choiceMarkup([
+          ["budget", "value", "Value"],
+          ["budget", "balanced", "Balanced"],
+          ["budget", "elevated", "Elevated"],
+        ]);
+        const routeMeta = plan
+          ? `<div class="echoo-quick-plan-route-meta"><span>${escapeHtml(plan.subtitle || `Built around ${name}`)}</span><strong>${Number(plan.totalTravelMinutes || 0) ? `~${plan.totalTravelMinutes} min between stops` : "A close-by loop"}</strong></div>`
+          : "";
+        const result = loading
+          ? `<div class="echoo-quick-plan-loading" aria-live="polite"><span class="echoo-quick-plan-loading-label">Reading the area, your pace, and what is open.</span><span class="echoo-quick-plan-skeleton"></span><span class="echoo-quick-plan-skeleton"></span></div>`
+          : plan
+            ? `<div class="echoo-quick-plan-result">${routeMeta}<div class="echoo-quick-plan-stops">${(plan.stops || []).map(quickPlanStopMarkup).join("")}</div></div>`
+            : `<p class="echoo-quick-plan-error">${escapeHtml(error || "Echoo could not make a reliable plan around this place yet.")}</p>`;
+        quickPlanContent.innerHTML = `
+          <div class="echoo-quick-plan-topline">
+            <p class="echoo-quick-plan-kicker">Quick Plan</p>
+            <button class="echoo-quick-plan-close" type="button" data-quick-plan-close aria-label="Close Quick Plan">×</button>
+          </div>
+          <div class="echoo-quick-plan-heading">
+            <div>
+              <h2 id="quick-plan-title">Around ${escapeHtml(name)}</h2>
+              <p>One useful plan, already shaped to your profile.</p>
+            </div>
+          </div>
+          <div class="echoo-quick-plan-controls" aria-label="Tune your plan">
+            <div class="echoo-quick-plan-control-row">${stopControls}</div>
+            <div class="echoo-quick-plan-control-row">${budgetControls}</div>
+          </div>
+          ${result}
+          ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${escapeHtml(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Open route</button></div>` : ""}`;
+
+        quickPlanContent.querySelectorAll("[data-quick-plan-choice]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const kind = button.getAttribute("data-quick-plan-choice");
+            const value = button.getAttribute("data-quick-plan-value");
+            if (kind === "stops") quickPlanState.stopCount = Number(value) === 2 ? 2 : 3;
+            if (kind === "budget") quickPlanState.budgetStyle = value || "balanced";
+            loadQuickPlan();
+          });
+        });
+        quickPlanContent.querySelector("[data-quick-plan-close]")?.addEventListener("click", closeQuickPlan);
+        quickPlanContent.querySelector("[data-quick-plan-route]")?.addEventListener("click", openQuickPlanRoute);
+        quickPlanContent.querySelectorAll("[data-quick-plan-stop]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const stop = (quickPlanState?.plan?.stops || []).find((item) => item.id === button.getAttribute("data-quick-plan-stop"));
+            if (!stop) return;
+            closeQuickPlan();
+            addPlaceDetailBubble(stop.id, {
+              placeId: stop.id,
+              title: stop.name,
+              category: stop.category,
+              address: stop.address,
+              latitude: stop.latitude,
+              longitude: stop.longitude,
+              image: stop.imageUrl,
+            });
+          });
+        });
+      }
+
+      async function loadQuickPlan() {
+        if (!quickPlanState?.anchor?.id) return;
+        const requestId = ++quickPlanRequestId;
+        quickPlanState.loading = true;
+        quickPlanState.error = "";
+        renderQuickPlan();
+        try {
+          const headers = window.EchooAuth
+            ? await window.EchooAuth.authHeaders({ "Content-Type": "application/json" })
+            : {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                apikey: CONFIG.supabaseAnonKey,
+              };
+          const response = await fetch(CONFIG.quickPlanUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              anchor: { id: quickPlanState.anchor.id },
+              stopCount: quickPlanState.stopCount,
+              budgetStyle: quickPlanState.budgetStyle,
+              profile: personalizationProfile,
+            }),
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (requestId !== quickPlanRequestId) return;
+          if (!response.ok || !payload?.plan) {
+            throw new Error(payload?.error || "Quick Plan could not build a reliable route right now.");
+          }
+          quickPlanState.plan = payload.plan;
+          quickPlanState.loading = false;
+          renderQuickPlan();
+        } catch (error) {
+          if (requestId !== quickPlanRequestId) return;
+          quickPlanState.loading = false;
+          quickPlanState.plan = null;
+          quickPlanState.error = error?.message || "Quick Plan could not build a reliable route right now.";
+          renderQuickPlan();
+        }
+      }
+
+      function openQuickPlan(anchor) {
+        if (!anchor?.id) return;
+        quickPlanState = {
+          anchor,
+          stopCount: 3,
+          budgetStyle: quickPlanDefaultBudget(),
+          loading: false,
+          error: "",
+          plan: null,
+        };
+        if (quickPlanModal) quickPlanModal.setAttribute("aria-hidden", "false");
+        loadQuickPlan();
+      }
+
+      function openQuickPlanRoute() {
+        const stops = quickPlanState?.plan?.stops || [];
+        if (stops.length < 2) return;
+        if (window.ReactNativeWebView?.postMessage) {
+          window.ReactNativeWebView.postMessage(`echoo:route-plan:${JSON.stringify({ stops })}`);
+          return;
+        }
+        const coordinate = (stop) => `${stop.latitude},${stop.longitude}`;
+        const url = new URL("https://www.google.com/maps/dir/");
+        url.searchParams.set("api", "1");
+        url.searchParams.set("origin", coordinate(stops[0]));
+        url.searchParams.set("destination", coordinate(stops.at(-1)));
+        if (stops.length > 2) url.searchParams.set("waypoints", stops.slice(1, -1).map(coordinate).join("|"));
+        window.open(url.toString(), "_blank", "noopener,noreferrer");
+      }
+
+      quickPlanBackdrop?.addEventListener("click", closeQuickPlan);
 
       function addDetailCard({ title, kicker, copy, meta, image, url }) {
         const card = document.createElement("article");
@@ -3954,7 +4149,7 @@
         return resolved.city.name;
       }
 
-      function captureDeviceLocationOnAppLoad() {
+      function hydratePreviouslyChosenLocation() {
         const prefs = window.EchooLocationPlatform.readPreferences();
         if (
           Number.isFinite(Number(prefs.lastLat)) &&
@@ -3963,61 +4158,12 @@
         ) {
           preciseLat = Number(prefs.lastLat);
           preciseLng = Number(prefs.lastLng);
-          return;
         }
-        if (!navigator.geolocation) return;
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const resolved = window.EchooLocationPlatform.resolveCoordinates(
-              lat,
-              lng,
-            );
-            if (!resolved.supported) {
-              preciseLat = undefined;
-              preciseLng = undefined;
-              city =
-                resolved.fallbackRegion?.name ||
-                resolved.fallbackCity?.name ||
-                "Ontario";
-              activityContext = getActivityContext();
-              window.EchooLocationPlatform.writeLocationState({
-                city,
-                countryCode: "CA",
-                adminArea1: "ON",
-                province: "Ontario",
-                locationSupported: true,
-                locationPrecision: "manual_region",
-                locationReason: resolved.reason,
-                lastLat: undefined,
-                lastLng: undefined,
-              });
-              return;
-            }
-
-            preciseLat = lat;
-            preciseLng = lng;
-            city = resolved.city.name;
-            activityContext = getActivityContext();
-            window.EchooLocationPlatform.writeLocationState({
-              city,
-              countryCode: "CA",
-              adminArea1: "ON",
-              province: "Ontario",
-              locationSupported: true,
-              locationPrecision: "gps",
-              lastLat: lat,
-              lastLng: lng,
-            });
-          },
-          () => {},
-          { enableHighAccuracy: true, timeout: 6000, maximumAge: 300000 },
-        );
       }
 
-      captureDeviceLocationOnAppLoad();
+      // Do not surprise people with a permission prompt on app launch. Fresh
+      // location access is asked for only after a nearby/route action.
+      hydratePreviouslyChosenLocation();
 
       /* ── Simulated conversation ── */
       function delay(ms) {
@@ -4359,11 +4505,9 @@
       });
 
       window.addEventListener("echoo:quick-plan", (event) => {
-        const message = String(event.detail?.message || "").trim();
-        if (!message) return;
-        clearPendingPlaceDetail();
-        closePlaceDetailModal();
-        openChat(message);
+        const anchor = event.detail?.anchor;
+        if (!anchor?.id) return;
+        openQuickPlan(anchor);
       });
 
       /* ── Auto-open chat from ?q= param (from Discover search) ── */
