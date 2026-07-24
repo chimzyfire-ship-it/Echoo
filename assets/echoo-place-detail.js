@@ -70,6 +70,20 @@
     return Number(detail?.sourceStatus?.sourceCount || detail?.sources?.length || 0);
   }
 
+  function pulseItemsFor(detail) {
+    const allowedLabels = new Set([
+      "Now", "Today", "Tonight", "Best for", "Good to know", "Access", "What to expect",
+    ]);
+    return (Array.isArray(detail?.pulse?.items) ? detail.pulse.items : [])
+      .map((item) => ({
+        label: cleanText(item?.label),
+        value: cleanText(item?.value),
+        source: cleanText(item?.source),
+      }))
+      .filter((item) => allowedLabels.has(item.label) && item.value && item.source)
+      .slice(0, 3);
+  }
+
   function heroImageFor(detail = {}, options = {}) {
     const place = detail.place || {};
     const candidate = cleanText(
@@ -235,7 +249,6 @@
       .join(" · ");
     const summary = summaryFor(detail);
     const hours = compactHours(detail);
-    const status = openStatus(detail);
     const sourceCount = sourceCountFor(detail);
     const sourceNames = [...new Set((detail.sources || []).map((source) => cleanText(source.source_name)).filter(Boolean))].slice(0, 2);
     const tags = profile.human_review_status === "approved"
@@ -250,35 +263,7 @@
     const preview = Boolean(options.preview);
     const directionsHref = options.directionsHref || mapsLinkFor(place);
     const callHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : "";
-    const rawRating =
-      detail.community?.ratingAverage ??
-      place.rating_average ??
-      place.ratingAverage;
-    const ratingAverage = rawRating === "" || rawRating === null || rawRating === undefined
-      ? Number.NaN
-      : Number(rawRating);
-    const ratingCount = Number(
-      detail.community?.ratingCount ??
-        place.rating_count ??
-        place.ratingCount ??
-        0,
-    );
-    const factRows = [
-      status ? { label: "Status", value: status } : null,
-      phone ? { label: "Phone", value: phone } : null,
-      Number.isFinite(ratingAverage)
-        ? {
-            label: "Rating",
-            value: `${ratingAverage.toFixed(1)}${ratingCount > 0 ? ` · ${ratingCount} reviews` : ""}`,
-          }
-        : null,
-      sourceCount > 0
-        ? { label: "Sources", value: `${sourceCount} ${sourceCount === 1 ? "source" : "sources"}` }
-        : null,
-      photos.length > 1
-        ? { label: "Photos", value: `${photos.length} verified` }
-        : null,
-    ].filter(Boolean);
+    const pulseItems = pulseItemsFor(detail);
 
     setTimeout(bindGalleryInteractions, 0);
 
@@ -291,7 +276,6 @@
             <div class="echoo-place-hero-fallback" aria-hidden="true"></div>
           `}
           <div class="echoo-place-hero-shade"></div>
-          <button type="button" class="echoo-place-close" data-close-sheet aria-label="Close place details">Close</button>
           <div class="echoo-place-hero-copy">
             ${preview ? `<p class="echoo-place-preview-flag">Live preview</p>` : ""}
             ${kicker ? `<p class="echoo-place-eyebrow">${escapeHtml(kicker)}</p>` : ""}
@@ -305,11 +289,14 @@
             <p class="echoo-place-preview-banner">Echoo is pulling verified details now.</p>
           ` : ""}
 
-          ${factRows.length ? `
-            <section class="echoo-place-section">
-              <p class="echoo-place-eyebrow">Quick facts</p>
+          ${pulseItems.length ? `
+            <section class="echoo-place-section echoo-pulse" aria-label="Echoo Pulse">
+              <div class="echoo-place-section-heading">
+                <p class="echoo-place-eyebrow">Echoo Pulse</p>
+                <span>Live, verified</span>
+              </div>
               <div class="echoo-place-facts">
-                ${factRows.map((fact) => `
+                ${pulseItems.map((fact) => `
                   <div class="echoo-place-fact">
                     <span>${escapeHtml(fact.label)}</span>
                     <strong>${escapeHtml(fact.value)}</strong>
@@ -375,7 +362,6 @@
             <a class="echoo-place-btn-primary" href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Directions</a>
             ${callHref ? `<a class="echoo-place-btn-secondary" href="${escapeHtml(callHref)}">Call</a>` : ""}
             ${website ? `<a class="echoo-place-btn-secondary" href="${escapeHtml(website)}" target="_blank" rel="noopener">Website</a>` : ""}
-            ${!callHref && !website ? `<button type="button" class="echoo-place-btn-secondary" data-close-sheet>Close</button>` : ""}
           </div>
         </div>
       </section>
@@ -459,6 +445,7 @@
     heroImageFor,
     isDetailReady,
     pickCaption,
+    pulseItemsFor,
     renderAuthPrompt,
     renderPlaceDetail,
     renderUnavailablePlaceDetail,

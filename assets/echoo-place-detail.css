@@ -231,6 +231,17 @@
   overflow-wrap: anywhere;
 }
 
+/* Pulse stays deliberately sparse: it is a decision aid, not a dashboard. */
+.echoo-pulse .echoo-place-facts {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.echoo-pulse .echoo-place-fact:first-child {
+  padding-top: 2px;
+  border-top: 0;
+}
+
 .echoo-place-tag-row {
   display: flex;
   flex-wrap: wrap;
