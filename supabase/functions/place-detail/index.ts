@@ -15,7 +15,7 @@ type LivePhotoResult = {
 };
 
 type PulseItem = {
-  kind: "now" | "tonight" | "best_for" | "notice" | "access" | "experience";
+  kind: "now" | "tonight" | "setting" | "best_for" | "notice" | "access" | "experience";
   label: string;
   value: string;
   source: string;
@@ -137,6 +137,21 @@ function buildPulse(place: any, hours: any[], events: any[], facts: any[]): Puls
     if (Number(fact.confidence_score) < PULSE_MIN_CONFIDENCE || !cleanText(fact.source_name) || !cleanText(fact.value)) continue;
     if (Date.parse(cleanText(fact.expires_at)) <= Date.now()) continue;
     candidates.push({ kind: fact.fact_type, label: labels[fact.fact_type] || "Good to know", value: cleanText(fact.value).slice(0, 180), source: cleanText(fact.source_name), observedAt: cleanText(fact.observed_at) || null, expiresAt: cleanText(fact.expires_at) || null, priority: 80 });
+  }
+
+  // This is the safe non-empty floor. It describes only the canonical record,
+  // never a guessed quality, crowd, price, or availability claim.
+  const category = cleanText(place.subcategory) || cleanText(place.category);
+  const locality = cleanText(place.municipality) || cleanText(place.city);
+  const address = cleanText(place.formatted_address) || cleanText(place.address);
+  const setting = category && locality
+    ? `${category} in ${locality}`
+    : address || locality;
+  if (setting) {
+    candidates.push({
+      kind: "setting", label: "Setting", value: setting.slice(0, 180),
+      source: "Echoo place record", observedAt: null, expiresAt: null, priority: 10,
+    });
   }
 
   const seen = new Set<string>();
