@@ -409,6 +409,9 @@ verify_jwt = false
 [functions.place-enrich]
 verify_jwt = false
 
+[functions.pulse-enrich]
+verify_jwt = false
+
 [functions.discover-live]
 verify_jwt = false
 

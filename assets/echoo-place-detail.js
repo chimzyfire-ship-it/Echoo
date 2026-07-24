@@ -72,7 +72,7 @@
 
   function pulseItemsFor(detail) {
     const allowedLabels = new Set([
-      "Now", "Today", "Tonight", "Setting", "Best for", "Good to know", "Access", "What to expect",
+      "Now", "Today", "Tonight", "Setting", "Best for", "Good to know", "Access", "What to expect", "Cuisine", "Amenities",
     ]);
     const items = (Array.isArray(detail?.pulse?.items) ? detail.pulse.items : [])
       .map((item) => ({
@@ -273,7 +273,6 @@
     const initialPhotoCredit = heroPhoto || galleryPhotos[0] || null;
     const phone = cleanText(place.phone);
     const website = cleanText(place.website);
-    const preview = Boolean(options.preview);
     const directionsHref = options.directionsHref || mapsLinkFor(place);
     const callHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : "";
     const pulseItems = pulseItemsFor(detail);
@@ -290,7 +289,6 @@
           `}
           <div class="echoo-place-hero-shade"></div>
           <div class="echoo-place-hero-copy">
-            ${preview ? `<p class="echoo-place-preview-flag">Live preview</p>` : ""}
             ${kicker ? `<p class="echoo-place-eyebrow">${escapeHtml(kicker)}</p>` : ""}
             <h1>${escapeHtml(title)}</h1>
             ${address ? `<p class="echoo-place-hero-address">${escapeHtml(address)}</p>` : ""}
@@ -298,10 +296,6 @@
         </div>
 
         <div class="echoo-place-body">
-          ${preview ? `
-            <p class="echoo-place-preview-banner">Echoo is pulling verified details now.</p>
-          ` : ""}
-
           ${pulseItems.length ? `
             <section class="echoo-place-section echoo-pulse" aria-label="Echoo Pulse">
               <div class="echoo-place-section-heading">

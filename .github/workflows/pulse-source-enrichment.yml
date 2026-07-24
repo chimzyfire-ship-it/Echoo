@@ -1,0 +1,71 @@
+name: Echoo Pulse Source Enrichment
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_offset:
+        description: First canonical-place offset to process
+        required: false
+        default: "0"
+        type: string
+      chunks:
+        description: Number of 100-place chunks to process (max 20)
+        required: false
+        default: "10"
+        type: string
+  schedule:
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: echoo-pulse-source-enrichment
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PULSE_ENRICH_URL: https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/pulse-enrich
+      ONTARIO_INGESTION_SECRET: ${{ secrets.ONTARIO_INGESTION_SECRET }}
+    steps:
+      - name: Select a bounded batch window
+        id: batch
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_OFFSET: ${{ inputs.start_offset }}
+          INPUT_CHUNKS: ${{ inputs.chunks }}
+        run: |
+          test -n "$ONTARIO_INGESTION_SECRET"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            offset="$INPUT_OFFSET"
+            chunks="$INPUT_CHUNKS"
+          else
+            # 38k Ontario records / 1k records per daily window is roughly a
+            # monthly refresh, without a long-running or expensive job.
+            offset="$(( (10#$(date -u +%d) - 1) * 1000 ))"
+            chunks="10"
+          fi
+          case "$offset" in (''|*[!0-9]*) exit 1;; esac
+          case "$chunks" in (''|*[!0-9]*) exit 1;; esac
+          [ "$chunks" -ge 1 ] && [ "$chunks" -le 20 ] || exit 1
+          echo "offset=$offset" >> "$GITHUB_OUTPUT"
+          echo "chunks=$chunks" >> "$GITHUB_OUTPUT"
+
+      - name: Enrich direct source facts in chunks
+        env:
+          START_OFFSET: ${{ steps.batch.outputs.offset }}
+          CHUNKS: ${{ steps.batch.outputs.chunks }}
+        run: |
+          for index in $(seq 0 $((CHUNKS - 1))); do
+            offset=$((START_OFFSET + index * 100))
+            response="$(curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors \
+              --connect-timeout 15 --max-time 90 -X POST "$PULSE_ENRICH_URL" \
+              -H 'Content-Type: application/json' \
+              -H "x-ingestion-secret: $ONTARIO_INGESTION_SECRET" \
+              --data "{\"offset\":$offset,\"limit\":100}")"
+            echo "$response"
+            echo "$response" | grep -Eq '"success"[[:space:]]*:[[:space:]]*true'
+          done
