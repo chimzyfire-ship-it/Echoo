@@ -72,9 +72,9 @@
 
   function pulseItemsFor(detail) {
     const allowedLabels = new Set([
-      "Now", "Today", "Tonight", "Best for", "Good to know", "Access", "What to expect",
+      "Now", "Today", "Tonight", "Setting", "Best for", "Good to know", "Access", "What to expect",
     ]);
-    return (Array.isArray(detail?.pulse?.items) ? detail.pulse.items : [])
+    const items = (Array.isArray(detail?.pulse?.items) ? detail.pulse.items : [])
       .map((item) => ({
         label: cleanText(item?.label),
         value: cleanText(item?.value),
@@ -82,6 +82,19 @@
       }))
       .filter((item) => allowedLabels.has(item.label) && item.value && item.source)
       .slice(0, 3);
+    if (items.length) return items;
+
+    // A preview or a temporarily unavailable detail response must not leave a
+    // blank panel. This only describes the supplied place record; it does not
+    // invent a recommendation or a live operational claim.
+    const place = detail?.place || {};
+    const category = cleanText(place.subcategory || place.category);
+    const locality = cleanText(place.municipality || place.city);
+    const address = cleanText(place.formatted_address || place.address);
+    const setting = category && locality ? `${category} in ${locality}` : address || locality;
+    return setting
+      ? [{ label: "Setting", value: setting, source: "Echoo place record" }]
+      : [];
   }
 
   function heroImageFor(detail = {}, options = {}) {
@@ -293,7 +306,7 @@
             <section class="echoo-place-section echoo-pulse" aria-label="Echoo Pulse">
               <div class="echoo-place-section-heading">
                 <p class="echoo-place-eyebrow">Echoo Pulse</p>
-                <span>Live, verified</span>
+                <span>Evidence-led</span>
               </div>
               <div class="echoo-place-facts">
                 ${pulseItems.map((fact) => `
