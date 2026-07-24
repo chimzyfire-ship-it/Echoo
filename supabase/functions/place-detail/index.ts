@@ -15,7 +15,7 @@ type LivePhotoResult = {
 };
 
 type PulseItem = {
-  kind: "now" | "tonight" | "setting" | "best_for" | "notice" | "access" | "experience";
+  kind: "now" | "tonight" | "setting" | "best_for" | "notice" | "access" | "experience" | "cuisine" | "amenity";
   label: string;
   value: string;
   source: string;
@@ -132,7 +132,7 @@ function buildPulse(place: any, hours: any[], events: any[], facts: any[]): Puls
     candidates.push({ kind: "tonight", label: "Tonight", value: `${cleanText(tonight.title).slice(0, 100)} · ${starts}`, source: cleanText(tonight.source_provider), observedAt: cleanText(tonight.last_seen_at), expiresAt: cleanText(tonight.ends_at) || null, priority: 90 });
   }
 
-  const labels: Record<string, PulseItem["label"]> = { best_for: "Best for", notice: "Good to know", access: "Access", experience: "What to expect" };
+  const labels: Record<string, PulseItem["label"]> = { best_for: "Best for", notice: "Good to know", access: "Access", experience: "What to expect", cuisine: "Cuisine", amenity: "Amenities" };
   for (const fact of facts) {
     if (Number(fact.confidence_score) < PULSE_MIN_CONFIDENCE || !cleanText(fact.source_name) || !cleanText(fact.value)) continue;
     if (Date.parse(cleanText(fact.expires_at)) <= Date.now()) continue;
