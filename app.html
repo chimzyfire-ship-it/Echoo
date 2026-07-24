@@ -1360,26 +1360,6 @@
         margin: 12px auto 6px;
         flex-shrink: 0;
       }
-      .card-detail-modal-close {
-        position: absolute;
-        top: 14px;
-        right: 18px;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: none;
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        font-size: 18px;
-        display: grid;
-        place-items: center;
-        cursor: pointer;
-        z-index: 10;
-        transition: background 0.2s ease;
-      }
-      .card-detail-modal-close:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
       .card-detail-modal-content {
         flex: 1;
         overflow-y: auto;
@@ -1933,13 +1913,6 @@
       ></div>
       <div class="card-detail-modal-container" id="card-detail-modal-container">
         <div class="card-detail-modal-drag-handle"></div>
-        <button
-          class="card-detail-modal-close"
-          id="card-detail-modal-close"
-          aria-label="Close details"
-        >
-          &#x2715;
-        </button>
         <div
           class="card-detail-modal-content"
           id="card-detail-modal-content"
@@ -2500,9 +2473,6 @@
 
       const fab = document.getElementById("chat-map-fab");
       const detailModal = document.getElementById("card-detail-modal");
-      const detailModalClose = document.getElementById(
-        "card-detail-modal-close",
-      );
       const detailModalBackdrop = document.getElementById(
         "card-detail-modal-backdrop",
       );
@@ -2746,12 +2716,6 @@
         });
       }
 
-      if (detailModalClose) {
-        detailModalClose.addEventListener("click", () => {
-          clearPendingPlaceDetail();
-          closePlaceDetailModal();
-        });
-      }
       if (detailModalBackdrop) {
         detailModalBackdrop.addEventListener("click", () => {
           clearPendingPlaceDetail();
@@ -4392,6 +4356,14 @@
             openChat("need a plan my friends will actually agree on");
           }
         });
+      });
+
+      window.addEventListener("echoo:quick-plan", (event) => {
+        const message = String(event.detail?.message || "").trim();
+        if (!message) return;
+        clearPendingPlaceDetail();
+        closePlaceDetailModal();
+        openChat(message);
       });
 
       /* ── Auto-open chat from ?q= param (from Discover search) ── */

@@ -315,7 +315,8 @@
   text-align: center;
   text-decoration: none;
   display: inline-flex;
-  flex: 1 1 132px;
+  flex: 1 1 0;
+  min-width: 0;
   align-items: center;
   justify-content: center;
 }
@@ -371,5 +372,4 @@
   .echoo-place-unavailable h2 { font-size: 28px; }
   .echoo-place-gallery { grid-auto-columns: minmax(148px, 58vw); }
   .echoo-place-facts { grid-template-columns: 1fr; }
-  .echoo-place-actions { flex-direction: column; }
 }
