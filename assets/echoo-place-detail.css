@@ -369,7 +369,7 @@
    taking the person into the companion chat. */
 .echoo-quick-plan-modal {
   position: fixed;
-  z-index: 70;
+  z-index: 110;
   inset: 0;
   display: flex;
   justify-content: center;
