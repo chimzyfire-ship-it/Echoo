@@ -19,6 +19,7 @@ type QuickPlanRequest = {
   };
   stopCount?: unknown;
   budgetStyle?: unknown;
+  recentPlaceIds?: unknown;
   profile?: Record<string, unknown>;
 };
 
@@ -51,6 +52,7 @@ type Place = {
   longitude?: number | null;
   timezone?: string | null;
   image_url?: string | null;
+  price_band?: string | null;
   confidence_score?: number | null;
 };
 
@@ -116,20 +118,40 @@ function budgetFromProfile(value: unknown) {
   return "balanced";
 }
 
-function priceFit(priceBand: unknown, planBudget: string) {
+function priceTier(priceBand: unknown) {
   const raw = text(priceBand).toLowerCase();
-  const price = raw.includes("$$$") || /premium|upscale|elevated|high/.test(raw)
-    ? "elevated"
-    : raw.includes("$$") || /moderate|mid|balanced/.test(raw)
-      ? "balanced"
-      : raw.includes("$") || /budget|value|low/.test(raw)
-        ? "value"
-        : "unknown";
-  if (price === "unknown") return 0.58;
+  if (!raw) return "unknown";
+  if (/free|inexpensive|low|budget|price_level_inexpensive/.test(raw) || raw === "$") return "value";
+  if (raw.includes("$$$") || /very_expensive|expensive|premium|upscale|elevated|high/.test(raw)) return "elevated";
+  if (raw.includes("$$") || /moderate|mid|balanced|price_level_moderate/.test(raw)) return "balanced";
+  return "unknown";
+}
+
+function priceFit(priceBand: unknown, planBudget: string) {
+  const price = priceTier(priceBand);
+  if (price === "unknown") return 0.42;
   if (price === planBudget) return 1;
-  if (planBudget === "balanced") return 0.72;
-  if (planBudget === "value") return price === "balanced" ? 0.56 : 0.16;
-  return price === "balanced" ? 0.72 : 0.34;
+  if (planBudget === "balanced") return 0.46;
+  if (planBudget === "value") return price === "balanced" ? 0.22 : 0.03;
+  return price === "balanced" ? 0.40 : 0.04;
+}
+
+function priceLabel(place: Candidate) {
+  const tier = priceTier(place.profile?.price_band || place.price_band);
+  if (tier === "value") return "Value pick";
+  if (tier === "balanced") return "Mid-range";
+  if (tier === "elevated") return "Elevated pick";
+  return "Price not listed";
+}
+
+function isBudgetMatch(place: Candidate, planBudget: string) {
+  return priceTier(place.profile?.price_band || place.price_band) === planBudget;
+}
+
+function recentIds(value: unknown) {
+  return new Set(
+    list(value).filter((id) => id.length <= 180).slice(0, 30),
+  );
 }
 
 function profileTags(profile?: PlaceProfile) {
@@ -276,7 +298,7 @@ async function liveNearbyCandidates(anchor: Place, limit: number): Promise<Candi
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": key,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types",
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.priceLevel",
       },
       body: JSON.stringify({
         // Coordinates are the authority here. A live search card can carry a
@@ -309,6 +331,7 @@ async function liveNearbyCandidates(anchor: Place, limit: number): Promise<Candi
         latitude,
         longitude,
         timezone: text(anchor.timezone, "America/Toronto"),
+        price_band: text(place.priceLevel),
         distanceMeters,
       };
     }).filter(Boolean) as Candidate[];
@@ -476,23 +499,34 @@ Deno.serve(async (req) => {
         const status = openAt(hoursByPlace.get(place.id) || [], timezone, new Date());
         return !status.known || status.open;
       });
-    const liveCandidates = await liveNearbyCandidates(anchor, stopCount + 3);
+    const liveCandidates = await liveNearbyCandidates(anchor, stopCount + 6);
     const candidates = Array.from(new Map([...inventoryCandidates, ...liveCandidates].map((place) => [place.id, place])).values());
+    const recentPlaceIds = recentIds(body.recentPlaceIds);
 
     const score = (candidate: Candidate) => {
       const distance = Math.max(0, 1 - candidate.distanceMeters / 14000);
       const profileConfidence = number(candidate.profile?.confidence_score, number(candidate.confidence_score, 0.46));
       return (
-        personalizationFit(candidate, profile) * 0.34 +
-        priceFit(candidate.profile?.price_band, requestedBudget) * 0.24 +
-        categoryComplement(anchorCandidate, candidate) * 0.18 +
-        distance * 0.14 +
-        profileConfidence * 0.10
+        priceFit(candidate.profile?.price_band || candidate.price_band, requestedBudget) * 0.44 +
+        personalizationFit(candidate, profile) * 0.22 +
+        categoryComplement(anchorCandidate, candidate) * 0.16 +
+        distance * 0.10 +
+        profileConfidence * 0.08
       );
     };
 
     const selected: Candidate[] = [anchorCandidate];
-    const sorted = [...candidates].sort((a, b) => score(b) - score(a));
+    const requiredNearbyStops = stopCount - 1;
+    const freshCandidates = candidates.filter((candidate) => !recentPlaceIds.has(candidate.id));
+    const rotationPool = freshCandidates.length >= requiredNearbyStops ? freshCandidates : candidates;
+    const exactBudgetMatches = rotationPool.filter((candidate) => isBudgetMatch(candidate, requestedBudget));
+    // When the area has enough priced inventory, make the spend choice a hard
+    // rail. If it does not, gracefully widen the pool rather than inventing a
+    // price or returning an empty plan.
+    const budgetPool = exactBudgetMatches.length >= requiredNearbyStops
+      ? exactBudgetMatches
+      : rotationPool;
+    const sorted = [...budgetPool].sort((a, b) => score(b) - score(a));
     for (const candidate of sorted) {
       if (selected.length >= stopCount) break;
       const duplicateFamily = selected.some((picked) => categoryFamily(picked) === categoryFamily(candidate));
@@ -524,6 +558,7 @@ Deno.serve(async (req) => {
         time: timeLabel(timezone, elapsed),
         travelMinutes: index === 0 ? 0 : travelMinutes(selected[index - 1], place),
         reason: reasonFor(place, index, anchorCandidate),
+        priceLabel: priceLabel(place),
         availability: availability.known ? (availability.open ? "open" : "check_hours") : "unverified",
         isAnchor: place.id === anchor.id,
       };
