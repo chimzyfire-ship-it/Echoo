@@ -1460,7 +1460,7 @@
             <div class="echoo-quick-plan-control-row">${choice("budget", "value", "Value", budgetStyle === "value")}${choice("budget", "balanced", "Balanced", budgetStyle === "balanced")}${choice("budget", "elevated", "Elevated", budgetStyle === "elevated")}</div>
           </div>
           ${result}
-          ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${esc(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Open route</button></div>` : ""}`;
+          ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${esc(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Start directions</button></div>` : ""}`;
         quickPlanContent.querySelector("[data-quick-plan-close]")?.addEventListener("click", closeQuickPlan);
         quickPlanContent.querySelectorAll("[data-quick-plan-choice]").forEach((button) => {
           button.addEventListener("click", () => {
@@ -1488,17 +1488,16 @@
           });
         });
         quickPlanContent.querySelector("[data-quick-plan-route]")?.addEventListener("click", () => {
-          if (stops.length < 2) return;
+          if (!stops.length) return;
           if (window.ReactNativeWebView?.postMessage) {
             window.ReactNativeWebView.postMessage(`echoo:route-plan:${JSON.stringify({ stops })}`);
             return;
           }
-          const coord = (stop) => `${stop.latitude},${stop.longitude}`;
-          const url = new URL("https://www.google.com/maps/dir/");
-          url.searchParams.set("api", "1");
-          url.searchParams.set("origin", coord(stops[0]));
-          url.searchParams.set("destination", coord(stops.at(-1)));
-          if (stops.length > 2) url.searchParams.set("waypoints", stops.slice(1, -1).map(coord).join("|"));
+          const coordinate = `${stops[0].latitude},${stops[0].longitude}`;
+          const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+          const url = isAppleDevice
+            ? `https://maps.apple.com/?daddr=${encodeURIComponent(coordinate)}&dirflg=d`
+            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(coordinate)}&dir_action=navigate`;
           window.open(url.toString(), "_blank", "noopener,noreferrer");
         });
       }
@@ -1517,7 +1516,7 @@
             method: "POST",
             headers: requestHeaders,
             body: JSON.stringify({
-              anchor: { id: quickPlanState.anchor.id },
+              anchor: quickPlanState.anchor,
               stopCount: quickPlanState.stopCount,
               budgetStyle: quickPlanState.budgetStyle,
               profile: {

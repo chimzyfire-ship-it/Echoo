@@ -7,7 +7,16 @@ import {
 } from "../_shared/location.ts";
 
 type QuickPlanRequest = {
-  anchor?: { id?: unknown };
+  anchor?: {
+    id?: unknown;
+    name?: unknown;
+    category?: unknown;
+    subcategory?: unknown;
+    city?: unknown;
+    address?: unknown;
+    latitude?: unknown;
+    longitude?: unknown;
+  };
   stopCount?: unknown;
   budgetStyle?: unknown;
   profile?: Record<string, unknown>;
@@ -68,6 +77,10 @@ const WEEKDAY_INDEX: Record<string, number> = {
 
 function text(value: unknown, fallback = "") {
   return String(value ?? fallback).replace(/\s+/g, " ").trim();
+}
+
+function isCanonicalPlaceId(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 function list(value: unknown) {
@@ -226,6 +239,85 @@ function travelMinutes(from: Candidate, to: Candidate) {
   return Math.max(6, Math.min(28, Math.round(5 + meters / 1000 * 3.3)));
 }
 
+function requestAnchor(anchor: QuickPlanRequest["anchor"]): Place | null {
+  const latitude = number(anchor?.latitude, NaN);
+  const longitude = number(anchor?.longitude, NaN);
+  const name = text(anchor?.name);
+  if (!name || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return {
+    id: text(anchor?.id, `live:${latitude.toFixed(5)},${longitude.toFixed(5)}`),
+    name,
+    category: text(anchor?.category),
+    subcategory: text(anchor?.subcategory),
+    city: text(anchor?.city),
+    municipality: text(anchor?.city),
+    address: text(anchor?.address),
+    latitude,
+    longitude,
+    timezone: "America/Toronto",
+  };
+}
+
+function liveSearchTypes(anchor: Place) {
+  const family = categoryFamily({ ...anchor, distanceMeters: 0 });
+  if (family === "food") return ["park", "tourist_attraction", "cafe"];
+  if (family === "outdoors") return ["cafe", "restaurant", "tourist_attraction"];
+  if (family === "culture") return ["cafe", "restaurant", "park"];
+  return ["restaurant", "cafe", "tourist_attraction"];
+}
+
+async function liveNearbyCandidates(anchor: Place, limit: number): Promise<Candidate[]> {
+  const key = Deno.env.get("GOOGLE_PLACES_API_KEY") || Deno.env.get("GOOGLE_MAPS_API_KEY");
+  if (!key) return [];
+  const city = text(anchor.municipality || anchor.city, "nearby");
+  const groups = await Promise.all(liveSearchTypes(anchor).map(async (includedType) => {
+    const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types",
+      },
+      body: JSON.stringify({
+        // Coordinates are the authority here. A live search card can carry a
+        // broad display city even when its real pin is elsewhere.
+        textQuery: includedType.replace(/_/g, " "),
+        includedType,
+        strictTypeFiltering: true,
+        pageSize: Math.min(Math.max(limit, 3), 8),
+        languageCode: "en",
+        regionCode: "CA",
+        rankPreference: "DISTANCE",
+        locationBias: { circle: { center: { latitude: Number(anchor.latitude), longitude: Number(anchor.longitude) }, radius: 12_000 } },
+      }),
+    });
+    if (!response.ok) return [] as Candidate[];
+    const payload = await response.json();
+    return (payload.places || []).map((place: any): Candidate | null => {
+      const latitude = number(place.location?.latitude, NaN);
+      const longitude = number(place.location?.longitude, NaN);
+      if (!place.id || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+      const distanceMeters = haversineMeters(Number(anchor.latitude), Number(anchor.longitude), latitude, longitude);
+      if (!Number.isFinite(distanceMeters) || distanceMeters > 14_000 || distanceMeters < 30) return null;
+      return {
+        id: `google:${text(place.id)}`,
+        name: text(place.displayName?.text, "A nearby stop"),
+        category: text(place.types?.[0], includedType).replace(/_/g, " "),
+        city,
+        municipality: city,
+        address: text(place.formattedAddress),
+        latitude,
+        longitude,
+        timezone: text(anchor.timezone, "America/Toronto"),
+        distanceMeters,
+      };
+    }).filter(Boolean) as Candidate[];
+  }));
+  return Array.from(new Map(groups.flat().map((place) => [place.id, place])).values())
+    .sort((left, right) => left.distanceMeters - right.distanceMeters)
+    .slice(0, Math.max(limit * 2, 8));
+}
+
 function reasonFor(place: Candidate, index: number, anchor: Candidate) {
   if (place.id === anchor.id) return "Your anchor";
   const family = categoryFamily(place);
@@ -308,29 +400,34 @@ Deno.serve(async (req) => {
     const requestedBudget = normalizeBudget(body.budgetStyle || budgetFromProfile(profile.budget));
     const stopCount = clampStopCount(body.stopCount);
 
-    const { data: anchorRow, error: anchorError } = await supabase
-      .from("canonical_places")
-      .select("*")
-      .eq("id", anchorId)
-      .maybeSingle();
+    const { data: anchorRow, error: anchorError } = isCanonicalPlaceId(anchorId)
+      ? await supabase
+        .from("canonical_places")
+        .select("*")
+        .eq("id", anchorId)
+        .maybeSingle()
+      : { data: null, error: null };
     if (anchorError) throw anchorError;
-    if (!anchorRow) return jsonResponse({ error: "That place is no longer available for planning" }, 404);
-
-    const anchor = anchorRow as Place;
+    // A place discovered live from Google has not necessarily been saved to
+    // canonical_places. Its tapped coordinates are still valid for a plan.
+    const anchor = (anchorRow as Place | null) || requestAnchor(body.anchor);
+    if (!anchor) return jsonResponse({ error: "This place needs a name and precise location before Echoo can plan around it" }, 422);
     if (!Number.isFinite(number(anchor.latitude, NaN)) || !Number.isFinite(number(anchor.longitude, NaN))) {
       return jsonResponse({ error: "This place needs a precise location before Echoo can route around it" }, 422);
     }
 
     const city = text(anchor.municipality || anchor.city || profile.city || "Ontario");
-    const { data: nearbyRows, error: nearbyError } = await supabase.rpc("search_ontario_places", {
-      p_query: null,
-      p_city: city,
-      p_lat: Number(anchor.latitude),
-      p_lng: Number(anchor.longitude),
-      p_radius_meters: 14000,
-      p_category: null,
-      p_limit: 80,
-    });
+    const { data: nearbyRows, error: nearbyError } = anchorRow
+      ? await supabase.rpc("search_ontario_places", {
+        p_query: null,
+        p_city: city,
+        p_lat: Number(anchor.latitude),
+        p_lng: Number(anchor.longitude),
+        p_radius_meters: 14000,
+        p_category: null,
+        p_limit: 80,
+      })
+      : { data: [], error: null };
     if (nearbyError) throw nearbyError;
     const nearbyIds = Array.from(new Set((nearbyRows || []).map((row: any) => text(row.id)).filter(Boolean)));
 
@@ -343,7 +440,12 @@ Deno.serve(async (req) => {
       [anchor.id, anchor],
       ...((fullRows || []) as Place[]).map((place) => [place.id, place]),
     ]);
-    const placeIds = [...places.keys()];
+    // Profile and hours tables use UUID foreign keys. Live Google IDs are not
+    // persisted there yet, so never send them into a UUID `in (...)` filter.
+    const placeIds = [
+      ...(anchorRow ? [anchor.id] : []),
+      ...((fullRows || []) as Place[]).map((place) => place.id),
+    ];
     const [profiles, hoursByPlace] = await Promise.all([
       loadProfiles(supabase, placeIds),
       loadHours(supabase, placeIds),
@@ -357,7 +459,7 @@ Deno.serve(async (req) => {
     const anchorHours = hoursByPlace.get(anchor.id) || [];
     const anchorAvailability = openAt(anchorHours, timezone, new Date());
 
-    const candidates: Candidate[] = [...places.values()]
+    const inventoryCandidates: Candidate[] = [...places.values()]
       .filter((place) => place.id !== anchor.id)
       .map((place) => ({
         ...place,
@@ -374,6 +476,8 @@ Deno.serve(async (req) => {
         const status = openAt(hoursByPlace.get(place.id) || [], timezone, new Date());
         return !status.known || status.open;
       });
+    const liveCandidates = await liveNearbyCandidates(anchor, stopCount + 3);
+    const candidates = Array.from(new Map([...inventoryCandidates, ...liveCandidates].map((place) => [place.id, place])).values());
 
     const score = (candidate: Candidate) => {
       const distance = Math.max(0, 1 - candidate.distanceMeters / 14000);
@@ -398,13 +502,6 @@ Deno.serve(async (req) => {
     for (const candidate of sorted) {
       if (selected.length >= stopCount) break;
       if (!selected.some((picked) => picked.id === candidate.id)) selected.push(candidate);
-    }
-
-    if (selected.length < 2) {
-      return jsonResponse({
-        error: "Echoo does not have enough verified nearby places to make this plan yet.",
-        code: "not_enough_local_inventory",
-      }, 409);
     }
 
     let elapsed = 0;
@@ -434,7 +531,9 @@ Deno.serve(async (req) => {
       return stop;
     });
 
-    const availabilityNote = selected.length < stopCount
+    const availabilityNote = selected.length < 2
+      ? `Start at ${text(anchor.name, "this place")}. Nearby matches are temporarily unavailable, so Echoo kept your route focused instead of guessing.`
+      : selected.length < stopCount
       ? `Echoo found ${selected.length} nearby places it can stand behind right now, so it kept this plan tight.`
       : anchorAvailability.known && !anchorAvailability.open
         ? `${text(anchor.name, "Your anchor")} is not marked open right now—check its hours before heading out.`

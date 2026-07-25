@@ -3452,7 +3452,7 @@
             <div class="echoo-quick-plan-control-row">${budgetControls}</div>
           </div>
           ${result}
-          ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${escapeHtml(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Open route</button></div>` : ""}`;
+          ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${escapeHtml(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Start directions</button></div>` : ""}`;
 
         quickPlanContent.querySelectorAll("[data-quick-plan-choice]").forEach((button) => {
           button.addEventListener("click", () => {
@@ -3501,7 +3501,7 @@
             method: "POST",
             headers,
             body: JSON.stringify({
-              anchor: { id: quickPlanState.anchor.id },
+              anchor: quickPlanState.anchor,
               stopCount: quickPlanState.stopCount,
               budgetStyle: quickPlanState.budgetStyle,
               profile: personalizationProfile,
@@ -3540,17 +3540,16 @@
 
       function openQuickPlanRoute() {
         const stops = quickPlanState?.plan?.stops || [];
-        if (stops.length < 2) return;
+        if (!stops.length) return;
         if (window.ReactNativeWebView?.postMessage) {
           window.ReactNativeWebView.postMessage(`echoo:route-plan:${JSON.stringify({ stops })}`);
           return;
         }
-        const coordinate = (stop) => `${stop.latitude},${stop.longitude}`;
-        const url = new URL("https://www.google.com/maps/dir/");
-        url.searchParams.set("api", "1");
-        url.searchParams.set("origin", coordinate(stops[0]));
-        url.searchParams.set("destination", coordinate(stops.at(-1)));
-        if (stops.length > 2) url.searchParams.set("waypoints", stops.slice(1, -1).map(coordinate).join("|"));
+        const coordinate = `${stops[0].latitude},${stops[0].longitude}`;
+        const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const url = isAppleDevice
+          ? `https://maps.apple.com/?daddr=${encodeURIComponent(coordinate)}&dirflg=d`
+          : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(coordinate)}&dir_action=navigate`;
         window.open(url.toString(), "_blank", "noopener,noreferrer");
       }
 
