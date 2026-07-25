@@ -199,22 +199,23 @@ function isEchooHome(url: string) {
   }
 }
 
-function routeUrlFor(destination: RouteDestination) {
+function googleRouteUrlFor(destination: RouteDestination) {
   const target = `${destination.latitude},${destination.longitude}`;
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(target)}&dir_action=navigate`;
 }
 
-function routeUrlForPlan(plan: RoutePlan) {
-  const stops = plan.stops;
-  const coordinate = (stop: RouteDestination) => `${stop.latitude},${stop.longitude}`;
-  const url = new URL('https://www.google.com/maps/dir/');
-  url.searchParams.set('api', '1');
-  url.searchParams.set('origin', coordinate(stops[0]));
-  url.searchParams.set('destination', coordinate(stops[stops.length - 1]));
-  if (stops.length > 2) {
-    url.searchParams.set('waypoints', stops.slice(1, -1).map(coordinate).join('|'));
-  }
-  return url.toString();
+function appleRouteUrlFor(destination: RouteDestination) {
+  const target = `${destination.latitude},${destination.longitude}`;
+  return `maps://?daddr=${encodeURIComponent(target)}&dirflg=d`;
+}
+
+function startNavigation(destination: RouteDestination) {
+  // iOS gets the installed Apple Maps app directly; Android gets Google Maps
+  // navigation. The HTTPS Google URL is retained as a safe fallback.
+  const primary = Platform.OS === 'ios'
+    ? appleRouteUrlFor(destination)
+    : googleRouteUrlFor(destination);
+  return Linking.openURL(primary).catch(() => Linking.openURL(googleRouteUrlFor(destination)));
 }
 
 function parseRouteDestination(value: string): RouteDestination | null {
@@ -244,7 +245,7 @@ function parseRoutePlan(value: string): RoutePlan | null {
       .map((stop) => parseRouteDestination(JSON.stringify(stop)))
       .filter((stop): stop is RouteDestination => stop !== null)
       .slice(0, 3);
-    return stops.length >= 2 ? { stops } : null;
+    return stops.length >= 1 ? { stops } : null;
   } catch {
     return null;
   }
@@ -358,15 +359,16 @@ function EchooShell() {
           if (message.startsWith('echoo:route-plan:')) {
             const plan = parseRoutePlan(message.slice('echoo:route-plan:'.length));
             if (!plan) return;
-            Linking.openURL(routeUrlForPlan(plan)).catch(() => undefined);
+            // A route should begin immediately at the first planned stop.
+            // Apple Maps does not support reliable multi-stop deep links, so
+            // this deliberately starts turn-by-turn navigation at stop one.
+            startNavigation(plan.stops[0]).catch(() => undefined);
             return;
           }
           if (message.startsWith('echoo:route:')) {
             const destination = parseRouteDestination(message.slice('echoo:route:'.length));
             if (!destination) return;
-            // Routing always hands off to Google Maps, keeping this Expo Go
-            // shell free of custom map or navigation native code.
-            Linking.openURL(routeUrlFor(destination)).catch(() => undefined);
+            startNavigation(destination).catch(() => undefined);
             return;
           }
           if (message === 'echoo:detail-sheet:true') {
