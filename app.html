@@ -3388,6 +3388,27 @@
         return budget === "$" ? "value" : budget === "$$$" ? "elevated" : "balanced";
       }
 
+      function quickPlanHistoryKey(anchor) {
+        return `echoo_quick_plan_seen:${String(anchor?.id || "").slice(0, 180)}`;
+      }
+
+      function quickPlanRecent(anchor) {
+        try {
+          const saved = JSON.parse(localStorage.getItem(quickPlanHistoryKey(anchor)) || "[]");
+          return Array.isArray(saved) ? saved.filter((id) => typeof id === "string").slice(0, 30) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function rememberQuickPlan(anchor, plan) {
+        const next = (plan?.stops || []).filter((stop) => !stop.isAnchor).map((stop) => String(stop.id || "")).filter(Boolean);
+        if (!next.length) return;
+        try {
+          localStorage.setItem(quickPlanHistoryKey(anchor), JSON.stringify([...new Set([...next, ...quickPlanRecent(anchor)])].slice(0, 30)));
+        } catch (_) {}
+      }
+
       function closeQuickPlan() {
         quickPlanRequestId += 1;
         if (!quickPlanModal) return;
@@ -3399,7 +3420,7 @@
         const travel = Number(stop.travelMinutes || 0);
         const descriptor = index === 0
           ? `${stop.reason || "Your anchor"}${stop.category ? ` · ${stop.category}` : ""}`
-          : `${travel ? `${travel} min away` : "Nearby"}${stop.reason ? ` · ${stop.reason}` : ""}`;
+          : `${travel ? `${travel} min away` : "Nearby"}${stop.reason ? ` · ${stop.reason}` : ""}${stop.priceLabel ? ` · ${stop.priceLabel}` : ""}`;
         return `
           <button class="echoo-quick-plan-stop" type="button" data-quick-plan-stop="${escapeHtml(stop.id)}">
             <span class="echoo-quick-plan-stop-number">${index + 1}</span>
@@ -3504,6 +3525,7 @@
               anchor: quickPlanState.anchor,
               stopCount: quickPlanState.stopCount,
               budgetStyle: quickPlanState.budgetStyle,
+              recentPlaceIds: quickPlanRecent(quickPlanState.anchor),
               profile: personalizationProfile,
             }),
           });
@@ -3513,6 +3535,7 @@
             throw new Error(payload?.error || "Quick Plan could not build a reliable route right now.");
           }
           quickPlanState.plan = payload.plan;
+          rememberQuickPlan(quickPlanState.anchor, payload.plan);
           quickPlanState.loading = false;
           renderQuickPlan();
         } catch (error) {
