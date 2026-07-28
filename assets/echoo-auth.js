@@ -7,6 +7,30 @@
   const VALID_BUDGETS = new Set(["$", "$$", "$$$"]);
   const VALID_ENERGIES = new Set(["chill", "hype", "curious"]);
   const VALID_TONES = new Set(["direct", "detailed"]);
+  const AUTH_STORAGE_KEY = "echoo.auth.session";
+
+  // Echoo deliberately keeps authentication scoped to the open browser or
+  // WebView session. Preferences may persist locally, but an access token
+  // never does: closing the browser/app requires an intentional sign-in.
+  const sessionStorageAdapter = {
+    getItem(key) {
+      try {
+        return window.sessionStorage.getItem(key);
+      } catch (_err) {
+        return null;
+      }
+    },
+    setItem(key, value) {
+      try {
+        window.sessionStorage.setItem(key, value);
+      } catch (_err) {}
+    },
+    removeItem(key) {
+      try {
+        window.sessionStorage.removeItem(key);
+      } catch (_err) {}
+    },
+  };
 
   const client =
     window.echooSupabaseClient ||
@@ -19,6 +43,8 @@
               persistSession: true,
               autoRefreshToken: true,
               detectSessionInUrl: true,
+              storage: sessionStorageAdapter,
+              storageKey: AUTH_STORAGE_KEY,
             },
           },
         )
@@ -59,6 +85,22 @@
     const parsed = new Date(value);
     if (!Number.isFinite(parsed.getTime())) return null;
     return String(value).slice(0, 10);
+  }
+
+  function nationalitiesFrom(value) {
+    return arrayFrom(value).slice(0, 8);
+  }
+
+  function normalizeUsername(value) {
+    return clean(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, "")
+      .slice(0, 24);
+  }
+
+  function isValidUsername(value) {
+    const raw = clean(value);
+    return raw === normalizeUsername(raw) && /^[a-z0-9_]{3,24}$/.test(raw);
   }
 
   function currentRelativeUrl() {
@@ -126,8 +168,12 @@
     const email = clean(row.email) || clean(user?.email);
     const budget = safeBudget(row.budget);
     const energy = safeEnergy(row.energy);
-    const city = clean(row.home_city, "Ontario");
+    const storedCity = clean(row.home_city, "Greater Toronto Area");
+    const city = /^ontario$/i.test(storedCity)
+      ? "Greater Toronto Area"
+      : storedCity;
     const gender = clean(row.gender, "Prefer not to say");
+    const nationalities = nationalitiesFrom(row.nationalities);
     const dob = row.date_of_birth || "";
     const tone = safeTone(row.tone);
     const username = clean(row.username);
@@ -140,6 +186,7 @@
       energy,
       city,
       gender,
+      nationalities,
       dob,
       tone,
     };
@@ -157,6 +204,7 @@
       energy,
       city,
       gender,
+      nationalities,
       dob,
       tone,
       onboardingCompletedAt: row.completed_at,
@@ -175,12 +223,12 @@
     const budget = safeBudget(profile.budget);
     const energy = safeEnergy(profile.energy);
     const tone = safeTone(profile.tone);
+    const nationalities = nationalitiesFrom(profile.nationalities);
     return {
       user_id: user.id,
-      username: clean(profile.username || profile.handle || profile.name)
-        .toLowerCase()
-        .replace(/[^a-z0-9_]+/g, "")
-        .slice(0, 24),
+      username: normalizeUsername(
+        profile.username || profile.handle || profile.name,
+      ),
       display_name:
         clean(profile.name || profile.displayName) ||
         clean(user.user_metadata?.display_name) ||
@@ -192,8 +240,15 @@
       motivations,
       budget,
       energy,
-      home_city: clean(profile.city || profile.home_city, "Ontario"),
+      home_city: /^ontario$/i.test(clean(profile.city || profile.home_city))
+        ? "Greater Toronto Area"
+        : clean(profile.city || profile.home_city, "Greater Toronto Area"),
       gender: clean(profile.gender, "Prefer not to say"),
+      nationalities,
+      nationality_disclosed_at:
+        nationalities.length > 0
+          ? profile.nationality_disclosed_at || new Date().toISOString()
+          : null,
       date_of_birth: safeDate(profile.dob || profile.date_of_birth),
       tone,
       profile_version: 1,
@@ -206,6 +261,7 @@
         budget,
         energy,
         tone,
+        nationalities,
       },
       metadata: {
         source: clean(profile.source, "web_onboarding"),
@@ -342,6 +398,35 @@
     return state;
   }
 
+  async function requireAuthenticatedAction(options = {}) {
+    const state = await requireOnboarding({
+      ...options,
+      redirect: false,
+    });
+    if (state.ok) return state;
+
+    if (options.redirect !== false) {
+      redirectToAuth(
+        options.next || currentRelativeUrl(),
+        options.mode || "signup",
+        {
+          intent: options.intent || "member_action",
+          reason: options.reason || "member_action_required",
+          caption:
+            options.caption ||
+            "Create an account to save this moment and keep your plan personal.",
+        },
+      );
+    }
+    return state;
+  }
+
+  async function signOut() {
+    if (!client) return;
+    await client.auth.signOut({ scope: "local" });
+    sessionStorageAdapter.removeItem(AUTH_STORAGE_KEY);
+  }
+
   async function saveOnboardingProfile(profile) {
     const { session, error } = await getSession();
     if (error || !session?.user) {
@@ -366,7 +451,7 @@
     if (patch.budget) update.budget = safeBudget(patch.budget);
     if (patch.energy) update.energy = safeEnergy(patch.energy);
     if (patch.tone) update.tone = safeTone(patch.tone);
-    if (patch.city) update.home_city = clean(patch.city, "Ontario");
+    if (patch.city) update.home_city = clean(patch.city, "Greater Toronto Area");
     if (!Object.keys(update).length) return null;
     const { error: updateError } = await client
       .from(PROFILE_TABLE)
@@ -418,15 +503,19 @@
     authHeaders,
     currentRelativeUrl,
     getAuthState,
+    isValidUsername,
     loadOnboardingProfile,
     lookupEmailByUsername,
     normalizeNext,
     readLocalPreferences,
     redirectToAuth,
     requireOnboarding,
+    requireAuthenticatedAction,
     saveOnboardingProfile,
+    signOut,
     syncPendingProfile,
     updateOnboardingPatch,
+    normalizeUsername,
     writeLocalPreferences,
   };
 })();

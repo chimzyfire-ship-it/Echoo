@@ -13,12 +13,27 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { WebView } from 'react-native-webview';
 import Svg, { Circle, Path } from 'react-native-svg';
+type RouteDestination = {
+  id?: string;
+  googlePlaceId?: string;
+  name: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
+};
+
+type RoutePlan = {
+  stops: RouteDestination[];
+};
 
 /**
  * The native shell deliberately renders Echoo's existing mobile interface.
  * Keep the web UI in the project root; do not duplicate its styles here.
  */
-const ECHOO_WEB_URL = process.env.EXPO_PUBLIC_ECHOO_WEB_URL;
+// Expo Go needs a usable app destination even before a developer adds a local
+// LAN override. The environment value still wins for local device testing.
+const ECHOO_WEB_URL =
+  process.env.EXPO_PUBLIC_ECHOO_WEB_URL?.trim() || 'https://echoocity.com/events.html';
 
 const MOBILE_CHROME_SCRIPT = `
   (function () {
@@ -31,8 +46,14 @@ const MOBILE_CHROME_SCRIPT = `
       (document.head || document.documentElement).appendChild(style);
     }
     var reportDetailSheetState = function () {
-      var sheet = document.getElementById('detail-sheet');
-      var isOpen = Boolean(sheet && sheet.classList.contains('open'));
+      var eventSheet = document.getElementById('detail-sheet');
+      var placeSheet = document.getElementById('card-detail-modal');
+      var quickPlanSheet = document.getElementById('quick-plan-modal');
+      var isOpen = Boolean(
+        (eventSheet && eventSheet.classList.contains('open')) ||
+        (placeSheet && placeSheet.classList.contains('open')) ||
+        (quickPlanSheet && quickPlanSheet.getAttribute('aria-hidden') === 'false')
+      );
       if (window.ReactNativeWebView) {
         window.ReactNativeWebView.postMessage('echoo:detail-sheet:' + isOpen);
       }
@@ -43,7 +64,7 @@ const MOBILE_CHROME_SCRIPT = `
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ['class'],
+        attributeFilter: ['class', 'aria-hidden'],
       });
     }
     reportDetailSheetState();
@@ -58,7 +79,6 @@ const NAVIGATION_ITEMS: ReadonlyArray<{
   label: string;
   target: string;
 }> = [
-  { key: 'home', label: 'Home', target: 'index.html' },
   { key: 'discover', label: 'Discover', target: 'events.html' },
   { key: 'tickets', label: 'Tickets', target: 'tickets.html' },
   { key: 'profile', label: 'Profile', target: 'auth.html' },
@@ -172,13 +192,65 @@ function isEchooHome(url: string) {
 
   try {
     const path = new URL(url).pathname.replace(/\/$/, '');
-    return path === '' || path === '/index' || path === '/index.html';
+    return path === '' || path === '/events' || path === '/events.html';
   } catch {
     return true;
   }
 }
 
-export default function App() {
+function googleRouteUrlFor(destination: RouteDestination) {
+  const target = `${destination.latitude},${destination.longitude}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(target)}&dir_action=navigate`;
+}
+
+function appleRouteUrlFor(destination: RouteDestination) {
+  const target = `${destination.latitude},${destination.longitude}`;
+  return `maps://?daddr=${encodeURIComponent(target)}&dirflg=d`;
+}
+
+function startNavigation(destination: RouteDestination) {
+  // iOS gets the installed Apple Maps app directly; Android gets Google Maps
+  // navigation. The HTTPS Google URL is retained as a safe fallback.
+  const primary = Platform.OS === 'ios'
+    ? appleRouteUrlFor(destination)
+    : googleRouteUrlFor(destination);
+  return Linking.openURL(primary).catch(() => Linking.openURL(googleRouteUrlFor(destination)));
+}
+
+function parseRouteDestination(value: string): RouteDestination | null {
+  try {
+    const payload = JSON.parse(value) as Partial<RouteDestination>;
+    const latitude = Number(payload.latitude);
+    const longitude = Number(payload.longitude);
+    if (!payload.name || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    return {
+      id: typeof payload.id === 'string' ? payload.id : undefined,
+      googlePlaceId: typeof payload.googlePlaceId === 'string' ? payload.googlePlaceId : undefined,
+      name: String(payload.name).slice(0, 160),
+      address: typeof payload.address === 'string' ? payload.address.slice(0, 300) : undefined,
+      latitude,
+      longitude,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function parseRoutePlan(value: string): RoutePlan | null {
+  try {
+    const payload = JSON.parse(value) as { stops?: unknown };
+    if (!Array.isArray(payload.stops)) return null;
+    const stops = payload.stops
+      .map((stop) => parseRouteDestination(JSON.stringify(stop)))
+      .filter((stop): stop is RouteDestination => stop !== null)
+      .slice(0, 3);
+    return stops.length >= 1 ? { stops } : null;
+  } catch {
+    return null;
+  }
+}
+
+function EchooShell() {
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(ECHOO_WEB_URL ?? '');
@@ -217,8 +289,8 @@ export default function App() {
     [currentUrl],
   );
 
-  // Home is the root of the app. A redirect or a prior browser session must
-  // never make a Back control appear over its header.
+  // Discover is the root of the app. A redirect or a prior browser session
+  // must never make a Back control appear over its header.
   const showBackButton = !isEchooHome(currentUrl);
   const activeTab = activeTabFor(currentUrl);
 
@@ -256,6 +328,10 @@ export default function App() {
         originWhitelist={['http://*', 'https://*']}
         javaScriptEnabled
         domStorageEnabled
+        // The shell intentionally has no durable browser storage. Echoo's
+        // auth token lives in sessionStorage, so closing the app requires a
+        // new sign-in while a foreground session remains uninterrupted.
+        incognito
         sharedCookiesEnabled
         thirdPartyCookiesEnabled
         allowsBackForwardNavigationGestures
@@ -282,10 +358,26 @@ export default function App() {
           setIsDetailSheetOpen(false);
         }}
         onMessage={(event) => {
-          if (event.nativeEvent.data === 'echoo:detail-sheet:true') {
+          const message = event.nativeEvent.data;
+          if (message.startsWith('echoo:route-plan:')) {
+            const plan = parseRoutePlan(message.slice('echoo:route-plan:'.length));
+            if (!plan) return;
+            // A route should begin immediately at the first planned stop.
+            // Apple Maps does not support reliable multi-stop deep links, so
+            // this deliberately starts turn-by-turn navigation at stop one.
+            startNavigation(plan.stops[0]).catch(() => undefined);
+            return;
+          }
+          if (message.startsWith('echoo:route:')) {
+            const destination = parseRouteDestination(message.slice('echoo:route:'.length));
+            if (!destination) return;
+            startNavigation(destination).catch(() => undefined);
+            return;
+          }
+          if (message === 'echoo:detail-sheet:true') {
             setIsDetailSheetOpen(true);
           }
-          if (event.nativeEvent.data === 'echoo:detail-sheet:false') {
+          if (message === 'echoo:detail-sheet:false') {
             setIsDetailSheetOpen(false);
           }
         }}
@@ -329,6 +421,10 @@ export default function App() {
       ) : null}
     </View>
   );
+}
+
+export default function App() {
+  return <EchooShell />;
 }
 
 const styles = StyleSheet.create({

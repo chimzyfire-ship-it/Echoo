@@ -98,8 +98,8 @@ Deno.serve(async (req) => {
       if (!isInsideCanadaBounds(lat, lng)) {
         const response = {
           supported: false,
-          reason: "outside_ontario",
-          message: "Echoo is focused on Ontario and the GTA first.",
+          reason: "outside_gta",
+          message: "Echoo is currently live across the Greater Toronto Area.",
           results: [],
         };
         await logLocationEvent(supabase, {
@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
           eventType: "unsupported_region",
           status: "blocked",
           durationMs: Date.now() - startedAt,
-          reason: "outside_ontario",
+          reason: "outside_gta",
           request: { lat, lng, radiusMeters, limit },
           responseSummary: { supported: false },
         });
@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
       }
 
       const region = nearestSupportedCity(lat, lng);
-      const { data, error } = await supabase.rpc("search_nearby_entities", {
+      const { data, error } = await supabase.rpc("search_gta_nearby_entities", {
         p_lat: lat,
         p_lng: lng,
         p_radius_meters: radiusMeters,
@@ -154,13 +154,13 @@ Deno.serve(async (req) => {
       return jsonResponse(response);
     }
 
-    const city = normalizeCityName(payload.city || "Ontario");
+    const city = normalizeCityName(payload.city || "GTA");
     if (!city) {
       const response = {
         supported: false,
         reason: "unsupported_city",
         message:
-          "Echoo is active across Ontario first. Choose Ontario or a supported Ontario city.",
+          "Echoo is currently live across the GTA. Choose one of the 25 GTA municipalities.",
         results: [],
       };
       await logLocationEvent(supabase, {
@@ -175,9 +175,7 @@ Deno.serve(async (req) => {
       return jsonResponse(response, 200);
     }
 
-    const { data, error } = await supabase.rpc("search_region_entities", {
-      p_country_code: "CA",
-      p_admin_area_1: city.province,
+    const { data, error } = await supabase.rpc("search_gta_region_entities", {
       p_city: city.coverageLevel === "province" ? null : city.name,
       p_entity_type: payload.entityType || null,
       p_category: payload.category || null,

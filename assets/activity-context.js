@@ -38,7 +38,7 @@
       end: 20,
       label: "after work",
       cta: "Plan after work",
-      query: "after work food culture and activities",
+      query: "after work food tourism and activities",
     },
     {
       id: "evening",

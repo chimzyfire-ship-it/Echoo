@@ -1376,7 +1376,7 @@
       });
 
       const authParams = new URLSearchParams(window.location.search);
-      const DEFAULT_AUTH_DESTINATION = "index.html";
+      const DEFAULT_AUTH_DESTINATION = "events.html";
       const redirectTarget = window.EchooAuth
         ? window.EchooAuth.normalizeNext(
             authParams.get("next"),
@@ -1392,18 +1392,18 @@
       let initialStoredPrefs = {};
 
       /* Check stored preference for pre-detected city */
-      let preDetectedCity = "Ontario";
+      let preDetectedCity = "Greater Toronto Area";
       try {
         const stored = localStorage.getItem("echoo_preferences");
         if (stored) {
           initialStoredPrefs = JSON.parse(stored);
           preDetectedCity =
-            redirectParams.get("city") || initialStoredPrefs.city || "Ontario";
+            redirectParams.get("city") || initialStoredPrefs.city || "Greater Toronto Area";
         }
       } catch (e) {}
       preDetectedCity =
         window.EchooLocationPlatform.cityByName(preDetectedCity)?.name ||
-        "Ontario";
+        "Greater Toronto Area";
 
       /* ── State ── */
       const state = {
@@ -1422,6 +1422,9 @@
         energy: initialStoredPrefs.energy || "chill",
         city: redirectParams.get("city") || preDetectedCity,
         gender: initialStoredPrefs.gender || "Prefer not to say",
+        nationalities: Array.isArray(initialStoredPrefs.nationalities)
+          ? initialStoredPrefs.nationalities
+          : [],
         dob: initialStoredPrefs.dob || "",
         tone: initialStoredPrefs.tone || "direct",
         userName: initialStoredPrefs.name || "",
@@ -1596,7 +1599,7 @@
             "Thoughtful & deep",
             "Food & drinks",
             "Talks",
-            "Cultural events",
+            "Tourism & local attractions",
           ],
           customLabel: "Or type an event style",
         },
@@ -1689,14 +1692,14 @@
         },
         {
           type: "city",
-          title: "Where should Echoo start?",
-          sub: "Use a supported city now. Precise location can refine this later.",
+          title: "Where in the GTA should Echoo start?",
+          sub: "Choose one of the 25 GTA municipalities. Current location can refine this later.",
           btn: "Continue",
         },
         {
           type: "identity",
           title: "Optional personal context.",
-          sub: "Age and gender can improve fit. These fields are private and can be skipped.",
+          sub: "Age, gender, and nationality are private and optional. They never control where you can explore.",
           btn: "Continue",
         },
         {
@@ -1720,7 +1723,7 @@
         },
         {
           type: "cards",
-          title: "Help shape Ontario's spaces.",
+          title: "Help shape GTA spaces.",
           sub: "Echoo compiles anonymised check-in and activity data to produce city intelligence reports for urban planners. Individual users are never identifiable.",
           btn: "Continue",
           key: "city_intel_consent",
@@ -1760,7 +1763,7 @@
 
       const INTEREST_SECTIONS = [
         {
-          title: "Art & Culture",
+          title: "Tourism & local discovery",
           options: [
             "Art",
             "Creativity",
@@ -1769,7 +1772,7 @@
             "Collaboration Between Creative Minds",
             "Theater",
             "Painting",
-            "Cultural Activities",
+            "Local Attractions",
             "Museum",
           ],
         },
@@ -1931,21 +1934,16 @@
           if (step.type === "city") {
             body = `
               <div class="field">
-                <label for="ob-city">Your city</label>
-                <input id="ob-city" type="text" value="${escapeHtml(state.city)}" placeholder="Your city" autocomplete="address-level2">
+                <label for="ob-city">Your GTA municipality</label>
+                <input id="ob-city" type="text" value="${escapeHtml(state.city)}" placeholder="Search your GTA municipality" autocomplete="address-level2">
               </div>
               <div class="city-pills" role="radiogroup" aria-label="Supported cities">
                 ${[
-                  "Toronto",
-                  "Vancouver",
-                  "Montreal",
-                  "Calgary",
-                  "Edmonton",
-                  "Ottawa",
-                  "Winnipeg",
-                  "Quebec City",
-                  "Halifax",
-                  "Victoria",
+                  "Toronto", "Ajax", "Brock", "Clarington", "Oshawa",
+                  "Pickering", "Scugog", "Uxbridge", "Whitby", "Aurora",
+                  "East Gwillimbury", "Georgina", "King", "Markham", "Newmarket",
+                  "Richmond Hill", "Vaughan", "Whitchurch-Stouffville", "Brampton",
+                  "Caledon", "Mississauga", "Burlington", "Halton Hills", "Milton", "Oakville",
                 ]
                   .map(
                     (cityName) => `
@@ -1981,6 +1979,11 @@
                 <div class="field">
                   <label for="dob">Date of birth</label>
                   <input id="dob" type="date" value="${escapeHtml(state.dob)}" autocomplete="bday">
+                </div>
+                <div class="field">
+                  <label for="nationalities">Nationality or cultural background <span class="sr-only">optional</span></label>
+                  <input id="nationalities" type="text" value="${escapeHtml((state.nationalities || []).join(", "))}" placeholder="Optional — for example, Canadian" autocomplete="off">
+                  <p class="privacy-note">Optional. This is never used to restrict places, prices, or access.</p>
                 </div>
               </div>
             `;
@@ -2086,7 +2089,10 @@
           setStatus("Supabase auth is not available on this page.", true);
           return;
         }
-        const username = usernameInput.value.trim();
+        const enteredUsername = usernameInput.value.trim();
+        const username = enteredUsername.includes("@")
+          ? enteredUsername
+          : window.EchooAuth.normalizeUsername(enteredUsername);
         const password = passwordInput.value;
         if (!username || !password) {
           setStatus("Enter your username and password.", true);
@@ -2179,7 +2185,10 @@
           setStatus("Supabase auth is not available on this page.", true);
           return;
         }
-        const username = usernameInput.value.trim();
+        const enteredUsername = usernameInput.value.trim();
+        const username = enteredUsername.includes("@")
+          ? enteredUsername
+          : window.EchooAuth.normalizeUsername(enteredUsername);
         if (!username) {
           setStatus("Enter your username to reset the password.", true);
           return;
@@ -2218,14 +2227,15 @@
           setStatus("Supabase auth is not available on this page.", true);
           return;
         }
-        const username = usernameInput.value.trim();
+        const rawUsername = usernameInput.value.trim();
+        const username = window.EchooAuth.normalizeUsername(rawUsername);
         const email = emailInput.value.trim();
         const password = passwordInput.value;
         const token = otpInput.value.trim();
         const displayName =
           nameInput.value.trim() || email.split("@")[0] || "Echoo User";
-        if (!username) {
-          setStatus("Choose a username first.", true);
+        if (!window.EchooAuth.isValidUsername(rawUsername) || rawUsername !== username) {
+          setStatus("Use 3–24 lowercase letters, numbers, or underscores for your username.", true);
           return;
         }
         if (!email) {
@@ -2300,14 +2310,15 @@
             setStatus("Supabase auth is not available on this page.", true);
             return;
           }
-          const username = usernameInput.value.trim();
+          const rawUsername = usernameInput.value.trim();
+          const username = window.EchooAuth.normalizeUsername(rawUsername);
           const email = emailInput.value.trim();
           const password = passwordInput.value;
           const displayName = nameInput.value.trim() || email.split("@")[0] || "Echoo User";
           const consentCheckbox = document.getElementById("pipeda-consent");
 
-          if (!username) {
-            setStatus("Choose a username before sending your code.", true);
+          if (!window.EchooAuth.isValidUsername(rawUsername) || rawUsername !== username) {
+            setStatus("Use 3–24 lowercase letters, numbers, or underscores for your username.", true);
             usernameInput.focus();
             return;
           }
@@ -2514,6 +2525,14 @@
             state.dob = event.target.value;
           }
 
+          if (event.target.id === "nationalities") {
+            state.nationalities = event.target.value
+              .split(",")
+              .map((value) => value.trim())
+              .filter(Boolean)
+              .slice(0, 8);
+          }
+
           if (event.target.dataset.custom) {
             state[event.target.dataset.custom] = event.target.value.trim();
           }
@@ -2549,13 +2568,16 @@
         const vibes = interests.join(",");
         const budget = state.budget || "$";
         const energy = state.energy || "chill";
-        let city = (state.city || cityInput?.value || "Ontario").trim();
+        let city = (state.city || cityInput?.value || "Greater Toronto Area").trim();
         try {
           const selectedCity = window.EchooLocationPlatform?.cityByName(city);
           if (selectedCity) city = selectedCity.name;
         } catch (_) { /* location platform may not be loaded */ }
         const tone = state.tone || "direct";
         const gender = state.gender || "Prefer not to say";
+        const nationalities = Array.isArray(state.nationalities)
+          ? state.nationalities.slice(0, 8)
+          : [];
         const dob = state.dob || "";
         const personalizationProfile = {
           interests,
@@ -2566,6 +2588,7 @@
           energy,
           city,
           gender,
+          nationalities,
           dob,
           tone,
         };
@@ -2583,6 +2606,7 @@
           energy,
           city,
           gender,
+          nationalities,
           dob,
           tone,
           personalizationProfile,
@@ -2700,7 +2724,7 @@
         document.getElementById("profile-name").textContent = name;
         document.getElementById("profile-email").textContent = email;
 
-        const currentCity = prefs?.city || state.city || "Ontario";
+        const currentCity = prefs?.city || state.city || "Greater Toronto Area";
         const currentBudget = prefs?.budget || state.budget || "$";
         const currentEnergy = prefs?.energy || state.energy || "chill";
         const currentTone = prefs?.tone || state.tone || "direct";
@@ -2810,7 +2834,7 @@
           </div>
 
           <div style="text-align: center; color: rgba(248, 245, 239, 0.25); font-size: 11px; margin-top: 4px;">
-            Echoo v1.0.0 · Ontario Base
+            Echoo v1.0.0 · GTA-25 launch
           </div>
         `;
 

@@ -1920,6 +1920,15 @@
       </div>
     </div>
 
+    <!-- Native Quick Plan stays separate from the AI companion. -->
+    <section id="quick-plan-modal" class="echoo-quick-plan-modal" aria-hidden="true" aria-label="Quick Plan">
+      <button id="quick-plan-backdrop" class="echoo-quick-plan-backdrop" type="button" tabindex="-1" aria-label="Close Quick Plan"></button>
+      <div class="echoo-quick-plan-sheet" role="dialog" aria-modal="true" aria-labelledby="quick-plan-title">
+        <div class="echoo-quick-plan-handle" aria-hidden="true"></div>
+        <div id="quick-plan-content"></div>
+      </div>
+    </section>
+
     <!-- Map slide-up overlay -->
     <div class="map-overlay" id="map-overlay">
       <button class="map-close" id="map-close" aria-label="Close map">
@@ -1991,6 +2000,8 @@
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-live",
         placeDetailUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
+        quickPlanUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/quick-plan",
       };
 
       /* ── Preferences retrieval ── */
@@ -2003,14 +2014,7 @@
       let tone = params.get("tone");
       let preciseLat;
       let preciseLng;
-      let storedPrefs = {};
-
-      const stored = localStorage.getItem("echoo_preferences");
-      if (stored) {
-        try {
-          storedPrefs = JSON.parse(stored);
-        } catch (e) {}
-      }
+      let storedPrefs = window.EchooLocationPlatform.readPreferences();
 
       name = name || storedPrefs.name;
       city = city || storedPrefs.city;
@@ -2029,7 +2033,8 @@
       }
 
       name = name || "Preview User";
-      city = city || "Ontario";
+      city = window.EchooLocationPlatform.cityByName(city)?.name ||
+        "Greater Toronto Area";
       vibes = vibes ? vibes.split(",") : [];
       budget = budget || "$";
       energy = energy || "chill";
@@ -2242,33 +2247,6 @@
             img: "https://images.unsplash.com/photo-1570126688111-97771e19412a?auto=format&fit=crop&w=120&q=80",
           },
         ],
-        Vancouver: [
-          {
-            tag: "Beach",
-            text: "Kitsilano beach bonfire permits extended for summer",
-            img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Theatre",
-            text: "Granville Island waterfront stage premieres new indie play",
-            img: "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Cocktails",
-            text: "Gastown lounge rated top 50 in North America for mixology",
-            img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Ride",
-            text: "Stanley Park night cycle ride draws record five hundred riders",
-            img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
-          },
-          {
-            tag: "Food",
-            text: "Richmond Night Market expands late fusion food stands",
-            img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=120&q=80",
-          },
-        ],
         Montreal: [
           {
             tag: "Jazz",
@@ -2366,14 +2344,11 @@
         }
 
         if (displayNews.length === 0) {
-          const cityList = localNewsDb[city] || localNewsDb["Toronto"];
-          const mixedNews = [];
-          const maxLen = Math.max(cityList.length, worldNews.length);
-          for (let i = 0; i < maxLen; i++) {
-            if (i < cityList.length) mixedNews.push(cityList[i]);
-            if (i < worldNews.length) mixedNews.push(worldNews[i]);
+          const newsTrack = document.getElementById("news-track");
+          if (newsTrack) {
+            newsTrack.innerHTML = `<p class="news-empty">Verified GTA news is being refreshed. Check back shortly.</p>`;
           }
-          displayNews = mixedNews;
+          return;
         }
 
         const newsTrack = document.getElementById("news-track");
@@ -2480,6 +2455,9 @@
         "card-detail-modal-content",
       );
       const DETAIL_PENDING_KEY = "echoo_pending_place_detail";
+      const quickPlanModal = document.getElementById("quick-plan-modal");
+      const quickPlanContent = document.getElementById("quick-plan-content");
+      const quickPlanBackdrop = document.getElementById("quick-plan-backdrop");
 
       /* ── FAB Map Drag & Transparency Logic ── */
       let isDraggingFab = false;
@@ -2573,10 +2551,10 @@
             id: payload.placeId || "",
             name: normalize(payload.title || payload.name || "This place"),
             category: payload.category || "Place",
-            municipality: normalize(payload.city || payload.neighborhood || city || "Ontario"),
-            city: normalize(payload.city || city || "Ontario"),
+            municipality: normalize(payload.city || payload.neighborhood || city || "Greater Toronto Area"),
+            city: normalize(payload.city || city || "Greater Toronto Area"),
             formatted_address:
-              normalize(payload.neighborhood || payload.address || payload.city || city || "Ontario"),
+              normalize(payload.neighborhood || payload.address || payload.city || city || "Greater Toronto Area"),
             latitude: payload.latitude || null,
             longitude: payload.longitude || null,
             timezone: "America/Toronto",
@@ -2815,54 +2793,6 @@
               coords: [43.6515, -79.412],
               img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=300&q=80",
               vibe: "Retro arcade machines, loud indie rock, neon aesthetic.",
-            },
-          ],
-        },
-        Vancouver: {
-          chill: [
-            {
-              name: "Gastown Cozy Bar",
-              tags: "Speakeasy · Gastown",
-              coords: [49.2827, -123.1207],
-              img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=300&q=80",
-              vibe: "Hidden entrance, intimate seating, custom mixology drinks.",
-            },
-            {
-              name: "Davie Street Delicacies",
-              tags: "Local Bakery · West End",
-              coords: [49.2785, -123.1325],
-              img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
-              vibe: "Acoustic lounge music, fresh late crepes, relaxed spacing.",
-            },
-            {
-              name: "Kitsilano Sunset Pier",
-              tags: "Beach View · Kitsilano",
-              coords: [49.274, -123.153],
-              img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80",
-              vibe: "Beautiful twilight viewing spot, chill waves, fresh air.",
-            },
-          ],
-          hype: [
-            {
-              name: "Granville Live Stage",
-              tags: "Live Music · Granville",
-              coords: [49.2798, -123.1235],
-              img: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=300&q=80",
-              vibe: "Live rock sets, high-energy dance floor, packed venue.",
-            },
-            {
-              name: "Richmond Night Eats",
-              tags: "Night Market · Richmond",
-              coords: [49.1915, -123.131],
-              img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80",
-              vibe: "Over 100 food stalls, loud background music, fast paced crowds.",
-            },
-            {
-              name: "Yaletown Cocktail Loft",
-              tags: "DJ Loft · Yaletown",
-              coords: [49.276, -123.12],
-              img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
-              vibe: "House DJs, packed dancefloor, vibrant lighting.",
             },
           ],
         },
@@ -3326,7 +3256,7 @@
               preview: true,
               directionsHref:
                 Number.isFinite(Number(payload.latitude)) && Number.isFinite(Number(payload.longitude))
-                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${payload.latitude},${payload.longitude}`)}`
+                  ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${payload.latitude},${payload.longitude}`)}&dir_action=navigate`
                   : undefined,
             },
           ),
@@ -3360,6 +3290,225 @@
           clearPendingPlaceDetail();
         }
       }
+
+      /* ── Native Quick Plan ──
+       * This is intentionally independent of the companion conversation. The
+       * API returns a grounded itinerary from place/profile/hours data; this
+       * controller only renders it and lets people make the two meaningful
+       * adjustments: length and spend level.
+       */
+      let quickPlanState = null;
+      let quickPlanRequestId = 0;
+
+      function quickPlanDefaultBudget() {
+        return budget === "$" ? "value" : budget === "$$$" ? "elevated" : "balanced";
+      }
+
+      function quickPlanHistoryKey(anchor) {
+        return `echoo_quick_plan_seen:${String(anchor?.id || "").slice(0, 180)}`;
+      }
+
+      function quickPlanRecent(anchor) {
+        try {
+          const saved = JSON.parse(localStorage.getItem(quickPlanHistoryKey(anchor)) || "[]");
+          return Array.isArray(saved) ? saved.filter((id) => typeof id === "string").slice(0, 30) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function rememberQuickPlan(anchor, plan) {
+        const next = (plan?.stops || []).filter((stop) => !stop.isAnchor).map((stop) => String(stop.id || "")).filter(Boolean);
+        if (!next.length) return;
+        try {
+          localStorage.setItem(quickPlanHistoryKey(anchor), JSON.stringify([...new Set([...next, ...quickPlanRecent(anchor)])].slice(0, 30)));
+        } catch (_) {}
+      }
+
+      function closeQuickPlan() {
+        quickPlanRequestId += 1;
+        if (!quickPlanModal) return;
+        quickPlanModal.setAttribute("aria-hidden", "true");
+        if (quickPlanContent) quickPlanContent.replaceChildren();
+      }
+
+      function quickPlanStopMarkup(stop, index) {
+        const travel = Number(stop.travelMinutes || 0);
+        const descriptor = index === 0
+          ? `${stop.reason || "Your anchor"}${stop.category ? ` · ${stop.category}` : ""}`
+          : `${travel ? `${travel} min away` : "Nearby"}${stop.reason ? ` · ${stop.reason}` : ""}${stop.priceLabel ? ` · ${stop.priceLabel}` : ""}`;
+        return `
+          <button class="echoo-quick-plan-stop" type="button" data-quick-plan-stop="${escapeHtml(stop.id)}">
+            <span class="echoo-quick-plan-stop-number">${index + 1}</span>
+            <span class="echoo-quick-plan-stop-copy">
+              <strong>${escapeHtml(stop.name)}</strong>
+              <span>${escapeHtml(descriptor)}</span>
+            </span>
+            <span class="echoo-quick-plan-stop-time">${escapeHtml(stop.time || "")}</span>
+          </button>`;
+      }
+
+      function renderQuickPlan() {
+        if (!quickPlanContent || !quickPlanState) return;
+        const { anchor, stopCount, budgetStyle, loading, error, plan } = quickPlanState;
+        const name = String(anchor?.name || "this place").trim() || "this place";
+        const choiceMarkup = (choices) => choices.map(([kind, value, label]) => {
+          const selected = kind === "stops" ? Number(value) === stopCount : value === budgetStyle;
+          return `<button type="button" class="echoo-quick-plan-choice" data-quick-plan-choice="${kind}" data-quick-plan-value="${value}" aria-pressed="${selected}">${label}</button>`;
+        }).join("");
+        const stopControls = choiceMarkup([
+          ["stops", 2, "2 stops"],
+          ["stops", 3, "3 stops"],
+        ]);
+        const budgetControls = choiceMarkup([
+          ["budget", "value", "Value"],
+          ["budget", "balanced", "Balanced"],
+          ["budget", "elevated", "Elevated"],
+        ]);
+        const routeMeta = plan
+          ? `<div class="echoo-quick-plan-route-meta"><span>${escapeHtml(plan.subtitle || `Built around ${name}`)}</span><strong>${Number(plan.totalTravelMinutes || 0) ? `~${plan.totalTravelMinutes} min between stops` : "A close-by loop"}</strong></div>`
+          : "";
+        const result = loading
+          ? `<div class="echoo-quick-plan-loading" aria-live="polite"><span class="echoo-quick-plan-loading-label">Reading the area, your pace, and what is open.</span><span class="echoo-quick-plan-skeleton"></span><span class="echoo-quick-plan-skeleton"></span></div>`
+          : plan
+            ? `<div class="echoo-quick-plan-result">${routeMeta}<div class="echoo-quick-plan-stops">${(plan.stops || []).map(quickPlanStopMarkup).join("")}</div></div>`
+            : `<p class="echoo-quick-plan-error">${escapeHtml(error || "Echoo could not make a reliable plan around this place yet.")}</p>`;
+        quickPlanContent.innerHTML = `
+          <div class="echoo-quick-plan-topline">
+            <p class="echoo-quick-plan-kicker">Quick Plan</p>
+            <button class="echoo-quick-plan-close" type="button" data-quick-plan-close aria-label="Close Quick Plan">×</button>
+          </div>
+          <div class="echoo-quick-plan-heading">
+            <div>
+              <h2 id="quick-plan-title">Around ${escapeHtml(name)}</h2>
+              <p>One useful plan, already shaped to your profile.</p>
+            </div>
+          </div>
+          <div class="echoo-quick-plan-controls" aria-label="Tune your plan">
+            <div class="echoo-quick-plan-control-row">${stopControls}</div>
+            <div class="echoo-quick-plan-control-row">${budgetControls}</div>
+          </div>
+          ${result}
+          ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${escapeHtml(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Start directions</button></div>` : ""}`;
+
+        quickPlanContent.querySelectorAll("[data-quick-plan-choice]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const kind = button.getAttribute("data-quick-plan-choice");
+            const value = button.getAttribute("data-quick-plan-value");
+            if (kind === "stops") quickPlanState.stopCount = Number(value) === 2 ? 2 : 3;
+            if (kind === "budget") quickPlanState.budgetStyle = value || "balanced";
+            loadQuickPlan();
+          });
+        });
+        quickPlanContent.querySelector("[data-quick-plan-close]")?.addEventListener("click", closeQuickPlan);
+        quickPlanContent.querySelector("[data-quick-plan-route]")?.addEventListener("click", openQuickPlanRoute);
+        quickPlanContent.querySelectorAll("[data-quick-plan-stop]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const stop = (quickPlanState?.plan?.stops || []).find((item) => item.id === button.getAttribute("data-quick-plan-stop"));
+            if (!stop) return;
+            closeQuickPlan();
+            addPlaceDetailBubble(stop.id, {
+              placeId: stop.id,
+              title: stop.name,
+              category: stop.category,
+              address: stop.address,
+              latitude: stop.latitude,
+              longitude: stop.longitude,
+              image: stop.imageUrl,
+            });
+          });
+        });
+      }
+
+      async function loadQuickPlan() {
+        if (!quickPlanState?.anchor?.id) return;
+        const requestId = ++quickPlanRequestId;
+        quickPlanState.loading = true;
+        quickPlanState.error = "";
+        renderQuickPlan();
+        try {
+          const headers = window.EchooAuth
+            ? await window.EchooAuth.authHeaders({ "Content-Type": "application/json" })
+            : {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+                apikey: CONFIG.supabaseAnonKey,
+              };
+          const response = await fetch(CONFIG.quickPlanUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              anchor: quickPlanState.anchor,
+              stopCount: quickPlanState.stopCount,
+              budgetStyle: quickPlanState.budgetStyle,
+              recentPlaceIds: quickPlanRecent(quickPlanState.anchor),
+              profile: personalizationProfile,
+            }),
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (requestId !== quickPlanRequestId) return;
+          if (!response.ok || !payload?.plan) {
+            throw new Error(payload?.error || "Quick Plan could not build a reliable route right now.");
+          }
+          quickPlanState.plan = payload.plan;
+          rememberQuickPlan(quickPlanState.anchor, payload.plan);
+          quickPlanState.loading = false;
+          renderQuickPlan();
+        } catch (error) {
+          if (requestId !== quickPlanRequestId) return;
+          quickPlanState.loading = false;
+          quickPlanState.plan = null;
+          quickPlanState.error = error?.message || "Quick Plan could not build a reliable route right now.";
+          renderQuickPlan();
+        }
+      }
+
+      async function openQuickPlan(anchor) {
+        if (!anchor?.id) return;
+        const access = await window.EchooAuth?.requireAuthenticatedAction?.({
+          next: window.EchooAuth.currentRelativeUrl(),
+          mode: "signup",
+          intent: "quick_plan",
+          reason: "quick_plan_required",
+          caption: "Create an account to build a personal Quick Plan.",
+        });
+        if (!access?.ok) return;
+        quickPlanState = {
+          anchor,
+          stopCount: 3,
+          budgetStyle: quickPlanDefaultBudget(),
+          loading: false,
+          error: "",
+          plan: null,
+        };
+        if (quickPlanModal) quickPlanModal.setAttribute("aria-hidden", "false");
+        loadQuickPlan();
+      }
+
+      async function openQuickPlanRoute() {
+        const stops = quickPlanState?.plan?.stops || [];
+        if (!stops.length) return;
+        const access = await window.EchooAuth?.requireAuthenticatedAction?.({
+          next: window.EchooAuth.currentRelativeUrl(),
+          mode: "signup",
+          intent: "directions",
+          reason: "directions_required",
+          caption: "Create an account before starting directions from Echoo.",
+        });
+        if (!access?.ok) return;
+        if (window.ReactNativeWebView?.postMessage) {
+          window.ReactNativeWebView.postMessage(`echoo:route-plan:${JSON.stringify({ stops })}`);
+          return;
+        }
+        const coordinate = `${stops[0].latitude},${stops[0].longitude}`;
+        const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const url = isAppleDevice
+          ? `https://maps.apple.com/?daddr=${encodeURIComponent(coordinate)}&dirflg=d`
+          : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(coordinate)}&dir_action=navigate`;
+        window.open(url.toString(), "_blank", "noopener,noreferrer");
+      }
+
+      quickPlanBackdrop?.addEventListener("click", closeQuickPlan);
 
       function addDetailCard({ title, kicker, copy, meta, image, url }) {
         const card = document.createElement("article");
@@ -3645,29 +3794,8 @@
           : { ...base, city };
       }
 
-      const DISCOVERY_CITY_NAMES = [
-        "Toronto",
-        "Markham",
-        "Vancouver",
-        "Montreal",
-        "Calgary",
-        "Edmonton",
-        "Ottawa",
-        "Mississauga",
-        "Brampton",
-        "Scarborough",
-        "North York",
-        "Richmond Hill",
-        "Hamilton",
-        "Waterloo",
-        "Kitchener",
-        "London",
-        "Thunder Bay",
-        "Winnipeg",
-        "Halifax",
-        "Victoria",
-        "Quebec City",
-      ];
+      const DISCOVERY_CITY_NAMES = window.EchooLocationPlatform.SUPPORTED_CITIES
+        .flatMap((supportedCity) => [supportedCity.name, ...(supportedCity.aliases || [])]);
 
       const LIVE_DISCOVERY_PATTERN =
         /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|meet people|newcomer|networking|nightlife)\b/i;
@@ -3684,21 +3812,21 @@
         );
       }
 
-      function isOntarioPlannerQuery(queryText = "") {
+      function isGtaPlannerQuery(queryText = "") {
         const cityName = cityFromQuery(queryText) || city;
-        const hasOntarioCity =
-          /^(Toronto|Markham|Scarborough|North York|Vaughan|Richmond Hill|Mississauga|Brampton|Oakville|Burlington|Hamilton|Ottawa|Waterloo|Kitchener|London|Niagara Falls|Kingston|Guelph|Barrie|Windsor|Thunder Bay)$/i.test(
-            cityName || "",
-          ) || /\bontario\b/i.test(queryText || "");
+        const hasGtaCity = Boolean(
+          window.EchooLocationPlatform.cityByName(cityName) ||
+          /\b(gta|greater toronto)\b/i.test(queryText || ""),
+        );
         const wantsPlan =
-          /\b(plan|route|lunch|dinner|restaurant|restaurants|cafe|coffee|date|park|museum|gallery|culture|things to do|activity|activities|bar|pub|mall|today|afternoon|hangout|hangouts|calm|quiet|best place|great|somewhere|place|places|weather|forecast|rain|snow|temperature|hot|cold|wind)\b/i.test(
+          /\b(plan|route|lunch|dinner|restaurant|restaurants|cafe|coffee|date|park|museum|gallery|tourism|attraction|culture|things to do|activity|activities|bar|pub|mall|today|afternoon|hangout|hangouts|calm|quiet|best place|great|somewhere|place|places|weather|forecast|rain|snow|temperature|hot|cold|wind)\b/i.test(
             queryText || "",
           );
         const wantsLive =
           /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|tonight)\b/i.test(
             queryText || "",
           );
-        return hasOntarioCity && wantsPlan && !wantsLive;
+        return hasGtaCity && wantsPlan && !wantsLive;
       }
 
       function isConversationOnlyQuery(queryText = "") {
@@ -3732,7 +3860,7 @@
         ) {
           return false;
         }
-        if (isOntarioPlannerQuery(queryText)) return false;
+        if (isGtaPlannerQuery(queryText)) return false;
         if (mode !== "chat") return true;
         return LIVE_DISCOVERY_PATTERN.test(queryText || "");
       }
@@ -3887,7 +4015,7 @@
               payload,
               stops: [],
               error:
-                "Echoo AI needs an Ontario launch location for live planning. I can use Ontario, Toronto, Markham, Mississauga, Ottawa, or another supported Ontario city.",
+                "Echoo is live across the GTA. Choose one of the 25 GTA municipalities, or use your current GTA location.",
             };
           }
           if (payload?.ai?.assistantMessage) {
@@ -3922,7 +4050,15 @@
       }
 
       /* ── Open / close ── */
-      function openChat(userText) {
+      async function openChat(userText) {
+        const access = await window.EchooAuth?.requireAuthenticatedAction?.({
+          next: window.EchooAuth.currentRelativeUrl(),
+          mode: "signup",
+          intent: "personal_plan",
+          reason: "personal_plan_required",
+          caption: "Create an account to get a plan shaped around you.",
+        });
+        if (!access?.ok) return;
         chatBody.innerHTML = "";
         if (fab) fab.style.display = "none";
         resetFabPosition();
@@ -3954,7 +4090,7 @@
         return resolved.city.name;
       }
 
-      function captureDeviceLocationOnAppLoad() {
+      function hydratePreviouslyChosenLocation() {
         const prefs = window.EchooLocationPlatform.readPreferences();
         if (
           Number.isFinite(Number(prefs.lastLat)) &&
@@ -3963,61 +4099,12 @@
         ) {
           preciseLat = Number(prefs.lastLat);
           preciseLng = Number(prefs.lastLng);
-          return;
         }
-        if (!navigator.geolocation) return;
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const resolved = window.EchooLocationPlatform.resolveCoordinates(
-              lat,
-              lng,
-            );
-            if (!resolved.supported) {
-              preciseLat = undefined;
-              preciseLng = undefined;
-              city =
-                resolved.fallbackRegion?.name ||
-                resolved.fallbackCity?.name ||
-                "Ontario";
-              activityContext = getActivityContext();
-              window.EchooLocationPlatform.writeLocationState({
-                city,
-                countryCode: "CA",
-                adminArea1: "ON",
-                province: "Ontario",
-                locationSupported: true,
-                locationPrecision: "manual_region",
-                locationReason: resolved.reason,
-                lastLat: undefined,
-                lastLng: undefined,
-              });
-              return;
-            }
-
-            preciseLat = lat;
-            preciseLng = lng;
-            city = resolved.city.name;
-            activityContext = getActivityContext();
-            window.EchooLocationPlatform.writeLocationState({
-              city,
-              countryCode: "CA",
-              adminArea1: "ON",
-              province: "Ontario",
-              locationSupported: true,
-              locationPrecision: "gps",
-              lastLat: lat,
-              lastLng: lng,
-            });
-          },
-          () => {},
-          { enableHighAccuracy: true, timeout: 6000, maximumAge: 300000 },
-        );
       }
 
-      captureDeviceLocationOnAppLoad();
+      // Do not surprise people with a permission prompt on app launch. Fresh
+      // location access is asked for only after a nearby/route action.
+      hydratePreviouslyChosenLocation();
 
       /* ── Simulated conversation ── */
       function delay(ms) {
@@ -4036,46 +4123,11 @@
         const planResult = await requestSmartPlan(maxStops, queryText, mode);
         if (planResult.error) {
           removeTyping();
-          console.warn(
-            "Echoo AI plan engine failed, loading curated local fallback.",
-            planResult.error,
-          );
-
-          const queryCity = cityFromQuery(queryText);
-          const resolvedCity =
-            window.EchooLocationPlatform.cityByName(queryCity || city)?.name ||
-            queryCity ||
-            city ||
-            "Toronto";
-          const fallbackGroup =
-            curationDb[resolvedCity] || curationDb["Toronto"];
-          const energyKey = energy && fallbackGroup[energy] ? energy : "chill";
-          const fallbackStops =
-            fallbackGroup[energyKey] || fallbackGroup["chill"];
-
-          const preciseStops = fallbackStops.map((stop, index) => ({
-            detailId: "fallback-" + index,
-            name: stop.name,
-            tags: stop.tags || "Curation",
-            coords: stop.coords,
-            img: stop.img || "assets/optimized/news-music-768.jpg",
-            vibe: stop.vibe || "Curated recommendation from Echoo local base.",
-            detailType: "place",
-          }));
-
+          console.warn("Echoo AI plan engine failed.", planResult.error);
           addBubble(
             "ai",
-            `Couldn’t get the clean live answer, so here is a local starter plan for ${resolvedCity}:`,
+            "A verified local plan is not available right now. Try Explore for live GTA results, or choose a more specific municipality.",
           );
-          await delay(80);
-
-          addRouteBoard(preciseStops, false);
-          await delay(90);
-
-          addSeeRouteButton(preciseStops);
-          await delay(200);
-
-          addPills(["Cheaper", "Closer", "More lively", "Start over"]);
           return;
         }
         const ai = planResult.payload?.ai;
@@ -4359,11 +4411,9 @@
       });
 
       window.addEventListener("echoo:quick-plan", (event) => {
-        const message = String(event.detail?.message || "").trim();
-        if (!message) return;
-        clearPendingPlaceDetail();
-        closePlaceDetailModal();
-        openChat(message);
+        const anchor = event.detail?.anchor;
+        if (!anchor?.id) return;
+        openQuickPlan(anchor);
       });
 
       /* ── Auto-open chat from ?q= param (from Discover search) ── */

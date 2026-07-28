@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       body.city ?? url.searchParams.get("city"),
       80,
     );
-    const city = normalizeCityName(cityInput || "Ontario");
+    const city = normalizeCityName(cityInput || "GTA");
     if (!city) {
       return jsonResponse({
         supported: false,

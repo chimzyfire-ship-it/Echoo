@@ -42,7 +42,7 @@ function categoryBucketsFromIntent(intent = "", category = "") {
   if (/park|trail|outdoor|walk|hike|chill/.test(normalized)) {
     return ["park", "trail", "nature_reserve", "cafe"];
   }
-  if (/museum|culture|art/.test(normalized)) {
+  if (/museum|culture|art|tourism|attraction|historic|heritage/.test(normalized)) {
     return [
       "museum",
       "arts_centre",
@@ -76,6 +76,7 @@ function searchQueryForPlaces(query = "", city = "", intent = "") {
     "night",
     "nightlife",
     "culture",
+    "tourism",
     "library",
     "libraries",
     "community",
