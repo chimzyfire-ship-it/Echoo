@@ -151,6 +151,38 @@
         margin-bottom: 2px;
       }
 
+      .discover-location-sheet {
+        position: fixed;
+        right: 18px;
+        bottom: 96px;
+        left: 18px;
+        z-index: 55;
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid rgba(248, 245, 239, 0.14);
+        border-radius: 24px;
+        background: rgba(24, 24, 23, 0.97);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .discover-location-sheet[hidden] { display: none; }
+      .discover-location-sheet h2 { margin: 0 0 8px; font-size: 24px; }
+      .discover-location-sheet p { margin: 0 0 16px; color: var(--muted); line-height: 1.4; }
+      .discover-location-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .discover-location-actions button,
+      .discover-location-select {
+        min-height: 46px;
+        border: 1px solid rgba(248, 245, 239, 0.14);
+        border-radius: 14px;
+        background: rgba(248, 245, 239, 0.07);
+        color: var(--ink);
+        font: inherit;
+        font-weight: 650;
+      }
+      .discover-location-actions .primary { border-color: transparent; background: var(--peach); color: #111; }
+      .discover-location-select { width: 100%; margin: 0 0 9px; padding: 0 12px; }
+
       /* Hero Section */
       .hero {
         display: flex;
@@ -861,7 +893,7 @@
         <section class="hero">
           <div class="location-badge" id="location-note">
             <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span>
-            <span>VANCOUVER TODAY</span>
+            <span>GTA TRENDS</span>
           </div>
           <h1>Discover your next favorite place<span class="accent-dot">.</span></h1>
           <p>Thoughtful places, plans, and experiences — all grounded in what Echoo knows locally.</p>
@@ -1019,6 +1051,17 @@
       </div>
     </section>
 
+    <section class="discover-location-sheet" id="discover-location-sheet" aria-labelledby="discover-location-title" hidden>
+      <h2 id="discover-location-title">Find places close to you?</h2>
+      <p>Use your current location to rank GTA places by distance. You can also browse a municipality instead.</p>
+      <select class="discover-location-select" id="discover-municipality" aria-label="Choose a GTA municipality"></select>
+      <div class="discover-location-actions">
+        <button class="primary" type="button" id="discover-use-location">Use my location</button>
+        <button type="button" id="discover-use-municipality">Use municipality</button>
+        <button type="button" id="discover-location-later">Not now</button>
+      </div>
+    </section>
+
       <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
       <script src="assets/echoo-auth.js"></script>
       <script src="assets/echoo-place-detail.js"></script>
@@ -1034,9 +1077,10 @@
         };
 
       const params = new URLSearchParams(location.search);
+      const DEFAULT_DISCOVERY_CITY = "Toronto";
       let prefs = window.EchooLocationPlatform.readPreferences();
-      let city = params.get("city") || prefs.city || "Greater Toronto Area";
-      city = window.EchooLocationPlatform.cityByName(city)?.name || "Greater Toronto Area";
+      let city = params.get("city") || prefs.city || DEFAULT_DISCOVERY_CITY;
+      city = window.EchooLocationPlatform.cityByName(city)?.name || DEFAULT_DISCOVERY_CITY;
       let lat = Number(prefs.lastLat), lng = Number(prefs.lastLng);
 
       const queryInput = document.getElementById("query"),
@@ -1045,7 +1089,12 @@
         mapView = document.getElementById("map-view"),
         mapPins = document.getElementById("map-pins"),
         loadMore = document.getElementById("load-more"),
-        popularContainer = document.getElementById("popular-nearby-container");
+        popularContainer = document.getElementById("popular-nearby-container"),
+        locationSheet = document.getElementById("discover-location-sheet"),
+        locationMunicipality = document.getElementById("discover-municipality"),
+        useLocationButton = document.getElementById("discover-use-location"),
+        useMunicipalityButton = document.getElementById("discover-use-municipality"),
+        locationLaterButton = document.getElementById("discover-location-later");
 
       let activeQuery = params.get("query") || "trending",
         items = [],
@@ -1214,6 +1263,30 @@
 
       async function openDetailByItem(item, options = {}) {
         const heroImage = imageUrlFor(item) || item?.image || FALLBACK_PLACE_IMAGE;
+        const authState = window.EchooAuth?.getAuthState
+          ? await window.EchooAuth.getAuthState({ requireFresh: true })
+          : { ok: false };
+
+        // Discovery stays open to everyone; the detailed, actionable place
+        // view is the natural moment to ask a guest to create an account.
+        if (!authState.ok) {
+          savePendingDetail(item);
+          setDetailContent(
+            window.EchooPlaceDetail.renderAuthPrompt({
+              title: "Sign in to see this place",
+              note: "Create an account and Echoo will bring you straight back here.",
+              nextUrl: window.EchooAuth?.currentRelativeUrl?.() || "events.html",
+              seed: item?.title || item?.name || "place",
+              mode: "signup",
+              intent: "place_detail",
+              reason: "detail_access",
+              primaryLabel: "Continue",
+              secondaryLabel: "Keep browsing",
+            }),
+          );
+          openDetailSheet();
+          return;
+        }
 
         openDetailSheet();
         setDetailContent(
@@ -1304,6 +1377,70 @@
         }
       }
 
+      function locationLabel() {
+        const hasExactLocation = Number.isFinite(lat) && Number.isFinite(lng);
+        if (hasExactLocation) return `${city.toUpperCase()} NEAR YOU`;
+        if (prefs.city && prefs.city !== DEFAULT_DISCOVERY_CITY) return `${city.toUpperCase()} TODAY`;
+        return "GTA TRENDS";
+      }
+
+      function updateLocationBadge() {
+        document.getElementById("location-note").innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span><span>${locationLabel()}</span>`;
+      }
+
+      function rememberLocationChoice(extra = {}) {
+        prefs = window.EchooLocationPlatform.writeLocationState({
+          ...prefs,
+          city,
+          locationPromptedAt: new Date().toISOString(),
+          ...extra,
+        });
+      }
+
+      function closeLocationSheet() {
+        locationSheet.hidden = true;
+      }
+
+      function showLocationSheetIfNeeded() {
+        if (prefs.locationPromptedAt || prefs.locationPrecision || params.has("city")) return;
+        locationSheet.hidden = false;
+      }
+
+      async function applyCurrentLocation({ silent = false } = {}) {
+        if (!navigator.geolocation) {
+          if (!silent) rememberLocationChoice({ locationPermissionState: "unavailable", locationPrecision: "manual_region" });
+          closeLocationSheet();
+          return;
+        }
+        if (!silent) {
+          useLocationButton.disabled = true;
+          useLocationButton.textContent = "Checking…";
+        }
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            lat = position.coords.latitude;
+            lng = position.coords.longitude;
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+            city = resolved.supported ? resolved.city.name : DEFAULT_DISCOVERY_CITY;
+            rememberLocationChoice({
+              lastLat: lat,
+              lastLng: lng,
+              locationPermissionState: "granted",
+              locationPrecision: "gps",
+              locationReason: resolved.supported ? "device_gta" : "outside_gta_fallback",
+            });
+            updateLocationBadge();
+            closeLocationSheet();
+            await search(activeQuery);
+          },
+          () => {
+            if (!silent) rememberLocationChoice({ locationPermissionState: "denied", locationPrecision: "manual_region" });
+            closeLocationSheet();
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+        );
+      }
+
       async function search(query = activeQuery) {
         let cleanQuery = query.trim().toLowerCase();
         if (!cleanQuery) cleanQuery = "trending";
@@ -1338,6 +1475,13 @@
           if (response.ok) {
             const payload = await response.json();
             items = payload.results || [];
+            // The deployed endpoint may briefly trail the GTA backend rollout.
+            // Keep Discover useful with its live Toronto GTA gateway rather than
+            // showing an empty card while that deployment catches up.
+            if (!items.length && payload.supported === false && city !== DEFAULT_DISCOVERY_CITY) {
+              city = DEFAULT_DISCOVERY_CITY;
+              return search(activeQuery);
+            }
             renderItems();
           } else {
             renderPopularNearby([]);
@@ -1558,10 +1702,33 @@
 
       document.querySelectorAll("[data-close-sheet]").forEach((btn) => btn.onclick = closeDetail);
 
+      locationMunicipality.innerHTML = window.EchooLocationPlatform.SUPPORTED_CITIES
+        .map((municipality) => `<option value="${esc(municipality.name)}">${esc(municipality.name)}</option>`)
+        .join("");
+      locationMunicipality.value = city;
+      useLocationButton.addEventListener("click", applyCurrentLocation);
+      useMunicipalityButton.addEventListener("click", async () => {
+        city = locationMunicipality.value || DEFAULT_DISCOVERY_CITY;
+        lat = NaN;
+        lng = NaN;
+        rememberLocationChoice({ locationPermissionState: "manual", locationPrecision: "manual_region", locationReason: "municipality_choice" });
+        updateLocationBadge();
+        closeLocationSheet();
+        await search(activeQuery);
+      });
+      locationLaterButton.addEventListener("click", () => {
+        rememberLocationChoice({ locationPermissionState: "skipped", locationPrecision: "manual_region", locationReason: "gta_trends" });
+        closeLocationSheet();
+      });
+
       // Initial setup
-      document.getElementById("location-note").innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span><span>${city.toUpperCase()} TODAY</span>`;
+      updateLocationBadge();
       renderPopularNearby(defaultPlaces);
       search(activeQuery);
+      setTimeout(showLocationSheetIfNeeded, 450);
+      if (prefs.locationPermissionState === "granted" && !(Number.isFinite(lat) && Number.isFinite(lng))) {
+        setTimeout(() => applyCurrentLocation({ silent: true }), 150);
+      }
       resumePendingDetail();
     </script>
     <script src="assets/party-radar.js"></script>

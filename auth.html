@@ -2346,12 +2346,16 @@
               password,
               options: {
                 data: { display_name: displayName, username },
+                // Supports both a numeric OTP template and a confirmation-link
+                // template. A confirmation link returns here with a session and
+                // bootAuthPage continues into onboarding.
+                emailRedirectTo: authRedirectForProvider(),
               },
             });
             if (error) throw error;
             codeSent = true;
             otpFieldGroup.style.display = "grid";
-            setStatus("Code sent. Check your inbox, then enter the verification code below.");
+            setStatus("Check your inbox for a verification code or confirmation link.");
             otpInput.focus();
             startCooldownTimer(30);
           } catch (error) {
