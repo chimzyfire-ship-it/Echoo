@@ -72,7 +72,7 @@
 
 .echoo-place-hero-copy h1,
 .echoo-place-unavailable h2 {
-  margin: 4px 0 0;
+  margin: 0;
   color: #fff;
   font-size: 32px;
   font-weight: 780;
@@ -231,15 +231,27 @@
   overflow-wrap: anywhere;
 }
 
-/* Pulse stays deliberately sparse: it is a decision aid, not a dashboard. */
-.echoo-pulse .echoo-place-facts {
-  grid-template-columns: 1fr;
-  gap: 0;
+/* Setting display section: clean, high contrast text without labels */
+.echoo-place-setting-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
 }
 
-.echoo-pulse .echoo-place-fact:first-child {
-  padding-top: 2px;
-  border-top: 0;
+.echoo-place-setting-values {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.echoo-place-setting-text {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
 }
 
 .echoo-place-tag-row {
@@ -294,6 +306,86 @@
   content: "·";
   margin-right: 10px;
   color: rgba(248, 245, 239, 0.35);
+}
+
+.echoo-uber-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+    #171715;
+}
+
+.echoo-uber-card-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.echoo-uber-car {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.echoo-uber-car svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.echoo-uber-card-copy p,
+.echoo-uber-card-copy strong {
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.echoo-uber-card-copy p {
+  color: rgba(248, 245, 239, 0.64);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.echoo-uber-card-copy strong {
+  max-width: 150px;
+  margin-top: 2px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.echoo-uber-button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #f7f2e9;
+  color: #151310;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.echoo-uber-button span {
+  margin-left: 4px;
+  font-size: 20px;
+  line-height: 0;
+  vertical-align: -2px;
 }
 
 .echoo-place-actions {
