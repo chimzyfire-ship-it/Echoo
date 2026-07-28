@@ -10,6 +10,9 @@
     "Briefly official.",
     "The good stuff.",
   ];
+  // Public Uber application identifier used only to identify Echoo in the
+  // handoff link. It is not an access token or a private credential.
+  const UBER_APPLICATION_ID = "Oao1ZwwzG4M-DV-nR1lr9go1DYjpfYHe";
 
   function escapeHtml(value) {
     return String(value || "")
@@ -227,6 +230,27 @@
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&dir_action=navigate`;
   }
 
+  function uberLinkFor(place) {
+    const latitude = Number(place?.latitude);
+    const longitude = Number(place?.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return "";
+
+    const name = cleanText(place?.name, "Destination");
+    const address = cleanText(place?.formatted_address || place?.address, name);
+    const dropoff = {
+      latitude,
+      longitude,
+      addressLine1: name,
+      addressLine2: address,
+    };
+    const query = new URLSearchParams({
+      client_id: UBER_APPLICATION_ID,
+      pickup: "my_location",
+      "drop[0]": JSON.stringify(dropoff),
+    });
+    return `https://m.uber.com/looking?${query.toString()}`;
+  }
+
   function renderUnavailablePlaceDetail(detail = {}) {
     const name = cleanText(detail?.place?.name, "This place");
     return `
@@ -257,9 +281,6 @@
     const photos = verifiedPhotos(detail);
     const address = cleanText(place.formatted_address || place.address);
     const title = cleanText(place.name);
-    const kicker = [cleanText(place.category), cleanText(place.municipality || place.city)]
-      .filter(Boolean)
-      .join(" · ");
     const summary = summaryFor(detail);
     const hours = compactHours(detail);
     const sourceCount = sourceCountFor(detail);
@@ -275,6 +296,7 @@
     const routeLatitude = Number(place.latitude);
     const routeLongitude = Number(place.longitude);
     const canRouteInsideEchoo = Number.isFinite(routeLatitude) && Number.isFinite(routeLongitude);
+    const uberHref = uberLinkFor(place);
     const pulseItems = pulseItemsFor(detail);
     const quickPlanMessage = `Make me a quick plan around ${title || "this place"}.`;
 
@@ -282,6 +304,7 @@
       bindGalleryInteractions();
       bindQuickPlanInteractions();
       bindRouteInteractions();
+      bindUberInteractions();
     }, 0);
 
     return `
@@ -294,7 +317,6 @@
           `}
           <div class="echoo-place-hero-shade"></div>
           <div class="echoo-place-hero-copy">
-            ${kicker ? `<p class="echoo-place-eyebrow">${escapeHtml(kicker)}</p>` : ""}
             <h1>${escapeHtml(title)}</h1>
             ${address ? `<p class="echoo-place-hero-address">${escapeHtml(address)}</p>` : ""}
           </div>
@@ -302,17 +324,10 @@
 
         <div class="echoo-place-body">
           ${pulseItems.length ? `
-            <section class="echoo-place-section echoo-pulse" aria-label="Echoo Pulse">
-              <div class="echoo-place-section-heading">
-                <p class="echoo-place-eyebrow">Echoo Pulse</p>
-                <span>Evidence-led</span>
-              </div>
-              <div class="echoo-place-facts">
+            <section class="echoo-place-section echoo-place-setting-section">
+              <div class="echoo-place-setting-values">
                 ${pulseItems.map((fact) => `
-                  <div class="echoo-place-fact">
-                    <span>${escapeHtml(fact.label)}</span>
-                    <strong>${escapeHtml(fact.value)}</strong>
-                  </div>
+                  <div class="echoo-place-setting-text">${escapeHtml(fact.value)}</div>
                 `).join("")}
               </div>
             </section>
@@ -368,6 +383,21 @@
               ${sourceCount > 0 ? `<span>${escapeHtml(`${sourceCount} ${sourceCount === 1 ? "source" : "sources"}`)}</span>` : ""}
               ${sourceNames.length ? `<span>${escapeHtml(sourceNames.join(" · "))}</span>` : ""}
             </div>
+          ` : ""}
+
+          ${uberHref ? `
+            <section class="echoo-uber-card" aria-label="Ride with Uber">
+              <div class="echoo-uber-card-copy">
+                <span class="echoo-uber-car" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M5.2 10.1 6.5 6.7c.3-.8 1-1.3 1.9-1.3h7.2c.8 0 1.6.5 1.9 1.3l1.3 3.4c.7.4 1.2 1.2 1.2 2.1v4.1c0 .8-.6 1.4-1.4 1.4h-1.1c-.7 0-1.3-.5-1.4-1.2H7.9c-.1.7-.7 1.2-1.4 1.2H5.4c-.8 0-1.4-.6-1.4-1.4v-4.1c0-.9.5-1.7 1.2-2.1Zm2.2.1h9.2l-.9-2.5c-.1-.3-.4-.5-.8-.5H8.2c-.3 0-.6.2-.8.5l-1 2.5Zm.3 4.2a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Zm8.6 0a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Z"/></svg></span>
+                <div>
+                  <p>Uber</p>
+                  <strong>Ride to ${escapeHtml(title || "this place")}</strong>
+                </div>
+              </div>
+              <button type="button" class="echoo-uber-button" data-echoo-uber-href="${escapeHtml(uberHref)}">
+                Continue with Uber <span aria-hidden="true">›</span>
+              </button>
+            </section>
           ` : ""}
 
           <div class="echoo-place-actions">
@@ -494,6 +524,18 @@
     });
   }
 
+  function bindUberInteractions() {
+    document.querySelectorAll("[data-echoo-uber-href]").forEach((button) => {
+      button.onclick = () => {
+        const href = button.getAttribute("data-echoo-uber-href");
+        if (!href) return;
+        // The native shell detects external URLs and hands this link to the
+        // operating system, which lets Uber open when it is installed.
+        window.location.assign(href);
+      };
+    });
+  }
+
   async function gateMemberAction(intent, reason) {
     const nextUrl = `${window.location.pathname.split("/").pop() || "events.html"}${window.location.search}${window.location.hash}`;
     if (window.EchooAuth?.requireAuthenticatedAction) {
@@ -555,6 +597,7 @@
     bindGalleryInteractions,
     bindQuickPlanInteractions,
     bindRouteInteractions,
+    bindUberInteractions,
     buildAuthUrl,
     confidenceLabel,
     escapeHtml,
