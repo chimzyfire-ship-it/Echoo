@@ -4,6 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Echoo</title>
+    <script>
+      // Discover is Echoo's public front door. Keep old homepage links alive
+      // while sending fresh browser launches to the browsable discovery feed.
+      window.location.replace(`events.html${window.location.search}${window.location.hash}`);
+    </script>
     <link rel="preload" as="image" href="assets/echoo-wordmark.png" />
     <style>
       :root {
@@ -1065,9 +1070,9 @@
                 margin-top: -6px;
               "
             >
-              <span class="city-pill">Ontario today</span>
+              <span class="city-pill">Across the GTA</span>
               <span class="location-proof" id="location-proof"
-                >Using Ontario as location base</span
+                >Choose a GTA municipality or use current location</span
               >
             </div>
 
@@ -1104,7 +1109,7 @@
           <section class="content" aria-label="Tonight on Echoo">
             <div>
               <div class="section-head">
-                <h2 id="live-picks-title">Live Ontario picks</h2>
+                <h2 id="live-picks-title">Live GTA picks</h2>
                 <a class="see-all" href="events.html">See all</a>
               </div>
               <div class="pick-carousel-container">
@@ -1207,7 +1212,7 @@
                     </span>
                     <span>Coffee</span>
                   </a>
-                  <a class="vibe" href="events.html?query=museum">
+                  <a class="vibe" href="events.html?query=tourism">
                     <span class="vibe-icon">
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M4 22V10" />
@@ -1218,7 +1223,7 @@
                         <path d="M2 22h20" />
                       </svg>
                     </span>
-                    <span>Culture</span>
+                    <span>Tourism</span>
                   </a>
                   <a class="vibe" href="events.html?query=park">
                     <span class="vibe-icon">
@@ -1330,8 +1335,8 @@
     <div class="location-modal" id="location-settings-modal">
       <h2 id="location-modal-title">Use your location?</h2>
       <p id="location-modal-copy">
-        Echoo uses it to find better Ontario plans near you. You can keep
-        browsing with Ontario anytime.
+        Echoo uses your current location only to sort GTA places and plans by
+        real distance. You can explore any GTA municipality without it.
       </p>
 
       <div
@@ -1370,7 +1375,7 @@
 
       <div class="location-modal-buttons">
         <button class="location-modal-btn" id="location-dismiss">
-          Use Ontario
+          Explore the GTA
         </button>
         <button class="location-modal-btn primary" id="location-try-again">
           Allow location
@@ -1414,6 +1419,8 @@
       const livePicksTitle = document.getElementById("live-picks-title");
       const DISCOVER_FEED_URL =
         "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-feed";
+      const LOCATION_CONTEXT_URL =
+        "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-context";
       let pendingBudgetHref = "";
       let lastFeedKey = "";
 
@@ -1521,7 +1528,7 @@
       dayPlanBtn.addEventListener("click", () => {
         ensureLocationContext(async () => {
           const currentCity =
-            window.EchooLocationPlatform.readPreferences().city || "Ontario";
+            window.EchooLocationPlatform.readPreferences().city || "Greater Toronto Area";
           const context = activityContext(currentCity);
           await showProtectedPlanSheet(
             `Built for ${context.label}.`,
@@ -1534,7 +1541,7 @@
       document.getElementById("bored-plan").addEventListener("click", () => {
         ensureLocationContext(() => {
           const currentCity =
-            window.EchooLocationPlatform.readPreferences().city || "Ontario";
+            window.EchooLocationPlatform.readPreferences().city || "Greater Toronto Area";
           const context = activityContext(currentCity);
           openSheet(
             "What budget should Echoo respect?",
@@ -1620,19 +1627,19 @@
           locationState.lastLat = coords.lat;
           locationState.lastLng = coords.lng;
           locationState.locationPrecision = "gps";
-          locationState.locationReason = "device_ontario";
+          locationState.locationReason = "device_gta";
         } else {
           locationState.lastLat = undefined;
           locationState.lastLng = undefined;
           locationState.locationPrecision = "manual_region";
-          locationState.locationReason = "ontario_fallback";
+          locationState.locationReason = "gta_fallback";
         }
         window.EchooLocationPlatform.writeLocationState(locationState);
 
         if (cityPill) cityPill.textContent = `${cityName} today`;
         if (locationProof) {
           locationProof.textContent = coords
-            ? `Ontario precise location on - ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${coords.accuracy ? ` - +/-${Math.round(coords.accuracy)}m` : ""}`
+            ? `Using your current location${coords.accuracy ? ` · accurate to about ${Math.round(coords.accuracy)} m` : ""}`
             : `Using ${cityName} as your location base`;
         }
         const context = setDayPlanCopy(cityName);
@@ -1651,14 +1658,14 @@
       function cardHref(card) {
         if (card.detailUrl) return card.detailUrl;
         if (card.type === "event")
-          return `events.html?query=${encodeURIComponent(card.title || "events Ontario")}`;
+          return `events.html?query=${encodeURIComponent(card.title || "events GTA")}`;
         if (card.type === "place")
-          return `app.html?q=${encodeURIComponent(card.title || "places Ontario")}`;
+          return `app.html?q=${encodeURIComponent(card.title || "places GTA")}`;
         return "events.html";
       }
 
       function cardMeta(card) {
-        const label = escapeHtml(card.statusLabel || card.city || "Ontario");
+        const label = escapeHtml(card.statusLabel || card.city || "GTA");
         const cityValue =
           card.city && card.city !== card.statusLabel ? card.city : "";
         const city = escapeHtml(cityValue);
@@ -1667,70 +1674,14 @@
           : label;
       }
 
-      const fallbackPicks = [
-        {
-          title: "The Rex Jazz & Blues Bar",
-          imageUrl: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=400&q=80",
-          detailUrl: "events.html?query=jazz"
-        },
-        {
-          title: "Distillery District Walking Tour",
-          imageUrl: "https://images.unsplash.com/photo-1543807535-eceef0bc6599?auto=format&fit=crop&w=400&q=80",
-          detailUrl: "events.html?query=distillery"
-        },
-        {
-          title: "Kensington Market Vintage Crawl",
-          imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=400&q=80",
-          detailUrl: "events.html?query=kensington"
-        },
-        {
-          title: "Bar Raval (Spanish Tapas & Drinks)",
-          imageUrl: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=400&q=80",
-          detailUrl: "events.html?query=bar"
-        },
-        {
-          title: "Toronto Music Garden Serenade",
-          imageUrl: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=400&q=80",
-          detailUrl: "events.html?query=music"
-        },
-        {
-          title: "TIFF Lightbox Film Screenings",
-          imageUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80",
-          detailUrl: "events.html?query=film"
-        }
-      ];
-
-      function renderFallbackPicks() {
-        if (!livePicks) return;
-        if (livePicksTitle) {
-          livePicksTitle.textContent = "Live Ontario picks";
-        }
-        livePicks.innerHTML = fallbackPicks
-          .map((card) => {
-            const image = card.imageUrl;
-            const title = escapeHtml(card.title);
-            return `
-              <a
-                class="pick-card"
-                href="${escapeHtml(card.detailUrl)}"
-                style="--image: url('${escapeHtml(image)}')"
-                aria-label="${title}"
-              >
-                <strong class="pick-title">${title}</strong>
-              </a>
-            `;
-          })
-          .join("");
-      }
-
-      async function loadLivePicks(cityName = "Ontario", coords) {
+      async function loadLivePicks(cityName = "Greater Toronto Area", coords) {
         if (!livePicks) return;
         const key = `${cityName}:${coords?.lat || ""}:${coords?.lng || ""}`;
         if (key === lastFeedKey) return;
         lastFeedKey = key;
 
         const url = new URL(DISCOVER_FEED_URL);
-        url.searchParams.set("city", cityName || "Ontario");
+        url.searchParams.set("city", cityName || "Greater Toronto Area");
         url.searchParams.set("limit", "12");
         if (coords?.lat && coords?.lng) {
           url.searchParams.set("lat", String(coords.lat));
@@ -1750,18 +1701,19 @@
             .filter(Boolean)
             .slice(0, 10);
           if (!cards.length) {
-            renderFallbackPicks();
+            livePicksTitle.textContent = "GTA picks are still loading";
+            livePicks.innerHTML = `<p class="empty-state">No verified picks are available for this view yet. Try a municipality or check back soon.</p>`;
             return;
           }
 
           if (livePicksTitle) {
-            livePicksTitle.textContent = "Live Ontario picks";
+            livePicksTitle.textContent = coords ? `Near you in ${cityName}` : `Live picks in ${cityName}`;
           }
           livePicks.innerHTML = cards
             .map((card) => {
               const image =
                 card.imageUrl || "assets/optimized/news-music-768.jpg";
-              const title = escapeHtml(card.title || "Ontario pick");
+              const title = escapeHtml(card.title || "GTA pick");
               return `
                 <a
                   class="pick-card"
@@ -1779,7 +1731,8 @@
             "Echoo: discover-feed unavailable, falling back to local picks.",
             error,
           );
-          renderFallbackPicks();
+          livePicksTitle.textContent = "GTA picks are unavailable";
+          livePicks.innerHTML = `<p class="empty-state">Try another municipality or come back shortly.</p>`;
         }
       }
 
@@ -1830,14 +1783,14 @@
         if (modalTitle) modalTitle.textContent = title;
         if (modalCopy) modalCopy.textContent = copy;
         if (modalInstructions)
-          modalInstructions.hidden = title === "Ontario launch only";
+          modalInstructions.hidden = title === "GTA launch area";
         locationModal.classList.add("active");
         locationBackdrop.classList.add("active");
       }
 
       function detectUserLocation() {
         if (!navigator.geolocation) {
-          updatePageCity("Ontario");
+          updatePageCity("Greater Toronto Area");
           if (pendingLocationCallback) {
             pendingLocationCallback();
             pendingLocationCallback = null;
@@ -1846,20 +1799,38 @@
         }
 
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          async (position) => {
             locationModal.classList.remove("active");
             locationBackdrop.classList.remove("active");
 
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            const resolved = window.EchooLocationPlatform.resolveCoordinates(
-              lat,
-              lng,
-            );
-            if (!resolved.supported) {
-              updatePageCity(resolved.fallbackRegion?.name || "Ontario");
+            let context = null;
+            try {
+              const response = await fetch(LOCATION_CONTEXT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  lat,
+                  lng,
+                  accuracyMeters: position.coords.accuracy,
+                }),
+              });
+              if (response.ok) context = await response.json();
+            } catch (_) {}
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+            if (context?.supported) {
+              updatePageCity(context.municipality || "Greater Toronto Area", {
+                lat,
+                lng,
+                accuracy: position.coords.accuracy,
+              });
+            } else if (!resolved.supported) {
+              updatePageCity(resolved.fallbackRegion?.name || "Greater Toronto Area");
             } else {
-              updatePageCity(resolved.city.name, {
+              // Do not mislabel a person at a municipal border. The GPS still
+              // ranks nearby results precisely, while the label stays GTA-wide.
+              updatePageCity("Greater Toronto Area", {
                 lat,
                 lng,
                 accuracy: position.coords.accuracy,
@@ -1871,7 +1842,7 @@
             }
           },
           () => {
-            updatePageCity("Ontario");
+            updatePageCity("Greater Toronto Area");
             if (modalInstructions) modalInstructions.style.display = "block";
           },
           { timeout: 8000 },
@@ -1886,15 +1857,15 @@
         locationModal.classList.remove("active");
         locationBackdrop.classList.remove("active");
         window.EchooLocationPlatform.writeLocationState({
-          city: "Ontario",
+          city: "Greater Toronto Area",
           countryCode: "CA",
           adminArea1: "ON",
           province: "Ontario",
           locationSupported: true,
           locationPrecision: "manual_region",
-          locationReason: "ontario_fallback",
+          locationReason: "gta_fallback",
         });
-        updatePageCity("Ontario");
+        updatePageCity("Greater Toronto Area");
         if (pendingLocationCallback) {
           pendingLocationCallback();
           pendingLocationCallback = null;
@@ -1902,7 +1873,9 @@
       });
 
       const savedPrefs = window.EchooLocationPlatform.readPreferences();
-      const initialCity = savedPrefs.city || "Ontario";
+      const initialCity =
+        window.EchooLocationPlatform.cityByName(savedPrefs.city)?.name ||
+        "Greater Toronto Area";
       updatePageCity(
         initialCity,
         savedPrefs.lastLat && savedPrefs.lastLng

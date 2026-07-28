@@ -1,6 +1,7 @@
 import {
   CORS_HEADERS,
   clampLimit,
+  GTA_MUNICIPALITIES,
   getSupabaseAdmin,
   jsonResponse,
   logLocationEvent,
@@ -103,28 +104,10 @@ function modelMetaResponse(query: string, city: string) {
   };
 }
 
-const DISCOVERY_CITY_NAMES = [
-  "Toronto",
-  "Markham",
-  "Vancouver",
-  "Montreal",
-  "Calgary",
-  "Edmonton",
-  "Ottawa",
-  "Mississauga",
-  "Brampton",
-  "Scarborough",
-  "North York",
-  "Richmond Hill",
-  "Hamilton",
-  "Waterloo",
-  "Kitchener",
-  "London",
-  "Winnipeg",
-  "Halifax",
-  "Victoria",
-  "Quebec City",
-];
+const DISCOVERY_CITY_NAMES = GTA_MUNICIPALITIES.flatMap((city) => [
+  city.name,
+  ...(city.aliases || []),
+]);
 
 function cityFromQuery(query = "") {
   return (
@@ -332,7 +315,7 @@ async function loadEchooCandidates(input: {
   query: string;
   limit: number;
 }): Promise<Candidate[]> {
-  const cityRecord = normalizeCityName(input.city || "Ontario");
+  const cityRecord = normalizeCityName(input.city || "GTA");
   const hasCoordinates =
     Number.isFinite(input.lat) && Number.isFinite(input.lng);
   const { data, error } = hasCoordinates

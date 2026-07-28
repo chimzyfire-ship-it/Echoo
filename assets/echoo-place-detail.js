@@ -384,7 +384,7 @@
                 data-route-longitude="${escapeHtml(String(routeLongitude))}"
                 data-route-fallback="${escapeHtml(directionsHref)}"
               >Take me there</button>
-            ` : `<a class="echoo-place-btn-primary" href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Take me there</a>`}
+            ` : `<button type="button" class="echoo-place-btn-primary" data-echoo-route data-route-fallback="${escapeHtml(directionsHref)}">Take me there</button>`}
             <button
               type="button"
               class="echoo-place-btn-secondary"
@@ -440,7 +440,8 @@
 
   function bindQuickPlanInteractions() {
     document.querySelectorAll("[data-quick-plan-message]").forEach((button) => {
-      button.onclick = () => {
+      button.onclick = async () => {
+        if (!(await gateMemberAction("quick_plan", "quick_plan_required"))) return;
         const message = cleanText(button.getAttribute("data-quick-plan-message"));
         if (!message) return;
         const latitude = Number(button.getAttribute("data-quick-plan-latitude"));
@@ -466,7 +467,8 @@
 
   function bindRouteInteractions() {
     document.querySelectorAll("[data-echoo-route]").forEach((button) => {
-      button.onclick = () => {
+      button.onclick = async () => {
+        if (!(await gateMemberAction("directions", "directions_required"))) return;
         const latitude = Number(button.getAttribute("data-route-latitude"));
         const longitude = Number(button.getAttribute("data-route-longitude"));
         const fallback = button.getAttribute("data-route-fallback") || "";
@@ -490,6 +492,27 @@
         if (fallback) window.open(fallback, "_blank", "noopener,noreferrer");
       };
     });
+  }
+
+  async function gateMemberAction(intent, reason) {
+    const nextUrl = `${window.location.pathname.split("/").pop() || "events.html"}${window.location.search}${window.location.hash}`;
+    if (window.EchooAuth?.requireAuthenticatedAction) {
+      const state = await window.EchooAuth.requireAuthenticatedAction({
+        next: nextUrl,
+        mode: "signup",
+        intent,
+        reason,
+        caption: "Create an account to make this part of your day yours.",
+      });
+      return state.ok;
+    }
+    window.location.href = buildAuthUrl(nextUrl, {
+      mode: "signup",
+      intent,
+      reason,
+      caption: "Create an account to make this part of your day yours.",
+    });
+    return false;
   }
 
   function buildAuthUrl(nextUrl, options = {}) {

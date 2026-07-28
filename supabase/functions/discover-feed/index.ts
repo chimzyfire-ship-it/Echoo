@@ -140,9 +140,9 @@ function normalizeEventCard(item: any): FeedCard {
   return {
     id: cleanText(item.entity_id || item.id || item.source_provider_id),
     type: "event",
-    title: cleanText(item.title, "Ontario event"),
+    title: cleanText(item.title, "GTA event"),
     subtitle: cleanText(metadata.venue_name || item.description || item.city),
-    city: cleanText(item.city, "Ontario"),
+    city: cleanText(item.city, "Greater Toronto Area"),
     imageUrl: cleanText(item.image_url) || fallbackImageFor("event", category),
     statusLabel: isToday(startsAt) ? "Tonight" : formatDateLabel(startsAt),
     actionLabel: metadata.ticket_url ? "See tickets" : "Open",
@@ -175,9 +175,9 @@ function normalizeTicketmasterCard(event: any, city: string): FeedCard {
   return {
     id: cleanText(event.id || event.url || event.name),
     type: "event",
-    title: cleanText(event.name, "Ontario event"),
+    title: cleanText(event.name, "GTA event"),
     subtitle: cleanText(venue.name || event.info || city),
-    city: cleanText(venue?.city?.name || city || "Ontario"),
+    city: cleanText(venue?.city?.name || city || "Greater Toronto Area"),
     imageUrl: cleanText(image?.url) || fallbackImageFor("event", category),
     statusLabel: isToday(startsAt) ? "Tonight" : formatDateLabel(startsAt),
     actionLabel: "See tickets",
@@ -197,7 +197,7 @@ function normalizeTicketmasterCard(event: any, city: string): FeedCard {
 
 function normalizePlaceCard(place: any): FeedCard {
   const category = cleanText(place.category || "place");
-  const city = cleanText(place.municipality || place.city || "Ontario");
+  const city = cleanText(place.municipality || place.city || "Greater Toronto Area");
   const tags = [
     ...(Array.isArray(place.vibe_tags) ? place.vibe_tags : []),
     ...(Array.isArray(place.good_for) ? place.good_for : []),
@@ -209,13 +209,13 @@ function normalizePlaceCard(place: any): FeedCard {
   return {
     id: cleanText(place.id),
     type: "place",
-    title: cleanText(place.name || place.title, "Ontario place"),
+    title: cleanText(place.name || place.title, "GTA place"),
     subtitle: tags.length
       ? tags.join(" · ")
       : cleanText(place.address || category),
     city,
     imageUrl: fallbackImageFor("place", category),
-    statusLabel: place.distance_meters ? "Near you" : "Ontario pick",
+    statusLabel: place.distance_meters ? "Near you" : "GTA pick",
     actionLabel: "View place",
     detailUrl: `app.html?q=${encodeURIComponent(`${cleanText(place.name || place.title)} ${city}`)}`,
     source: cleanText(place.source_provider || "echoo"),
@@ -227,15 +227,15 @@ function normalizePlaceCard(place: any): FeedCard {
 
 function normalizeEntityPlaceCard(place: any): FeedCard {
   const category = cleanText(place.category || "place");
-  const city = cleanText(place.city || "Ontario");
+  const city = cleanText(place.city || "Greater Toronto Area");
   return {
     id: cleanText(place.entity_id || place.place_id || place.id),
     type: "place",
-    title: cleanText(place.title || place.name, "Ontario place"),
+    title: cleanText(place.title || place.name, "GTA place"),
     subtitle: cleanText(place.description || category),
     city,
     imageUrl: cleanText(place.image_url) || fallbackImageFor("place", category),
-    statusLabel: place.distance_meters ? "Near you" : "Ontario pick",
+    statusLabel: place.distance_meters ? "Near you" : "GTA pick",
     actionLabel: "View place",
     detailUrl: `app.html?q=${encodeURIComponent(`${cleanText(place.title || place.name)} ${city}`)}`,
     source: cleanText(place.source_provider || "echoo"),
@@ -253,11 +253,11 @@ async function loadEventLane(input: {
   limit: number;
   mode?: string;
 }) {
-  const cityRecord = normalizeCityName(input.city || "Ontario");
+  const cityRecord = normalizeCityName(input.city || "GTA");
   const hasCoordinates =
     Number.isFinite(input.lat) && Number.isFinite(input.lng);
   const { data, error } = hasCoordinates
-    ? await input.supabase.rpc("search_nearby_entities", {
+    ? await input.supabase.rpc("search_gta_nearby_entities", {
         p_lat: Number(input.lat),
         p_lng: Number(input.lng),
         p_radius_meters: 35000,
@@ -265,11 +265,8 @@ async function loadEventLane(input: {
         p_category: null,
         p_limit: input.limit * 2,
       })
-    : await input.supabase.rpc("search_region_entities", {
-        p_country_code: "CA",
-        p_admin_area_1: "ON",
-        p_city:
-          cityRecord?.coverageLevel === "municipality" ? cityRecord.name : null,
+    : await input.supabase.rpc("search_gta_region_entities", {
+        p_city: cityRecord?.coverageLevel === "municipality" ? cityRecord.name : null,
         p_entity_type: "event",
         p_category: null,
         p_limit: input.limit * 2,
@@ -377,9 +374,9 @@ async function loadPlaceLane(input: {
   const hasCoordinates =
     Number.isFinite(input.lat) && Number.isFinite(input.lng);
   if (hasCoordinates || input.city !== "Markham") {
-    const cityRecord = normalizeCityName(input.city || "Ontario");
+    const cityRecord = normalizeCityName(input.city || "GTA");
     const { data, error } = hasCoordinates
-      ? await input.supabase.rpc("search_nearby_entities", {
+      ? await input.supabase.rpc("search_gta_nearby_entities", {
           p_lat: Number(input.lat),
           p_lng: Number(input.lng),
           p_radius_meters: 30000,
@@ -387,13 +384,11 @@ async function loadPlaceLane(input: {
           p_category: null,
           p_limit: input.limit,
         })
-      : await input.supabase.rpc("search_region_entities", {
-          p_country_code: "CA",
-          p_admin_area_1: "ON",
+      : await input.supabase.rpc("search_gta_region_entities", {
           p_city:
             cityRecord?.coverageLevel === "municipality"
               ? cityRecord.name
-              : "Markham",
+              : null,
           p_entity_type: "place",
           p_category: null,
           p_limit: input.limit,
@@ -412,7 +407,7 @@ async function loadPlaceLane(input: {
     "library",
   ];
   const placeCity =
-    input.city && input.city !== "Ontario" ? input.city : "Markham";
+    input.city && input.city !== "Greater Toronto Area" ? input.city : "Markham";
   const rows: any[] = [];
   for (const category of categories) {
     const { data, error } = await input.supabase.rpc("search_ontario_places", {
@@ -460,12 +455,12 @@ async function loadNewsLane(input: {
       ({
         id: cleanText(item.id || item.published_at || item.title),
         type: "news",
-        title: cleanText(item.title, "Ontario entertainment update"),
+        title: cleanText(item.title, "GTA entertainment update"),
         subtitle: cleanText(item.tag || item.city || "Entertainment"),
-        city: cleanText(item.city || "Ontario"),
+        city: cleanText(item.city || "Greater Toronto Area"),
         imageUrl:
           cleanText(item.image_url) || fallbackImageFor("news", item.tag),
-        statusLabel: item.published_at ? "Updated today" : "Ontario news",
+        statusLabel: item.published_at ? "Updated today" : "GTA news",
         actionLabel: "Read",
         source: "echoo-news",
         category: cleanText(item.tag || "news"),
@@ -490,7 +485,7 @@ Deno.serve(async (req) => {
     const body =
       req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const payload: FeedPayload = {
-      city: cleanText(body.city ?? url.searchParams.get("city"), "Ontario"),
+      city: cleanText(body.city ?? url.searchParams.get("city"), "GTA"),
       lat: optionalNumber(body.lat ?? url.searchParams.get("lat")),
       lng: optionalNumber(body.lng ?? url.searchParams.get("lng")),
       limit: optionalNumber(body.limit ?? url.searchParams.get("limit")),
@@ -499,7 +494,7 @@ Deno.serve(async (req) => {
 
     const supabase = getSupabaseAdmin();
     const limit = Math.min(clampLimit(payload.limit), 12);
-    const city = payload.city || "Ontario";
+    const city = payload.city || "GTA";
     const hasGps = Number.isFinite(payload.lat) && Number.isFinite(payload.lng);
 
     const [events, places, news] = await Promise.all([
@@ -524,7 +519,7 @@ Deno.serve(async (req) => {
     const lanes: FeedLane[] = [
       {
         id: "shows-tickets",
-        title: hasGps ? `Shows near you` : "Ontario shows",
+        title: hasGps ? `Shows near you` : "GTA shows",
         label: events.some((event) => event.statusLabel === "Tonight")
           ? "Tonight"
           : "Selling now",
@@ -532,8 +527,8 @@ Deno.serve(async (req) => {
       },
       {
         id: "trending-places",
-        title: hasGps ? `Places near you` : "Trending Ontario places",
-        label: hasGps ? "Near you" : "Ontario pick",
+        title: hasGps ? `Places near you` : "Trending GTA places",
+        label: hasGps ? "Near you" : "GTA pick",
         cards: places,
       },
       {

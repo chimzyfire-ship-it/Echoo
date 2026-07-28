@@ -898,18 +898,18 @@
           <button class="chip" data-query="food">Food</button>
           <button class="chip" data-query="music">Music</button>
           <button class="chip" data-query="nightlife">Nightlife</button>
-          <button class="chip" data-query="culture">Culture</button>
+          <button class="chip" data-query="tourism">Tourism</button>
           <button class="chip" data-query="nature">Nature</button>
         </div>
 
         <!-- Featured Destination Card -->
         <section aria-label="Featured Destination">
           <div class="featured-card" id="featured-destination-card">
-            <img class="featured-img" id="featured-img" src="https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?auto=format&fit=crop&w=1200&q=80" alt="Science World" />
+            <img class="featured-img" id="featured-img" src="assets/optimized/news-date-768.jpg" alt="Explore the GTA" />
             <div class="featured-overlay">
               <div class="featured-info">
-                <h3 class="featured-title" id="featured-title">Science World</h3>
-                <span class="featured-sub" id="featured-sub">Museum • Downtown Vancouver</span>
+                <h3 class="featured-title" id="featured-title">Explore the GTA</h3>
+                <span class="featured-sub" id="featured-sub">Choose a category or search a place</span>
                 <div class="featured-rating">
                   <span class="star">★</span>
                   <span id="featured-score">4.8</span>
@@ -1034,11 +1034,9 @@
         };
 
       const params = new URLSearchParams(location.search);
-      let prefs = {};
-      try {
-        prefs = JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
-      } catch (_) {}
-      let city = params.get("city") || prefs.city || "Vancouver";
+      let prefs = window.EchooLocationPlatform.readPreferences();
+      let city = params.get("city") || prefs.city || "Greater Toronto Area";
+      city = window.EchooLocationPlatform.cityByName(city)?.name || "Greater Toronto Area";
       let lat = Number(prefs.lastLat), lng = Number(prefs.lastLng);
 
       const queryInput = document.getElementById("query"),
@@ -1215,27 +1213,7 @@
       }
 
       async function openDetailByItem(item, options = {}) {
-        const authState = window.EchooAuth?.getAuthState
-          ? await window.EchooAuth.getAuthState({ requireFresh: true })
-          : { ok: false, signedIn: false, needsLogin: true, needsReauth: false };
-        const heroImage = imageUrlFor(item) || item?.image || defaultPlaces[0].image;
-
-        if (!authState.ok) {
-          savePendingDetail(item);
-          setDetailContent(
-            window.EchooPlaceDetail.renderAuthPrompt({
-              title: "Sign in to unlock this place",
-              subhead: "Back in a sec.",
-              note: "We’ll bring you back here after a quick sign-in.",
-              nextUrl: `${window.location.pathname.split("/").pop() || "events.html"}${window.location.search}${window.location.hash}`,
-              seed: item?.title || item?.name || "place",
-              primaryLabel: "Sign in",
-              secondaryLabel: "Keep browsing",
-            }),
-          );
-          openDetailSheet();
-          return;
-        }
+        const heroImage = imageUrlFor(item) || item?.image || FALLBACK_PLACE_IMAGE;
 
         openDetailSheet();
         setDetailContent(
@@ -1279,60 +1257,23 @@
         }
       }
 
-      const defaultPlaces = [
-        {
-          title: "Science World",
-          category: "Museum",
-          neighborhood: "Downtown Vancouver",
-          rating: 4.8,
-          reviews: 120,
-          image: "https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?auto=format&fit=crop&w=800&q=80",
-          distance: "0.8 km"
-        },
-        {
-          title: "Breka Bakery",
-          category: "Café",
-          neighborhood: "Davie St",
-          rating: 4.6,
-          distance: "0.4 km",
-          image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80"
-        },
-        {
-          title: "The Roof",
-          category: "Rooftop",
-          neighborhood: "Downtown",
-          rating: 4.7,
-          distance: "0.6 km",
-          image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80"
-        },
-        {
-          title: "The Narrow",
-          category: "Bar",
-          neighborhood: "Main St",
-          rating: 4.5,
-          distance: "0.7 km",
-          image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&q=80"
-        },
-        {
-          title: "Grouse Mountain",
-          category: "Park",
-          neighborhood: "North Vancouver",
-          rating: 4.4,
-          distance: "4.2 km",
-          image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80"
-        }
-      ];
+      const FALLBACK_PLACE_IMAGE = "assets/optimized/news-date-768.jpg";
+      const defaultPlaces = [];
 
       function renderPopularNearby(placeList) {
-        const list = placeList.length ? placeList : defaultPlaces;
+        const list = Array.isArray(placeList) ? placeList : [];
+        if (!list.length) {
+          popularContainer.innerHTML = `<div class="empty-state">No verified places match this view yet. Try another GTA municipality or category.</div>`;
+          return;
+        }
         popularContainer.innerHTML = list.map((item, idx) => {
-          const img = imageUrlFor(item) || item.image || defaultPlaces[idx % defaultPlaces.length].image;
-          const rating = item.community?.ratingAverage ? Number(item.community.ratingAverage).toFixed(1) : item.rating || "4.6";
-          const dist = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.distance || "0.5 km";
+          const img = imageUrlFor(item) || item.image || FALLBACK_PLACE_IMAGE;
+          const rating = item.community?.ratingAverage ? Number(item.community.ratingAverage).toFixed(1) : "New";
+          const dist = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.city || "GTA";
           const cat = item.category || "Place";
 
           return `
-            <div class="location-card" onclick="openDetail(${idx})">
+            <div class="location-card" onclick="openDetail(${items.indexOf(item)})">
               <img class="location-card-img" src="${esc(img)}" alt="${esc(item.title)}" loading="lazy" />
               <div class="location-card-overlay">
                 <div class="location-card-title">${esc(item.title)}</div>
@@ -1346,11 +1287,11 @@
 
       function updateFeaturedCard(featured) {
         if (!featured) return;
-        const img = imageUrlFor(featured) || featured.image || defaultPlaces[0].image;
+        const img = imageUrlFor(featured) || featured.image || FALLBACK_PLACE_IMAGE;
         document.getElementById("featured-img").src = img;
-        document.getElementById("featured-title").textContent = featured.title || "Science World";
-        document.getElementById("featured-sub").textContent = `${featured.category || 'Museum'} • ${featured.neighborhood || featured.city || 'Downtown Vancouver'}`;
-        document.getElementById("featured-score").textContent = featured.community?.ratingAverage ? Number(featured.community.ratingAverage).toFixed(1) : (featured.rating || "4.8");
+        document.getElementById("featured-title").textContent = featured.title || "Explore the GTA";
+        document.getElementById("featured-sub").textContent = `${featured.category || 'Place'} • ${featured.neighborhood || featured.city || 'Greater Toronto Area'}`;
+        document.getElementById("featured-score").textContent = featured.community?.ratingAverage ? Number(featured.community.ratingAverage).toFixed(1) : "New";
         document.getElementById("featured-destination-card").onclick = () => openDetail(0);
       }
 
@@ -1359,7 +1300,7 @@
           updateFeaturedCard(items[0]);
           renderPopularNearby(items.slice(1));
         } else {
-          renderPopularNearby(defaultPlaces);
+          renderPopularNearby([]);
         }
       }
 
@@ -1387,6 +1328,9 @@
             body: JSON.stringify({
               query: activeQuery === "trending" ? "top attractions" : activeQuery,
               city,
+              lat: Number.isFinite(lat) ? lat : undefined,
+              lng: Number.isFinite(lng) ? lng : undefined,
+              radiusMeters: Number.isFinite(lat) && Number.isFinite(lng) ? 25000 : undefined,
               includeLiveFallback: true,
               limit: 15,
             }),
@@ -1396,15 +1340,16 @@
             items = payload.results || [];
             renderItems();
           } else {
-            renderItems();
+            renderPopularNearby([]);
           }
         } catch (_) {
-          renderItems();
+          renderPopularNearby([]);
         }
       }
 
       function openDetail(index) {
-        const item = items[index] || defaultPlaces[index] || defaultPlaces[0];
+        const item = items[index];
+        if (!item) return;
         savePendingDetail(item);
         openDetailByItem(item);
       }
@@ -1568,9 +1513,17 @@
         }
       }
 
-      window.addEventListener("echoo:quick-plan", (event) => {
+      window.addEventListener("echoo:quick-plan", async (event) => {
         const anchor = event.detail?.anchor;
         if (!anchor?.id) return;
+        const access = await window.EchooAuth?.requireAuthenticatedAction?.({
+          next: window.EchooAuth.currentRelativeUrl(),
+          mode: "signup",
+          intent: "quick_plan",
+          reason: "quick_plan_required",
+          caption: "Create an account to build a personal Quick Plan.",
+        });
+        if (!access?.ok) return;
         quickPlanState = {
           anchor,
           stopCount: 3,

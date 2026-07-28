@@ -33,7 +33,7 @@ type RoutePlan = {
 // Expo Go needs a usable app destination even before a developer adds a local
 // LAN override. The environment value still wins for local device testing.
 const ECHOO_WEB_URL =
-  process.env.EXPO_PUBLIC_ECHOO_WEB_URL?.trim() || 'https://echoocity.com/app.html';
+  process.env.EXPO_PUBLIC_ECHOO_WEB_URL?.trim() || 'https://echoocity.com/events.html';
 
 const MOBILE_CHROME_SCRIPT = `
   (function () {
@@ -79,7 +79,6 @@ const NAVIGATION_ITEMS: ReadonlyArray<{
   label: string;
   target: string;
 }> = [
-  { key: 'home', label: 'Home', target: 'index.html' },
   { key: 'discover', label: 'Discover', target: 'events.html' },
   { key: 'tickets', label: 'Tickets', target: 'tickets.html' },
   { key: 'profile', label: 'Profile', target: 'auth.html' },
@@ -193,7 +192,7 @@ function isEchooHome(url: string) {
 
   try {
     const path = new URL(url).pathname.replace(/\/$/, '');
-    return path === '' || path === '/index' || path === '/index.html';
+    return path === '' || path === '/events' || path === '/events.html';
   } catch {
     return true;
   }
@@ -290,8 +289,8 @@ function EchooShell() {
     [currentUrl],
   );
 
-  // Home is the root of the app. A redirect or a prior browser session must
-  // never make a Back control appear over its header.
+  // Discover is the root of the app. A redirect or a prior browser session
+  // must never make a Back control appear over its header.
   const showBackButton = !isEchooHome(currentUrl);
   const activeTab = activeTabFor(currentUrl);
 
@@ -329,6 +328,10 @@ function EchooShell() {
         originWhitelist={['http://*', 'https://*']}
         javaScriptEnabled
         domStorageEnabled
+        // The shell intentionally has no durable browser storage. Echoo's
+        // auth token lives in sessionStorage, so closing the app requires a
+        // new sign-in while a foreground session remains uninterrupted.
+        incognito
         sharedCookiesEnabled
         thirdPartyCookiesEnabled
         allowsBackForwardNavigationGestures

@@ -192,7 +192,7 @@ function personalizationFit(candidate: Candidate, profile: Record<string, unknow
 function categoryFamily(place: Candidate) {
   const raw = `${text(place.category)} ${text(place.subcategory)}`.toLowerCase();
   if (/restaurant|cafe|bakery|food|bar|pub|dessert/.test(raw)) return "food";
-  if (/museum|gallery|arts|culture|library|attraction/.test(raw)) return "culture";
+  if (/museum|gallery|arts|culture|tourism|library|attraction|historic|heritage/.test(raw)) return "culture";
   if (/park|trail|nature|garden|beach/.test(raw)) return "outdoors";
   if (/shop|mall|market/.test(raw)) return "browse";
   return raw || "place";
@@ -351,30 +351,24 @@ function reasonFor(place: Candidate, index: number, anchor: Candidate) {
   return "Matched to your plan";
 }
 
-async function profileForRequest(
+async function profileForMember(
   supabase: ReturnType<typeof getSupabaseAdmin>,
-  req: Request,
-  supplied: Record<string, unknown>,
+  userId: string,
 ) {
-  const token = authToken(req);
-  if (!token) return supplied;
-  const { data: auth } = await supabase.auth.getUser(token);
-  if (!auth?.user) return supplied;
   const { data } = await supabase
     .from("user_onboarding_profiles")
-    .select("interests,event_styles,audiences,motivations,budget,energy,home_city")
-    .eq("user_id", auth.user.id)
+    .select("interests,event_styles,audiences,motivations,budget,energy,home_city,completed_at")
+    .eq("user_id", userId)
     .maybeSingle();
-  if (!data) return supplied;
+  if (!data?.completed_at) return null;
   return {
-    ...supplied,
-    interests: data.interests || supplied.interests,
-    eventStyles: data.event_styles || supplied.eventStyles,
-    audiences: data.audiences || supplied.audiences,
-    motivations: data.motivations || supplied.motivations,
-    budget: data.budget || supplied.budget,
-    energy: data.energy || supplied.energy,
-    city: data.home_city || supplied.city,
+    interests: data.interests || [],
+    eventStyles: data.event_styles || [],
+    audiences: data.audiences || [],
+    motivations: data.motivations || [],
+    budget: data.budget || "$",
+    energy: data.energy || "chill",
+    city: data.home_city || "Greater Toronto Area",
   };
 }
 
@@ -419,7 +413,18 @@ Deno.serve(async (req) => {
     if (!anchorId) return jsonResponse({ error: "Choose a place to build around" }, 422);
 
     const supabase = getSupabaseAdmin();
-    const profile = await profileForRequest(supabase, req, body.profile || {});
+    const token = authToken(req);
+    if (!token) {
+      return jsonResponse({ error: "Sign in to build a Quick Plan." }, 401);
+    }
+    const { data: auth, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !auth?.user) {
+      return jsonResponse({ error: "Your session has ended. Sign in to build a Quick Plan." }, 401);
+    }
+    const profile = await profileForMember(supabase, auth.user.id);
+    if (!profile) {
+      return jsonResponse({ error: "Finish onboarding to build your Quick Plan." }, 403);
+    }
     const requestedBudget = normalizeBudget(body.budgetStyle || budgetFromProfile(profile.budget));
     const stopCount = clampStopCount(body.stopCount);
 

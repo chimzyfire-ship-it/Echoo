@@ -24,6 +24,50 @@ export const ONTARIO_REGION: SupportedCity = {
   coverageLevel: "province",
 };
 
+/**
+ * Echoo's launch area is the 25 municipal search scopes in the Greater Toronto
+ * Area: Toronto plus Durham, York, Peel, and Halton. Ontario remains an
+ * expansion jurisdiction, not a default discovery location.
+ */
+export const GTA_REGION: SupportedCity = {
+  name: "Greater Toronto Area",
+  province: "ON",
+  provinceName: "Ontario",
+  timezone: "America/Toronto",
+  lat: 43.8561,
+  lng: -79.337,
+  coverageLevel: "province",
+  aliases: ["GTA", "Greater Toronto", "Greater Toronto Area"],
+};
+
+const GTA_MUNICIPALITY_NAMES = new Set([
+  "Toronto",
+  "Ajax",
+  "Brock",
+  "Clarington",
+  "Oshawa",
+  "Pickering",
+  "Scugog",
+  "Uxbridge",
+  "Whitby",
+  "Aurora",
+  "East Gwillimbury",
+  "Georgina",
+  "King",
+  "Markham",
+  "Newmarket",
+  "Richmond Hill",
+  "Vaughan",
+  "Whitchurch-Stouffville",
+  "Brampton",
+  "Caledon",
+  "Mississauga",
+  "Burlington",
+  "Halton Hills",
+  "Milton",
+  "Oakville",
+]);
+
 export const ONTARIO_BOUNDS = {
   minLat: 41.64,
   maxLat: 56.9,
@@ -31,7 +75,7 @@ export const ONTARIO_BOUNDS = {
   maxLng: -74.25,
 };
 
-export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
+const LEGACY_CANADA_CITIES: SupportedCity[] = [
   {
     name: "Toronto",
     province: "ON",
@@ -431,6 +475,26 @@ export const SUPPORTED_CANADA_CITIES: SupportedCity[] = [
   },
 ];
 
+/** GTA-only client and API registry. Do not use the legacy Canada list above
+ * for consumer discovery; it remains temporarily exported for admin/event
+ * code that is migrated separately. */
+export const GTA_MUNICIPALITIES: SupportedCity[] = LEGACY_CANADA_CITIES
+  .filter((city) => GTA_MUNICIPALITY_NAMES.has(city.name))
+  .map((city) => ({ ...city, coverageLevel: "municipality" as const }));
+
+// Backwards-compatible export for existing consumers. It now deliberately
+// resolves to GTA-25 only; no consumer feature may opt into the old list.
+export const SUPPORTED_CANADA_CITIES = GTA_MUNICIPALITIES;
+
+export const GTA_BOUNDS = {
+  // A fast, conservative preflight only. The database boundary resolver is
+  // authoritative once municipal polygons are loaded.
+  minLat: 43.24,
+  maxLat: 44.37,
+  minLng: -80.06,
+  maxLng: -78.54,
+};
+
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -531,7 +595,7 @@ export async function logLocationEvent(
 }
 
 export function isInsideCanadaBounds(lat: number, lng: number): boolean {
-  return isInsideOntarioBounds(lat, lng);
+  return isInsideGtaBounds(lat, lng);
 }
 
 export function isInsideOntarioBounds(lat: number, lng: number): boolean {
@@ -542,6 +606,17 @@ export function isInsideOntarioBounds(lat: number, lng: number): boolean {
     lat <= ONTARIO_BOUNDS.maxLat &&
     lng >= ONTARIO_BOUNDS.minLng &&
     lng <= ONTARIO_BOUNDS.maxLng
+  );
+}
+
+export function isInsideGtaBounds(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= GTA_BOUNDS.minLat &&
+    lat <= GTA_BOUNDS.maxLat &&
+    lng >= GTA_BOUNDS.minLng &&
+    lng <= GTA_BOUNDS.maxLng
   );
 }
 
@@ -565,13 +640,10 @@ export function nearestSupportedCity(
   lat: number,
   lng: number,
 ): SupportedCity & { distanceMeters: number } {
-  const ontarioCities = SUPPORTED_CANADA_CITIES.filter(
-    (city) => city.province === "ON",
-  );
-  let best = ontarioCities[0] || ONTARIO_REGION;
+  let best = GTA_MUNICIPALITIES[0] || GTA_REGION;
   let bestDistance = Number.POSITIVE_INFINITY;
 
-  for (const city of ontarioCities) {
+  for (const city of GTA_MUNICIPALITIES) {
     const distance = haversineMeters(lat, lng, city.lat, city.lng);
     if (distance < bestDistance) {
       best = city;
@@ -585,9 +657,15 @@ export function nearestSupportedCity(
 export function normalizeCityName(input?: string | null): SupportedCity | null {
   if (!input) return null;
   const normalized = input.trim().toLowerCase();
-  if (normalized === "ontario" || normalized === "on") return ONTARIO_REGION;
+  if (
+    normalized === "gta" ||
+    normalized === "greater toronto" ||
+    normalized === "greater toronto area"
+  ) {
+    return GTA_REGION;
+  }
   return (
-    SUPPORTED_CANADA_CITIES.find(
+    GTA_MUNICIPALITIES.find(
       (city) =>
         city.name.toLowerCase() === normalized ||
         city.aliases?.some((alias) => alias.toLowerCase() === normalized),

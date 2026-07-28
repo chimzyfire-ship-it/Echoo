@@ -92,7 +92,7 @@ function categoryBuckets(input: string) {
   ) {
     add(["restaurant", "cafe", "bar", "pub", "mall"]);
   }
-  if (/museum|gallery|culture|art|rainy/.test(text)) {
+  if (/museum|gallery|culture|tourism|attraction|historic|heritage|art|rainy/.test(text)) {
     add([
       "museum",
       "arts_centre",
@@ -536,7 +536,7 @@ function stopVibe(place: PlaceRow, index: number, total: number) {
     return "A calmer stop that keeps the plan easy instead of loud.";
   }
   if (tags.some((tag) => /polished|date|artful|cultural/.test(tag))) {
-    return "Better as the date or culture stop than as a throwaway errand.";
+    return "Better as the date or tourism stop than as a throwaway errand.";
   }
   if (tags.some((tag) => /group|social|lively|casual/.test(tag))) {
     return "Works when the outing needs a little more social energy.";
@@ -548,7 +548,7 @@ function stopVibe(place: PlaceRow, index: number, total: number) {
     return "Use this as the easy walk or outdoor reset in the route.";
   }
   if (/museum|library|arts_centre/.test(category)) {
-    return "Add a culture or rainy-day stop that gives the plan a real activity.";
+    return "Add a tourism or rainy-day stop that gives the plan a real activity.";
   }
   if (/mall/.test(category)) {
     return "Keep this as the weather-safe backup.";
@@ -577,7 +577,7 @@ function friendlyPlanMessage(
   const second = cleanText(stops[1]?.title);
   const hasSecond = Boolean(second);
   if (!first) {
-    return `${placeCity} is not giving a solid match for that yet. Try coffee, park, food, culture, or one quiet reset.`;
+    return `${placeCity} is not giving a solid match for that yet. Try coffee, park, food, tourism, or one quiet reset.`;
   }
   if (/\b(library|libraries)\b/.test(text)) {
     return hasSecond
@@ -634,7 +634,7 @@ function fallbackSearchQueryForCategory(category: string, query = "") {
   }
   if (category === "cultural_space") {
     if (/gallery|galleries/.test(text)) return "gallery";
-    if (/culture|cultural/.test(text)) return "culture";
+    if (/culture|cultural|tourism|attraction|historic|heritage/.test(text)) return "tourism";
     return "art";
   }
   if (category === "food_premise") {

@@ -2,7 +2,7 @@ import {
   CORS_HEADERS,
   clampRadiusMeters,
   getSupabaseAdmin,
-  isInsideOntarioBounds,
+  isInsideGtaBounds,
   jsonResponse,
   nearestSupportedCity,
   normalizeCityName,
@@ -61,7 +61,7 @@ function ownedCard(item: OwnedResult) {
     title: item.title,
     category: item.category || item.entity_type,
     description: item.description || "",
-    city: item.city || "Ontario",
+    city: item.city || "Greater Toronto Area",
     address: null,
     latitude: optionalDiscoveryNumber(item.latitude),
     longitude: optionalDiscoveryNumber(item.longitude),
@@ -144,7 +144,7 @@ async function googleLiveSearch(input: {
     Deno.env.get("GOOGLE_MAPS_API_KEY");
   if (!key || !input.query) return { results: [], nextPageToken: null };
   const body: Record<string, unknown> = {
-    textQuery: `${normalizedLiveQuery(input.query, input.category)} in ${input.city}, Ontario`,
+    textQuery: `${normalizedLiveQuery(input.query, input.category)} in ${input.city || "Greater Toronto Area"}, Ontario`,
     pageSize: Math.min(Math.max(input.limit, 1), 20),
     languageCode: "en",
     regionCode: "CA",
@@ -260,12 +260,12 @@ Deno.serve(async (req) => {
     if (
       lat !== undefined &&
       lng !== undefined &&
-      !isInsideOntarioBounds(lat, lng)
+      !isInsideGtaBounds(lat, lng)
     ) {
       return jsonResponse(
         {
           supported: false,
-          reason: "outside_ontario",
+          reason: "outside_gta",
           results: [],
           nextCursor: null,
         },
@@ -277,7 +277,7 @@ Deno.serve(async (req) => {
     const city =
       lat !== undefined && lng !== undefined
         ? nearestSupportedCity(lat, lng)
-        : normalizeCityName(suppliedCity || "Ontario");
+        : normalizeCityName(suppliedCity || "GTA");
     if (!city)
       return jsonResponse(
         {
