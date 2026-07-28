@@ -309,39 +309,31 @@
 }
 
 .echoo-uber-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 18px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
-    #171715;
+  gap: 10px;
+  padding: 13px 0;
+  border-top: 1px solid var(--echoo-detail-line);
+  border-bottom: 1px solid var(--echoo-detail-line);
 }
 
 .echoo-uber-card-copy {
-  display: flex;
   min-width: 0;
-  align-items: center;
-  gap: 10px;
 }
 
 .echoo-uber-car {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.09);
-  color: #fff;
+  color: rgba(248, 245, 239, 0.74);
 }
 
 .echoo-uber-car svg {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
   fill: currentColor;
 }
 
@@ -355,71 +347,92 @@
 }
 
 .echoo-uber-card-copy p {
-  color: rgba(248, 245, 239, 0.64);
-  font-size: 11px;
-  font-weight: 700;
+  color: rgba(248, 245, 239, 0.54);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .echoo-uber-card-copy strong {
-  max-width: 150px;
-  margin-top: 2px;
+  margin-top: 3px;
   color: #fff;
-  font-size: 13px;
-  font-weight: 750;
+  font-size: 14px;
+  font-weight: 680;
 }
 
 .echoo-uber-button {
-  min-height: 40px;
-  padding: 0 12px;
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
   border: 0;
-  border-radius: 12px;
-  background: #f7f2e9;
-  color: #151310;
+  background: transparent;
+  color: var(--echoo-detail-accent);
   font: inherit;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 760;
   white-space: nowrap;
 }
 
-.echoo-uber-button span {
-  margin-left: 4px;
-  font-size: 20px;
-  line-height: 0;
-  vertical-align: -2px;
+.echoo-uber-button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.echoo-uber-button:hover,
+.echoo-uber-button:focus-visible { color: #fff; }
+
+.echoo-uber-button:focus-visible,
+.echoo-place-btn-primary:focus-visible,
+.echoo-place-btn-secondary:focus-visible {
+  outline: 1px solid var(--echoo-detail-accent);
+  outline-offset: 3px;
 }
 
 .echoo-place-actions {
-  display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border-top: 1px solid var(--echoo-detail-line);
+  border-bottom: 1px solid var(--echoo-detail-line);
 }
 
 .echoo-place-btn-primary,
 .echoo-place-btn-secondary {
-  min-height: 46px;
-  padding: 0 15px;
-  border: 1px solid var(--echoo-detail-line);
-  border-radius: 13px;
-  color: var(--echoo-detail-ink);
+  min-height: 48px;
+  padding: 0 1px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(248, 245, 239, 0.8);
   font: inherit;
-  font-size: 13px;
-  font-weight: 750;
-  text-align: center;
+  font-size: 12px;
+  font-weight: 720;
+  text-align: left;
   text-decoration: none;
   display: inline-flex;
-  flex: 1 1 0;
   min-width: 0;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .echoo-place-btn-primary {
-  border-color: transparent;
-  background: var(--echoo-detail-paper);
-  color: #151310;
+  padding-right: 14px;
+  border-right: 1px solid var(--echoo-detail-line);
 }
 
-.echoo-place-btn-secondary { background: rgba(255, 255, 255, 0.045); }
+.echoo-place-btn-secondary { padding-left: 14px; }
+
+.echoo-place-btn-primary:hover,
+.echoo-place-btn-secondary:hover { color: #fff; }
 
 .echoo-place-unavailable {
   min-height: 260px;

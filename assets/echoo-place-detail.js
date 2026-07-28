@@ -387,15 +387,13 @@
 
           ${uberHref ? `
             <section class="echoo-uber-card" aria-label="Ride with Uber">
+              <span class="echoo-uber-car" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M5.2 10.1 6.5 6.7c.3-.8 1-1.3 1.9-1.3h7.2c.8 0 1.6.5 1.9 1.3l1.3 3.4c.7.4 1.2 1.2 1.2 2.1v4.1c0 .8-.6 1.4-1.4 1.4h-1.1c-.7 0-1.3-.5-1.4-1.2H7.9c-.1.7-.7 1.2-1.4 1.2H5.4c-.8 0-1.4-.6-1.4-1.4v-4.1c0-.9.5-1.7 1.2-2.1Zm2.2.1h9.2l-.9-2.5c-.1-.3-.4-.5-.8-.5H8.2c-.3 0-.6.2-.8.5l-1 2.5Zm.3 4.2a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Zm8.6 0a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Z"/></svg></span>
               <div class="echoo-uber-card-copy">
-                <span class="echoo-uber-car" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M5.2 10.1 6.5 6.7c.3-.8 1-1.3 1.9-1.3h7.2c.8 0 1.6.5 1.9 1.3l1.3 3.4c.7.4 1.2 1.2 1.2 2.1v4.1c0 .8-.6 1.4-1.4 1.4h-1.1c-.7 0-1.3-.5-1.4-1.2H7.9c-.1.7-.7 1.2-1.4 1.2H5.4c-.8 0-1.4-.6-1.4-1.4v-4.1c0-.9.5-1.7 1.2-2.1Zm2.2.1h9.2l-.9-2.5c-.1-.3-.4-.5-.8-.5H8.2c-.3 0-.6.2-.8.5l-1 2.5Zm.3 4.2a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Zm8.6 0a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Z"/></svg></span>
-                <div>
-                  <p>Uber</p>
-                  <strong>Ride to ${escapeHtml(title || "this place")}</strong>
-                </div>
+                <p>Uber</p>
+                <strong>Ride to ${escapeHtml(title || "this place")}</strong>
               </div>
-              <button type="button" class="echoo-uber-button" data-echoo-uber-href="${escapeHtml(uberHref)}">
-                Continue with Uber <span aria-hidden="true">›</span>
+              <button type="button" class="echoo-uber-button" data-echoo-uber-href="${escapeHtml(uberHref)}" aria-label="Open Uber for ${escapeHtml(title || "this place")}">
+                <span>Open</span><svg aria-hidden="true" viewBox="0 0 16 16" focusable="false"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
               </button>
             </section>
           ` : ""}
@@ -413,8 +411,8 @@
                 data-route-latitude="${escapeHtml(String(routeLatitude))}"
                 data-route-longitude="${escapeHtml(String(routeLongitude))}"
                 data-route-fallback="${escapeHtml(directionsHref)}"
-              >Take me there</button>
-            ` : `<button type="button" class="echoo-place-btn-primary" data-echoo-route data-route-fallback="${escapeHtml(directionsHref)}">Take me there</button>`}
+              ><span>Directions</span><span aria-hidden="true">↗</span></button>
+            ` : `<button type="button" class="echoo-place-btn-primary" data-echoo-route data-route-fallback="${escapeHtml(directionsHref)}"><span>Directions</span><span aria-hidden="true">↗</span></button>`}
             <button
               type="button"
               class="echoo-place-btn-secondary"
@@ -427,7 +425,7 @@
               data-quick-plan-address="${escapeHtml(address)}"
               data-quick-plan-latitude="${escapeHtml(String(routeLatitude))}"
               data-quick-plan-longitude="${escapeHtml(String(routeLongitude))}"
-            >Quick plan</button>
+            ><span>Quick plan</span><span aria-hidden="true">→</span></button>
           </div>
         </div>
       </section>
