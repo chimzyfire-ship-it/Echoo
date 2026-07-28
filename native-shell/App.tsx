@@ -79,6 +79,7 @@ const NAVIGATION_ITEMS: ReadonlyArray<{
   label: string;
   target: string;
 }> = [
+  { key: 'home', label: 'Home', target: 'index.html' },
   { key: 'discover', label: 'Discover', target: 'events.html' },
   { key: 'tickets', label: 'Tickets', target: 'tickets.html' },
   { key: 'profile', label: 'Profile', target: 'auth.html' },
@@ -192,7 +193,7 @@ function isEchooHome(url: string) {
 
   try {
     const path = new URL(url).pathname.replace(/\/$/, '');
-    return path === '' || path === '/events' || path === '/events.html';
+    return path === '' || path === '/index' || path === '/index.html' || path === '/events' || path === '/events.html';
   } catch {
     return true;
   }
