@@ -197,26 +197,23 @@
         padding: 12px;
         background: rgba(245, 241, 232, 0.035);
       }
-      .stay-card {
-        display: grid;
-        gap: 10px;
+      .event-route {
+        display: inline-flex;
+        min-height: 38px;
+        align-items: center;
+        gap: 8px;
+        margin-top: 14px;
+        padding: 0 13px;
         border: 1px solid var(--line);
-        padding: 12px;
-        background: rgba(245, 241, 232, 0.035);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--ink);
+        font-size: 12px;
       }
-      .stay-card img {
-        width: 100%;
-        height: 128px;
-        object-fit: cover;
-        border: 1px solid var(--line);
-        filter: saturate(0.72) contrast(1.04);
-      }
-      .stay-card strong {
-        display: block;
-      }
-      .stay-price {
+      .event-route:hover,
+      .event-route:focus-visible {
+        border-color: var(--signal);
         color: var(--signal);
-        font-weight: 950;
       }
       .empty {
         border: 1px dashed var(--line);
@@ -235,6 +232,7 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="assets/echoo-live-stays.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
     <script>document.documentElement.classList.add("echoo-page-loading");</script>
   </head>
@@ -252,13 +250,14 @@
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
+    <script src="assets/echoo-live-stays.js"></script>
     <script>
       const CONFIG = {
         anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
         eventDetailUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-detail",
-        eventStaysUrl:
-          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/event-stays",
+        liveStaysUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/live-stays",
         ticketReserveUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ticket-reserve",
         planEngineUrl:
@@ -267,6 +266,11 @@
       const params = new URLSearchParams(window.location.search);
       const eventId = params.get("id");
       const root = document.getElementById("event-root");
+
+      window.EchooLiveStays?.configure({
+        apiUrl: CONFIG.liveStaysUrl,
+        anonKey: CONFIG.anonKey,
+      });
 
       function sessionId() {
         let id = localStorage.getItem("echoo_ticket_session_id");
@@ -319,11 +323,6 @@
       function safeAssetUrl(value, fallback) {
         const url = String(value || "");
         return /^(https?:\/\/|assets\/)/.test(url) ? url : fallback;
-      }
-
-      function safeExternalUrl(value) {
-        const url = String(value || "");
-        return /^https?:\/\//.test(url) ? url : "";
       }
 
       async function loadRelated(event) {
@@ -379,44 +378,50 @@
         }
       }
 
-      async function loadStays(event) {
+      function eventTimeZone(event) {
+        const city = String(event?.city || "").trim().toLowerCase();
+        if (city === "vancouver" || city === "victoria") return "America/Vancouver";
+        if (city === "calgary" || city === "edmonton") return "America/Edmonton";
+        if (city === "winnipeg") return "America/Winnipeg";
+        if (city === "halifax") return "America/Halifax";
+        return "America/Toronto";
+      }
+
+      function stayAnchor(event) {
+        return {
+          latitude: Number(event.latitude),
+          longitude: Number(event.longitude),
+          destinationName: event.venue_name || event.title || "this event",
+          timeZone: eventTimeZone(event),
+        };
+      }
+
+      function loadStays(event) {
         const box = document.getElementById("event-stays");
         if (!box) return;
-        try {
-          const response = await fetch(
-            `${CONFIG.eventStaysUrl}?eventId=${encodeURIComponent(event.id)}`,
-            { headers: headers() },
-          );
-          const json = await response.json();
-          if (!response.ok)
-            throw new Error(json.error || "Stay recommendations unavailable");
-          const stays = Array.isArray(json.stays) ? json.stays : [];
-          const fallbackImage = "assets/optimized/news-date-768.jpg";
-          box.innerHTML = stays.length
-            ? stays
-                .map(
-                  (stay) => `
-            <article class="stay-card">
-              <img src="${escapeHtml(safeAssetUrl(stay.imageUrl, fallbackImage))}" alt="">
-              <div>
-                <strong>${escapeHtml(stay.hotelName)}</strong>
-                <p>${escapeHtml(stay.description || stay.why)}</p>
-                <div class="meta">
-                  <span>${Math.max(0.1, stay.distanceMeters / 1000).toFixed(1)} km away</span>
-                  <span>${Number(stay.rating || 0).toFixed(1)} rating</span>
-                  <span class="stay-price">${money(stay.nightlyRateCents, stay.currency)}</span>
-                </div>
-                <p>${escapeHtml(stay.why)}</p>
-                ${safeExternalUrl(stay.bookingUrl) ? `<a class="pill" href="${escapeHtml(safeExternalUrl(stay.bookingUrl))}" target="_blank" rel="noopener">View stay options</a>` : ""}
-              </div>
-            </article>
-          `,
-                )
-                .join("")
-            : '<div class="empty">Stay recommendations will appear here once nearby options are loaded.</div>';
-        } catch (error) {
-          box.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+        window.EchooLiveStays?.renderInline(box, stayAnchor(event), {
+          title: "Real stays near the venue",
+          subtitle: `Live hotel matches close to ${event.venue_name || event.title || "this event"}.`,
+        });
+      }
+
+      async function takeMeThere(event) {
+        const anchor = stayAnchor(event);
+        if (!Number.isFinite(anchor.latitude) || !Number.isFinite(anchor.longitude)) return;
+        await window.EchooLiveStays?.maybePromptLateRoute(anchor);
+        const route = {
+          id: event.id,
+          name: anchor.destinationName,
+          address: event.address || "",
+          latitude: anchor.latitude,
+          longitude: anchor.longitude,
+        };
+        if (window.ReactNativeWebView?.postMessage) {
+          window.ReactNativeWebView.postMessage(`echoo:route:${JSON.stringify(route)}`);
+          return;
         }
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${anchor.latitude},${anchor.longitude}`)}&dir_action=navigate`;
+        window.open(url, "_blank", "noopener,noreferrer");
       }
 
       async function reserve(event, tiers) {
@@ -492,6 +497,7 @@
                 <h2 style="margin-top:0;">Venue</h2>
                 <p>${escapeHtml(event.venue_name || "Venue TBA")}${event.address ? ` · ${escapeHtml(event.address)}` : ""}</p>
                 <div class="meta"><span>${Number(event.latitude).toFixed(4)}, ${Number(event.longitude).toFixed(4)}</span><span>Canada-first verified location</span></div>
+                ${Number.isFinite(Number(event.latitude)) && Number.isFinite(Number(event.longitude)) ? `<button id="event-route" class="event-route" type="button">Take me there <span aria-hidden="true">↗</span></button>` : ""}
               </div>
               <div class="panel">
                 <h2 style="margin-top:0;">Before or after this</h2>
@@ -499,7 +505,7 @@
               </div>
               <div class="panel">
                 <h2 style="margin-top:0;">Where to stay</h2>
-                <p>Smart nearby picks for people coming in for the event.</p>
+                <p>Live hotel matches, ranked by distance from this venue.</p>
                 <div class="grid" id="event-stays"><div class="empty">Loading stay matches...</div></div>
               </div>
             </div>
@@ -529,6 +535,9 @@
           document
             .getElementById("reserve-btn")
             .addEventListener("click", () => reserve(event, tiers));
+        document
+          .getElementById("event-route")
+          ?.addEventListener("click", () => takeMeThere(event));
         loadRelated(event);
         loadStays(event);
       }

@@ -1762,6 +1762,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="assets/party-radar.css" />
     <link rel="stylesheet" href="assets/echoo-place-detail.css" />
+    <link rel="stylesheet" href="assets/echoo-live-stays.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
     <script>document.documentElement.classList.add("echoo-page-loading");</script>
   </head>
@@ -1970,6 +1971,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
     <script src="assets/echoo-place-detail.js"></script>
+    <script src="assets/echoo-live-stays.js"></script>
     <script src="assets/location-platform.js"></script>
     <script src="assets/activity-context.js"></script>
     <script>
@@ -2002,7 +2004,14 @@
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
         quickPlanUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/quick-plan",
+        liveStaysUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/live-stays",
       };
+
+      window.EchooLiveStays?.configure({
+        apiUrl: CONFIG.liveStaysUrl,
+        anonKey: CONFIG.supabaseAnonKey,
+      });
 
       /* ── Preferences retrieval ── */
       const params = new URLSearchParams(window.location.search);
@@ -3348,6 +3357,20 @@
           </button>`;
       }
 
+      function quickPlanStayAnchor() {
+        const stops = quickPlanState?.plan?.stops || [];
+        const finalStop = stops[stops.length - 1] || quickPlanState?.anchor;
+        const latitude = Number(finalStop?.latitude);
+        const longitude = Number(finalStop?.longitude);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+        return {
+          latitude,
+          longitude,
+          destinationName: finalStop?.name || quickPlanState?.anchor?.name || "your final stop",
+          timeZone: quickPlanState?.anchor?.timeZone || "America/Toronto",
+        };
+      }
+
       function renderQuickPlan() {
         if (!quickPlanContent || !quickPlanState) return;
         const { anchor, stopCount, budgetStyle, loading, error, plan } = quickPlanState;
@@ -3373,6 +3396,10 @@
           : plan
             ? `<div class="echoo-quick-plan-result">${routeMeta}<div class="echoo-quick-plan-stops">${(plan.stops || []).map(quickPlanStopMarkup).join("")}</div></div>`
             : `<p class="echoo-quick-plan-error">${escapeHtml(error || "Echoo could not make a reliable plan around this place yet.")}</p>`;
+        const stayAnchor = plan ? quickPlanStayAnchor() : null;
+        const lateStayAction = stayAnchor && window.EchooLiveStays?.isLateNight(stayAnchor.timeZone)
+          ? `<button type="button" class="echoo-quick-plan-stay-button" data-quick-plan-stays>Need a stay near your final stop? <span aria-hidden="true">→</span></button>`
+          : "";
         quickPlanContent.innerHTML = `
           <div class="echoo-quick-plan-topline">
             <p class="echoo-quick-plan-kicker">Quick Plan</p>
@@ -3389,6 +3416,7 @@
             <div class="echoo-quick-plan-control-row">${budgetControls}</div>
           </div>
           ${result}
+          ${lateStayAction}
           ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${escapeHtml(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Start directions</button></div>` : ""}`;
 
         quickPlanContent.querySelectorAll("[data-quick-plan-choice]").forEach((button) => {
@@ -3402,6 +3430,10 @@
         });
         quickPlanContent.querySelector("[data-quick-plan-close]")?.addEventListener("click", closeQuickPlan);
         quickPlanContent.querySelector("[data-quick-plan-route]")?.addEventListener("click", openQuickPlanRoute);
+        quickPlanContent.querySelector("[data-quick-plan-stays]")?.addEventListener("click", () => {
+          const liveStayAnchor = quickPlanStayAnchor();
+          if (liveStayAnchor) window.EchooLiveStays?.openSheet(liveStayAnchor, { late: true });
+        });
         quickPlanContent.querySelectorAll("[data-quick-plan-stop]").forEach((button) => {
           button.addEventListener("click", () => {
             const stop = (quickPlanState?.plan?.stops || []).find((item) => item.id === button.getAttribute("data-quick-plan-stop"));

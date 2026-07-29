@@ -366,19 +366,6 @@
         border-color: var(--peach);
       }
 
-      /* Highlighted Category Chip for Upcoming Drop */
-      .chip.chip-drop {
-        border-color: rgba(247, 213, 178, 0.4);
-        color: var(--peach);
-        font-weight: 600;
-        background: rgba(247, 213, 178, 0.08);
-      }
-
-      .chip.chip-drop.active {
-        background: var(--peach);
-        color: #050505;
-      }
-
       /* Section Headers */
       .section-header {
         display: flex;
@@ -926,7 +913,7 @@
         <!-- Category Pills -->
         <div class="category-pills" id="chips" aria-label="Explore categories">
           <button class="chip active" data-query="trending">Trending</button>
-          <button class="chip chip-drop" data-query="upcoming drop">Upcoming Drop</button>
+          <button class="chip" data-query="upcoming drop">Upcoming Drop</button>
           <button class="chip" data-query="food">Food</button>
           <button class="chip" data-query="music">Music</button>
           <button class="chip" data-query="nightlife">Nightlife</button>

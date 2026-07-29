@@ -432,6 +432,11 @@ verify_jwt = false
 [functions.place-photo]
 verify_jwt = false
 
+# Live hotel discovery is public read-only lookup. It protects the provider
+# key server-side and applies its own per-client rate limit.
+[functions.live-stays]
+verify_jwt = false
+
 # Quick Plan validates a supplied session itself when one is present so it can
 # safely fall back to local onboarding preferences for preview users.
 [functions.quick-plan]

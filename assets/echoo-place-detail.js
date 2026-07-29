@@ -296,6 +296,7 @@
     const routeLatitude = Number(place.latitude);
     const routeLongitude = Number(place.longitude);
     const canRouteInsideEchoo = Number.isFinite(routeLatitude) && Number.isFinite(routeLongitude);
+    const placeTimeZone = cleanText(place.timezone, "America/Toronto");
     const uberHref = uberLinkFor(place);
     const pulseItems = pulseItemsFor(detail);
     const quickPlanMessage = `Make me a quick plan around ${title || "this place"}.`;
@@ -304,6 +305,7 @@
       bindGalleryInteractions();
       bindQuickPlanInteractions();
       bindRouteInteractions();
+      bindStayInteractions();
       bindUberInteractions();
     }, 0);
 
@@ -410,6 +412,7 @@
                 data-route-address="${escapeHtml(address)}"
                 data-route-latitude="${escapeHtml(String(routeLatitude))}"
                 data-route-longitude="${escapeHtml(String(routeLongitude))}"
+                data-route-timezone="${escapeHtml(placeTimeZone)}"
                 data-route-fallback="${escapeHtml(directionsHref)}"
               ><span>Directions</span><span aria-hidden="true">↗</span></button>
             ` : `<button type="button" class="echoo-place-btn-primary" data-echoo-route data-route-fallback="${escapeHtml(directionsHref)}"><span>Directions</span><span aria-hidden="true">↗</span></button>`}
@@ -425,8 +428,20 @@
               data-quick-plan-address="${escapeHtml(address)}"
               data-quick-plan-latitude="${escapeHtml(String(routeLatitude))}"
               data-quick-plan-longitude="${escapeHtml(String(routeLongitude))}"
+              data-quick-plan-timezone="${escapeHtml(placeTimeZone)}"
             ><span>Quick plan</span><span aria-hidden="true">→</span></button>
           </div>
+          ${canRouteInsideEchoo ? `
+            <button
+              type="button"
+              class="echoo-place-stay-trigger"
+              data-live-stays
+              data-stay-name="${escapeHtml(title)}"
+              data-stay-latitude="${escapeHtml(String(routeLatitude))}"
+              data-stay-longitude="${escapeHtml(String(routeLongitude))}"
+              data-stay-timezone="${escapeHtml(placeTimeZone)}"
+            ><span>Stay nearby</span><span>Real hotels close to this place <i aria-hidden="true">→</i></span></button>
+          ` : ""}
         </div>
       </section>
     `;
@@ -486,6 +501,7 @@
               address: cleanText(button.getAttribute("data-quick-plan-address")),
               latitude: Number.isFinite(latitude) ? latitude : null,
               longitude: Number.isFinite(longitude) ? longitude : null,
+              timeZone: cleanText(button.getAttribute("data-quick-plan-timezone"), "America/Toronto"),
             },
           },
         }));
@@ -512,12 +528,34 @@
           address: cleanText(button.getAttribute("data-route-address")),
           latitude,
           longitude,
+          timeZone: cleanText(button.getAttribute("data-route-timezone"), "America/Toronto"),
         };
+        await window.EchooLiveStays?.maybePromptLateRoute(route);
         if (window.ReactNativeWebView?.postMessage) {
           window.ReactNativeWebView.postMessage(`echoo:route:${JSON.stringify(route)}`);
           return;
         }
         if (fallback) window.open(fallback, "_blank", "noopener,noreferrer");
+      };
+    });
+  }
+
+  function bindStayInteractions() {
+    document.querySelectorAll("[data-live-stays]").forEach((button) => {
+      button.onclick = () => {
+        const latitude = Number(button.getAttribute("data-stay-latitude"));
+        const longitude = Number(button.getAttribute("data-stay-longitude"));
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+        window.dispatchEvent(new CustomEvent("echoo:live-stays", {
+          detail: {
+            anchor: {
+              name: cleanText(button.getAttribute("data-stay-name"), "this place"),
+              latitude,
+              longitude,
+              timeZone: cleanText(button.getAttribute("data-stay-timezone"), "America/Toronto"),
+            },
+          },
+        }));
       };
     });
   }
@@ -595,6 +633,7 @@
     bindGalleryInteractions,
     bindQuickPlanInteractions,
     bindRouteInteractions,
+    bindStayInteractions,
     bindUberInteractions,
     buildAuthUrl,
     confidenceLabel,
