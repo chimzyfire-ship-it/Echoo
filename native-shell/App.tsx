@@ -103,6 +103,7 @@ function activeTabFor(url: string): TabKey | null {
       '/events.html',
       '/music.html',
       '/food.html',
+      '/culture.html',
       '/films.html',
       '/dates.html',
     ].includes(path)
