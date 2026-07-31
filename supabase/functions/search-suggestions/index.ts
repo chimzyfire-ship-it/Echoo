@@ -54,17 +54,56 @@ Deno.serve(async (req) => {
     });
     if (error) throw error;
 
+    // The fast RPC serves starts-with suggestions. Add a small keyword pass so
+    // people can discover a venue by a word in its name, category, or approved
+    // description as well (for example "sushi", "rooftop", or a mid-name
+    // fragment). GTA deliberately has no city constraint: it is a regional
+    // search, not a fictitious municipality named "GTA".
+    const keyword = query.replace(/[%,()]/g, " ").trim();
+    let keywordRequest = supabase
+      .from("location_entities")
+      .select("id,title,category,description,popularity_score,editorial_boost")
+      .eq("status", "published")
+      .eq("country_code", "CA")
+      .eq("admin_area_1", "ON")
+      .or(
+        `title.ilike.%${keyword}%,category.ilike.%${keyword}%,description.ilike.%${keyword}%`,
+      )
+      .order("editorial_boost", { ascending: false })
+      .order("popularity_score", { ascending: false })
+      .limit(limit);
+    if (city.coverageLevel === "municipality") {
+      keywordRequest = keywordRequest.ilike("city", city.name);
+    }
+    const { data: keywordMatches, error: keywordError } = await keywordRequest;
+    if (keywordError) throw keywordError;
+
+    const prefixSuggestions = (data || []).map((item: any) => ({
+      type: item.suggestion_type,
+      value: item.value,
+      label: item.label,
+      category: item.category || null,
+      entityId: item.entity_id || null,
+    }));
+    const keywordSuggestions = (keywordMatches || []).map((item: any) => ({
+      type: "place",
+      value: item.title,
+      label: item.title,
+      category: item.category || null,
+      entityId: item.id || null,
+    }));
+    const suggestions = [...prefixSuggestions, ...keywordSuggestions]
+      .filter((item, index, all) => {
+        const key = `${item.type}:${String(item.value || "").toLowerCase()}`;
+        return key && all.findIndex((candidate) => `${candidate.type}:${String(candidate.value || "").toLowerCase()}` === key) === index;
+      })
+      .slice(0, limit);
+
     return jsonResponse({
       supported: true,
       query,
       city: city.name,
-      suggestions: (data || []).map((item: any) => ({
-        type: item.suggestion_type,
-        value: item.value,
-        label: item.label,
-        category: item.category || null,
-        entityId: item.entity_id || null,
-      })),
+      suggestions,
     });
   } catch (error) {
     return jsonResponse(

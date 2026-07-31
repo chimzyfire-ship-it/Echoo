@@ -742,6 +742,8 @@
     </style>
     <link rel="stylesheet" href="assets/page-loader.css" />
     <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <script src="assets/location-platform.js"></script>
+    <script src="assets/culture-context.js"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -772,7 +774,7 @@
               <span class="ticket-section-kicker">On sale now</span>
               <h2 id="on-sale-heading">Good nights ahead</h2>
             </div>
-            <a class="all-events-link" href="happenings.html">All events</a>
+            <a class="all-events-link" id="all-events-link" href="happenings.html">All events</a>
           </div>
           <div class="sale-grid" id="tickets-for-sale" aria-live="polite">
             <div class="sale-loading" aria-hidden="true"></div>
@@ -843,10 +845,13 @@
         "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/my-tickets";
       const DISCOVER_FEED_ENDPOINT =
         "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-feed";
+      const CULTURE_LENS_ENDPOINT =
+        "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/culture-lens";
       const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
       const ticketsEl = document.getElementById("tickets");
       const ticketsForSaleEl = document.getElementById("tickets-for-sale");
       const emailEl = document.getElementById("email");
+      const allEventsLink = document.getElementById("all-events-link");
       let loadedTickets = [];
 
       emailEl.value = localStorage.getItem("echoo_ticket_buyer_email") || "";
@@ -897,8 +902,25 @@
         return detail || "happenings.html";
       }
 
+      function activeCulture() {
+        return window.EchooCultureContext?.getActive?.() || null;
+      }
+
+      function hasRealImage(value) {
+        return /^https?:\/\//i.test(String(value || ""));
+      }
+
+      function updateAllEventsLink() {
+        const culture = activeCulture();
+        allEventsLink.href = culture
+          ? `happenings.html?culture=${encodeURIComponent(culture.slug)}`
+          : "happenings.html";
+      }
+
       function renderTicketsForSale(cards) {
-        const events = Array.isArray(cards) ? cards.slice(0, 4) : [];
+        const events = Array.isArray(cards)
+          ? cards.filter((card) => hasRealImage(card?.imageUrl)).slice(0, 4)
+          : [];
         if (!events.length) {
           ticketsForSaleEl.innerHTML = '<div class="sale-empty">Live ticket drops will appear here. <a href="happenings.html">Browse all events</a>.</div>';
           return;
@@ -906,7 +928,7 @@
         ticketsForSaleEl.innerHTML = events.map((card) => {
           const href = saleDestination(card);
           const external = /^https?:\/\//i.test(href);
-          const image = String(card.imageUrl || "assets/optimized/news-music-768.jpg");
+          const image = String(card.imageUrl);
           const status = card.statusLabel || "Selling now";
           const detail = [card.subtitle, readableEventDate(card.startsAt)].filter(Boolean).join(" · ");
           return `<a class="sale-card" href="${escapeHtml(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>
@@ -917,9 +939,35 @@
       }
 
       async function loadTicketsForSale() {
+        const culture = activeCulture();
+        if (culture) {
+          try {
+            const response = await fetch(CULTURE_LENS_ENDPOINT, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${ANON_KEY}`, apikey: ANON_KEY },
+              body: JSON.stringify({ cultureSlug: culture.slug, city: preferredCity(), topics: ["events"] }),
+            });
+            const payload = await response.json().catch(() => ({}));
+            const cultureCards = (payload?.sections?.find((section) => section.topic === "events")?.items || [])
+              .filter((item) => item?.source === "ticketmaster" && item?.startsAt);
+            if (response.ok && cultureCards.length) {
+              renderTicketsForSale(cultureCards.map((item) => ({
+                ...item,
+                detailUrl: item.actionUrl,
+                statusLabel: item.startsAt ? "Live now" : "Selling now",
+                priceLabel: "See tickets",
+              })));
+              return;
+            }
+          } catch (_) {
+            // A live city-wide Ticketmaster feed remains useful if a culture
+            // has no matching ticket listing yet.
+          }
+        }
         const url = new URL(DISCOVER_FEED_ENDPOINT);
         url.searchParams.set("city", preferredCity());
         url.searchParams.set("limit", "8");
+        url.searchParams.set("mode", "tickets");
         try {
           const response = await fetch(url, {
             headers: { Authorization: `Bearer ${ANON_KEY}`, apikey: ANON_KEY },
@@ -945,10 +993,10 @@
             const event = ticket.ticketed_events || {};
             const tier = ticket.ticket_tiers || {};
             const location = [event.venue_name || "Venue TBA", event.city || "Canada", event.province].filter(Boolean).join(" · ");
-            const image = event.image_url || "assets/optimized/news-music-768.jpg";
+            const image = hasRealImage(event.image_url) ? event.image_url : "";
             return `
             <article class="ticket">
-              <div class="ticket-art"><img src="${escapeHtml(image)}" alt="" loading="lazy" /><span class="ticket-status">Confirmed</span></div>
+              <div class="ticket-art">${image ? `<img src="${escapeHtml(image)}" alt="" loading="lazy" />` : ""}<span class="ticket-status">Confirmed</span></div>
               <div class="ticket-body">
                 <small class="ticket-tag">${escapeHtml(tier.name || "Ticket")}</small>
                 <h2>${escapeHtml(event.title || "Echoo event")}</h2>
@@ -1039,6 +1087,11 @@
       emailEl.addEventListener("keydown", (event) => {
         if (event.key === "Enter") loadTickets();
       });
+      window.addEventListener("echoo:culture-changed", () => {
+        updateAllEventsLink();
+        loadTicketsForSale();
+      });
+      updateAllEventsLink();
       loadTicketsForSale();
       loadTickets();
     </script>

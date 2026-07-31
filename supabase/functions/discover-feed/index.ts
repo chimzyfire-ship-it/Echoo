@@ -52,6 +52,15 @@ function cleanText(value: unknown, fallback = "") {
     .trim();
 }
 
+function approvedImageUrl(value: unknown) {
+  const image = cleanText(value);
+  if (!image) return undefined;
+  if (/^https?:\/\//i.test(image)) return image;
+  // This is reviewed Echoo venue media in the public discovery-covers bucket,
+  // not a generated or stock-image fallback.
+  return `https://dlezregdjpdqmooubwvl.supabase.co/storage/v1/object/public/discovery-covers/${image.split("/").map(encodeURIComponent).join("/")}`;
+}
+
 function errorMessage(err: unknown, fallback: string) {
   if (err instanceof Error) return err.message;
   if (err && typeof err === "object" && "message" in err) {
@@ -103,21 +112,13 @@ function ticketmasterDateWindow(mode = "") {
 }
 
 function ticketmasterCity(city = "") {
-  if (/^(markham|scarborough|north york|richmond hill|vaughan)$/i.test(city)) {
+  // "GTA" is an Echoo regional choice, not a city Ticketmaster recognises.
+  // Toronto is the correct Ticketmaster market for that regional setting.
+  if (/^(gta|greater toronto area|markham|scarborough|north york|richmond hill|vaughan)$/i.test(city)) {
     return "Toronto";
   }
   if (!city || /^ontario$/i.test(city)) return "Toronto";
   return city;
-}
-
-function fallbackImageFor(type: FeedCard["type"], category = "") {
-  const text = category.toLowerCase();
-  if (type === "event" || /music|concert|comedy|theatre|sport/.test(text)) {
-    return "assets/optimized/news-music-768.jpg";
-  }
-  if (/movie|cinema|film/.test(text))
-    return "assets/optimized/news-movie-768.jpg";
-  return "assets/optimized/news-date-768.jpg";
 }
 
 function scorePlace(place: any) {
@@ -143,7 +144,7 @@ function normalizeEventCard(item: any): FeedCard {
     title: cleanText(item.title, "GTA event"),
     subtitle: cleanText(metadata.venue_name || item.description || item.city),
     city: cleanText(item.city, "Greater Toronto Area"),
-    imageUrl: cleanText(item.image_url) || fallbackImageFor("event", category),
+    imageUrl: approvedImageUrl(item.image_url || item.cover_url),
     statusLabel: isToday(startsAt) ? "Tonight" : formatDateLabel(startsAt),
     actionLabel: metadata.ticket_url ? "See tickets" : "Open",
     detailUrl:
@@ -178,7 +179,7 @@ function normalizeTicketmasterCard(event: any, city: string): FeedCard {
     title: cleanText(event.name, "GTA event"),
     subtitle: cleanText(venue.name || event.info || city),
     city: cleanText(venue?.city?.name || city || "Greater Toronto Area"),
-    imageUrl: cleanText(image?.url) || fallbackImageFor("event", category),
+    imageUrl: cleanText(image?.url) || undefined,
     statusLabel: isToday(startsAt) ? "Tonight" : formatDateLabel(startsAt),
     actionLabel: "See tickets",
     detailUrl: cleanText(event.url),
@@ -214,7 +215,7 @@ function normalizePlaceCard(place: any): FeedCard {
       ? tags.join(" · ")
       : cleanText(place.address || category),
     city,
-    imageUrl: fallbackImageFor("place", category),
+    imageUrl: undefined,
     statusLabel: place.distance_meters ? "Near you" : "GTA pick",
     actionLabel: "View place",
     detailUrl: `app.html?q=${encodeURIComponent(`${cleanText(place.name || place.title)} ${city}`)}`,
@@ -234,7 +235,7 @@ function normalizeEntityPlaceCard(place: any): FeedCard {
     title: cleanText(place.title || place.name, "GTA place"),
     subtitle: cleanText(place.description || category),
     city,
-    imageUrl: cleanText(place.image_url) || fallbackImageFor("place", category),
+    imageUrl: approvedImageUrl(place.image_url || place.cover_url),
     statusLabel: place.distance_meters ? "Near you" : "GTA pick",
     actionLabel: "View place",
     detailUrl: `app.html?q=${encodeURIComponent(`${cleanText(place.title || place.name)} ${city}`)}`,
@@ -253,58 +254,15 @@ async function loadEventLane(input: {
   limit: number;
   mode?: string;
 }) {
-  const cityRecord = normalizeCityName(input.city || "GTA");
-  const hasCoordinates =
-    Number.isFinite(input.lat) && Number.isFinite(input.lng);
-  const { data, error } = hasCoordinates
-    ? await input.supabase.rpc("search_gta_nearby_entities", {
-        p_lat: Number(input.lat),
-        p_lng: Number(input.lng),
-        p_radius_meters: 35000,
-        p_entity_type: "event",
-        p_category: null,
-        p_limit: input.limit * 2,
-      })
-    : await input.supabase.rpc("search_gta_region_entities", {
-        p_city: cityRecord?.coverageLevel === "municipality" ? cityRecord.name : null,
-        p_entity_type: "event",
-        p_category: null,
-        p_limit: input.limit * 2,
-      });
-  if (error) throw error;
-
-  const storedEvents = (data || [])
-    .map(normalizeEventCard)
-    .filter((card: FeedCard) => {
-      if (!card.startsAt) return true;
-      return (
-        new Date(card.startsAt).getTime() >= Date.now() - 1000 * 60 * 60 * 3
-      );
-    })
-    .sort((a: FeedCard, b: FeedCard) => {
-      const aTime = a.startsAt ? new Date(a.startsAt).getTime() : Infinity;
-      const bTime = b.startsAt ? new Date(b.startsAt).getTime() : Infinity;
-      return aTime - bTime;
-    })
-    .slice(0, input.limit);
-
-  if (storedEvents.length >= Math.min(3, input.limit)) return storedEvents;
-
-  const ticketmasterEvents = await loadTicketmasterEventLane({
+  // Tickets must never depend on an optional internal-events index. The live
+  // Ticketmaster lane is the source of truth for events that can be bought.
+  return loadTicketmasterEventLane({
     city: input.city,
     lat: input.lat,
     lng: input.lng,
     limit: input.limit,
     mode: input.mode,
   });
-  const merged = [...storedEvents, ...ticketmasterEvents];
-  return Array.from(new Map(merged.map((event) => [event.id, event])).values())
-    .sort((a: FeedCard, b: FeedCard) => {
-      const aTime = a.startsAt ? new Date(a.startsAt).getTime() : Infinity;
-      const bTime = b.startsAt ? new Date(b.startsAt).getTime() : Infinity;
-      return aTime - bTime;
-    })
-    .slice(0, input.limit);
 }
 
 async function loadTicketmasterEventLane(input: {
@@ -361,6 +319,7 @@ async function loadTicketmasterEventLane(input: {
       (event: FeedCard) =>
         !/combo ticket|weekend pass|parking|add-on|package/i.test(event.title),
     )
+    .filter((event: FeedCard) => Boolean(event.imageUrl))
     .slice(0, input.limit);
 }
 
@@ -373,64 +332,41 @@ async function loadPlaceLane(input: {
 }) {
   const hasCoordinates =
     Number.isFinite(input.lat) && Number.isFinite(input.lng);
-  if (hasCoordinates || input.city !== "Markham") {
-    const cityRecord = normalizeCityName(input.city || "GTA");
-    const { data, error } = hasCoordinates
-      ? await input.supabase.rpc("search_gta_nearby_entities", {
-          p_lat: Number(input.lat),
-          p_lng: Number(input.lng),
-          p_radius_meters: 30000,
-          p_entity_type: "place",
-          p_category: null,
-          p_limit: input.limit,
-        })
-      : await input.supabase.rpc("search_gta_region_entities", {
-          p_city:
-            cityRecord?.coverageLevel === "municipality"
-              ? cityRecord.name
-              : null,
-          p_entity_type: "place",
-          p_category: null,
-          p_limit: input.limit,
-        });
-    if (error) throw error;
-    return (data || []).map(normalizeEntityPlaceCard).slice(0, input.limit);
-  }
-
-  const categories = [
-    "restaurant",
-    "cafe",
-    "bar",
-    "pub",
-    "park",
-    "trail",
-    "library",
-  ];
-  const placeCity =
-    input.city && input.city !== "Greater Toronto Area" ? input.city : "Markham";
-  const rows: any[] = [];
-  for (const category of categories) {
-    const { data, error } = await input.supabase.rpc("search_ontario_places", {
-      p_query: null,
-      p_city: placeCity,
-      p_lat: input.lat ?? null,
-      p_lng: input.lng ?? null,
-      p_radius_meters: 30000,
-      p_category: category,
-      p_limit: Math.max(4, Math.ceil(input.limit / 2)),
-    });
-    if (error) throw error;
-    rows.push(...(data || []));
-  }
-
-  return Array.from(new Map(rows.map((place) => [place.id, place])).values())
-    .sort((a: any, b: any) => {
-      const scoreDelta = scorePlace(b) - scorePlace(a);
-      if (scoreDelta !== 0) return scoreDelta;
-      return Number(a.distance_meters || 0) - Number(b.distance_meters || 0);
-    })
-    .slice(0, input.limit)
-    .map(normalizePlaceCard);
+  const cityRecord = normalizeCityName(input.city || "GTA");
+  // Do not make an unbounded table scan just to fill a visual lane. Each
+  // category query is indexed, scoped, and only returns approved photography.
+  const categories = ["restaurant", "cafe", "bar", "museum", "park"];
+  const batches = await Promise.all(categories.map(async (category) => {
+    const { data, error } = await input.supabase.rpc(
+      "search_discovery_owned_entities",
+      {
+        p_query: category,
+        p_feature_slugs: [],
+        p_lat: hasCoordinates ? Number(input.lat) : null,
+        p_lng: hasCoordinates ? Number(input.lng) : null,
+        p_radius_meters: hasCoordinates ? 30000 : 100000,
+        p_city: cityRecord?.coverageLevel === "municipality" ? cityRecord.name : null,
+        p_category: category,
+        p_limit: Math.max(3, Math.ceil(input.limit / 2)),
+        p_cursor_score: null,
+        p_cursor_id: null,
+      },
+    );
+    if (error) {
+      console.warn("discover-feed place lane category skipped:", category, error.message);
+      return [];
+    }
+    return data || [];
+  }));
+  return Array.from(new Map(
+    batches.flat()
+      .filter((item: any) => item.entity_type === "place")
+      .map((item: any) => [item.id, item]),
+  ).values())
+    .map(normalizeEntityPlaceCard)
+    .filter((card: FeedCard) => Boolean(card.imageUrl))
+    .sort((a, b) => Number(b.score || 0) - Number(a.score || 0))
+    .slice(0, input.limit);
 }
 
 async function loadNewsLane(input: {
@@ -458,14 +394,13 @@ async function loadNewsLane(input: {
         title: cleanText(item.title, "GTA entertainment update"),
         subtitle: cleanText(item.tag || item.city || "Entertainment"),
         city: cleanText(item.city || "Greater Toronto Area"),
-        imageUrl:
-          cleanText(item.image_url) || fallbackImageFor("news", item.tag),
+        imageUrl: cleanText(item.image_url) || undefined,
         statusLabel: item.published_at ? "Updated today" : "GTA news",
         actionLabel: "Read",
         source: "echoo-news",
         category: cleanText(item.tag || "news"),
       }) satisfies FeedCard,
-  );
+  ).filter((card: FeedCard) => Boolean(card.imageUrl));
 }
 
 Deno.serve(async (req) => {
@@ -496,6 +431,7 @@ Deno.serve(async (req) => {
     const limit = Math.min(clampLimit(payload.limit), 12);
     const city = payload.city || "GTA";
     const hasGps = Number.isFinite(payload.lat) && Number.isFinite(payload.lng);
+    const eventOnly = /^(tickets|events)$/i.test(payload.mode || "");
 
     const [events, places, news] = await Promise.all([
       loadEventLane({
@@ -506,14 +442,18 @@ Deno.serve(async (req) => {
         limit,
         mode: payload.mode,
       }),
-      loadPlaceLane({
-        supabase,
-        city,
-        lat: payload.lat,
-        lng: payload.lng,
-        limit,
-      }),
-      loadNewsLane({ supabase, city, limit: Math.min(limit, 6) }),
+      eventOnly
+        ? Promise.resolve([] as FeedCard[])
+        : loadPlaceLane({
+            supabase,
+            city,
+            lat: payload.lat,
+            lng: payload.lng,
+            limit,
+          }),
+      eventOnly
+        ? Promise.resolve([] as FeedCard[])
+        : loadNewsLane({ supabase, city, limit: Math.min(limit, 6) }),
     ]);
 
     const lanes: FeedLane[] = [
@@ -525,18 +465,20 @@ Deno.serve(async (req) => {
           : "Selling now",
         cards: events,
       },
-      {
-        id: "trending-places",
-        title: hasGps ? `Places near you` : "Trending GTA places",
-        label: hasGps ? "Near you" : "GTA pick",
-        cards: places,
-      },
-      {
-        id: "entertainment-news",
-        title: "Entertainment news",
-        label: news.length ? "Updated today" : "Coming soon",
-        cards: news,
-      },
+      ...(!eventOnly ? [
+        {
+          id: "trending-places",
+          title: hasGps ? `Places near you` : "Trending GTA places",
+          label: hasGps ? "Near you" : "GTA pick",
+          cards: places,
+        },
+        {
+          id: "entertainment-news",
+          title: "Entertainment news",
+          label: news.length ? "Updated today" : "Coming soon",
+          cards: news,
+        },
+      ] : []),
     ];
 
     await logLocationEvent(supabase, {

@@ -1431,7 +1431,7 @@
             // Place/category searches belong in Explore, which can show a
             // browsable local list instead of the companion's short route.
             const isPlaceSearch =
-              /\b(restaurant|resturant|resturants|restaraunt|restaraunts|cafe|coffee|bar|pub|food|eat|lunch|brunch|dinner|breakfast|bakery|museum|gallery|park|trail|library|shopping|mall|hotel|spa|gym|things to do|place|places)\b/i.test(
+              /\b(restaurant|restraints?|restrants?|resturant|resturants|restaraunt|restaraunts|cafe|coffee|bar|pub|food|eat|lunch|brunch|dinner|breakfast|bakery|museum|gallery|park|trail|library|shopping|mall|hotel|spa|gym|things to do|place|places)\b/i.test(
                 query,
               );
             await openProtectedRoute(
@@ -1615,7 +1615,7 @@
           const lanes = payload?.data?.lanes || [];
           const cards = lanes
             .flatMap((lane) => lane.cards || [])
-            .filter(Boolean)
+            .filter((card) => card && /^https?:\/\//i.test(String(card.imageUrl || "")))
             .slice(0, 10);
           if (!cards.length) {
             livePicksTitle.textContent = "GTA picks are still loading";
@@ -1628,8 +1628,7 @@
           }
           livePicks.innerHTML = cards
             .map((card) => {
-              const image =
-                card.imageUrl || "assets/optimized/news-music-768.jpg";
+              const image = card.imageUrl;
               const title = escapeHtml(card.title || "GTA pick");
               return `
                 <a
