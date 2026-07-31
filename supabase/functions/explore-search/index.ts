@@ -1,10 +1,10 @@
 import {
   CORS_HEADERS,
   clampRadiusMeters,
+  GTA_REGION,
   getSupabaseAdmin,
   isInsideGtaBounds,
   jsonResponse,
-  nearestSupportedCity,
   normalizeCityName,
   readLocationCache,
   sha256Hex,
@@ -22,13 +22,13 @@ import {
 
 type ExplorePayload = {
   query?: unknown;
-  context?: unknown;
   city?: unknown;
   lat?: unknown;
   lng?: unknown;
   radiusMeters?: unknown;
   category?: unknown;
   featureSlugs?: unknown;
+  preferenceFeatureSlugs?: unknown;
   limit?: unknown;
   cursor?: unknown;
   livePageToken?: unknown;
@@ -36,6 +36,10 @@ type ExplorePayload = {
 };
 
 type OwnedResult = Record<string, any>;
+type LiveSearchResponse = {
+  results: Array<Record<string, any>>;
+  nextPageToken: string | null;
+};
 
 function stringArray(value: unknown, max = 8) {
   if (!Array.isArray(value)) return [];
@@ -46,6 +50,36 @@ function stringArray(value: unknown, max = 8) {
         .filter(Boolean),
     ),
   ].slice(0, max);
+}
+
+async function resolveGpsCity(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  lat: number,
+  lng: number,
+) {
+  // A municipality is a legal boundary, not the closest city centre. The
+  // fallback deliberately remains GTA-wide until the official polygon resolver
+  // can name a municipality with confidence.
+  try {
+    const { data, error } = await supabase.rpc("resolve_gta_municipality", {
+      p_lat: lat,
+      p_lng: lng,
+    });
+    if (error) throw error;
+    const match = (Array.isArray(data) ? data[0] : null) as {
+      municipality?: string;
+    } | null;
+    const municipality = normalizeCityName(match?.municipality);
+    if (municipality?.coverageLevel === "municipality") {
+      return { ...municipality, resolution: "boundary" as const };
+    }
+  } catch (error) {
+    console.warn(
+      "Explore municipality resolver unavailable:",
+      cleanDiscoveryText((error as Error)?.message, 160),
+    );
+  }
+  return { ...GTA_REGION, resolution: "gta_fallback" as const };
 }
 
 function asBoolean(value: unknown, fallback: boolean) {
@@ -163,6 +197,10 @@ function normalizedLiveQuery(query: string, category: string | null) {
 // it to match an entire sentence such as "food dinner date night".
 function ownedInventoryQuery(query: string) {
   const text = normalizedLiveQuery(query, null).toLowerCase();
+  // “Trending” is a browse mode, not a literal venue name. Leaving it as a
+  // text predicate would hide the whole owned catalogue unless a place happened
+  // to contain the word “popular” in its title or description.
+  if (/\b(trending|popular)\b|\bthings to do\b/.test(text)) return "";
   if (/\b(restaurant|food|dining|eat|brunch|lunch|dinner|tasting|bakery)\b/.test(text)) return "restaurant";
   if (/\b(cafe|coffee|espresso)\b/.test(text)) return "cafe";
   if (/\b(bar|pub|nightlife|lounge)\b/.test(text)) return "bar";
@@ -313,7 +351,7 @@ async function googleLiveSearch(input: {
   lng?: number;
   limit: number;
   pageToken?: string;
-}) {
+}): Promise<LiveSearchResponse> {
   const key =
     Deno.env.get("GOOGLE_PLACES_API_KEY") ||
     Deno.env.get("GOOGLE_MAPS_API_KEY");
@@ -339,7 +377,9 @@ async function googleLiveSearch(input: {
         radius: 35000,
       },
     };
-    body.rankPreference = "DISTANCE";
+    // The selected quick filter controls provider relevance; GPS is a bias
+    // and is blended with relevance below rather than becoming a hard sort.
+    body.rankPreference = "RELEVANCE";
   }
   const response = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
@@ -356,7 +396,7 @@ async function googleLiveSearch(input: {
   );
   if (!response.ok) {
     console.warn("Explore Google fallback failed:", await response.text());
-    return [];
+    return { results: [], nextPageToken: null };
   }
   const data = await response.json();
   const results = await Promise.all((data.places || []).map(async (place: any) => {
@@ -423,6 +463,96 @@ async function googleLiveSearch(input: {
   return { results, nextPageToken: cleanDiscoveryText(data.nextPageToken, 2048) || null };
 }
 
+function discoveryTerms(value: unknown) {
+  return cleanDiscoveryText(value, 160)
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .split(/[^a-z0-9]+/)
+    .filter((term) => term.length > 2)
+    .filter((term) => !new Set(["popular", "places", "things", "nearby", "local", "today"]).has(term));
+}
+
+function profileAffinity(item: Record<string, any>, preferenceSlugs: string[]) {
+  if (!preferenceSlugs.length) return 0;
+  const features = Array.isArray(item.features)
+    ? item.features.map((feature: unknown) => cleanDiscoveryText(feature, 80).toLowerCase())
+    : [];
+  const haystack = [item.title, item.category, item.description, ...features]
+    .map((value) => cleanDiscoveryText(value, 300).toLowerCase().replace(/[_-]+/g, " "))
+    .join(" ");
+  const matches = preferenceSlugs.filter((slug) => {
+    const phrase = slug.replace(/_/g, " ");
+    return features.includes(slug) || haystack.includes(phrase);
+  }).length;
+  return Math.min(matches / Math.min(preferenceSlugs.length, 3), 1);
+}
+
+function mergedDiscoveryScore(input: {
+  item: Record<string, any>;
+  query: string;
+  preferenceSlugs: string[];
+  hasCoordinates: boolean;
+}) {
+  const { item, preferenceSlugs, hasCoordinates } = input;
+  const haystack = [item.title, item.category, item.description, ...(item.features || [])]
+    .map((value) => cleanDiscoveryText(value, 300).toLowerCase().replace(/[_-]+/g, " "))
+    .join(" ");
+  const queryTerms = [...new Set(discoveryTerms(input.query))];
+  const queryMatches = queryTerms.filter((term) => haystack.includes(term)).length;
+  // Google has already ranked its response against the selected text query.
+  // Echoo inventory carries an explicit relevance score from the same query.
+  const sourceRelevance = item.source === "echoo"
+    ? Math.max(0, Math.min(Number(item.rankScore || 0) / 1.15, 1))
+    : Math.min(0.9, 0.62 + queryMatches * 0.12);
+  const distance = Number(item.distanceMeters);
+  const distanceAffinity = hasCoordinates && Number.isFinite(distance)
+    ? Math.max(0, 1 - distance / 75_000)
+    : 0.5;
+  const quality = Math.max(
+    0,
+    Math.min(
+      1,
+      (Number(item.community?.ratingAverage || 0) / 5) * 0.6 +
+        Math.min(Math.log10(Number(item.community?.ratingCount || 0) + 1) / 4, 1) * 0.4,
+    ),
+  );
+  // Intent remains dominant. GPS is substantial but not so strict that an
+  // excellent next-municipality option disappears from a GTA experience.
+  return (
+    sourceRelevance * 0.52 +
+    distanceAffinity * (hasCoordinates ? 0.27 : 0.08) +
+    profileAffinity(item, preferenceSlugs) * 0.13 +
+    quality * 0.08
+  );
+}
+
+function rankMergedResults(
+  results: Record<string, any>[],
+  query: string,
+  preferenceSlugs: string[],
+  hasCoordinates: boolean,
+) {
+  return results
+    .map((item) => ({
+      ...item,
+      discoveryScore: mergedDiscoveryScore({
+        item,
+        query,
+        preferenceSlugs,
+        hasCoordinates,
+      }),
+    }))
+    .sort((
+      a: Record<string, any> & { discoveryScore: number },
+      b: Record<string, any> & { discoveryScore: number },
+    ) => {
+      const scoreDelta = Number(b.discoveryScore) - Number(a.discoveryScore);
+      if (Math.abs(scoreDelta) > 0.0001) return scoreDelta;
+      return (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) -
+        (b.distanceMeters ?? Number.MAX_SAFE_INTEGER);
+    });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -440,7 +570,6 @@ Deno.serve(async (req) => {
     // Without this, "resturants" reached Google correctly but missed Echoo's
     // own search index entirely.
     const searchQuery = query ? normalizedLiveQuery(query, null) : "";
-    const context = cleanDiscoveryText(get("context"), 120);
     const inventoryQuery = ownedInventoryQuery(searchQuery);
     const lat = optionalDiscoveryNumber(get("lat"));
     const lng = optionalDiscoveryNumber(get("lng"));
@@ -466,9 +595,10 @@ Deno.serve(async (req) => {
     }
 
     const suppliedCity = cleanDiscoveryText(get("city"), 80);
+    const supabase = getSupabaseAdmin();
     const city =
       lat !== undefined && lng !== undefined
-        ? nearestSupportedCity(lat, lng)
+        ? await resolveGpsCity(supabase, lat, lng)
         : normalizeCityName(suppliedCity || "GTA");
     if (!city)
       return jsonResponse(
@@ -489,28 +619,51 @@ Deno.serve(async (req) => {
     if (get("cursor") && !cursor)
       return jsonResponse({ error: "Invalid cursor" }, 422);
     const livePageToken = cleanDiscoveryText(get("livePageToken"), 2048) || undefined;
-    const supabase = getSupabaseAdmin();
     const { data: features, error: featuresError } = await supabase
       .from("discovery_feature_catalog")
       .select("slug,label,synonyms")
       .eq("is_active", true);
     if (featuresError) throw featuresError;
-    const explicitFeatures = stringArray(
+    const explicitRequiredFeatures = stringArray(
       body.featureSlugs ?? url.searchParams.getAll("featureSlugs"),
+    );
+    const explicitPreferenceFeatures = stringArray(
+      body.preferenceFeatureSlugs ?? url.searchParams.getAll("preferenceFeatureSlugs"),
+      10,
     );
     const knownSlugs = new Set(
       (features || []).map((feature: any) => feature.slug),
     );
+    // An explicitly requested feature remains a hard filter. Inferred query
+    // features (for example `music` -> `live_music`) are a soft boost: newly
+    // imported OSM venues do not yet have every editorial feature attached,
+    // so making that inference mandatory would hide real local inventory.
+    // Query intent is enforced by the category taxonomy inside the search RPC.
+    const queryFeatureSlugs = matchedFeatureSlugs(
+      searchQuery,
+      (features || []) as DiscoveryFeature[],
+    );
     const featureSlugs = [
       ...new Set([
-        ...explicitFeatures.filter((slug) => knownSlugs.has(slug)),
-        ...matchedFeatureSlugs(searchQuery, (features || []) as DiscoveryFeature[]),
+        ...explicitRequiredFeatures.filter((slug) => knownSlugs.has(slug)),
       ]),
     ].slice(0, 8);
-    const cityFilter = city.coverageLevel === "municipality" ? city.name : null;
+    const preferenceFeatureSlugs = [
+      ...new Set([
+        ...queryFeatureSlugs,
+        ...explicitPreferenceFeatures.filter((slug) => knownSlugs.has(slug)),
+      ]),
+    ].slice(0, 10);
+    // A manual municipality choice is intentionally narrow. With real GPS,
+    // however, location is a relevance signal rather than a hard city wall:
+    // rank the nearby venue first, then let cursor pagination continue through
+    // the wider GTA envelope. This avoids a user in one neighbourhood seeing
+    // an artificially small catalogue while preserving a local-first order.
+    const cityFilter =
+      lat === undefined && city.coverageLevel === "municipality" ? city.name : null;
     const cacheKey = await sha256Hex(
       JSON.stringify({
-        v: 2,
+        v: 4,
         query: searchQuery.toLowerCase(),
         inventoryQuery,
         city: cityFilter,
@@ -519,6 +672,7 @@ Deno.serve(async (req) => {
         radiusMeters,
         category,
         featureSlugs,
+        preferenceFeatureSlugs,
         limit,
         cursor,
       }),
@@ -533,6 +687,7 @@ Deno.serve(async (req) => {
         {
           p_query: inventoryQuery || null,
           p_feature_slugs: featureSlugs,
+          p_preference_feature_slugs: preferenceFeatureSlugs,
           p_lat: lat ?? null,
           p_lng: lng ?? null,
           p_radius_meters: radiusMeters,
@@ -561,9 +716,9 @@ Deno.serve(async (req) => {
     const liveRequest = includeLiveFallback
       ? await googleLiveSearch({
           req,
-          query: [searchQuery || category || "things to do", context]
-            .filter(Boolean)
-            .join(" "),
+          // Do not concatenate onboarding or time prose into the provider
+          // query. A quick filter must remain a clean, unambiguous intent.
+          query: searchQuery || category || "things to do",
           category,
           city: city.name,
           lat,
@@ -575,23 +730,29 @@ Deno.serve(async (req) => {
     await hydrateOwnedCardPhotos(req, supabase, ownedCards);
     const live = liveRequest;
     const last = page.at(-1);
-    // Every visual result is a real provider or approved venue photo. Cards
-    // without a verified photo wait for the enrichment path instead of being
-    // padded with AI or stock imagery.
+    // Every photo that is shown is a real provider or approved venue photo.
+    // Missing photography must never make a real local business disappear:
+    // clients render an honest category fallback while enrichment continues.
     const merged = [...ownedCards, ...live.results]
       .filter((item, index, all) =>
         all.findIndex((candidate) => discoveryResultKey(candidate) === discoveryResultKey(item)) === index,
-      )
-      .filter((item: any) => Boolean(item.image?.url || item.image?.storagePath));
-    if (lat !== undefined && lng !== undefined) {
-      merged.sort((a: any, b: any) => (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER));
-    }
+      );
+    const ranked = rankMergedResults(
+      merged,
+      searchQuery || category || "things to do",
+      preferenceFeatureSlugs,
+      lat !== undefined && lng !== undefined,
+    );
     return jsonResponse({
       supported: true,
       query,
       region: city,
-      filters: { category, featureSlugs, radiusMeters },
-      results: merged,
+      filters: { category, featureSlugs, preferenceFeatureSlugs, radiusMeters },
+      locationResolution:
+        (city as { resolution?: string }).resolution ||
+        (lat === undefined ? "manual_city" : "gta_fallback"),
+      searchScope: cityFilter ? "municipality" : "gta_region",
+      results: ranked,
       ownedResultCount: page.length,
       registeredResultCount: ownedCards.filter((item: any) => item.placement?.sponsored).length,
       liveFallbackCount: live.results.length,

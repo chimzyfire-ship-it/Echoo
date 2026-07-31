@@ -39,6 +39,8 @@ export type PlaceInput = {
   popularityScore?: number;
   trustScore?: number;
   photos?: PlacePhotoInput[];
+  /** Identifier for one complete, municipality-clipped source extract. */
+  sourceSnapshotId?: string;
 };
 
 export type IngestionRun = {
@@ -105,15 +107,54 @@ export const TICKETMASTER_CATEGORY_BUCKETS = [
   "comedy",
 ];
 
+// These are physical-place classes that Echoo reconciles against a complete
+// municipality-clipped source extract. Event categories (including comedy)
+// have their own freshness/provider audit and must never be presented as a
+// complete place census.
+export const GTA_PLACE_COVERAGE_CATEGORIES = [
+  "restaurant",
+  "cafe",
+  "bar",
+  "pub",
+  "fast_food",
+  "food_court",
+  "ice_cream",
+  "biergarten",
+  "nightclub",
+  "theatre",
+  "cinema",
+  "arts_centre",
+  "event_venue",
+  "community_centre",
+  "library",
+  "attraction",
+  "museum",
+  "gallery",
+  "park",
+  "fitness_centre",
+  "nature_reserve",
+  "mall",
+  "club",
+  "historic",
+] as const;
+
 const OSM_AMENITIES = new Map([
   ["restaurant", "restaurant"],
   ["cafe", "cafe"],
   ["bar", "bar"],
   ["pub", "pub"],
   ["fast_food", "fast_food"],
+  ["food_court", "food_court"],
+  ["ice_cream", "ice_cream"],
+  ["biergarten", "biergarten"],
+  ["nightclub", "nightclub"],
   ["cinema", "cinema"],
   ["theatre", "theatre"],
   ["arts_centre", "arts_centre"],
+  ["conference_centre", "event_venue"],
+  ["event_venue", "event_venue"],
+  ["music_venue", "event_venue"],
+  ["social_centre", "event_venue"],
   ["community_centre", "community_centre"],
   ["library", "library"],
 ]);
@@ -231,36 +272,108 @@ function addressFromTags(tags: Record<string, unknown>) {
 }
 
 function osmIdentity(element: any) {
+  const properties = element?.properties || {};
   const rawId = cleanText(
     element.id ||
-      element.properties?.id ||
-      element.properties?.["@id"] ||
-      element.properties?.type_id ||
+      properties["@id"] ||
+      properties.id ||
+      properties.type_id ||
       element.raw_feature?.id,
   );
   const typedMatch = rawId.match(/^(node|way|relation)[/:_](.+)$/i);
+  const shorthandMatch = rawId.match(/^([nwra])(\d+)$/i);
   const rawType = cleanText(
-    element.type || element.properties?.type,
+    properties["@type"] || element.osm_type || properties.type || element.type,
     "node",
   ).toLowerCase();
+  const normalizeType = (value: string) => {
+    if (value === "n") return "node";
+    if (value === "w") return "way";
+    if (value === "r") return "relation";
+    return value;
+  };
+
+  // `osmium export --add-unique-id=type_id` uses `a<id>` for areas. Keep
+  // this fallback for older artifacts, even though the current converter
+  // exports the original @type and @id attributes directly.
+  if (shorthandMatch?.[1]?.toLowerCase() === "a") {
+    const areaId = Number(shorthandMatch[2]);
+    if (Number.isSafeInteger(areaId)) {
+      return areaId % 2 === 0
+        ? { type: "way", id: String(areaId / 2) }
+        : { type: "relation", id: String((areaId - 1) / 2) };
+    }
+  }
+
   return {
-    type: typedMatch?.[1]?.toLowerCase() || rawType || "node",
-    id: typedMatch?.[2] || rawId,
+    type: normalizeType(
+      typedMatch?.[1]?.toLowerCase() || shorthandMatch?.[1]?.toLowerCase() ||
+        rawType || "node",
+    ),
+    id: typedMatch?.[2] || shorthandMatch?.[2] || rawId,
   };
 }
 
 function pointFromGeometry(geometry: any) {
+  if (!geometry?.coordinates) return {};
+  const points: Array<[number, number]> = [];
+  const collect = (value: unknown) => {
+    if (!Array.isArray(value)) return;
+    if (
+      value.length >= 2 &&
+      typeof value[0] === "number" &&
+      typeof value[1] === "number"
+    ) {
+      points.push([value[0], value[1]]);
+      return;
+    }
+    for (const child of value) collect(child);
+  };
+  collect(geometry.coordinates);
+  if (!points.length) return {};
+
+  // OSM venues are frequently mapped as a building/area rather than a node.
+  // A bounding-box centre is a stable, nearby search pin for points, lines,
+  // polygons, and multipolygons without discarding non-point businesses.
+  const longitudes = points.map(([lng]) => lng);
+  const latitudes = points.map(([, lat]) => lat);
+  return {
+    lat: (Math.min(...latitudes) + Math.max(...latitudes)) / 2,
+    lng: (Math.min(...longitudes) + Math.max(...longitudes)) / 2,
+  };
+}
+
+export function osmSourceCoverageRecord(element: any) {
+  const tags =
+    element?.tags || element?.properties?.tags || element?.properties || {};
+  const category = inferOsmCategory(tags);
+  const { type, id } = osmIdentity(element);
+  const geometryPoint = pointFromGeometry(element.geometry);
+  const lat = optionalNumber(
+    element.lat ?? element.latitude ?? element.center?.lat ?? geometryPoint.lat,
+  );
+  const lng = optionalNumber(
+    element.lon ??
+      element.lng ??
+      element.longitude ??
+      element.center?.lon ??
+      geometryPoint.lng,
+  );
+  const name = optionalText(tags.name || tags.brand || tags.operator);
+  // The reconciliation census deliberately covers all records that can be
+  // truthfully published as a searchable place. Untitled map infrastructure
+  // and geometry without a usable pin are retained in the source extract but
+  // cannot be presented as a venue without fabricating a user-facing identity.
   if (
-    geometry?.type === "Point" &&
-    Array.isArray(geometry.coordinates) &&
-    geometry.coordinates.length >= 2
-  ) {
-    return {
-      lat: optionalNumber(geometry.coordinates[1]),
-      lng: optionalNumber(geometry.coordinates[0]),
-    };
-  }
-  return {};
+    !category ||
+    !id ||
+    !name ||
+    !/^(node|way|relation)$/.test(type) ||
+    lat === undefined ||
+    lng === undefined ||
+    !isInsideOntario(lat, lng)
+  ) return null;
+  return { category, sourceId: `${type}/${id}` };
 }
 
 export function osmElementToPlace(
@@ -269,8 +382,8 @@ export function osmElementToPlace(
 ): PlaceInput | null {
   const tags =
     element?.tags || element?.properties?.tags || element?.properties || {};
-  const category = inferOsmCategory(tags);
-  if (!category) return null;
+  const sourceRecord = osmSourceCoverageRecord(element);
+  if (!sourceRecord) return null;
 
   const geometryPoint = pointFromGeometry(element.geometry);
   const lat = optionalNumber(
@@ -294,11 +407,11 @@ export function osmElementToPlace(
   return {
     source: "osm",
     sourceName: "openstreetmap",
-    sourceId: `${osmType}/${osmId}`,
+    sourceId: sourceRecord.sourceId,
     sourceUrl: `https://www.openstreetmap.org/${osmType}/${osmId}`,
     sourceLicense: "ODbL-1.0",
     name,
-    category,
+    category: sourceRecord.category,
     subcategory: optionalText(
       tags.amenity ||
         tags.tourism ||
@@ -514,6 +627,7 @@ export async function upsertCanonicalPlace(
           ingestion_source: place.source,
           description: place.description,
           raw_source_name: place.sourceName,
+          source_snapshot_id: place.sourceSnapshotId || null,
         },
       },
       { onConflict: "place_provider,place_provider_id" },
@@ -602,6 +716,7 @@ export async function mirrorPlaceToLocationEntity(
         source_name: place.sourceName,
         source_license: place.sourceLicense,
         source_url: place.sourceUrl,
+        source_snapshot_id: place.sourceSnapshotId || null,
       },
     },
     { onConflict: "source_provider,source_provider_id" },
