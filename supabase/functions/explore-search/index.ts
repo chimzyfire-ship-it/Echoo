@@ -174,7 +174,7 @@ async function googleLiveSearch(input: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri,places.photos",
+          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri,places.photos,places.rating,places.userRatingCount",
       },
       body: JSON.stringify(body),
     },
@@ -201,6 +201,16 @@ async function googleLiveSearch(input: {
     const imageUrl = photoName
       ? `https://places.googleapis.com/v1/${photoName}/media?key=${encodeURIComponent(key)}&maxWidthPx=400`
       : null;
+    const ratingAverage = optionalDiscoveryNumber(place.rating);
+    const ratingCount = Math.max(0, Number(place.userRatingCount || 0));
+    // This is an observed popularity signal, not a claim about live capacity:
+    // rating quality and enough independent reviews make a place a strong
+    // candidate for Discover's “well loved” treatment.
+    const ratingQuality = ratingAverage === undefined
+      ? 0
+      : Math.max(0, Math.min(1, (ratingAverage - 3.8) / 1.2));
+    const reviewVolume = Math.max(0, Math.min(1, Math.log10(ratingCount + 1) / 4));
+    const hotScore = Number((ratingQuality * 0.62 + reviewVolume * 0.38).toFixed(3));
     return {
     id: `google:${cleanDiscoveryText(place.id, 160)}`,
     source: "google_places",
@@ -223,7 +233,14 @@ async function googleLiveSearch(input: {
       }
       : null,
     features: [],
-    community: null,
+    community: ratingAverage === undefined
+      ? null
+      : {
+        ratingAverage,
+        ratingCount,
+        hotScore,
+        isHot: ratingAverage >= 4.5 && ratingCount >= 100,
+      },
     actionUrl: cleanDiscoveryText(place.googleMapsUri, 500) || null,
     attribution: { provider: "Google Maps", requiredLabel: "Google Maps" },
     isNewToEchoo: true,
