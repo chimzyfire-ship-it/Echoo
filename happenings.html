@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080808" />
+    <title>Happenings · echoo</title>
+    <link rel="stylesheet" href="assets/page-loader.css" />
+    <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <style>
+      :root { color-scheme: dark; --bg:#080808; --panel:#151514; --ink:#f8f5ef; --muted:#aaa29a; --line:rgba(248,245,239,.12); --peach:#f7d5b2; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+      * { box-sizing:border-box; }
+      html,body { min-height:100%; margin:0; background:var(--bg); color:var(--ink); }
+      body { display:grid; justify-items:center; -webkit-font-smoothing:antialiased; }
+      button,a { color:inherit; font:inherit; }
+      a { text-decoration:none; }
+      .app { width:min(100%,430px); min-height:100svh; padding-bottom:44px; background:radial-gradient(circle at 96% 4%,rgba(247,213,178,.11),transparent 13rem),radial-gradient(circle at 5% 36%,rgba(117,155,147,.09),transparent 15rem),var(--bg); }
+      .topbar { display:flex; align-items:center; justify-content:space-between; padding:calc(22px + env(safe-area-inset-top)) 24px 16px; }
+      .brand img { display:block; width:116px; height:auto; filter:brightness(1.15); }
+      .discover-link { min-height:35px; padding:0 12px; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:11px; font-weight:720; }
+      .discover-link svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.8; }
+      main { display:grid; gap:31px; padding:8px 24px; }
+      .hero { display:grid; gap:11px; }
+      .eyebrow { display:flex; align-items:center; gap:7px; margin:0; color:var(--peach); font-size:10px; font-weight:780; letter-spacing:.11em; text-transform:uppercase; }
+      .eyebrow::before { width:6px; height:6px; border-radius:50%; background:var(--peach); content:""; }
+      h1,h2,p { margin:0; }
+      h1 { max-width:8ch; font-size:clamp(39px,11vw,50px); font-weight:810; letter-spacing:-.065em; line-height:.94; }
+      .hero-copy { max-width:33ch; color:var(--muted); font-size:14px; line-height:1.48; }
+      .culture-state { justify-self:start; display:inline-flex; min-height:34px; align-items:center; gap:7px; padding:0 11px; border:1px solid rgba(247,213,178,.3); border-radius:999px; color:var(--peach); background:rgba(247,213,178,.06); font-size:11px; font-weight:720; }
+      .culture-state svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7; }
+      .filters { display:flex; gap:8px; overflow-x:auto; margin:0 -24px; padding:0 24px 2px; scrollbar-width:none; }
+      .filters::-webkit-scrollbar { display:none; }
+      .filter { flex:0 0 auto; min-height:35px; padding:0 13px; color:var(--muted); border:1px solid var(--line); border-radius:999px; background:rgba(248,245,239,.035); font-size:11px; font-weight:720; }
+      .filter.is-active { color:#1c1711; border-color:var(--peach); background:var(--peach); }
+      .section { display:grid; gap:13px; }
+      .section-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+      .section-head h2 { font-size:19px; letter-spacing:-.035em; }
+      .section-head span { color:var(--muted); font-size:10px; font-weight:660; }
+      .posted-rail { display:flex; gap:12px; overflow-x:auto; margin:0 -24px; padding:0 24px 4px; scrollbar-width:none; }
+      .posted-rail::-webkit-scrollbar { display:none; }
+      .posted-card { position:relative; flex:0 0 255px; min-height:292px; display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden; padding:17px; border:1px solid var(--line); border-radius:22px; background:#151515; }
+      .posted-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.8; }
+      .posted-card::after { position:absolute; inset:0; background:linear-gradient(to top,rgba(5,5,5,.96),rgba(5,5,5,.2) 72%,transparent); content:""; }
+      .posted-card > * { position:relative; z-index:1; }
+      .posted-card small { margin-bottom:8px; color:var(--peach); font-size:10px; font-weight:760; letter-spacing:.08em; text-transform:uppercase; }
+      .posted-card strong { max-width:15ch; font-size:22px; letter-spacing:-.035em; line-height:1.02; }
+      .posted-card span { margin-top:8px; color:rgba(248,245,239,.73); font-size:11px; font-weight:620; }
+      .live-list { display:grid; gap:10px; }
+      .live-card { display:grid; grid-template-columns:92px minmax(0,1fr); gap:13px; align-items:stretch; min-height:108px; overflow:hidden; padding:7px; border:1px solid var(--line); border-radius:17px; background:rgba(248,245,239,.035); }
+      .live-card:active,.posted-card:active { transform:scale(.985); }
+      .live-card img { width:92px; height:94px; border-radius:11px; object-fit:cover; background:#222; }
+      .live-card-copy { display:flex; min-width:0; flex-direction:column; justify-content:center; gap:5px; padding:3px 7px 3px 0; }
+      .live-card-kicker { color:var(--peach); font-size:9px; font-weight:760; letter-spacing:.08em; text-transform:uppercase; }
+      .live-card strong { overflow:hidden; font-size:15px; letter-spacing:-.02em; line-height:1.15; text-overflow:ellipsis; white-space:nowrap; }
+      .live-card p { overflow:hidden; color:var(--muted); font-size:11px; font-weight:560; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+      .live-card-meta { color:rgba(248,245,239,.67); font-size:10px; font-weight:620; }
+      .empty { min-height:108px; display:grid; place-items:center; padding:18px; color:var(--muted); border:1px dashed var(--line); border-radius:16px; font-size:12px; line-height:1.45; text-align:center; }
+      .skeleton { min-height:108px; border-radius:17px; background:linear-gradient(90deg,rgba(248,245,239,.035),rgba(248,245,239,.08),rgba(248,245,239,.035)); background-size:200% 100%; animation:shimmer 1.4s infinite; }
+      @keyframes shimmer { to { background-position:-200% 0; } }
+      @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Echoo home"><img src="assets/echoo-wordmark.png" alt="echoo" /></a>
+        <a class="discover-link" href="events.html" aria-label="Back to Discover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7M8 12h10" /></svg>Discover</a>
+      </header>
+      <main>
+        <section class="hero">
+          <p class="eyebrow">Live guide</p>
+          <h1>Good things are happening.</h1>
+          <p class="hero-copy">Echoo’s own drops alongside the live plans, rooms, and gatherings worth knowing about nearby.</p>
+          <a class="culture-state" id="happenings-culture" href="events.html?culturePicker=1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.25" /><path d="M4.75 12h14.5M12 4.75c2.1 2.13 3.17 4.55 3.17 7.25S14.1 17.12 12 19.25C9.9 17.12 8.83 14.7 8.83 12S9.9 6.88 12 4.75" /></svg><span>Set a culture view</span></a>
+        </section>
+
+        <div class="filters" id="event-filters" aria-label="Filter events">
+          <button class="filter is-active" type="button" data-event-category="all">For you</button>
+          <button class="filter" type="button" data-event-category="food">Food</button>
+          <button class="filter" type="button" data-event-category="music">Music</button>
+          <button class="filter" type="button" data-event-category="nightlife">Nightlife</button>
+          <button class="filter" type="button" data-event-category="culture">Culture</button>
+          <button class="filter" type="button" data-event-category="outdoors">Outdoors</button>
+        </div>
+
+        <section class="section" aria-labelledby="echoo-posted-heading">
+          <div class="section-head"><h2 id="echoo-posted-heading">Echoo presents</h2><span>Curated drops</span></div>
+          <div class="posted-rail" id="posted-events"><div class="posted-card skeleton"></div></div>
+        </section>
+
+        <section class="section" aria-labelledby="live-events-heading">
+          <div class="section-head"><h2 id="live-events-heading">Live nearby</h2><span id="live-events-city">Loading</span></div>
+          <div class="live-list" id="live-events"><div class="skeleton"></div><div class="skeleton"></div></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/location-platform.js"></script>
+    <script src="assets/culture-context.js"></script>
+    <script>
+      (() => {
+        const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
+        const PROJECT_URL = "https://dlezregdjpdqmooubwvl.supabase.co";
+        const DISCOVER_FEED_URL = `${PROJECT_URL}/functions/v1/discover-feed`;
+        const EVENTS_URL = `${PROJECT_URL}/rest/v1/ticketed_events`;
+        const params = new URLSearchParams(location.search);
+        const filters = document.getElementById("event-filters");
+        const postedMount = document.getElementById("posted-events");
+        const liveMount = document.getElementById("live-events");
+        const cityLabel = document.getElementById("live-events-city");
+        const cultureLink = document.getElementById("happenings-culture");
+        let activeCategory = params.get("category") || "all";
+        if (params.get("culture")) window.EchooCultureContext?.setActive(params.get("culture"), { silent: true });
+
+        const esc = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[char]);
+        const fallbackImage = "assets/optimized/news-music-768.jpg";
+        const readPrefs = () => { try { return JSON.parse(localStorage.getItem("echoo_preferences") || "{}"); } catch (_) { return {}; } };
+        function formatDate(value) {
+          const date = new Date(value || "");
+          return Number.isFinite(date.getTime()) ? date.toLocaleDateString(undefined, { month:"short", day:"numeric" }).toUpperCase() : "LIVE PICK";
+        }
+
+        function culture() { return window.EchooCultureContext?.getActive?.() || null; }
+
+        function updateCultureLink() {
+          const selected = culture();
+          cultureLink.href = "events.html?culturePicker=1";
+          cultureLink.querySelector("span").textContent = selected ? `${selected.label} view · change` : "Set a culture view";
+        }
+
+        function eventHref(item) {
+          return item?.detailUrl || (item?.id ? `event.html?id=${encodeURIComponent(item.id)}` : "#");
+        }
+
+        function imageFor(item) { return item?.image_url || item?.image?.url || item?.imageUrl || item?.image || fallbackImage; }
+
+        function renderPosted(events) {
+          if (!events.length) {
+            postedMount.innerHTML = '<p class="empty">Echoo’s next hosted drop will land here soon.</p>';
+            return;
+          }
+          postedMount.innerHTML = events.map((event) => `<a class="posted-card" href="${eventHref(event)}"><img src="${esc(imageFor(event))}" alt="" loading="lazy" /><small>Echoo presents · ${esc(formatDate(event.starts_at))}</small><strong>${esc(event.title || "Echoo event")}</strong><span>${esc(event.venue_name || event.city || "Greater Toronto Area")}</span></a>`).join("");
+        }
+
+        function renderLive(events) {
+          if (!events.length) {
+            liveMount.innerHTML = '<p class="empty">No reliable live listings match this view right now. Try another category or check back shortly.</p>';
+            return;
+          }
+          liveMount.innerHTML = events.map((event) => `<a class="live-card" href="${eventHref(event)}"><img src="${esc(imageFor(event))}" alt="" loading="lazy" /><span class="live-card-copy"><span class="live-card-kicker">${esc(formatDate(event.startsAt || event.starts_at))} · ${esc(event.category || "Live event")}</span><strong>${esc(event.title || "Local happening")}</strong><p>${esc(event.description || event.address || "A live local pick from Echoo.")}</p><span class="live-card-meta">${esc(event.address || event.venue_name || event.city || "Greater Toronto Area")}</span></span></a>`).join("");
+        }
+
+        async function loadPosted() {
+          try {
+            const query = new URLSearchParams({ select:"id,title,venue_name,city,starts_at,image_url,category,status", status:"eq.published", order:"starts_at.asc", limit:"8" });
+            const response = await fetch(`${EVENTS_URL}?${query}`, { headers:{ apikey:ANON_KEY, Authorization:`Bearer ${ANON_KEY}` } });
+            if (!response.ok) throw new Error("Echoo events unavailable");
+            const events = await response.json();
+            renderPosted(Array.isArray(events) ? events.filter((event) => activeCategory === "all" || event.category === activeCategory).slice(0, 6) : []);
+          } catch (_) {
+            renderPosted([]);
+          }
+        }
+
+        function matchesCategory(event) {
+          if (activeCategory === "all" || activeCategory === "upcoming") return true;
+          const terms = {
+            food: ["food", "dining", "tasting", "market", "supper", "culinary"],
+            music: ["music", "concert", "dj", "listening", "band", "sound"],
+            nightlife: ["night", "party", "club", "dj", "late", "bar"],
+            culture: ["culture", "art", "gallery", "museum", "community", "festival", "heritage"],
+            outdoors: ["outdoor", "park", "walk", "market", "garden", "nature"],
+          }[activeCategory] || [];
+          const haystack = `${event.category || ""} ${event.title || ""} ${event.subtitle || ""}`.toLowerCase();
+          return terms.some((term) => haystack.includes(term));
+        }
+
+        async function loadLive() {
+          const prefs = readPrefs();
+          const city = prefs.city || "Toronto";
+          cityLabel.textContent = city;
+          try {
+            const lat = Number(prefs.lastLat), lng = Number(prefs.lastLng);
+            const url = new URL(DISCOVER_FEED_URL);
+            url.searchParams.set("city", city);
+            url.searchParams.set("limit", "12");
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+              url.searchParams.set("lat", String(lat));
+              url.searchParams.set("lng", String(lng));
+            }
+            const response = await fetch(url, { headers:{ apikey:ANON_KEY, Authorization:`Bearer ${ANON_KEY}` } });
+            if (!response.ok) throw new Error("Live events unavailable");
+            const payload = await response.json();
+            const postedTitles = new Set([...postedMount.querySelectorAll("strong")].map((element) => element.textContent));
+            const events = payload?.data?.lanes?.find((lane) => lane.id === "shows-tickets")?.cards || [];
+            const categoryMatches = events.filter(matchesCategory);
+            const selectedCulture = culture();
+            const cultureMatches = selectedCulture
+              ? categoryMatches.filter((event) => `${event.title || ""} ${event.subtitle || ""} ${event.category || ""}`.toLowerCase().includes(selectedCulture.label.toLowerCase()))
+              : [];
+            const usable = (cultureMatches.length ? cultureMatches : categoryMatches.length ? categoryMatches : events)
+              .filter((event) => !postedTitles.has(event.title))
+              .slice(0, 8);
+            renderLive(usable);
+          } catch (_) {
+            renderLive([]);
+          }
+        }
+
+        async function refresh() {
+          filters.querySelectorAll("[data-event-category]").forEach((button) => button.classList.toggle("is-active", button.dataset.eventCategory === activeCategory));
+          updateCultureLink();
+          liveMount.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+          await loadPosted();
+          await loadLive();
+        }
+
+        filters.addEventListener("click", (event) => {
+          const filter = event.target.closest("[data-event-category]");
+          if (!filter || filter.dataset.eventCategory === activeCategory) return;
+          activeCategory = filter.dataset.eventCategory;
+          const next = new URL(window.location.href);
+          next.searchParams.set("category", activeCategory);
+          window.history.replaceState({}, "", next);
+          refresh();
+        });
+        window.addEventListener("echoo:culture-changed", refresh);
+        refresh();
+      })();
+    </script>
+    <script src="assets/page-loader.js"></script>
+  </body>
+</html>

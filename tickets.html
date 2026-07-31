@@ -346,17 +346,17 @@
       /* ── Tickets grid ── */
       .tickets-grid {
         display: grid;
-        gap: 12px;
+        gap: 16px;
         margin-top: 20px;
       }
 
       .ticket {
         display: grid;
-        gap: 12px;
-        padding: 14px;
-        border-radius: 14px;
-        background: rgba(248, 245, 239, 0.05);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: rgba(248, 245, 239, 0.045);
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24);
         transition:
           transform 180ms ease,
           background 180ms ease;
@@ -367,6 +367,49 @@
         background: rgba(248, 245, 239, 0.08);
       }
 
+      .ticket-art {
+        position: relative;
+        min-height: 144px;
+        padding: 14px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        background: #20201e;
+      }
+
+      .ticket-art img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.78;
+      }
+
+      .ticket-art::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background: linear-gradient(135deg, rgba(5, 5, 5, 0.05), rgba(5, 5, 5, 0.58));
+      }
+
+      .ticket-status {
+        position: relative;
+        z-index: 1;
+        padding: 6px 9px;
+        border: 1px solid rgba(248, 245, 239, 0.23);
+        border-radius: 999px;
+        color: var(--ink);
+        background: rgba(5, 5, 5, 0.44);
+        backdrop-filter: blur(8px);
+        font-size: 9px;
+        font-weight: 760;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .ticket-body { display: grid; gap: 13px; padding: 16px; }
+
       .ticket-tag {
         color: var(--peach);
         font-size: 10px;
@@ -376,8 +419,8 @@
       }
 
       .ticket h2 {
-        margin: 4px 0 6px;
-        font-size: 20px;
+        margin: 0;
+        font-size: 22px;
         line-height: 1;
         font-weight: 620;
         text-wrap: balance;
@@ -389,6 +432,13 @@
         font-size: 13px;
         line-height: 1.28;
         font-weight: 520;
+      }
+
+      .ticket-date {
+        color: var(--peach);
+        font-size: 11px;
+        font-weight: 720;
+        letter-spacing: 0.01em;
       }
 
       .ticket-meta {
@@ -404,9 +454,12 @@
       }
 
       .ticket-code {
-        display: grid;
-        place-items: center;
-        min-height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 62px;
+        padding: 0 8px 0 15px;
         border: 1px solid var(--line);
         border-radius: 10px;
         background:
@@ -418,10 +471,28 @@
             0 0 / 14px 14px,
           rgba(8, 8, 8, 0.6);
         color: var(--peach);
-        font-size: 22px;
+        font-size: 17px;
         font-weight: 780;
         letter-spacing: 0.08em;
       }
+
+      .ticket-code span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ticket-copy {
+        min-height: 38px;
+        padding: 0 11px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(247, 213, 178, 0.32);
+        border-radius: 10px;
+        color: var(--peach);
+        background: rgba(247, 213, 178, 0.08);
+        font-size: 10px;
+        font-weight: 720;
+      }
+
+      .ticket-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .ticket-action { min-height: 42px; display: grid; place-items: center; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 12px; color: var(--ink); background: transparent; font-size: 11px; font-weight: 720; text-align: center; }
+      .ticket-action.primary { border-color: var(--peach); color: #17130e; background: var(--peach); }
+      .ticket-action:active,.ticket-copy:active { transform: scale(.98); }
 
       /* ── Empty state ── */
       .empty {
@@ -582,6 +653,7 @@
       const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
       const ticketsEl = document.getElementById("tickets");
       const emailEl = document.getElementById("email");
+      let loadedTickets = [];
 
       emailEl.value = localStorage.getItem("echoo_ticket_buyer_email") || "";
 
@@ -596,35 +668,99 @@
         return id;
       }
 
+      function escapeHtml(value) {
+        return String(value || "").replace(/[&<>"']/g, (character) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        })[character]);
+      }
+
+      function eventDate(value) {
+        const date = new Date(value || "");
+        return Number.isFinite(date.getTime())
+          ? date.toLocaleString([], { dateStyle: "full", timeStyle: "short" })
+          : "Date to be confirmed";
+      }
+
       function render(tickets) {
+        loadedTickets = Array.isArray(tickets) ? tickets : [];
         if (!tickets.length) {
           ticketsEl.innerHTML =
-            '<div class="empty">No confirmed tickets found yet. Paid manual orders appear here after owner confirmation.</div>';
+            '<div class="empty">No confirmed tickets found yet. Tickets appear here as soon as an order is confirmed.</div>';
           return;
         }
         ticketsEl.innerHTML = tickets
-          .map((ticket) => {
+          .map((ticket, index) => {
             const event = ticket.ticketed_events || {};
             const tier = ticket.ticket_tiers || {};
-            const starts = event.starts_at
-              ? new Date(event.starts_at).toLocaleString([], {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })
-              : "Date TBA";
+            const location = [event.venue_name || "Venue TBA", event.city || "Canada", event.province].filter(Boolean).join(" · ");
+            const image = event.image_url || "assets/optimized/news-music-768.jpg";
             return `
             <article class="ticket">
-              <small class="ticket-tag">${tier.name || "Ticket"} · ${starts}</small>
-              <h2>${event.title || "Echoo event"}</h2>
-              <p>${event.venue_name || "Venue TBA"} · ${event.city || "Canada"}${event.province ? ", " + event.province : ""}</p>
-              <div class="ticket-code">${ticket.display_code}</div>
-              <div class="ticket-meta">
-                <span>${ticket.display_code}</span>
+              <div class="ticket-art"><img src="${escapeHtml(image)}" alt="" loading="lazy" /><span class="ticket-status">Confirmed</span></div>
+              <div class="ticket-body">
+                <small class="ticket-tag">${escapeHtml(tier.name || "Ticket")}</small>
+                <h2>${escapeHtml(event.title || "Echoo event")}</h2>
+                <p class="ticket-date">${escapeHtml(eventDate(event.starts_at))}</p>
+                <p>${escapeHtml(location)}</p>
+                <div class="ticket-code"><span>${escapeHtml(ticket.display_code || "Ticket code pending")}</span><button class="ticket-copy" type="button" data-copy-ticket="${index}">Copy code</button></div>
+                <div class="ticket-actions">
+                  <a class="ticket-action primary" href="event.html?id=${encodeURIComponent(event.id || "")}">View event</a>
+                  <button class="ticket-action" type="button" data-calendar-ticket="${index}">Add to calendar</button>
+                </div>
               </div>
             </article>
           `;
           })
           .join("");
+        ticketsEl.querySelectorAll("[data-copy-ticket]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const ticket = loadedTickets[Number(button.dataset.copyTicket)];
+            const code = ticket?.display_code;
+            if (!code) return;
+            try {
+              await navigator.clipboard.writeText(code);
+              button.textContent = "Copied";
+              setTimeout(() => { button.textContent = "Copy code"; }, 1300);
+            } catch (_) {
+              button.textContent = "Copy unavailable";
+            }
+          });
+        });
+        ticketsEl.querySelectorAll("[data-calendar-ticket]").forEach((button) => {
+          button.addEventListener("click", () => downloadCalendar(loadedTickets[Number(button.dataset.calendarTicket)]));
+        });
+      }
+
+      function calendarDate(value) {
+        const date = new Date(value || "");
+        if (!Number.isFinite(date.getTime())) return "";
+        return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+      }
+
+      function calendarText(value) {
+        return String(value || "").replace(/[\\,;\n]/g, (character) => ({ "\\": "\\\\", ",": "\\,", ";": "\\;", "\n": "\\n" })[character]);
+      }
+
+      function downloadCalendar(ticket) {
+        const event = ticket?.ticketed_events || {};
+        const starts = calendarDate(event.starts_at);
+        if (!starts) return;
+        const end = calendarDate(new Date(new Date(event.starts_at).getTime() + 2 * 60 * 60 * 1000));
+        const content = [
+          "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Echoo//Tickets//EN", "BEGIN:VEVENT",
+          `UID:${calendarText(ticket.id || ticket.display_code)}@echoo`, `DTSTAMP:${calendarDate(new Date())}`,
+          `DTSTART:${starts}`, `DTEND:${end || starts}`, `SUMMARY:${calendarText(event.title || "Echoo event")}`,
+          `LOCATION:${calendarText([event.venue_name, event.city, event.province].filter(Boolean).join(", "))}`,
+          `DESCRIPTION:${calendarText(`Ticket ${ticket.display_code || ""}`)}`, "END:VEVENT", "END:VCALENDAR",
+        ].join("\r\n");
+        const url = URL.createObjectURL(new Blob([content], { type: "text/calendar;charset=utf-8" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${String(event.title || "echoo-event").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "echoo-event"}.ics`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
       }
 
       async function loadTickets() {
@@ -642,11 +778,15 @@
             throw new Error(json.error || "Ticket lookup failed");
           render(json.tickets || []);
         } catch (error) {
-          ticketsEl.innerHTML = `<div class="empty">${error.message}</div>`;
+          loadedTickets = [];
+          ticketsEl.innerHTML = `<div class="empty">${escapeHtml(error?.message || "Ticket lookup failed")}</div>`;
         }
       }
 
       document.getElementById("load").addEventListener("click", loadTickets);
+      emailEl.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") loadTickets();
+      });
       loadTickets();
     </script>
     <script src="assets/page-loader.js"></script>
