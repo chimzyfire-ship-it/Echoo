@@ -62,11 +62,13 @@ present.
 Each full municipality import now finalizes a source-coverage snapshot. The
 report also returns `sourceCoverageReady: true` only when all 25 municipalities
 and every mapped category in the municipal OSM extract have a fresh snapshot
-whose source record count reconciles with the published canonical index. This
-is the evidence-backed check for “we imported the entire current source
-extract,” and will surface any partial chunk import instead of silently calling
-it coverage. The converter includes point, line, and area geometry so a venue
-mapped as a building is not silently excluded.
+whose named, geolocated source records reconcile with the published canonical
+index. This is the evidence-backed check for “we imported the complete current
+searchable source extract,” and will surface any partial chunk import instead
+of silently calling it coverage. Anonymous map infrastructure and records with
+no usable location pin are excluded because they cannot be presented as a
+truthful search result. The converter includes point, line, and area geometry
+so a venue mapped as a building is not silently excluded.
 
 The same run also loads all 25 administrative boundary polygons into the GPS
 resolver. `boundaryCoverageReady: true` confirms that precise device location

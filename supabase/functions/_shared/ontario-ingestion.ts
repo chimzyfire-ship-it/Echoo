@@ -348,7 +348,31 @@ export function osmSourceCoverageRecord(element: any) {
     element?.tags || element?.properties?.tags || element?.properties || {};
   const category = inferOsmCategory(tags);
   const { type, id } = osmIdentity(element);
-  if (!category || !id || !/^(node|way|relation)$/.test(type)) return null;
+  const geometryPoint = pointFromGeometry(element.geometry);
+  const lat = optionalNumber(
+    element.lat ?? element.latitude ?? element.center?.lat ?? geometryPoint.lat,
+  );
+  const lng = optionalNumber(
+    element.lon ??
+      element.lng ??
+      element.longitude ??
+      element.center?.lon ??
+      geometryPoint.lng,
+  );
+  const name = optionalText(tags.name || tags.brand || tags.operator);
+  // The reconciliation census deliberately covers all records that can be
+  // truthfully published as a searchable place. Untitled map infrastructure
+  // and geometry without a usable pin are retained in the source extract but
+  // cannot be presented as a venue without fabricating a user-facing identity.
+  if (
+    !category ||
+    !id ||
+    !name ||
+    !/^(node|way|relation)$/.test(type) ||
+    lat === undefined ||
+    lng === undefined ||
+    !isInsideOntario(lat, lng)
+  ) return null;
   return { category, sourceId: `${type}/${id}` };
 }
 
