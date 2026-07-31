@@ -102,12 +102,13 @@
         z-index: -2;
         content: "";
         background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 24%),
-          url("assets/optimized/echoo-mobile-bg-768.webp");
+          linear-gradient(90deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.3) 55%, rgba(0, 0, 0, 0.1) 100%),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, transparent 22%, transparent 70%, rgba(0, 0, 0, 0.85) 100%),
+          url("assets/echoo-mobile-bg.jpg");
         background-size: cover;
         background-position: center;
-        opacity: 0.1;
-        filter: saturate(0.2) contrast(1.2);
+        opacity: 1;
+        filter: none;
       }
 
       .app-shell::after {
@@ -116,17 +117,10 @@
         z-index: -1;
         content: "";
         background:
-          linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.035),
-            transparent 18%,
-            transparent 82%,
-            rgba(255, 255, 255, 0.028)
-          ),
           radial-gradient(
             ellipse at center,
-            transparent 48%,
-            rgba(0, 0, 0, 0.62) 100%
+            transparent 40%,
+            rgba(0, 0, 0, 0.55) 100%
           );
         pointer-events: none;
       }
@@ -671,42 +665,47 @@
       .bottom-nav {
         position: fixed;
         left: 50%;
-        bottom: 12px;
+        bottom: 16px;
         z-index: 30;
-        width: min(376px, calc(100% - 52px));
+        width: min(380px, calc(100% - 32px));
         min-height: 72px;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 6px;
-        padding: 10px 15px 8px;
-        border: 1px solid rgba(248, 245, 239, 0.06);
-        border-radius: 28px;
-        background: rgba(25, 25, 24, 0.82);
+        padding: 10px 14px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 36px;
+        background: rgba(18, 18, 20, 0.88);
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.05),
-          0 18px 44px rgba(0, 0, 0, 0.42);
-        backdrop-filter: blur(26px);
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 20px 48px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
         transform: translateX(-50%);
       }
 
       .nav-link {
         min-width: 0;
-        display: grid;
-        justify-items: center;
-        align-content: center;
-        gap: 5px;
-        color: rgba(248, 245, 239, 0.62);
-        font-size: 12px;
-        font-weight: 560;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 11.5px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.18s ease;
       }
 
       .nav-link.active {
-        color: var(--peach);
+        color: #ffffff;
+        font-weight: 600;
       }
 
       .nav-link svg {
-        width: 27px;
-        height: 27px;
+        width: 24px;
+        height: 24px;
         stroke: currentColor;
         stroke-width: 1.8;
         fill: none;
@@ -715,8 +714,8 @@
       }
 
       .nav-link.active svg {
-        fill: currentColor;
-        stroke-width: 0;
+        stroke: currentColor;
+        stroke-width: 2.2;
       }
 
       .sheet,
@@ -898,52 +897,92 @@
         opacity: 0.72;
       }
 
-      .main-cta,
       .bored-cta {
         width: 100%;
-        min-height: 52px;
-        border: 1px solid transparent;
+        min-height: 56px;
+        border: none;
         border-radius: 999px;
+        background: #F3D7C4;
+        color: #0b0b0d;
+        font-size: 17px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
         cursor: pointer;
-        font-weight: 680;
-        font-size: 14px;
-        transition:
-          transform 180ms ease,
-          filter 180ms ease,
-          border-color 180ms ease,
-          background 180ms ease;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        margin-top: 14px;
       }
 
-      .main-cta {
-        color: #111;
-        background: var(--peach);
-        box-shadow: 0 8px 24px rgba(247, 213, 178, 0.16);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-
-      .bored-cta {
-        color: var(--ink);
-        background: rgba(248, 245, 239, 0.05);
-        border-color: rgba(248, 245, 239, 0.12);
-      }
-
-      .main-cta:hover,
-      .main-cta:focus-visible,
       .bored-cta:hover,
       .bored-cta:focus-visible {
+        background: #f8ded0;
         transform: translateY(-1.5px);
-        outline: 0;
+        outline: none;
       }
 
-      .main-cta:hover {
-        filter: brightness(1.08);
+      .bored-cta svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
-      .bored-cta:hover,
-      .bored-cta:focus-visible {
-        border-color: rgba(248, 245, 239, 0.24);
-        background: rgba(248, 245, 239, 0.08);
+      .category-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        background: rgba(22, 22, 25, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        padding: 12px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 44px rgba(0, 0, 0, 0.4);
+        margin-top: 28px;
+      }
+
+      .category-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 18px 6px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        background: rgba(45, 45, 50, 0.45);
+        color: #ffffff;
+        text-decoration: none;
+        transition: all 0.2s ease;
+      }
+
+      .category-card:hover {
+        background: rgba(65, 65, 72, 0.68);
+        border-color: rgba(255, 255, 255, 0.22);
+        transform: translateY(-2px);
+      }
+
+      .category-card svg {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .category-card span {
+        font-size: 12.5px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: rgba(255, 255, 255, 0.95);
       }
 
       @media (min-width: 520px) {
@@ -1051,195 +1090,72 @@
 
         <main>
           <section class="hero" aria-labelledby="landing-title">
-            <h1 id="landing-title">Pick a lane. Make it lovely.</h1>
+            <h1 id="landing-title">Pick a lane.<br>Make it<br>lovely.</h1>
             <p class="tagline">
-              Shows, tables, and places that make tonight worth it.
+              Shows, tables, and places<br>that make tonight worth it.
             </p>
-            <div
-              class="location-wrapper"
-              style="
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 4px;
-                margin-top: -6px;
-              "
-            >
-              <span class="city-pill">Across the GTA</span>
-              <span class="location-proof" id="location-proof"
-                >Choose a GTA municipality or use current location</span
-              >
-            </div>
 
-            <form class="prompt" id="search-form" aria-label="Ask Echoo">
-              <span class="search-glyph" aria-hidden="true"></span>
-              <label for="city-search" class="sr-only"
-                >Search shows, places, dates</label
-              >
-              <input
-                id="city-search"
-                autocomplete="off"
-                placeholder="Search shows, places, dates..."
-              />
-              <button
-                class="send"
-                type="submit"
-                aria-label="Ask Echoo AI"
-              ></button>
-            </form>
-
-            <div
-              class="cta-stack"
-              style="display: grid; gap: 12px; margin-top: 8px; width: 100%"
-            >
-              <button class="main-cta" id="day-plan" type="button">
-                Plan what's next
-              </button>
-              <button class="bored-cta" id="bored-plan" type="button">
-                I'm bored. Surprise me.
-              </button>
-            </div>
+            <button class="bored-cta" id="bored-plan" type="button">
+              <span>I'm bored. Surprise me.</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
           </section>
 
-          <section class="content" aria-label="Tonight on Echoo">
-            <div>
-              <div class="section-head">
-                <h2 id="live-picks-title">Live GTA picks</h2>
-                <a class="see-all" href="events.html">See all</a>
-              </div>
-              <div class="pick-carousel-container">
-                <button class="carousel-arrow prev" id="picks-prev" aria-label="Previous pick" type="button">
-                  <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg>
-                </button>
-                <div class="pick-carousel" id="live-picks">
-                  <div class="pick-card skeleton-card"></div>
-                  <div class="pick-card skeleton-card"></div>
-                </div>
-                <button class="carousel-arrow next" id="picks-next" aria-label="Next pick" type="button">
-                  <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <div class="section-head">
-                <h2>For your vibe</h2>
-              </div>
-              <div class="vibe-row" aria-label="Browse by vibe">
-                <a class="vibe" href="music.html">
-                  <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M9 18V5l10-2v13" />
-                      <path d="M9 18a3 3 0 1 1-2-2.83" />
-                      <path d="M19 16a3 3 0 1 1-2-2.83" />
-                    </svg>
-                  </span>
-                  <span>Music</span>
-                </a>
-                <a class="vibe" href="happenings.html?category=culture">
-                  <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <circle cx="12" cy="12" r="9" />
-                      <path d="M8 10h.01" />
-                      <path d="M16 10h.01" />
-                      <path d="M8.5 15a5 5 0 0 0 7 0" />
-                    </svg>
-                  </span>
-                  <span>Comedy</span>
-                </a>
-                <a class="vibe" href="food.html">
-                  <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6 3v8" />
-                      <path d="M10 3v8" />
-                      <path d="M8 3v18" />
-                      <path d="M17 3v18" />
-                      <path d="M14 3v8a3 3 0 0 0 6 0V3" />
-                    </svg>
-                  </span>
-                  <span>Food</span>
-                </a>
-                <a class="vibe" href="dates.html">
-                  <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
-                      />
-                    </svg>
-                  </span>
-                  <span>Dates</span>
-                </a>
-                <button class="vibe" id="more-vibes-btn" type="button" aria-expanded="false" aria-controls="more-vibes-container" style="background:none; border:none; padding:0;">
-                  <span class="vibe-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" id="more-vibe-icon">
-                      <path d="M5 12h.01" />
-                      <path d="M12 12h.01" />
-                      <path d="M19 12h.01" />
-                    </svg>
-                  </span>
-                  <span>More</span>
-                </button>
-              </div>
-
-              <!-- Extra Vibes Row (hidden/expandable) -->
-              <div class="vibe-expanded" id="more-vibes-container">
-                <div class="vibe-row">
-                  <a class="vibe" href="events.html?query=nightlife">
-                    <span class="vibe-icon">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M22 22H2" />
-                        <path d="M21 3L12 11L3 3" />
-                        <path d="M12 11V22" />
-                        <path d="M17 2H7" />
-                      </svg>
-                    </span>
-                    <span>Bars</span>
-                  </a>
-                  <a class="vibe" href="events.html?query=coffee">
-                    <span class="vibe-icon">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
-                        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
-                        <path d="M6 2v2" />
-                        <path d="M10 2v2" />
-                        <path d="M14 2v2" />
-                      </svg>
-                    </span>
-                    <span>Coffee</span>
-                  </a>
-                  <a class="vibe" href="events.html?query=tourism">
-                    <span class="vibe-icon">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M4 22V10" />
-                        <path d="M9 22V10" />
-                        <path d="M15 22V10" />
-                        <path d="M20 22V10" />
-                        <path d="M12 2L2 7v3h20V7L12 2Z" />
-                        <path d="M2 22h20" />
-                      </svg>
-                    </span>
-                    <span>Tourism</span>
-                  </a>
-                  <a class="vibe" href="events.html?query=park">
-                    <span class="vibe-icon">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 2L3 17h18L12 2Z" />
-                        <path d="M12 12V22" />
-                      </svg>
-                    </span>
-                    <span>Outdoors</span>
-                  </a>
-                  <a class="vibe" href="events.html?query=wellness">
-                    <span class="vibe-icon">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                        <path d="M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
-                      </svg>
-                    </span>
-                    <span>Wellness</span>
-                  </a>
-                </div>
-              </div>
+          <section class="content" aria-label="Browse by category">
+            <div class="category-grid" aria-label="Category Grid">
+              <a class="category-card" href="food.html">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 3v8" />
+                  <path d="M10 3v8" />
+                  <path d="M8 3v18" />
+                  <path d="M17 3v18" />
+                  <path d="M14 3v8a3 3 0 0 0 6 0V3" />
+                </svg>
+                <span>Food</span>
+              </a>
+              <a class="category-card" href="events.html?query=comedy">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M8 10h.01" />
+                  <path d="M16 10h.01" />
+                  <path d="M8.5 15a5 5 0 0 0 7 0" />
+                </svg>
+                <span>Comedy</span>
+              </a>
+              <a class="category-card" href="music.html">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 18V5l10-2v13" />
+                  <path d="M9 18a3 3 0 1 1-2-2.83" />
+                  <path d="M19 16a3 3 0 1 1-2-2.83" />
+                </svg>
+                <span>Live music</span>
+              </a>
+              <a class="category-card" href="events.html?query=nightlife">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 22h8" />
+                  <path d="M12 15v7" />
+                  <path d="M6 3h12l-6 9-6-9Z" />
+                </svg>
+                <span>Nightlife</span>
+              </a>
+              <a class="category-card" href="events.html?query=experiences">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                </svg>
+                <span>Experiences</span>
+              </a>
+              <a class="category-card" href="events.html?query=this-week">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                  <line x1="16" x2="16" y1="2" y2="6" />
+                  <line x1="8" x2="8" y1="2" y2="6" />
+                  <line x1="3" x2="21" y1="10" y2="10" />
+                </svg>
+                <span>This week</span>
+              </a>
             </div>
           </section>
           <footer
