@@ -154,7 +154,7 @@ function discoveryResultKey(item: Record<string, any>) {
 
 function normalizedLiveQuery(query: string, category: string | null) {
   const normalized = cleanDiscoveryText(query || category || "things to do", 120)
-    .replace(/\b(restaurants?|resturants?|restaraunts?)\b/gi, "restaurant");
+    .replace(/\b(restaurants?|restraints?|restrants?|resturants?|restaraunts?)\b/gi, "restaurant");
   return normalized || "things to do";
 }
 
@@ -295,7 +295,7 @@ async function hydrateOwnedCardPhotos(
 
 function liveType(query: string, category: string | null) {
   const normalized = `${query} ${category || ""}`.toLowerCase();
-  if (/\b(restaurants?|resturants?|restaraunts?)\b/.test(normalized)) return "restaurant";
+  if (/\b(restaurants?|restraints?|restrants?|resturants?|restaraunts?)\b/.test(normalized)) return "restaurant";
   if (/\b(cafes?|coffee)\b/.test(normalized)) return "cafe";
   if (/\b(bars?|pubs?)\b/.test(normalized)) return "bar";
   if (/\b(parks?|trails?)\b/.test(normalized)) return "park";
@@ -507,10 +507,16 @@ Deno.serve(async (req) => {
         ...matchedFeatureSlugs(searchQuery, (features || []) as DiscoveryFeature[]),
       ]),
     ].slice(0, 8);
-    const cityFilter = city.coverageLevel === "municipality" ? city.name : null;
+    // A manual municipality choice is intentionally narrow. With real GPS,
+    // however, location is a relevance signal rather than a hard city wall:
+    // rank the nearby venue first, then let cursor pagination continue through
+    // the wider GTA envelope. This avoids a user in one neighbourhood seeing
+    // an artificially small catalogue while preserving a local-first order.
+    const cityFilter =
+      lat === undefined && city.coverageLevel === "municipality" ? city.name : null;
     const cacheKey = await sha256Hex(
       JSON.stringify({
-        v: 2,
+        v: 3,
         query: searchQuery.toLowerCase(),
         inventoryQuery,
         city: cityFilter,
@@ -588,9 +594,10 @@ Deno.serve(async (req) => {
     }
     return jsonResponse({
       supported: true,
-      query,
+      query: searchQuery || query,
       region: city,
       filters: { category, featureSlugs, radiusMeters },
+      searchScope: cityFilter ? "municipality" : "gta_region",
       results: merged,
       ownedResultCount: page.length,
       registeredResultCount: ownedCards.filter((item: any) => item.placement?.sponsored).length,

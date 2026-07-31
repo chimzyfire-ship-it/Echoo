@@ -1240,7 +1240,7 @@
         culturePickerSearch = document.getElementById("culture-picker-search"),
         cultureClear = document.getElementById("culture-clear");
 
-      let activeQuery = params.get("query") || "trending",
+      let activeQuery = normalizeSearchQuery(params.get("query") || "trending"),
         items = [],
         view = "list",
         suggestionTimer,
@@ -1254,6 +1254,39 @@
         String(value || "").replace(/[&<>"']/g, (char) => ({
           "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
         })[char]);
+
+      // Keep a mistyped category from becoming a broken-looking label or an
+      // unrelated search. This deliberately only corrects a small set of
+      // common restaurant typos; names and specific keywords stay untouched.
+      function normalizeSearchQuery(value) {
+        return String(value || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\b(restraints?|restrants?|resturants?|restaraunts?)\b/g, "restaurants");
+      }
+
+      function resultLabel() {
+        const culture = activeCulture();
+        const categoryLabels = {
+          food: "Food",
+          restaurant: "Restaurants",
+          restaurants: "Restaurants",
+          cafe: "Cafés",
+          cafes: "Cafés",
+          coffee: "Cafés",
+          music: "Music",
+          nightlife: "Nightlife",
+          tourism: "Tourism",
+          nature: "Outdoors",
+        };
+        const category = categoryLabels[activeQuery];
+        const localLabel = category || `Results for “${activeQuery.replace(/\b\w/g, (letter) => letter.toUpperCase())}”`;
+        return culture && category
+          ? `${culture.label} · ${category}`
+          : culture
+            ? `${culture.label} · ${localLabel}`
+            : localLabel;
+      }
 
       function activeCulture() {
         return cultureContext?.getActive?.() || null;
@@ -1771,12 +1804,6 @@
         document.getElementById("featured-score").textContent = "—";
       }
 
-      function resultLabel() {
-        const culture = activeCulture();
-        const category = activeQuery === "trending" ? "places" : activeQuery;
-        return `${culture ? `${culture.label} ` : ""}${category} places`;
-      }
-
       function renderResultsPage() {
         const shouldShow = activeQuery !== "trending" && view !== "map";
         resultsSection.hidden = !shouldShow;
@@ -1890,7 +1917,10 @@
           city,
           lat: Number.isFinite(lat) ? lat : undefined,
           lng: Number.isFinite(lng) ? lng : undefined,
-          radiusMeters: Number.isFinite(lat) && Number.isFinite(lng) ? 25000 : undefined,
+          // GPS should rank the closest places first without shrinking the
+          // catalogue to one small circle. The server caps this to the GTA
+          // search envelope and keeps it cursor-paginated.
+          radiusMeters: Number.isFinite(lat) && Number.isFinite(lng) ? 100000 : undefined,
           featureSlugs: !culture ? featureSlugsFromSignals(signals) : undefined,
           includeLiveFallback: true,
           // One visual page at a time; the cursor continues across the full
@@ -1953,8 +1983,51 @@
         }
       }
 
+      function hideSuggestions() {
+        clearTimeout(suggestionTimer);
+        suggestionsEl.hidden = true;
+        suggestionsEl.replaceChildren();
+        queryInput.setAttribute("aria-expanded", "false");
+      }
+
+      function renderSuggestions(suggestions) {
+        const entries = Array.isArray(suggestions) ? suggestions.filter((item) => item?.value) : [];
+        if (!entries.length) {
+          hideSuggestions();
+          return;
+        }
+        suggestionsEl.innerHTML = entries.map((item) => {
+          const label = item.label || item.value;
+          const meta = item.category ? ` · ${item.category}` : "";
+          return `<button class="suggestion-item" type="button" role="option" data-suggestion-value="${esc(item.value)}"><span>${esc(label)}</span><small>${esc(meta)}</small></button>`;
+        }).join("");
+        suggestionsEl.hidden = false;
+        queryInput.setAttribute("aria-expanded", "true");
+      }
+
+      async function loadSuggestions(value) {
+        const query = normalizeSearchQuery(value);
+        if (query.length < 2) {
+          hideSuggestions();
+          return;
+        }
+        const requestQuery = query;
+        try {
+          const url = new URL(CONFIG.suggestionsUrl);
+          url.searchParams.set("query", query);
+          url.searchParams.set("city", city);
+          url.searchParams.set("limit", "8");
+          const response = await fetch(url, { headers });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok || normalizeSearchQuery(queryInput.value) !== requestQuery) return;
+          renderSuggestions(payload.suggestions || []);
+        } catch (_) {
+          hideSuggestions();
+        }
+      }
+
       async function search(query = activeQuery, options = {}) {
-        let cleanQuery = String(query || "").trim().toLowerCase();
+        let cleanQuery = normalizeSearchQuery(query);
         if (!cleanQuery) cleanQuery = "trending";
         activeQuery = cleanQuery;
         if (options.refresh) discoveryRefreshNonce += 1;
@@ -1967,7 +2040,7 @@
           return;
         }
         queryInput.value = activeQuery === "trending" ? "" : activeQuery;
-        suggestionsEl.hidden = true;
+        hideSuggestions();
         discoveryRequestId += 1;
         discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: discoveryRequestForActiveView(), loading: false };
         renderDiscoverLoading();
@@ -1976,15 +2049,21 @@
 
       async function showNextResultsPage() {
         const pageSize = 10;
-        if ((resultPage + 1) * pageSize < items.length) {
+        const nextPage = resultPage + 1;
+        const loadedPageCount = Math.ceil(items.length / pageSize);
+        if (nextPage < loadedPageCount) {
           resultPage += 1;
           renderResultsPage();
+          resultsSection.scrollIntoView({ block: "start", behavior: "smooth" });
           return;
         }
         if (discoveryPaging.hasMore) {
           const before = items.length;
           await fetchDiscoveryPage({ append: true });
-          if (items.length > before) resultPage += 1;
+          if (items.length > before) {
+            resultPage = Math.min(nextPage, Math.max(0, Math.ceil(items.length / pageSize) - 1));
+            resultsSection.scrollIntoView({ block: "start", behavior: "smooth" });
+          }
           renderResultsPage();
         }
       }
@@ -2183,6 +2262,27 @@
         e.preventDefault();
         search(queryInput.value);
       };
+
+      queryInput.addEventListener("input", () => {
+        clearTimeout(suggestionTimer);
+        const value = queryInput.value;
+        if (normalizeSearchQuery(value).length < 2) {
+          hideSuggestions();
+          return;
+        }
+        suggestionTimer = setTimeout(() => loadSuggestions(value), 160);
+      });
+      queryInput.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") hideSuggestions();
+      });
+      suggestionsEl.addEventListener("click", (event) => {
+        const suggestion = event.target.closest("[data-suggestion-value]");
+        if (!suggestion) return;
+        search(suggestion.dataset.suggestionValue || "");
+      });
+      document.addEventListener("pointerdown", (event) => {
+        if (!event.target.closest(".search-wrap")) hideSuggestions();
+      });
 
       document.getElementById("chips").onclick = (e) => {
         const chip = e.target.closest("[data-query]");
