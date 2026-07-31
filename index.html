@@ -1136,7 +1136,7 @@
                   </span>
                   <span>Music</span>
                 </a>
-                <a class="vibe" href="events.html?query=comedy">
+                <a class="vibe" href="happenings.html?category=culture">
                   <span class="vibe-icon">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <circle cx="12" cy="12" r="9" />
@@ -1653,7 +1653,7 @@
       function cardHref(card) {
         if (card.detailUrl) return card.detailUrl;
         if (card.type === "event")
-          return `events.html?query=${encodeURIComponent(card.title || "events GTA")}`;
+          return "happenings.html";
         if (card.type === "place")
           return `app.html?q=${encodeURIComponent(card.title || "places GTA")}`;
         return "events.html";
