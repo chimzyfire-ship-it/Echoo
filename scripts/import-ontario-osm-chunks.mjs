@@ -20,6 +20,10 @@ const startOffset = Math.max(
   Number(process.env.OSM_IMPORT_START_OFFSET || 0),
 );
 const municipality = String(process.env.OSM_MUNICIPALITY || "").trim();
+const sourceUrl = String(process.env.OSM_SOURCE_URL || "").trim();
+const sourceSnapshotId = String(
+  process.env.OSM_SNAPSHOT_ID || `osm-${new Date().toISOString()}`,
+).trim();
 
 if (!inputPath || !endpoint || !secret) {
   console.error(
@@ -43,7 +47,9 @@ async function postChunk(records, offset) {
         },
         body: JSON.stringify({
           sourceName: "openstreetmap",
+          sourceUrl: sourceUrl || undefined,
           municipality: municipality || undefined,
+          sourceSnapshotId,
           records,
           offset,
           maxRecords: records.length,
@@ -56,8 +62,20 @@ async function postChunk(records, offset) {
             `OSM chunk ${offset} failed: ${response.status}`,
         );
       }
+      const skipped = Number(json?.summary?.skipped || 0);
+      const unindexed = Number(json?.summary?.unindexedCoverageCount || 0);
+      if (skipped > 0 || unindexed > 0) {
+        throw new Error(
+          `OSM chunk ${offset} did not fully index its physical-place source records: ` +
+            JSON.stringify({
+              skipped,
+              unindexedCoverage: json?.summary?.unindexedCoverage || {},
+              errors: json?.summary?.errors || [],
+            }),
+        );
+      }
       console.log(JSON.stringify({ offset, ...json.summary }));
-      return;
+      return json;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(JSON.stringify({ offset, attempt, error: message }));
@@ -67,11 +85,53 @@ async function postChunk(records, offset) {
   }
 }
 
+function addCategorySourceIds(target, categoryIds) {
+  for (const [category, values] of Object.entries(categoryIds || {})) {
+    if (!Array.isArray(values)) continue;
+    const ids = target.get(category) || new Set();
+    for (const value of values) {
+      if (typeof value === "string" && value) ids.add(value);
+    }
+    target.set(category, ids);
+  }
+}
+
+function categoryCounts(categoryIds) {
+  return Object.fromEntries(
+    [...categoryIds.entries()].map(([category, ids]) => [category, ids.size]),
+  );
+}
+
+async function finalizeCoverage(sourceRecordCounts) {
+  if (!municipality || startOffset > 0) return null;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-ingestion-secret": secret,
+    },
+    body: JSON.stringify({
+      action: "finalize_coverage",
+      municipality,
+      sourceName: "openstreetmap",
+      sourceUrl: sourceUrl || undefined,
+      sourceSnapshotId,
+      sourceRecordCounts,
+    }),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(json.error || `Coverage finalization failed: ${response.status}`);
+  }
+  return json.coverageSnapshot || null;
+}
+
 let offset = startOffset;
 let records = [];
 let seen = 0;
 let imported = 0;
 let skipped = 0;
+const sourceIdsByCategory = new Map();
 const stream = readline.createInterface({
   input: fs.createReadStream(inputPath, { encoding: "utf8" }),
   crlfDelay: Infinity,
@@ -88,7 +148,8 @@ for await (const line of stream) {
   records.push(JSON.parse(trimmed));
   seen += 1;
   if (records.length >= chunkSize) {
-    await postChunk(records, offset);
+    const result = await postChunk(records, offset);
+    addCategorySourceIds(sourceIdsByCategory, result?.summary?.sourceCategoryIds);
     imported += records.length;
     offset += records.length;
     records = [];
@@ -96,9 +157,13 @@ for await (const line of stream) {
 }
 
 if (records.length) {
-  await postChunk(records, offset);
+  const result = await postChunk(records, offset);
+  addCategorySourceIds(sourceIdsByCategory, result?.summary?.sourceCategoryIds);
   imported += records.length;
 }
+
+const sourceRecordCounts = categoryCounts(sourceIdsByCategory);
+const coverageSnapshot = await finalizeCoverage(sourceRecordCounts);
 
 console.log(JSON.stringify({
   completed: true,
@@ -108,4 +173,8 @@ console.log(JSON.stringify({
   chunkSize,
   startOffset,
   municipality: municipality || null,
+  sourceUrl: sourceUrl || null,
+  sourceSnapshotId,
+  sourceRecordCounts,
+  coverageSnapshot,
 }));

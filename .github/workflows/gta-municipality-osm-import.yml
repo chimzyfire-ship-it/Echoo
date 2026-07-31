@@ -49,6 +49,43 @@ jobs:
           osmium fileinfo -e ontario.osm.pbf
       - name: Resolve municipality boundaries
         run: node scripts/resolve-gta-boundaries.mjs supabase/seed-data/gta-municipality-import-manifest.json gta-boundaries
+      - name: Publish municipality boundaries for GPS resolution
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const directory = 'gta-boundaries';
+          const files = fs.readdirSync(directory).filter((file) => file.endsWith('.geojson')).sort();
+          if (files.length !== 25) throw new Error(`Expected 25 GTA boundaries, found ${files.length}.`);
+          (async () => {
+            for (const file of files) {
+              const feature = JSON.parse(fs.readFileSync(path.join(directory, file), 'utf8'));
+              const properties = feature.properties || {};
+              const response = await fetch(process.env.IMPORT_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-ingestion-secret': process.env.ONTARIO_INGESTION_SECRET,
+                },
+                body: JSON.stringify({
+                  action: 'upsert_boundary',
+                  boundary: {
+                    municipality: properties.municipality,
+                    regionalMunicipality: properties.region,
+                    geometry: feature.geometry,
+                    sourceName: 'OpenStreetMap via Nominatim',
+                    sourceUrl: `https://www.openstreetmap.org/relation/${properties.osm_relation_id}`,
+                    sourceLicense: 'ODbL-1.0',
+                    sourceRecordId: `relation/${properties.osm_relation_id}`,
+                  },
+                }),
+              });
+              const result = await response.json().catch(() => ({}));
+              if (!response.ok) throw new Error(`${properties.municipality}: ${result.error || response.status}`);
+              console.log(JSON.stringify(result.boundary));
+            }
+          })().catch((error) => { console.error(error); process.exit(1); });
+          NODE
       - name: Clip, convert, and import every requested municipality
         env:
           REQUESTED_MUNICIPALITIES: ${{ inputs.municipalities }}
@@ -65,13 +102,17 @@ jobs:
           if (resume && start < 0) throw new Error('resume_municipality must be in municipalities.');
           console.log(selected.slice(start).join('\n'));
           NODE
+          source_checksum="$(sha256sum ontario.osm.pbf | awk '{print $1}')"
           while IFS= read -r municipality; do
             slug="$(echo "$municipality" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')"
             echo "Importing $municipality"
             osmium extract --strategy=complete_ways --polygon "gta-boundaries/${slug}.geojson" ontario.osm.pbf --output "${slug}.osm.pbf" --overwrite
             scripts/osm-pbf-to-ndjson.sh "${slug}.osm.pbf" "${slug}.ndjson"
             test -s "${slug}.ndjson"
-            OSM_MUNICIPALITY="$municipality" node scripts/import-ontario-osm-chunks.mjs "${slug}.ndjson" "$IMPORT_ENDPOINT"
+            OSM_MUNICIPALITY="$municipality" \
+              OSM_SOURCE_URL="${{ inputs.extract_url }}" \
+              OSM_SNAPSHOT_ID="osm-${source_checksum}-${slug}" \
+              node scripts/import-ontario-osm-chunks.mjs "${slug}.ndjson" "$IMPORT_ENDPOINT"
           done < municipalities.txt
       - name: Verify published inventory coverage
         run: |
@@ -80,6 +121,14 @@ jobs:
             --header "x-ingestion-secret: $ONTARIO_INGESTION_SECRET" \
             --data '{"action":"coverage"}' | tee gta-coverage.json
           test "$(jq -r '.complete' gta-coverage.json)" = true || { jq -r '.missingMunicipalities[]' gta-coverage.json >&2; exit 1; }
+          test "$(jq -r '.sourceCoverageReady' gta-coverage.json)" = true || {
+            jq -r '.sourceCoverageGaps[] | "\(.municipality) / \(.category): \(.status)"' gta-coverage.json >&2
+            exit 1
+          }
+          test "$(jq -r '.boundaryCoverageReady' gta-coverage.json)" = true || {
+            echo "GPS municipality boundaries are incomplete." >&2
+            exit 1
+          }
       - uses: actions/upload-artifact@v4
         if: always()
         with:

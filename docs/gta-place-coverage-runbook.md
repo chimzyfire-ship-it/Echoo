@@ -55,10 +55,32 @@ select * from public.gta_municipality_coverage();
 
 The same protected report is available to automation through
 `ontario-osm-import` by posting `{ "action": "coverage" }` with the ingestion
-secret. It returns `complete: true` only when exactly 25 GTA municipalities are
-reported and none has zero `published_entities`.
+secret. `complete: true` means the inventory is non-empty in all 25
+municipalities; it is a launch-floor check, **not** a claim that every place is
+present.
+
+Each full municipality import now finalizes a source-coverage snapshot. The
+report also returns `sourceCoverageReady: true` only when all 25 municipalities
+and every mapped category in the municipal OSM extract have a fresh snapshot
+whose source record count reconciles with the published canonical index. This
+is the evidence-backed check for “we imported the entire current source
+extract,” and will surface any partial chunk import instead of silently calling
+it coverage. The converter includes point, line, and area geometry so a venue
+mapped as a building is not silently excluded.
+
+The same run also loads all 25 administrative boundary polygons into the GPS
+resolver. `boundaryCoverageReady: true` confirms that precise device location
+can be labelled by municipality rather than falling back to a GTA-wide label.
+
+Comedy needs a separate standard: comedy is primarily an event/venue domain,
+not a uniformly tagged POI category. Track comedy venues through the physical
+place audit where OSM identifies a theatre/nightclub/event venue, and track
+upcoming comedy through the event-provider refresh and freshness report. Do
+not label either lane as exhaustive without a licensed event/venue census.
 
 Every municipality must have published inventory before it is described as
-fully covered. Investigate any row with zero `published_entities`, then run a
-location-specific search (for example `city=Whitby` or `city=Stouffville`) and
-confirm the returned city is the canonical municipality.
+launch-ready. Describe a physical-place category as source-reconciled only when
+the source-coverage report is fresh and reconciled. Investigate any row with
+zero `published_entities` or an `import_gap`, then run a location-specific
+search (for example `city=Whitby` or `city=Stouffville`) and confirm the
+returned city is the canonical municipality.

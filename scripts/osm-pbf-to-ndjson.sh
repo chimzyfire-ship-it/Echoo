@@ -19,7 +19,7 @@ trap 'rm -f "$TMP_FILTERED"' EXIT
 
 osmium tags-filter \
   "$INPUT_PBF" \
-  nwr/amenity=restaurant,cafe,bar,pub,fast_food,cinema,theatre,arts_centre,community_centre,library \
+  nwr/amenity=restaurant,cafe,bar,pub,fast_food,food_court,ice_cream,biergarten,nightclub,cinema,theatre,arts_centre,community_centre,library,conference_centre,event_venue,music_venue,social_centre \
   nwr/tourism=attraction,museum,gallery \
   nwr/leisure=park,fitness_centre,nature_reserve \
   nwr/shop=mall \
@@ -28,11 +28,11 @@ osmium tags-filter \
   --overwrite
 
 osmium export "$TMP_FILTERED" \
-  --geometry-types=point \
-  --add-unique-id=type_id \
+  --geometry-types=point,linestring,polygon \
+  --attributes=type,id \
+  --stop-on-error \
   --output-format=geojsonseq \
   --overwrite \
   -o "$OUTPUT_NDJSON"
 
 echo "Wrote $OUTPUT_NDJSON"
-
