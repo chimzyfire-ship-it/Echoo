@@ -347,7 +347,165 @@
       .tickets-grid {
         display: grid;
         gap: 16px;
-        margin-top: 20px;
+        margin-top: 14px;
+      }
+
+      .ticket-section {
+        display: grid;
+        gap: 14px;
+      }
+
+      .ticket-section + .ticket-section {
+        margin-top: 34px;
+      }
+
+      .ticket-section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .ticket-section-kicker {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 760;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .ticket-section h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.05;
+        font-weight: 720;
+      }
+
+      .all-events-link {
+        flex: 0 0 auto;
+        color: var(--peach);
+        font-size: 12px;
+        font-weight: 720;
+      }
+
+      .sale-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .sale-card {
+        min-width: 0;
+        display: grid;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        background: rgba(248, 245, 239, 0.045);
+        color: var(--ink);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      }
+
+      .sale-card:hover,
+      .sale-card:focus-visible {
+        border-color: rgba(247, 213, 178, 0.45);
+        background: rgba(248, 245, 239, 0.075);
+        outline: 0;
+        transform: translateY(-2px);
+      }
+
+      .sale-art {
+        position: relative;
+        aspect-ratio: 1 / 0.82;
+        overflow: hidden;
+        background: #242321;
+      }
+
+      .sale-art img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.82;
+      }
+
+      .sale-art::after {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 34%, rgba(5, 5, 5, 0.58));
+        content: "";
+      }
+
+      .sale-status {
+        position: absolute;
+        z-index: 1;
+        top: 9px;
+        left: 9px;
+        padding: 5px 7px;
+        border: 1px solid rgba(248, 245, 239, 0.18);
+        border-radius: 999px;
+        background: rgba(5, 5, 5, 0.52);
+        backdrop-filter: blur(8px);
+        color: var(--ink);
+        font-size: 8px;
+        font-weight: 760;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .sale-copy {
+        display: grid;
+        gap: 6px;
+        padding: 11px 11px 12px;
+      }
+
+      .sale-copy strong {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        font-size: 14px;
+        line-height: 1.12;
+        font-weight: 710;
+      }
+
+      .sale-copy span {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.25;
+      }
+
+      .sale-price {
+        color: var(--peach) !important;
+        font-weight: 700;
+      }
+
+      .sale-loading {
+        min-height: 206px;
+        border-radius: 17px;
+        background: linear-gradient(100deg, rgba(248, 245, 239, 0.04) 20%, rgba(248, 245, 239, 0.13) 43%, rgba(248, 245, 239, 0.04) 66%);
+        background-size: 220% 100%;
+        animation: ticket-shimmer 1.35s ease-in-out infinite;
+      }
+
+      .sale-empty {
+        grid-column: 1 / -1;
+        padding: 16px;
+        border: 1px dashed var(--line-strong);
+        border-radius: 16px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      @keyframes ticket-shimmer {
+        0%, 100% { background-position: 100% 0; }
+        50% { background-position: 0 0; }
       }
 
       .ticket {
@@ -509,6 +667,17 @@
         line-height: 1.42;
       }
 
+      .empty strong,
+      .empty span {
+        display: block;
+      }
+
+      .empty strong {
+        margin-bottom: 6px;
+        color: var(--ink);
+        font-size: 15px;
+      }
+
       /* ── Bottom navigation ── */
       .bottom-nav {
         position: fixed;
@@ -590,10 +759,33 @@
       <main class="shell">
         <section class="hero">
           <div class="hero-copy">
-            <h1>My tickets</h1>
+            <h1>Tickets</h1>
             <p>
-              Confirmed tickets appear here by browser session or buyer email.
+              Find something worth going out for, then keep every Echoo ticket in one place.
             </p>
+          </div>
+        </section>
+
+        <section class="ticket-section" aria-labelledby="on-sale-heading">
+          <div class="ticket-section-head">
+            <div>
+              <span class="ticket-section-kicker">On sale now</span>
+              <h2 id="on-sale-heading">Good nights ahead</h2>
+            </div>
+            <a class="all-events-link" href="happenings.html">All events</a>
+          </div>
+          <div class="sale-grid" id="tickets-for-sale" aria-live="polite">
+            <div class="sale-loading" aria-hidden="true"></div>
+            <div class="sale-loading" aria-hidden="true"></div>
+          </div>
+        </section>
+
+        <section class="ticket-section" aria-labelledby="my-tickets-heading">
+          <div class="ticket-section-head">
+            <div>
+              <span class="ticket-section-kicker">My tickets</span>
+              <h2 id="my-tickets-heading">Already yours</h2>
+            </div>
           </div>
           <div class="lookup">
             <label class="sr-only" for="email">Email</label>
@@ -609,10 +801,9 @@
               aria-label="Load tickets"
             ></button>
           </div>
-        </section>
-
-        <section class="tickets-grid" id="tickets">
-          <div class="empty">Load tickets to begin.</div>
+          <div class="tickets-grid" id="tickets">
+            <div class="empty">Loading your tickets…</div>
+          </div>
         </section>
       </main>
     </div>
@@ -650,8 +841,11 @@
     <script>
       const ENDPOINT =
         "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/my-tickets";
+      const DISCOVER_FEED_ENDPOINT =
+        "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discover-feed";
       const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
       const ticketsEl = document.getElementById("tickets");
+      const ticketsForSaleEl = document.getElementById("tickets-for-sale");
       const emailEl = document.getElementById("email");
       let loadedTickets = [];
 
@@ -681,11 +875,69 @@
           : "Date to be confirmed";
       }
 
+      function readableEventDate(value) {
+        const date = new Date(value || "");
+        return Number.isFinite(date.getTime())
+          ? date.toLocaleDateString([], { month: "short", day: "numeric" })
+          : "Dates to be announced";
+      }
+
+      function preferredCity() {
+        try {
+          const platformPrefs = window.EchooLocationPlatform?.readPreferences?.();
+          if (platformPrefs?.city) return platformPrefs.city;
+          return JSON.parse(localStorage.getItem("echoo_preferences") || "{}").city || "Toronto";
+        } catch (_) {
+          return "Toronto";
+        }
+      }
+
+      function saleDestination(card) {
+        const detail = String(card?.detailUrl || "").trim();
+        return detail || "happenings.html";
+      }
+
+      function renderTicketsForSale(cards) {
+        const events = Array.isArray(cards) ? cards.slice(0, 4) : [];
+        if (!events.length) {
+          ticketsForSaleEl.innerHTML = '<div class="sale-empty">Live ticket drops will appear here. <a href="happenings.html">Browse all events</a>.</div>';
+          return;
+        }
+        ticketsForSaleEl.innerHTML = events.map((card) => {
+          const href = saleDestination(card);
+          const external = /^https?:\/\//i.test(href);
+          const image = String(card.imageUrl || "assets/optimized/news-music-768.jpg");
+          const status = card.statusLabel || "Selling now";
+          const detail = [card.subtitle, readableEventDate(card.startsAt)].filter(Boolean).join(" · ");
+          return `<a class="sale-card" href="${escapeHtml(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>
+            <span class="sale-art"><img src="${escapeHtml(image)}" alt="" loading="lazy" /><span class="sale-status">${escapeHtml(status)}</span></span>
+            <span class="sale-copy"><strong>${escapeHtml(card.title || "Live event")}</strong><span>${escapeHtml(detail || "Greater Toronto Area")}</span><span class="sale-price">${escapeHtml(card.priceLabel || "See tickets")}</span></span>
+          </a>`;
+        }).join("");
+      }
+
+      async function loadTicketsForSale() {
+        const url = new URL(DISCOVER_FEED_ENDPOINT);
+        url.searchParams.set("city", preferredCity());
+        url.searchParams.set("limit", "8");
+        try {
+          const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${ANON_KEY}`, apikey: ANON_KEY },
+          });
+          if (!response.ok) throw new Error("Live tickets unavailable");
+          const payload = await response.json();
+          const cards = payload?.data?.lanes?.find((lane) => lane.id === "shows-tickets")?.cards || [];
+          renderTicketsForSale(cards);
+        } catch (_) {
+          renderTicketsForSale([]);
+        }
+      }
+
       function render(tickets) {
         loadedTickets = Array.isArray(tickets) ? tickets : [];
         if (!tickets.length) {
           ticketsEl.innerHTML =
-            '<div class="empty">No confirmed tickets found yet. Tickets appear here as soon as an order is confirmed.</div>';
+            '<div class="empty"><strong>Nothing saved here yet.</strong><span>Your Echoo tickets appear automatically after checkout. Use the email from your order to restore them on another device.</span></div>';
           return;
         }
         ticketsEl.innerHTML = tickets
@@ -787,6 +1039,7 @@
       emailEl.addEventListener("keydown", (event) => {
         if (event.key === "Enter") loadTickets();
       });
+      loadTicketsForSale();
       loadTickets();
     </script>
     <script src="assets/page-loader.js"></script>

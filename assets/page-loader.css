@@ -1,3 +1,25 @@
+/* Shared viewport guard: the page never drifts sideways on a phone. */
+html,
+body {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+
+body {
+  position: relative;
+}
+
+img,
+video,
+canvas,
+iframe,
+table {
+  max-inline-size: 100%;
+}
+
 html.echoo-page-loading {
   background: #050505;
 }
