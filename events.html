@@ -106,6 +106,25 @@
         filter: brightness(1.2);
       }
 
+      .culture-toggle {
+        position: relative;
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        padding: 0;
+        color: var(--ink);
+        border: 1px solid rgba(248, 245, 239, 0.13);
+        border-radius: 50%;
+        background: rgba(248, 245, 239, 0.06);
+        transition: transform 0.18s ease, color 0.18s ease, background 0.18s ease;
+      }
+      .culture-toggle:active { transform: scale(0.94); }
+      .culture-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .culture-toggle.is-active { color: #1b1711; border-color: var(--peach); background: var(--peach); }
+      .culture-toggle::after { position: absolute; right: 1px; bottom: 1px; width: 7px; height: 7px; border: 2px solid #0b0b0b; border-radius: 50%; background: #79d394; content: ""; opacity: 0; }
+      .culture-toggle.is-active::after { opacity: 1; }
+
       .profile-link {
         display: grid;
         place-items: center;
@@ -213,54 +232,32 @@
         max-width: 340px;
       }
 
-      .culture-lens-entry {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-        min-height: 76px;
-        margin-top: -6px;
-        padding: 15px 15px 15px 17px;
-        overflow: hidden;
-        border: 1px solid rgba(248, 245, 239, 0.12);
-        border-radius: 19px;
-        background:
-          radial-gradient(circle at 92% 16%, rgba(248, 190, 135, 0.24), transparent 27%),
-          radial-gradient(circle at 72% 110%, rgba(108, 130, 220, 0.24), transparent 40%),
-          rgba(248, 245, 239, 0.045);
-        transition: transform 0.2s ease, border-color 0.2s ease;
-      }
-      .culture-lens-entry:active { transform: scale(0.985); }
-      .culture-lens-entry:hover { border-color: rgba(247, 213, 178, 0.35); }
-      .culture-lens-entry::after {
-        position: absolute;
-        top: -30px;
-        right: -18px;
-        width: 100px;
-        height: 100px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 50%;
-        content: "";
-        pointer-events: none;
-      }
-      .culture-lens-entry-copy { position: relative; z-index: 1; display: grid; gap: 4px; }
-      .culture-lens-entry-kicker { color: var(--peach); font-size: 9px; font-weight: 750; letter-spacing: 0.11em; text-transform: uppercase; }
-      .culture-lens-entry strong { font-size: 15px; font-weight: 720; letter-spacing: -0.02em; }
-      .culture-lens-entry span:last-child { color: var(--muted); font-size: 11px; line-height: 1.3; }
-      .culture-lens-entry-arrow {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        width: 34px;
-        height: 34px;
-        flex: 0 0 34px;
-        place-items: center;
-        color: #1a1712;
-        border-radius: 50%;
-        background: var(--peach);
-      }
-      .culture-lens-entry-arrow svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .culture-picker { position: fixed; inset: 0; z-index: 70; display: grid; align-items: end; pointer-events: none; }
+      .culture-picker.is-open { pointer-events: auto; }
+      .culture-picker-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; background: rgba(0, 0, 0, 0.68); transition: opacity 0.22s ease; }
+      .culture-picker.is-open .culture-picker-backdrop { opacity: 1; }
+      .culture-picker-sheet { position: relative; width: min(100%, 430px); max-height: min(72svh, 620px); display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 14px; padding: 10px 22px calc(17px + env(safe-area-inset-bottom)); overflow: hidden; border: 1px solid rgba(248,245,239,.12); border-bottom: 0; border-radius: 27px 27px 0 0; background: #181817; box-shadow: 0 -20px 50px rgba(0,0,0,.38); transform: translateY(104%); transition: transform .32s cubic-bezier(.2,.8,.2,1); }
+      .culture-picker.is-open .culture-picker-sheet { transform: translateY(0); }
+      .culture-picker-handle { width: 33px; height: 4px; margin: 0 auto 1px; border-radius: 99px; background: rgba(248,245,239,.24); }
+      .culture-picker-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+      .culture-picker-heading div { display: grid; gap: 6px; }
+      .culture-picker-heading small { color: var(--peach); font-size: 9px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
+      .culture-picker-heading h2 { margin: 0; font-size: 26px; line-height: 1; letter-spacing: -.045em; }
+      .culture-picker-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.42; }
+      .culture-picker-close { display: grid; width: 31px; height: 31px; flex: 0 0 31px; place-items: center; padding: 0 0 2px; color: var(--muted); border: 0; border-radius: 50%; background: rgba(248,245,239,.07); font-size: 23px; }
+      .culture-picker-search { display: flex; align-items: center; gap: 9px; min-height: 43px; padding: 0 13px; border: 1px solid var(--line); border-radius: 14px; background: rgba(248,245,239,.045); }
+      .culture-picker-search svg { width: 16px; height: 16px; flex: 0 0 16px; fill: none; stroke: var(--muted); stroke-width: 1.8; }
+      .culture-picker-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font: inherit; font-size: 12px; }
+      .culture-picker-search input::placeholder { color: var(--muted); }
+      .culture-picker-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 8px; min-height: 0; overflow-y: auto; padding: 1px; overscroll-behavior: contain; }
+      .culture-choice { display: flex; align-items: center; justify-content: space-between; min-height: 47px; padding: 8px 10px 8px 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 13px; background: rgba(248,245,239,.035); font-size: 11px; font-weight: 670; text-align: left; }
+      .culture-choice.is-active { color: var(--ink); border-color: rgba(247,213,178,.6); background: rgba(247,213,178,.1); }
+      .culture-choice-mark { display: grid; width: 17px; height: 17px; place-items: center; color: #1b1711; border: 1px solid rgba(248,245,239,.28); border-radius: 50%; font-size: 10px; }
+      .culture-choice.is-active .culture-choice-mark { border-color: var(--peach); background: var(--peach); }
+      .culture-picker-footer { display: flex; justify-content: center; padding-top: 3px; }
+      .culture-clear { min-height: 34px; padding: 0 12px; color: var(--muted); border: 0; background: transparent; font-size: 11px; font-weight: 680; }
+      .culture-clear strong { color: var(--peach); font-weight: 750; }
+      body.culture-picker-open { overflow: hidden; }
 
       /* Search Bar */
       .search-wrap {
@@ -921,6 +918,9 @@
         <a class="brand" href="index.html" aria-label="Echoo home">
           <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
+        <button class="culture-toggle" id="culture-toggle" type="button" aria-label="Choose a culture" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.25" /><path d="M12 4.75c2.1 2.13 3.17 4.55 3.17 7.25S14.1 17.12 12 19.25C9.9 17.12 8.83 14.7 8.83 12S9.9 6.88 12 4.75ZM4.75 12h14.5" /></svg>
+        </button>
       </header>
 
       <!-- Main Shell Content -->
@@ -931,8 +931,8 @@
             <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span>
             <span>GTA TRENDS</span>
           </div>
-          <h1>Discover your next favorite place<span class="accent-dot">.</span></h1>
-          <p>Thoughtful places, plans, and experiences — all grounded in what Echoo knows locally.</p>
+          <h1 id="discover-title">Discover your next favorite place<span class="accent-dot">.</span></h1>
+          <p id="discover-copy">Thoughtful places, plans, and experiences — all grounded in what Echoo knows locally.</p>
           
           <!-- Search Bar -->
           <div class="search-wrap">
@@ -958,15 +958,6 @@
             <div class="suggestions-popover" id="suggestions" role="listbox" hidden></div>
           </div>
         </section>
-
-        <a class="culture-lens-entry" href="culture.html" aria-label="Open Culture Lens">
-          <span class="culture-lens-entry-copy">
-            <span class="culture-lens-entry-kicker">A new way to discover</span>
-            <strong>Culture, made local.</strong>
-            <span>Choose a lens. Find the city through it.</span>
-          </span>
-          <span class="culture-lens-entry-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
-        </a>
 
         <!-- Category Pills -->
         <div class="category-pills" id="chips" aria-label="Explore categories">
@@ -1005,7 +996,7 @@
         <!-- Popular Nearby Section with inline List/Map View Switch -->
         <section aria-label="Popular Nearby">
           <div class="section-header">
-            <h2>Popular nearby</h2>
+            <h2 id="nearby-heading">Popular nearby</h2>
             <div class="view-switch" aria-label="Result layout">
               <button class="active" data-view="list">List</button>
               <button data-view="map">Map</button>
@@ -1025,7 +1016,7 @@
         <!-- Events This Week / Upcoming Drop Mount -->
         <section aria-label="Events this week" id="events-section">
           <div class="section-header">
-            <h2>Events this week</h2>
+            <h2 id="events-heading">Events this week</h2>
             <a href="#" class="see-all">View all ›</a>
           </div>
           <div id="party-radar-mount"></div>
@@ -1107,10 +1098,25 @@
       </div>
     </section>
 
+    <section class="culture-picker" id="culture-picker" aria-hidden="true">
+      <button class="culture-picker-backdrop" type="button" data-close-culture tabindex="-1" aria-label="Close culture picker"></button>
+      <div class="culture-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="culture-picker-title">
+        <div class="culture-picker-handle" aria-hidden="true"></div>
+        <div class="culture-picker-heading">
+          <div><small>Discover mode</small><h2 id="culture-picker-title">Choose a culture.</h2><p>Discover and trending will refresh around your choice.</p></div>
+          <button class="culture-picker-close" type="button" data-close-culture aria-label="Close">×</button>
+        </div>
+        <label class="culture-picker-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg><input id="culture-picker-search" type="search" autocomplete="off" placeholder="Search cultures or languages" /></label>
+        <div class="culture-picker-list" id="culture-picker-list" role="list" aria-label="Choose a culture"></div>
+        <div class="culture-picker-footer"><button class="culture-clear" id="culture-clear" type="button">Show <strong>all local picks</strong> instead</button></div>
+      </div>
+    </section>
+
       <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
       <script src="assets/echoo-auth.js"></script>
       <script src="assets/echoo-place-detail.js"></script>
       <script src="assets/location-platform.js"></script>
+      <script src="assets/culture-context.js"></script>
       <script>
         const CONFIG = {
           anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
@@ -1127,6 +1133,8 @@
       let city = params.get("city") || prefs.city || DEFAULT_DISCOVERY_CITY;
       city = window.EchooLocationPlatform.cityByName(city)?.name || DEFAULT_DISCOVERY_CITY;
       let lat = Number(prefs.lastLat), lng = Number(prefs.lastLng);
+      const cultureContext = window.EchooCultureContext;
+      if (params.get("culture")) cultureContext?.setActive(params.get("culture"), { silent: true });
 
       const queryInput = document.getElementById("query"),
         resultsEl = document.getElementById("results"),
@@ -1141,6 +1149,12 @@
         useMunicipalityButton = document.getElementById("discover-use-municipality"),
         locationLaterButton = document.getElementById("discover-location-later");
 
+      const cultureToggle = document.getElementById("culture-toggle"),
+        culturePicker = document.getElementById("culture-picker"),
+        culturePickerList = document.getElementById("culture-picker-list"),
+        culturePickerSearch = document.getElementById("culture-picker-search"),
+        cultureClear = document.getElementById("culture-clear");
+
       let activeQuery = params.get("query") || "trending",
         items = [],
         view = "list",
@@ -1150,6 +1164,61 @@
         String(value || "").replace(/[&<>"']/g, (char) => ({
           "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
         })[char]);
+
+      function activeCulture() {
+        return cultureContext?.getActive?.() || null;
+      }
+
+      function renderCulturePicker() {
+        const term = String(culturePickerSearch?.value || "").trim().toLowerCase();
+        const selected = activeCulture()?.slug || "";
+        const options = (cultureContext?.catalogue || []).filter((culture) => {
+          if (!term) return true;
+          return [culture.label, ...(culture.aliases || [])].some((value) => String(value).toLowerCase().includes(term));
+        }).slice(0, term ? 40 : 14);
+        culturePickerList.innerHTML = options.length
+          ? options.map((culture) => `<button type="button" class="culture-choice${culture.slug === selected ? " is-active" : ""}" role="listitem" data-culture="${esc(culture.slug)}" aria-pressed="${culture.slug === selected}"><span>${esc(culture.label)}</span><span class="culture-choice-mark" aria-hidden="true">${culture.slug === selected ? "✓" : ""}</span></button>`).join("")
+          : `<p style="grid-column: 1 / -1; color: var(--muted); font-size: 12px;">No culture matches that search.</p>`;
+      }
+
+      function openCulturePicker() {
+        culturePickerSearch.value = "";
+        renderCulturePicker();
+        culturePicker.classList.add("is-open");
+        culturePicker.setAttribute("aria-hidden", "false");
+        document.body.classList.add("culture-picker-open");
+        setTimeout(() => culturePickerSearch.focus({ preventScroll: true }), 180);
+      }
+
+      function closeCulturePicker() {
+        culturePicker.classList.remove("is-open");
+        culturePicker.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("culture-picker-open");
+      }
+
+      function applyCultureMood() {
+        const culture = activeCulture();
+        const title = document.getElementById("discover-title");
+        const copy = document.getElementById("discover-copy");
+        const nearbyHeading = document.getElementById("nearby-heading");
+        const eventsHeading = document.getElementById("events-heading");
+        cultureToggle.classList.toggle("is-active", Boolean(culture));
+        cultureToggle.setAttribute("aria-label", culture ? `${culture.label} is selected. Change culture` : "Choose a culture");
+        if (culture) {
+          title.innerHTML = `Discover ${esc(culture.label)} locally<span class="accent-dot">.</span>`;
+          copy.textContent = `Food, music, events, and places with a ${culture.label} point of view — around ${city}.`;
+          nearbyHeading.textContent = `Trending in ${culture.label} culture`;
+          eventsHeading.textContent = `${culture.label} events & gatherings`;
+          queryInput.placeholder = `Search ${culture.label} places`;
+        } else {
+          title.innerHTML = `Discover your next favorite place<span class="accent-dot">.</span>`;
+          copy.textContent = "Thoughtful places, plans, and experiences — all grounded in what Echoo knows locally.";
+          nearbyHeading.textContent = "Popular nearby";
+          eventsHeading.textContent = "Events this week";
+          queryInput.placeholder = "Search and discover places";
+        }
+        updateLocationBadge();
+      }
 
       const headers = {
         "Content-Type": "application/json",
@@ -1423,6 +1492,8 @@
       }
 
       function locationLabel() {
+        const culture = activeCulture();
+        if (culture) return `${culture.label.toUpperCase()} EDIT`;
         const hasExactLocation = Number.isFinite(lat) && Number.isFinite(lng);
         if (hasExactLocation) return `${city.toUpperCase()} NEAR YOU`;
         if (prefs.city && prefs.city !== DEFAULT_DISCOVERY_CITY) return `${city.toUpperCase()} TODAY`;
@@ -1504,11 +1575,14 @@
         suggestionsEl.hidden = true;
 
         try {
+          const discoveryQuery = cultureContext?.queryFor
+            ? cultureContext.queryFor(activeQuery, activeCulture())
+            : (activeQuery === "trending" ? "top attractions" : activeQuery);
           const response = await fetch(CONFIG.exploreUrl, {
             method: "POST",
             headers,
             body: JSON.stringify({
-              query: activeQuery === "trending" ? "top attractions" : activeQuery,
+              query: discoveryQuery,
               city,
               lat: Number.isFinite(lat) ? lat : undefined,
               lng: Number.isFinite(lng) ? lng : undefined,
@@ -1747,6 +1821,27 @@
 
       document.querySelectorAll("[data-close-sheet]").forEach((btn) => btn.onclick = closeDetail);
 
+      cultureToggle.addEventListener("click", openCulturePicker);
+      culturePicker.querySelectorAll("[data-close-culture]").forEach((button) => button.addEventListener("click", closeCulturePicker));
+      culturePickerList.addEventListener("click", (event) => {
+        const option = event.target.closest("[data-culture]");
+        if (!option) return;
+        cultureContext?.setActive(option.dataset.culture);
+        closeCulturePicker();
+      });
+      culturePickerSearch.addEventListener("input", renderCulturePicker);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && culturePicker.classList.contains("is-open")) closeCulturePicker();
+      });
+      cultureClear.addEventListener("click", () => {
+        cultureContext?.clear();
+        closeCulturePicker();
+      });
+      window.addEventListener("echoo:culture-changed", () => {
+        applyCultureMood();
+        search(activeQuery);
+      });
+
       locationMunicipality.innerHTML = window.EchooLocationPlatform.SUPPORTED_CITIES
         .map((municipality) => `<option value="${esc(municipality.name)}">${esc(municipality.name)}</option>`)
         .join("");
@@ -1767,9 +1862,10 @@
       });
 
       // Initial setup
-      updateLocationBadge();
+      applyCultureMood();
       renderPopularNearby(defaultPlaces);
       search(activeQuery);
+      if (params.get("culturePicker") === "1") setTimeout(openCulturePicker, 180);
       setTimeout(showLocationSheetIfNeeded, 450);
       if (prefs.locationPermissionState === "granted" && !(Number.isFinite(lat) && Number.isFinite(lng))) {
         setTimeout(() => applyCurrentLocation({ silent: true }), 150);
