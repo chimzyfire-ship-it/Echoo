@@ -39,9 +39,11 @@
         margin: 0;
         padding: 0;
         min-height: 100%;
+        max-width: 100%;
         background-color: var(--bg-black);
         color: var(--ink);
         overflow-x: hidden;
+        overflow-x: clip;
       }
 
       body {
@@ -68,7 +70,8 @@
 
       /* App Shell Container - Standard 430px mobile width */
       .app-shell {
-        width: min(100vw, 430px);
+        width: min(100%, 430px);
+        max-width: 100%;
         min-height: 100svh;
         isolation: isolate;
         position: relative;
@@ -878,7 +881,8 @@
 
       .sheet-panel {
         position: relative;
-        width: min(100vw, 430px);
+        width: min(100%, 430px);
+        max-width: 100%;
         max-height: 88vh;
         overflow-y: auto;
         background: #141414;
@@ -1462,14 +1466,15 @@
       }
 
       async function fetchPlaceDetail(item) {
-        if (!item?.id) return buildFallbackDetail(item);
+        const detailId = item?.canonicalId || item?.entityId || item?.id;
+        if (!detailId || String(detailId).startsWith("google:")) return buildFallbackDetail(item);
         const headersForDetail = window.EchooAuth?.authHeaders
           ? await window.EchooAuth.authHeaders({
               "Content-Type": "application/json",
             })
           : headers;
         const response = await fetch(
-          `${CONFIG.placeDetailUrl}?id=${encodeURIComponent(item.id)}`,
+          `${CONFIG.placeDetailUrl}?id=${encodeURIComponent(detailId)}`,
           { headers: headersForDetail },
         );
         const payload = await response.json().catch(() => ({}));
@@ -1776,13 +1781,15 @@
         const shouldShow = activeQuery !== "trending" && view !== "map";
         resultsSection.hidden = !shouldShow;
         if (!shouldShow) return;
-        const pageSize = 5;
+        const pageSize = 10;
         const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
         resultPage = Math.min(resultPage, pageCount - 1);
         const start = resultPage * pageSize;
         const pageItems = items.slice(start, start + pageSize);
         resultsHeading.textContent = resultLabel();
-        resultsPageStatus.textContent = items.length ? `Page ${resultPage + 1} · ${items.length}${discoveryPaging.hasMore ? "+" : ""} places` : "";
+        resultsPageStatus.textContent = items.length
+          ? `Page ${resultPage + 1} · ${start + 1}–${Math.min(start + pageSize, items.length)} of ${items.length}${discoveryPaging.hasMore ? "+" : ""}`
+          : "";
         resultsEl.innerHTML = pageItems.length
           ? pageItems.map((item, index) => {
               const itemIndex = items.indexOf(item);
@@ -1873,14 +1880,22 @@
         const time = timeContext();
         const personalSignals = !culture ? signals.slice(0, 2) : [];
         return {
-          query: [base, ...personalSignals, time.query].filter(Boolean).join(" "),
+          // Keep the searchable phrase precise. Mixing every onboarding and
+          // time signal into one literal database search used to turn a
+          // simple "restaurants" request into a phrase no place could match.
+          // Signals are still sent separately for feature matching and the
+          // live provider's contextual ranking.
+          query: base,
+          context: [...personalSignals, time.query].filter(Boolean).join(" "),
           city,
           lat: Number.isFinite(lat) ? lat : undefined,
           lng: Number.isFinite(lng) ? lng : undefined,
           radiusMeters: Number.isFinite(lat) && Number.isFinite(lng) ? 25000 : undefined,
           featureSlugs: !culture ? featureSlugsFromSignals(signals) : undefined,
           includeLiveFallback: true,
-          limit: 20,
+          // One visual page at a time; the cursor continues across the full
+          // GTA inventory instead of treating ten as the total.
+          limit: 10,
         };
       }
 
@@ -1960,7 +1975,7 @@
       }
 
       async function showNextResultsPage() {
-        const pageSize = 5;
+        const pageSize = 10;
         if ((resultPage + 1) * pageSize < items.length) {
           resultPage += 1;
           renderResultsPage();

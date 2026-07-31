@@ -22,6 +22,7 @@ import {
 
 type ExplorePayload = {
   query?: unknown;
+  context?: unknown;
   city?: unknown;
   lat?: unknown;
   lng?: unknown;
@@ -56,6 +57,7 @@ function ownedCard(item: OwnedResult) {
   const coverUrl = cleanDiscoveryText(item.cover_url, 500);
   return {
     id: item.id,
+    canonicalId: item.entity_id || null,
     source: "echoo",
     type: item.entity_type === "event" ? "event" : "place",
     title: item.title,
@@ -98,11 +100,75 @@ function ownedCard(item: OwnedResult) {
   };
 }
 
+function base64Url(value: string) {
+  return btoa(value).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+}
+
+async function sign(value: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(signature))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function signedPhotoUrl(req: Request, photoName: unknown) {
+  const name = cleanDiscoveryText(photoName, 500);
+  const secret = cleanDiscoveryText(Deno.env.get("PLACE_MEDIA_SIGNING_SECRET"), 500);
+  if (!secret || !/^places\/[^/]+\/photos\/[^/]+$/.test(name)) return null;
+  const token = base64Url(JSON.stringify({ photoName: name, expiresAt: Date.now() + 6 * 60_000 }));
+  const signature = await sign(token, secret);
+  const url = new URL(req.url);
+  return `${url.origin}/functions/v1/place-photo?token=${encodeURIComponent(token)}&signature=${signature}`;
+}
+
+function normalizedName(value: unknown) {
+  return cleanDiscoveryText(value, 200)
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function namesMatch(a: unknown, b: unknown) {
+  const left = normalizedName(a);
+  const right = normalizedName(b);
+  if (!left || !right) return false;
+  if (left === right || left.includes(right) || right.includes(left)) return true;
+  const leftWords = new Set(left.split(" ").filter((word) => word.length > 2));
+  const rightWords = new Set(right.split(" ").filter((word) => word.length > 2));
+  const shared = [...leftWords].filter((word) => rightWords.has(word));
+  return shared.length >= Math.min(2, leftWords.size, rightWords.size);
+}
+
+function discoveryResultKey(item: Record<string, any>) {
+  const title = normalizedName(item.title);
+  return title ? `${cleanDiscoveryText(item.type, 30)}:${title}` : cleanDiscoveryText(item.id, 220);
+}
+
 function normalizedLiveQuery(query: string, category: string | null) {
   const normalized = cleanDiscoveryText(query || category || "things to do", 120)
-    .replace(/\bresturants?\b/gi, "restaurants")
-    .replace(/\brestaraunts?\b/gi, "restaurants");
+    .replace(/\b(restaurants?|resturants?|restaraunts?)\b/gi, "restaurant");
   return normalized || "things to do";
+}
+
+// Echoo's owned search index is intentionally exact and fast. Convert common
+// broad intents to the catalogue's canonical category word instead of asking
+// it to match an entire sentence such as "food dinner date night".
+function ownedInventoryQuery(query: string) {
+  const text = normalizedLiveQuery(query, null).toLowerCase();
+  if (/\b(restaurant|food|dining|eat|brunch|lunch|dinner|tasting|bakery)\b/.test(text)) return "restaurant";
+  if (/\b(cafe|coffee|espresso)\b/.test(text)) return "cafe";
+  if (/\b(bar|pub|nightlife|lounge)\b/.test(text)) return "bar";
+  if (/\b(park|nature|trail|outdoor|walk)\b/.test(text)) return "park";
+  if (/\b(museum|gallery|tourism|landmark|attraction)\b/.test(text)) return "museum";
+  return text;
 }
 
 function metersBetween(
@@ -119,6 +185,114 @@ function metersBetween(
   return Math.round(6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
+async function photoForOwnedCard(input: {
+  req: Request;
+  supabase: ReturnType<typeof getSupabaseAdmin>;
+  card: Record<string, any>;
+  googlePlaceId?: string;
+}) {
+  const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY") || Deno.env.get("GOOGLE_MAPS_API_KEY");
+  if (!apiKey || !Deno.env.get("PLACE_MEDIA_SIGNING_SECRET")) return null;
+  let googlePlaceId = cleanDiscoveryText(input.googlePlaceId, 180);
+  let photoName = "";
+
+  try {
+    if (googlePlaceId) {
+      const response = await fetch(
+        `https://places.googleapis.com/v1/places/${encodeURIComponent(googlePlaceId)}`,
+        {
+          headers: {
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": "photos",
+          },
+        },
+      );
+      if (response.ok) {
+        const place = await response.json();
+        photoName = cleanDiscoveryText(place?.photos?.[0]?.name, 500);
+      }
+    } else {
+      const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": apiKey,
+          "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.photos",
+        },
+        body: JSON.stringify({
+          textQuery: `${cleanDiscoveryText(input.card.title, 160)} ${cleanDiscoveryText(input.card.city, 80)} Ontario`,
+          pageSize: 1,
+          languageCode: "en",
+          regionCode: "CA",
+          ...(Number.isFinite(input.card.latitude) && Number.isFinite(input.card.longitude)
+            ? {
+              locationBias: {
+                circle: {
+                  center: { latitude: input.card.latitude, longitude: input.card.longitude },
+                  radius: 250,
+                },
+              },
+            }
+            : {}),
+        }),
+      });
+      if (!response.ok) return null;
+      const candidate = (await response.json())?.places?.[0];
+      const distance = metersBetween(
+        input.card.latitude,
+        input.card.longitude,
+        optionalDiscoveryNumber(candidate?.location?.latitude),
+        optionalDiscoveryNumber(candidate?.location?.longitude),
+      );
+      if (!candidate?.id || !namesMatch(input.card.title, candidate.displayName?.text) || (distance !== undefined && distance > 250)) {
+        return null;
+      }
+      googlePlaceId = cleanDiscoveryText(candidate.id, 180);
+      photoName = cleanDiscoveryText(candidate.photos?.[0]?.name, 500);
+      if (googlePlaceId && input.card.canonicalId) {
+        // Google permits storing a Place ID. Photo metadata and images stay
+        // live and are only delivered through Echoo's short-lived proxy.
+        await input.supabase
+          .from("canonical_places")
+          .update({ google_place_id: googlePlaceId, google_place_matched_at: new Date().toISOString() })
+          .eq("id", input.card.canonicalId);
+      }
+    }
+    const imageUrl = await signedPhotoUrl(input.req, photoName);
+    return imageUrl
+      ? { url: imageUrl, alt: cleanDiscoveryText(input.card.title, 160), source: "google_places" }
+      : null;
+  } catch (error) {
+    console.warn("Explore owned photo lookup skipped", cleanDiscoveryText((error as Error)?.message, 160));
+    return null;
+  }
+}
+
+async function hydrateOwnedCardPhotos(
+  req: Request,
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  cards: Record<string, any>[],
+) {
+  const needsPhoto = cards.filter((card) => !card.image && card.canonicalId).slice(0, 10);
+  if (!needsPhoto.length) return cards;
+  const canonicalIds = needsPhoto.map((card) => card.canonicalId);
+  const { data } = await supabase
+    .from("canonical_places")
+    .select("id,google_place_id")
+    .in("id", canonicalIds);
+  const googleIds = new Map((data || []).map((place: any) => [place.id, place.google_place_id]));
+  await Promise.all(needsPhoto.map(async (card) => {
+    const image = await photoForOwnedCard({
+      req,
+      supabase,
+      card,
+      googlePlaceId: googleIds.get(card.canonicalId),
+    });
+    if (image) card.image = image;
+  }));
+  return cards;
+}
+
 function liveType(query: string, category: string | null) {
   const normalized = `${query} ${category || ""}`.toLowerCase();
   if (/\b(restaurants?|resturants?|restaraunts?)\b/.test(normalized)) return "restaurant";
@@ -131,6 +305,7 @@ function liveType(query: string, category: string | null) {
 }
 
 async function googleLiveSearch(input: {
+  req: Request;
   query: string;
   category: string | null;
   city: string;
@@ -184,7 +359,7 @@ async function googleLiveSearch(input: {
     return [];
   }
   const data = await response.json();
-  const results = (data.places || []).map((place: any) => {
+  const results = await Promise.all((data.places || []).map(async (place: any) => {
     const latitude = optionalDiscoveryNumber(place.location?.latitude);
     const longitude = optionalDiscoveryNumber(place.location?.longitude);
     const photoName = cleanDiscoveryText(place.photos?.[0]?.name, 500);
@@ -196,11 +371,9 @@ async function googleLiveSearch(input: {
         }))
         .filter((author: { displayName: string }) => Boolean(author.displayName))
       : [];
-    // The Places API returns a resource name, not a directly displayable image.
-    // The media endpoint redirects the browser to the actual photo asset.
-    const imageUrl = photoName
-      ? `https://places.googleapis.com/v1/${photoName}/media?key=${encodeURIComponent(key)}&maxWidthPx=400`
-      : null;
+    // The browser only receives a short-lived photo proxy URL, never a
+    // provider API key embedded in image markup.
+    const imageUrl = await signedPhotoUrl(input.req, photoName);
     const ratingAverage = optionalDiscoveryNumber(place.rating);
     const ratingCount = Math.max(0, Number(place.userRatingCount || 0));
     // This is an observed popularity signal, not a claim about live capacity:
@@ -245,7 +418,7 @@ async function googleLiveSearch(input: {
     attribution: { provider: "Google Maps", requiredLabel: "Google Maps" },
     isNewToEchoo: true,
     };
-  });
+  }));
   results.sort((a: any, b: any) => (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER));
   return { results, nextPageToken: cleanDiscoveryText(data.nextPageToken, 2048) || null };
 }
@@ -267,6 +440,8 @@ Deno.serve(async (req) => {
     // Without this, "resturants" reached Google correctly but missed Echoo's
     // own search index entirely.
     const searchQuery = query ? normalizedLiveQuery(query, null) : "";
+    const context = cleanDiscoveryText(get("context"), 120);
+    const inventoryQuery = ownedInventoryQuery(searchQuery);
     const lat = optionalDiscoveryNumber(get("lat"));
     const lng = optionalDiscoveryNumber(get("lng"));
     if ((lat === undefined) !== (lng === undefined))
@@ -335,8 +510,9 @@ Deno.serve(async (req) => {
     const cityFilter = city.coverageLevel === "municipality" ? city.name : null;
     const cacheKey = await sha256Hex(
       JSON.stringify({
-        v: 1,
+        v: 2,
         query: searchQuery.toLowerCase(),
+        inventoryQuery,
         city: cityFilter,
         lat: lat?.toFixed(4) || null,
         lng: lng?.toFixed(4) || null,
@@ -355,14 +531,17 @@ Deno.serve(async (req) => {
       const { data, error } = await supabase.rpc(
         "search_discovery_owned_entities",
         {
-          p_query: searchQuery || null,
+          p_query: inventoryQuery || null,
           p_feature_slugs: featureSlugs,
           p_lat: lat ?? null,
           p_lng: lng ?? null,
           p_radius_meters: radiusMeters,
           p_city: cityFilter,
           p_category: category,
-          p_limit: limit + 1,
+          // The SQL function has a 50-row safety ceiling. At that ceiling a
+          // complete page is enough to offer the next cursor; a follow-up
+          // request confirms whether another page exists.
+          p_limit: Math.min(limit + 1, 50),
           p_cursor_score: cursor?.score ?? null,
           p_cursor_id: cursor?.id ?? null,
         },
@@ -374,12 +553,17 @@ Deno.serve(async (req) => {
       owned = [];
     }
 
-    const hasNextPage = owned.length > limit;
+    const hasNextPage =
+      owned.length > limit || (limit === 50 && owned.length === 50);
     const page = owned.slice(0, limit);
+    const ownedCards = page.map(ownedCard);
     const includeLiveFallback = asBoolean(get("includeLiveFallback"), true);
-    const live = includeLiveFallback
+    const liveRequest = includeLiveFallback
       ? await googleLiveSearch({
-          query: searchQuery || category || "things to do",
+          req,
+          query: [searchQuery || category || "things to do", context]
+            .filter(Boolean)
+            .join(" "),
           category,
           city: city.name,
           lat,
@@ -388,13 +572,15 @@ Deno.serve(async (req) => {
           pageToken: livePageToken,
         })
       : { results: [], nextPageToken: null };
+    await hydrateOwnedCardPhotos(req, supabase, ownedCards);
+    const live = liveRequest;
     const last = page.at(-1);
-    const ownedCards = page.map(ownedCard);
-    // The explore UI promises real place photography. Do not show a generic
-    // decorative placeholder when neither Echoo nor Google can provide one.
+    // Every visual result is a real provider or approved venue photo. Cards
+    // without a verified photo wait for the enrichment path instead of being
+    // padded with AI or stock imagery.
     const merged = [...ownedCards, ...live.results]
       .filter((item, index, all) =>
-        all.findIndex((candidate) => candidate.id === item.id) === index,
+        all.findIndex((candidate) => discoveryResultKey(candidate) === discoveryResultKey(item)) === index,
       )
       .filter((item: any) => Boolean(item.image?.url || item.image?.storagePath));
     if (lat !== undefined && lng !== undefined) {
