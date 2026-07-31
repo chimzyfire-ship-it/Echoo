@@ -44,10 +44,10 @@
     );
   }
 
-  function hrefFor(item, category) {
+  function hrefFor(item, category, culture) {
     return (
       clean(item.actionUrl) ||
-      `events.html?query=${encodeURIComponent(`${item.title || category} Ontario`)}`
+      `events.html?query=${encodeURIComponent(`${culture?.label || ""} ${item.title || category} Ontario`.trim())}`
     );
   }
 
@@ -64,7 +64,7 @@
     return bits.join(" · ") || copyFor(item);
   }
 
-  function render(items, category, city) {
+  function render(items, category, city, culture) {
     const feed = document.getElementById("live-feed");
     if (!feed) return;
     if (!items.length) {
@@ -79,7 +79,7 @@
 
     const [lead, ...rest] = items;
     feed.innerHTML = `
-      <a class="live-card" href="${hrefFor(lead, category)}">
+      <a class="live-card" href="${hrefFor(lead, category, culture)}">
         <img src="${imageFor(lead, category)}" alt="${clean(lead.title, "Live Echoo pick")}" loading="eager" decoding="async" fetchpriority="high">
         <h2>${clean(lead.title, "Live pick")}</h2>
         <p>${copyFor(lead)}</p>
@@ -89,7 +89,7 @@
           .slice(0, 5)
           .map(
             (item) => `
-              <a class="live-row" href="${hrefFor(item, category)}">
+              <a class="live-row" href="${hrefFor(item, category, culture)}">
                 <img src="${imageFor(item, category)}" alt="" loading="lazy" decoding="async">
                 <span>
                   <strong>${clean(item.title, "Live pick")}</strong>
@@ -103,13 +103,33 @@
     `;
   }
 
+  function applyCultureHero(culture, page) {
+    if (!culture) return;
+    const title = document.querySelector("[data-echoo-hero-title]");
+    const copy = document.querySelector("[data-echoo-hero-copy]");
+    const titles = {
+      food: `${culture.label} food, nearby.`,
+      music: `${culture.label} sound, locally.`,
+      dates: `${culture.label} date ideas.`,
+    };
+    if (title) title.textContent = titles[page] || `${culture.label}, locally.`;
+    if (copy) copy.textContent = `Your Culture Lens is shaping these live picks around ${culture.label} culture.`;
+  }
+
   async function load() {
     const page = document.body.dataset.page || "music";
-    const query = document.body.dataset.query || `${page} Ontario`;
+    const baseQuery = document.body.dataset.query || `${page} Ontario`;
+    const culture = window.EchooCultureContext?.getActive?.() || null;
+    const query = window.EchooCultureContext?.queryFor
+      ? window.EchooCultureContext.queryFor(baseQuery, culture)
+      : baseQuery;
     const state = document.getElementById("live-state");
     const prefs = readPrefs();
     const city = clean(prefs.city, "Ontario");
-    if (state) state.textContent = "Finding live Ontario picks...";
+    applyCultureHero(culture, page);
+    if (state) state.textContent = culture
+      ? `Finding live ${culture.label} picks...`
+      : "Finding live Ontario picks...";
 
     try {
       const lat = Number(prefs.lastLat);
@@ -127,15 +147,17 @@
       const items = Array.isArray(payload.recommendations)
         ? payload.recommendations
         : [];
-      render(items, page, payload.city || city);
+      render(items, page, payload.city || city, culture);
       if (state) {
         state.textContent = items.length
-          ? `Live around ${payload.city || city}`
+          ? culture
+            ? `Live ${culture.label} picks around ${payload.city || city}`
+            : `Live around ${payload.city || city}`
           : "No live picks found yet";
       }
     } catch (error) {
       console.warn("Echoo lifestyle live feed unavailable.", error);
-      render([], page, city);
+      render([], page, city, culture);
       if (state) state.textContent = "Live feed unavailable";
     }
   }
