@@ -3341,6 +3341,14 @@
         if (quickPlanContent) quickPlanContent.replaceChildren();
       }
 
+      function quickPlanStopCover(stop) {
+        const image = String(stop?.imageUrl || "").trim();
+        const fallback = `<span class="echoo-quick-plan-stop-cover" aria-hidden="true"><span>Curated</span></span>`;
+        return /^https?:\/\//i.test(image)
+          ? `<img class="echoo-quick-plan-stop-image" src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />${fallback.replace(" aria-hidden", " hidden aria-hidden")}`
+          : fallback;
+      }
+
       function quickPlanStopMarkup(stop, index) {
         const travel = Number(stop.travelMinutes || 0);
         const descriptor = index === 0
@@ -3349,6 +3357,7 @@
         return `
           <button class="echoo-quick-plan-stop" type="button" data-quick-plan-stop="${escapeHtml(stop.id)}">
             <span class="echoo-quick-plan-stop-number">${index + 1}</span>
+            ${quickPlanStopCover(stop)}
             <span class="echoo-quick-plan-stop-copy">
               <strong>${escapeHtml(stop.name)}</strong>
               <span>${escapeHtml(descriptor)}</span>

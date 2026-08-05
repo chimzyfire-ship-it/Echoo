@@ -16,6 +16,7 @@ type QuickPlanRequest = {
     address?: unknown;
     latitude?: unknown;
     longitude?: unknown;
+    imageUrl?: unknown;
   };
   stopCount?: unknown;
   budgetStyle?: unknown;
@@ -277,7 +278,12 @@ function requestAnchor(anchor: QuickPlanRequest["anchor"]): Place | null {
     latitude,
     longitude,
     timezone: "America/Toronto",
+    image_url: text(anchor?.imageUrl),
   };
+}
+
+function hasCoverImage(place: Place) {
+  return /^https?:\/\//i.test(text(place.image_url));
 }
 
 function liveSearchTypes(anchor: Place) {
@@ -453,8 +459,12 @@ Deno.serve(async (req) => {
     if (anchorError) throw anchorError;
     // A place discovered live from Google has not necessarily been saved to
     // canonical_places. Its tapped coordinates are still valid for a plan.
-    const anchor = (anchorRow as Place | null) || requestAnchor(body.anchor);
+    const requestPlace = requestAnchor(body.anchor);
+    const anchor = (anchorRow as Place | null) || requestPlace;
     if (!anchor) return jsonResponse({ error: "This place needs a name and precise location before Echoo can plan around it" }, 422);
+    // An Explore card can already have a verified cover while the canonical
+    // record awaits photo enrichment. Preserve it for the plan's anchor.
+    if (!hasCoverImage(anchor) && requestPlace?.image_url) anchor.image_url = requestPlace.image_url;
     if (!Number.isFinite(number(anchor.latitude, NaN)) || !Number.isFinite(number(anchor.longitude, NaN))) {
       return jsonResponse({ error: "This place needs a precise location before Echoo can route around it" }, 422);
     }
@@ -504,6 +514,9 @@ Deno.serve(async (req) => {
 
     const inventoryCandidates: Candidate[] = [...places.values()]
       .filter((place) => place.id !== anchor.id)
+      // Quick Plan only uses Echoo's persisted, cover-backed inventory. This
+      // keeps every additional stop curated and visually complete.
+      .filter(hasCoverImage)
       .map((place) => ({
         ...place,
         profile: profiles.get(place.id),
@@ -519,8 +532,7 @@ Deno.serve(async (req) => {
         const status = openAt(hoursByPlace.get(place.id) || [], timezone, new Date());
         return !status.known || status.open;
       });
-    const liveCandidates = await liveNearbyCandidates(anchor, stopCount + 6);
-    const candidates = Array.from(new Map([...inventoryCandidates, ...liveCandidates].map((place) => [place.id, place])).values());
+    const candidates = inventoryCandidates;
     const recentPlaceIds = recentIds(body.recentPlaceIds);
 
     const score = (candidate: Candidate) => {
