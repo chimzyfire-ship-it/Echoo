@@ -1456,15 +1456,12 @@
       });
 
       document.getElementById("bored-plan").addEventListener("click", () => {
-        ensureLocationContext(() => {
+        ensureLocationContext(async () => {
           const currentCity =
             window.EchooLocationPlatform.readPreferences().city || "Greater Toronto Area";
           const context = activityContext(currentCity);
-          openSheet(
-            "What budget should Echoo respect?",
-            "Pick this first, then Echoo will make the surprise fit the spend instead of guessing.",
+          await openProtectedRoute(
             `events.html?query=${encodeURIComponent(`surprise me ${context.label} in ${currentCity}`)}&mode=surprise`,
-            true,
           );
         });
       });

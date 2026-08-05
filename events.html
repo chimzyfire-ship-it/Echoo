@@ -489,23 +489,6 @@
           linear-gradient(145deg, #2a2926, #11110f 62%, #25211d);
       }
       .place-visual-fallback[hidden] { display: none; }
-      .place-visual-fallback::after,
-      .featured-card.has-visual-fallback::before {
-        content: attr(data-visual-label);
-        width: min(62%, 112px);
-        padding: 8px 10px;
-        overflow: hidden;
-        border: 1px solid rgba(248, 245, 239, 0.2);
-        border-radius: 999px;
-        background: rgba(5, 5, 5, 0.24);
-        font-size: 10px;
-        font-weight: 760;
-        letter-spacing: 0.1em;
-        text-align: center;
-        text-overflow: ellipsis;
-        text-transform: uppercase;
-        white-space: nowrap;
-      }
       .featured-card.has-visual-fallback::before {
         position: absolute;
         inset: 0;
@@ -1686,15 +1669,10 @@
         return "local";
       }
 
-      function visualLabel() {
-        return "Discover";
-      }
-
       function placeVisual(item, className, alt = "") {
         const image = realImageUrl(item);
-        if (image) return `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="lazy" decoding="async" onerror="this.hidden=true; this.nextElementSibling.hidden=false" /><div class="${className} place-visual-fallback" data-visual-label="${esc(visualLabel(item))}" role="img" aria-label="${esc(alt || visualLabel(item))}" hidden></div>`;
-        const label = visualLabel(item);
-        return `<div class="${className} place-visual-fallback" data-visual-label="${esc(label)}" role="img" aria-label="${esc(alt || label)}"></div>`;
+        if (image) return `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="lazy" decoding="async" onerror="this.hidden=true; this.nextElementSibling.hidden=false" /><div class="${className} place-visual-fallback" role="img" aria-label="${esc(alt || "Place image")}" hidden></div>`;
+        return `<div class="${className} place-visual-fallback" role="img" aria-label="${esc(alt || "Place image")}"></div>`;
       }
 
       function hotScoreFor(item) {
@@ -1896,7 +1874,7 @@
         const fiveMinuteWindow = Math.floor(Date.now() / (1000 * 60 * 5));
         const choice = pool[stableNumber(`${city}|${lat}|${lng}|${onboardingSignals().join("|")}|${fiveMinuteWindow}`) % pool.length].item;
         const loaderStartedAt = Number(surpriseLoader.dataset.startedAt || Date.now());
-        const remaining = Math.max(0, 1250 - (Date.now() - loaderStartedAt));
+        const remaining = Math.max(0, 3000 - (Date.now() - loaderStartedAt));
         if (remaining) await new Promise((resolve) => setTimeout(resolve, remaining));
         surpriseLoader.hidden = true;
         const opensPlan = stableNumber(`${choice.id}|${fiveMinuteWindow}|${onboardingSignals().join("|")}`) % 3 === 0;
@@ -2275,8 +2253,13 @@
         discoveryRequestId += 1;
         discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: discoveryRequestForActiveView(), loading: false };
         renderDiscoverLoading();
-        await fetchDiscoveryPage({ requestId: discoveryRequestId });
-        if (options.surprise) await revealSurprise();
+        const discoveryPromise = fetchDiscoveryPage({ requestId: discoveryRequestId });
+        if (options.surprise) {
+          await Promise.race([discoveryPromise, new Promise((resolve) => setTimeout(resolve, 3000))]);
+          await revealSurprise();
+          return;
+        }
+        await discoveryPromise;
       }
 
       async function showNextResultsPage() {
