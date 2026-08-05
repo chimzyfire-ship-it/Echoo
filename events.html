@@ -741,11 +741,14 @@
 
       .surprise-loader { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 28px; background: rgba(5,5,5,.92); backdrop-filter: blur(18px); transition: opacity .32s ease, visibility .32s ease; }
       .surprise-loader[hidden] { display: none; }
-      .surprise-loader-card { width: min(100%, 280px); display: grid; justify-items: center; gap: 16px; padding: 30px 22px; border: 1px solid rgba(247,213,178,.25); border-radius: 28px; background: radial-gradient(circle at 50% 0%, rgba(247,213,178,.16), transparent 58%), #171716; box-shadow: 0 24px 64px rgba(0,0,0,.52); text-align: center; }
+      .surprise-loader-card { width: min(100%, 300px); display: grid; justify-items: center; gap: 16px; padding: 30px 22px; border: 1px solid rgba(247,213,178,.25); border-radius: 28px; background: radial-gradient(circle at 50% 0%, rgba(247,213,178,.16), transparent 58%), #171716; box-shadow: 0 24px 64px rgba(0,0,0,.52); text-align: center; }
       .surprise-die { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 20px; color: #17130e; background: var(--peach); box-shadow: 0 12px 30px rgba(247,213,178,.25); font-size: 39px; animation: surprise-roll 1.05s cubic-bezier(.2,.75,.25,1) infinite; }
       .surprise-loader h2 { margin: 0; font-size: 23px; letter-spacing: -.04em; }
       .surprise-loader p { margin: -8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+      .surprise-loader-signals { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:-2px; }
+      .surprise-loader-signals span { padding:5px 8px; border:1px solid rgba(247,213,178,.18); border-radius:999px; color:rgba(248,245,239,.76); font-size:10px; }
       @keyframes surprise-roll { 0%,100% { transform: rotate(0) scale(1); } 28% { transform: rotate(105deg) scale(.84); } 63% { transform: rotate(230deg) scale(1.06); } }
+      @media (prefers-reduced-motion: reduce) { .surprise-die { animation:none; } }
 
       @keyframes skeleton-shimmer {
         100% {
@@ -1123,7 +1126,7 @@
       </main>
 
       <div class="surprise-loader" id="surprise-loader" role="status" aria-live="polite" hidden>
-        <div class="surprise-loader-card"><span class="surprise-die" aria-hidden="true">⚄</span><h2>Rolling something good</h2><p>Mixing your location, interests, and the moment.</p></div>
+        <div class="surprise-loader-card"><span class="surprise-die" aria-hidden="true">⚄</span><h2>Rolling something good</h2><p id="surprise-loader-copy">Mixing your location, interests, and the moment.</p><div class="surprise-loader-signals" aria-hidden="true"><span>Nearby</span><span>Your taste</span><span>Right now</span></div></div>
       </div>
 
       <!-- AI Chat Floating Button -->
@@ -1873,6 +1876,8 @@
         if (!pool.length) return;
         const fiveMinuteWindow = Math.floor(Date.now() / (1000 * 60 * 5));
         const choice = pool[stableNumber(`${city}|${lat}|${lng}|${onboardingSignals().join("|")}|${fiveMinuteWindow}`) % pool.length].item;
+        const loaderCopy = document.getElementById("surprise-loader-copy");
+        if (loaderCopy) loaderCopy.textContent = `Matching ${city}, your preferences, and ${timeContext().label}.`;
         const loaderStartedAt = Number(surpriseLoader.dataset.startedAt || Date.now());
         const remaining = Math.max(0, 3000 - (Date.now() - loaderStartedAt));
         if (remaining) await new Promise((resolve) => setTimeout(resolve, remaining));
@@ -2157,7 +2162,7 @@
         });
       }
 
-      async function hydrateOnboardingSignals() {
+      async function hydrateOnboardingSignals({ refresh = true } = {}) {
         if (!window.EchooAuth?.loadOnboardingProfile) return;
         const before = personalizationSignature(prefs);
         try {
@@ -2167,7 +2172,7 @@
           if (!(Number.isFinite(lat) && Number.isFinite(lng)) && !params.has("city")) {
             city = window.EchooLocationPlatform.cityByName(prefs.city)?.name || city;
           }
-          if (personalizationSignature(prefs) !== before) {
+          if (refresh && personalizationSignature(prefs) !== before) {
             updateLocationBadge();
             await search(activeQuery, { refresh: true });
           }
@@ -2389,11 +2394,19 @@
             window.ReactNativeWebView.postMessage(`echoo:route-plan:${JSON.stringify({ stops })}`);
             return;
           }
-          const coordinate = `${stops[0].latitude},${stops[0].longitude}`;
+          const validStops = stops.filter((stop) => Number.isFinite(Number(stop.latitude)) && Number.isFinite(Number(stop.longitude)));
+          if (!validStops.length) return;
+          const coordinate = `${validStops[0].latitude},${validStops[0].longitude}`;
           const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
           const url = isAppleDevice
             ? `https://maps.apple.com/?daddr=${encodeURIComponent(coordinate)}&dirflg=d`
-            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(coordinate)}&dir_action=navigate`;
+            : (() => {
+                const destination = validStops.at(-1);
+                const waypoints = validStops.slice(0, -1).map((stop) => `${stop.latitude},${stop.longitude}`).join("|");
+                const params = new URLSearchParams({ api: "1", destination: `${destination.latitude},${destination.longitude}`, dir_action: "navigate" });
+                if (waypoints) params.set("waypoints", waypoints);
+                return `https://www.google.com/maps/dir/?${params.toString()}`;
+              })();
           window.open(url.toString(), "_blank", "noopener,noreferrer");
         });
       }
@@ -2555,8 +2568,17 @@
         surpriseLoader.hidden = false;
         surpriseLoader.dataset.startedAt = String(Date.now());
       }
-      search(activeQuery, { surprise: surpriseMode });
-      hydrateOnboardingSignals();
+      if (surpriseMode) {
+        // Cached preferences are instant; give a signed-in profile a short
+        // head start before the random local pick is scored.
+        Promise.race([
+          hydrateOnboardingSignals({ refresh: false }),
+          new Promise((resolve) => setTimeout(resolve, 850)),
+        ]).finally(() => search(activeQuery, { surprise: true }));
+      } else {
+        search(activeQuery);
+        hydrateOnboardingSignals();
+      }
       if (params.get("culturePicker") === "1") setTimeout(openCulturePicker, 180);
       // Refresh a granted device location when Discover opens. Session GPS is
       // useful as an immediate fallback, but it must not quietly become an

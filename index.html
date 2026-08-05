@@ -950,6 +950,18 @@
         stroke-linejoin: round;
       }
 
+      /* A tap should feel immediate, even while the next screen is loading. */
+      .surprise-launcher { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; opacity: 0; visibility: hidden; pointer-events: none; background: rgba(5, 5, 5, .94); backdrop-filter: blur(18px); transition: opacity .22s ease, visibility .22s ease; }
+      .surprise-launcher.is-visible { opacity: 1; visibility: visible; }
+      .surprise-launcher-card { width: min(100%, 300px); display: grid; justify-items: center; gap: 14px; padding: 30px 24px; border: 1px solid rgba(247, 213, 178, .3); border-radius: 30px; background: radial-gradient(circle at 50% 0%, rgba(247, 213, 178, .19), transparent 56%), #171716; box-shadow: 0 26px 72px rgba(0, 0, 0, .58); text-align: center; }
+      .surprise-launcher-die { width: 78px; height: 78px; display: grid; place-items: center; border-radius: 22px; color: #17130e; background: var(--peach); box-shadow: 0 13px 34px rgba(247, 213, 178, .3); font-size: 42px; animation: surprise-launch-roll .82s cubic-bezier(.2, .75, .25, 1) infinite; }
+      .surprise-launcher h2 { margin: 2px 0 0; font-size: 23px; letter-spacing: -.04em; }
+      .surprise-launcher p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+      .surprise-launcher-signals { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+      .surprise-launcher-signals span { padding: 5px 8px; border: 1px solid rgba(247, 213, 178, .18); border-radius: 999px; color: rgba(248, 245, 239, .78); font-size: 10px; }
+      @keyframes surprise-launch-roll { 0%, 100% { transform: rotate(0) scale(1); } 32% { transform: rotate(118deg) scale(.83); } 66% { transform: rotate(244deg) scale(1.07); } }
+      @media (prefers-reduced-motion: reduce) { .surprise-launcher-die { animation: none; } }
+
       .category-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -1097,6 +1109,14 @@
     <script>document.documentElement.classList.add("echoo-page-loading");</script>
   </head>
   <body>
+    <div class="surprise-launcher" id="surprise-launcher" role="status" aria-live="polite" aria-hidden="true">
+      <div class="surprise-launcher-card">
+        <span class="surprise-launcher-die" aria-hidden="true">⚄</span>
+        <h2>Rolling something good</h2>
+        <p id="surprise-launcher-copy">Finding a fit for right now.</p>
+        <div class="surprise-launcher-signals" aria-hidden="true"><span>Nearby</span><span>Your taste</span><span>Right now</span></div>
+      </div>
+    </div>
     <div class="app-shell">
       <div class="page">
         <header class="topbar" aria-label="Echoo">
@@ -1471,16 +1491,23 @@
         if (button.getAttribute("aria-busy") === "true") return;
         button.setAttribute("aria-busy", "true");
         button.classList.add("is-pressed");
-        const currentCity =
-          window.EchooLocationPlatform.readPreferences().city || "Greater Toronto Area";
+        const launcher = document.getElementById("surprise-launcher");
+        const launcherCopy = document.getElementById("surprise-launcher-copy");
+        const preference = window.EchooLocationPlatform.readPreferences();
+        const currentCity = preference.city || "Greater Toronto Area";
         const context = activityContext(currentCity);
-        // Discover is available to guests. Starting the reveal immediately is
-        // more important than blocking a spontaneous choice on account setup.
+        if (launcher) {
+          launcher.classList.add("is-visible");
+          launcher.setAttribute("aria-hidden", "false");
+        }
+        if (launcherCopy) launcherCopy.textContent = `Checking ${currentCity}, your taste, and ${context.label.toLowerCase()}.`;
+        // Keep the first animation on this page long enough to be felt, then
+        // continue it on Discover while live local results are ranked.
         window.setTimeout(() => {
           window.location.assign(
-            `events.html?query=${encodeURIComponent(`surprise me ${context.label} in ${currentCity}`)}&mode=surprise`,
+            `events.html?query=${encodeURIComponent(`surprise me ${context.label} in ${currentCity}`)}&mode=surprise&city=${encodeURIComponent(currentCity)}`,
           );
-        }, 130);
+        }, 900);
       });
 
       sheetBudgetActions.addEventListener("click", (event) => {
