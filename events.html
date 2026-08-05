@@ -488,6 +488,7 @@
           radial-gradient(circle at 20% 86%, rgba(133, 156, 201, 0.2), transparent 40%),
           linear-gradient(145deg, #2a2926, #11110f 62%, #25211d);
       }
+      .place-visual-fallback[hidden] { display: none; }
       .place-visual-fallback::after,
       .featured-card.has-visual-fallback::before {
         content: attr(data-visual-label);
@@ -686,14 +687,19 @@
       .place-hot { position: absolute; top: 10px; left: 10px; z-index: 2; min-height: 23px; display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid rgba(247,213,178,.3); border-radius: 999px; color: var(--peach); background: rgba(5,5,5,.56); backdrop-filter: blur(10px); font-size: 9px; font-weight: 780; letter-spacing: .06em; text-transform: uppercase; }
 
       .recommendation-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        margin: 0 -24px;
+        padding: 0 24px 8px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
       }
+      .recommendation-grid::-webkit-scrollbar { display: none; }
 
       .recommendation-card {
         position: relative;
-        min-width: 0;
+        flex: 0 0 178px;
         aspect-ratio: .78;
         overflow: hidden;
         padding: 0;
@@ -712,6 +718,15 @@
       .recommendation-card-copy strong { overflow: hidden; font-size: 14px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
       .recommendation-card-copy span { overflow: hidden; color: rgba(248,245,239,.72); font-size: 10px; font-weight: 600; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
       .discover-refresh { min-height: 30px; padding: 0; color: var(--peach); border: 0; background: transparent; font: inherit; font-size: 11px; font-weight: 720; }
+
+      .more-to-try-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .more-to-try-card { position: relative; min-height: 128px; overflow: hidden; padding: 0; color: var(--ink); border: 1px solid var(--line); border-radius: 18px; background: #151515; text-align: left; }
+      .more-to-try-card:active { transform: scale(.98); }
+      .more-to-try-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .more-to-try-card .place-visual-fallback { position: absolute; inset: 0; }
+      .more-to-try-copy { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; padding: 13px; background: linear-gradient(to top, rgba(5,5,5,.94), rgba(5,5,5,.08) 74%, transparent); }
+      .more-to-try-copy strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+      .more-to-try-copy span { overflow: hidden; color: rgba(248,245,239,.72); font-size: 10px; font-weight: 650; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 
       .discovery-results { display: grid; gap: 9px; }
       .discovery-result { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; min-height: 94px; padding: 7px; color: var(--ink); border: 1px solid var(--line); border-radius: 17px; background: rgba(248,245,239,.035); text-align: left; }
@@ -749,6 +764,10 @@
         );
         animation: skeleton-shimmer 1.5s infinite;
       }
+
+      .section-loading-note { display: flex; align-items: center; gap: 8px; min-height: 44px; color: var(--muted); font-size: 12px; }
+      .section-loading-note::before { content: ""; width: 15px; height: 15px; border: 2px solid rgba(247,213,178,.22); border-top-color: var(--peach); border-radius: 50%; animation: discover-spin .72s linear infinite; }
+      @keyframes discover-spin { to { transform: rotate(360deg); } }
 
       @keyframes skeleton-shimmer {
         100% {
@@ -1079,43 +1098,12 @@
 
         <!-- Category Pills -->
         <div class="category-pills" id="chips" aria-label="Explore categories">
-          <button class="chip active" data-query="trending">Trending</button>
           <button class="chip" data-query="food">Food</button>
           <button class="chip" data-query="music">Music</button>
           <button class="chip" data-query="nightlife">Nightlife</button>
           <button class="chip" data-query="tourism">Tourism</button>
           <button class="chip" data-query="nature">Nature</button>
         </div>
-
-        <section id="search-results-section" hidden>
-          <div class="section-header"><h2 id="results-heading">All places</h2><span class="results-page-status" id="results-page-status"></span></div>
-          <div class="discovery-results" id="results"></div>
-          <div class="results-pagination" id="results-pagination" hidden><button id="results-previous" type="button">Previous</button><button id="results-next" type="button">Next</button></div>
-        </section>
-
-        <!-- Featured Destination Card -->
-        <section aria-label="Featured Destination">
-          <div class="featured-card is-loading" id="featured-destination-card" aria-busy="true">
-            <img class="featured-img" id="featured-img" alt="" hidden />
-            <div class="featured-loading" aria-hidden="true"><span></span><span></span></div>
-            <div class="featured-overlay">
-              <div class="featured-info">
-                <h3 class="featured-title" id="featured-title">Explore the GTA</h3>
-                <span class="featured-sub" id="featured-sub">Choose a category or search a place</span>
-                <div class="featured-rating">
-                  <span class="star">★</span>
-                  <span id="featured-score">4.8</span>
-                  <span style="color: var(--muted); font-weight: 400;">(120)</span>
-                </div>
-              </div>
-              <button class="featured-action-btn" aria-label="View featured place">
-                <svg viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </section>
 
         <!-- Popular Nearby Section with inline List/Map View Switch -->
         <section aria-label="Popular Nearby">
@@ -1146,6 +1134,17 @@
             <div class="recommendation-card skeleton-card"></div>
             <div class="recommendation-card skeleton-card"></div>
           </div>
+        </section>
+
+        <section aria-label="More places to try">
+          <div class="section-header"><h2 id="more-to-try-heading">More to try</h2></div>
+          <div class="more-to-try-grid" id="more-to-try-container" aria-live="polite"><div class="more-to-try-card skeleton-card"></div><div class="more-to-try-card skeleton-card"></div></div>
+        </section>
+
+        <section id="search-results-section" aria-label="All places">
+          <div class="section-header"><h2 id="results-heading">All places</h2><span class="results-page-status" id="results-page-status"></span></div>
+          <div class="discovery-results" id="results"></div>
+          <div class="results-pagination" id="results-pagination" hidden><button id="results-previous" type="button">Previous</button><button id="results-next" type="button">Next</button></div>
         </section>
 
       </main>
@@ -1271,6 +1270,7 @@
         mapPins = document.getElementById("map-pins"),
         popularContainer = document.getElementById("popular-nearby-container"),
         recommendationContainer = document.getElementById("recommendation-container"),
+        moreToTryContainer = document.getElementById("more-to-try-container"),
         locationSheet = document.getElementById("discover-location-sheet"),
         locationMunicipality = document.getElementById("discover-municipality"),
         useLocationButton = document.getElementById("discover-use-location"),
@@ -1286,7 +1286,7 @@
         culturePickerSearch = document.getElementById("culture-picker-search"),
         cultureClear = document.getElementById("culture-clear");
 
-      let activeQuery = params.get("query") || "trending",
+      let activeQuery = params.get("query") === "trending" ? "discover" : (params.get("query") || "discover"),
         items = [],
         view = "list",
         suggestionTimer,
@@ -1412,7 +1412,7 @@
         const recommendationsHeading = document.getElementById("recommendations-heading");
         const time = timeContext();
         const category = {
-          trending: { nearby: "Trending", recommendations: "Recommended for you", noun: "places, sounds, and neighbourhood finds" },
+          discover: { nearby: "Near you", recommendations: "Recommended for you", noun: "places, sounds, and neighbourhood finds" },
           food: { nearby: "Food near you", recommendations: "More tables to try", noun: "restaurants, cafes, bakeries, and markets" },
           music: { nearby: "Music nearby", recommendations: "More sound to explore", noun: "venues, records, and local sound" },
           nightlife: { nearby: "Tonight nearby", recommendations: "More after-dark picks", noun: "late rooms, bars, and live energy" },
@@ -1430,7 +1430,7 @@
           copy.textContent = `${category.noun.charAt(0).toUpperCase()}${category.noun.slice(1)} with a ${culture.label} point of view — especially good ${time.label}.`;
           nearbyHeading.textContent = `${culture.label} · ${category.nearby}`;
           recommendationsHeading.textContent = `${culture.label} · ${category.recommendations}`;
-          queryInput.placeholder = `Search ${culture.label} ${activeQuery === "trending" ? "places" : activeQuery}`;
+          queryInput.placeholder = `Search ${culture.label} places`;
         } else {
           title.innerHTML = `Discover the GTA<span class="accent-dot">.</span>`;
           copy.textContent = `Thoughtful places, plans, and experiences shaped by what you like, where you are, and what fits ${time.label}.`;
@@ -1686,7 +1686,7 @@
 
       function placeVisual(item, className, alt = "") {
         const image = realImageUrl(item);
-        if (image) return `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="lazy" />`;
+        if (image) return `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="lazy" decoding="async" onerror="this.hidden=true; this.nextElementSibling.hidden=false" /><div class="${className} place-visual-fallback" data-visual-label="${esc(visualLabel(item))}" role="img" aria-label="${esc(alt || visualLabel(item))}" hidden></div>`;
         const label = visualLabel(item);
         return `<div class="${className} place-visual-fallback" data-visual-label="${esc(label)}" role="img" aria-label="${esc(alt || label)}"></div>`;
       }
@@ -1701,21 +1701,11 @@
       }
 
       function renderDiscoverLoading() {
-        const featured = document.getElementById("featured-destination-card");
-        const image = document.getElementById("featured-img");
-        featured.classList.add("is-loading");
-        featured.setAttribute("aria-busy", "true");
-        image.hidden = true;
-        image.removeAttribute("src");
         popularContainer.innerHTML = `<div class="location-card skeleton-card"></div><div class="location-card skeleton-card"></div><div class="location-card skeleton-card"></div>`;
-        recommendationContainer.innerHTML = `<div class="recommendation-card skeleton-card"></div><div class="recommendation-card skeleton-card"></div>`;
-        if (activeQuery !== "trending") {
-          resultsSection.hidden = false;
-          resultsHeading.textContent = resultLabel();
-          resultsPageStatus.textContent = "Finding the best local matches";
-          resultsEl.innerHTML = `<div class="discovery-result skeleton-card"></div><div class="discovery-result skeleton-card"></div><div class="discovery-result skeleton-card"></div>`;
-          resultsPagination.hidden = true;
-        }
+        recommendationContainer.innerHTML = `<div class="recommendation-card skeleton-card"></div><div class="recommendation-card skeleton-card"></div><div class="recommendation-card skeleton-card"></div>`;
+        moreToTryContainer.innerHTML = `<div class="more-to-try-card skeleton-card"></div><div class="more-to-try-card skeleton-card"></div>`;
+        resultsSection.hidden = false; resultsHeading.textContent = "All places"; resultsPageStatus.textContent = "Finding great local places";
+        resultsEl.innerHTML = `<div class="discovery-result skeleton-card"></div><div class="discovery-result skeleton-card"></div><div class="discovery-result skeleton-card"></div>`; resultsPagination.hidden = true;
       }
 
       function placeKey(item) {
@@ -1756,6 +1746,14 @@
           unique.push(item);
         });
         if (unique.length < 2) return unique;
+        if (activeQuery === "discover") {
+          const groups = new Map();
+          unique.forEach((item) => { const key = visualLabel(item); groups.set(key, [...(groups.get(key) || []), item]); });
+          const buckets = [...groups.values()], mixed = [];
+          while (buckets.some((bucket) => bucket.length)) buckets.forEach((bucket) => { if (bucket.length) mixed.push(bucket.shift()); });
+          const offset = stableNumber(`${city}|${activeCulture()?.slug || "local"}|${discoveryRefreshNonce}|${Math.floor(Date.now() / 14_400_000)}`) % mixed.length;
+          return [...mixed.slice(offset), ...mixed.slice(0, offset)];
+        }
         // The API already balances relevance, profile affinity, time and
         // distance. Do not shuffle that order when a person has shared GPS:
         // it makes a carefully ranked local feed look arbitrary.
@@ -1779,7 +1777,7 @@
       function renderPopularNearby(placeList) {
         const list = Array.isArray(placeList) ? placeList : [];
         if (!list.length) {
-          popularContainer.innerHTML = `<div class="empty-state">No verified places match this view yet. Try another GTA municipality or category.</div>`;
+          popularContainer.innerHTML = `<div class="section-loading-note">Refreshing nearby places</div>`;
           return;
         }
         popularContainer.innerHTML = list.map((item, idx) => {
@@ -1815,6 +1813,13 @@
         recommendationContainer.querySelectorAll("[data-place-index]").forEach((button) => {
           button.addEventListener("click", () => openDetail(Number(button.dataset.placeIndex)));
         });
+      }
+
+      function renderMoreToTry(placeList) {
+        const list = Array.isArray(placeList) ? placeList.slice(0, 4) : [];
+        if (!list.length) { moreToTryContainer.innerHTML = `<div class="section-loading-note" style="grid-column: 1 / -1;">Curating more local places</div>`; return; }
+        moreToTryContainer.innerHTML = list.map((item) => { const placeIndex = items.indexOf(item); return `<button class="more-to-try-card" type="button" data-more-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "more-to-try-img", item.title || "Local place")}<span class="more-to-try-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.category || "Place")} · ${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`; }).join("");
+        moreToTryContainer.querySelectorAll("[data-more-place-index]").forEach((button) => button.addEventListener("click", () => openDetail(Number(button.dataset.morePlaceIndex))));
       }
 
       function updateFeaturedCard(featured) {
@@ -1859,14 +1864,14 @@
       function renderItems() {
         items = diversifyPlaces(items);
         if (items.length) {
-          updateFeaturedCard(items[0]);
-          renderPopularNearby(items.slice(1, 6));
-          renderRecommendations(items.slice(6, 12).length ? items.slice(6, 12) : items.slice(1, 7));
+          renderPopularNearby(items.slice(0, 5));
+          renderRecommendations(items.slice(5, 11).length ? items.slice(5, 11) : items.slice(0, 6));
+          renderMoreToTry(items.slice(11, 15).length ? items.slice(11, 15) : items.slice(2, 6));
           rememberShown(items.slice(0, 12));
         } else {
-          renderFeaturedEmpty();
-          renderPopularNearby([]);
-          renderRecommendations([]);
+          popularContainer.innerHTML = `<div class="section-loading-note">Refreshing local picks</div>`;
+          recommendationContainer.innerHTML = `<div class="section-loading-note">Finding recommendations</div>`;
+          renderMoreToTry([]);
         }
         renderResultsPage();
       }
@@ -1887,12 +1892,12 @@
 
       function resultLabel() {
         const culture = activeCulture();
-        const category = activeQuery === "trending" ? "places" : activeQuery;
-        return `${culture ? `${culture.label} ` : ""}${category} places`;
+        if (activeQuery === "discover") return `${culture ? `${culture.label} ` : ""}All places`;
+        return `${culture ? `${culture.label} ` : ""}${activeQuery} places`;
       }
 
       function renderResultsPage() {
-        const shouldShow = activeQuery !== "trending" && view !== "map";
+        const shouldShow = view !== "map";
         resultsSection.hidden = !shouldShow;
         if (!shouldShow) return;
         const pageSize = 10;
@@ -1910,7 +1915,7 @@
             const meta = [item.category || "Place", item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.neighborhood || item.city || "GTA"].filter(Boolean).join(" · ");
               return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place")}<span class="discovery-result-copy"><small>${isHotPlace(item) ? "Well loved · " : ""}${esc(meta)}</small><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.description || item.address || "A local Echoo recommendation")}</span></span><span class="discovery-result-index">${start + index + 1}</span></button>`;
             }).join("")
-          : `<p class="empty-state">No verified places match this view yet.</p>`;
+          : `<div class="section-loading-note">We’re refreshing this neighbourhood. Try again in a moment.</div>`;
         resultsEl.querySelectorAll("[data-result-index]").forEach((button) => button.addEventListener("click", () => openDetail(Number(button.dataset.resultIndex))));
         resultsPagination.hidden = !items.length || (pageCount === 1 && !discoveryPaging.hasMore);
         resultsPrevious.disabled = resultPage === 0;
@@ -2108,7 +2113,7 @@
         const culture = activeCulture();
         const base = cultureContext?.queryFor
           ? cultureContext.queryFor(activeQuery, culture)
-          : (activeQuery === "trending" ? "popular places things to do" : activeQuery);
+          : (activeQuery === "discover" ? "places things to do" : activeQuery);
         return {
           // The selected filter stays the search intent. Profile and time are
           // passed separately as ranking signals so "Music" cannot turn into
@@ -2127,7 +2132,7 @@
           includeLiveFallback: true,
           // One visual page at a time; the cursor continues across the full
           // GTA inventory instead of treating ten as the total.
-          limit: 10,
+          limit: 20,
         };
       }
 
@@ -2218,7 +2223,7 @@
 
       async function search(query = activeQuery, options = {}) {
         let cleanQuery = String(query || "").trim().toLowerCase();
-        if (!cleanQuery) cleanQuery = "trending";
+        if (!cleanQuery) cleanQuery = "discover";
         activeQuery = cleanQuery;
         if (options.refresh) discoveryRefreshNonce += 1;
         resultPage = 0;
@@ -2229,7 +2234,7 @@
           window.location.assign(`happenings.html?category=upcoming${activeCulture() ? `&culture=${encodeURIComponent(activeCulture().slug)}` : ""}`);
           return;
         }
-        queryInput.value = activeQuery === "trending" ? "" : activeQuery;
+        if (options.fromSearch) queryInput.value = cleanQuery === "discover" ? "" : String(query || "").trim();
         suggestionsEl.hidden = true;
         discoveryRequestId += 1;
         discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: discoveryRequestForActiveView(), loading: false };
@@ -2444,12 +2449,12 @@
 
       document.getElementById("search-form").onsubmit = (e) => {
         e.preventDefault();
-        search(queryInput.value);
+        search(queryInput.value, { fromSearch: true });
       };
 
       document.getElementById("chips").onclick = (e) => {
         const chip = e.target.closest("[data-query]");
-        if (chip) search(chip.dataset.query);
+        if (chip) search(chip.dataset.query, { fromCategory: true });
       };
 
       document.querySelector(".view-switch").onclick = (e) => {
