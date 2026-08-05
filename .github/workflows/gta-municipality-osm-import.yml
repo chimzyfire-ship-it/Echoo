@@ -23,13 +23,21 @@ on:
         required: false
         default: ""
         type: string
+      runner:
+        description: Where to run the import (use self-hosted after your Mac runner is Idle)
+        required: true
+        default: ubuntu-latest
+        type: choice
+        options:
+          - ubuntu-latest
+          - self-hosted
 
 permissions:
   contents: read
 
 jobs:
   import:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     timeout-minutes: 360
     env:
       IMPORT_ENDPOINT: https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/ontario-osm-import
@@ -39,7 +47,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install OSM tools
-        run: sudo apt-get update && sudo apt-get install -y osmium-tool jq
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            brew install osmium-tool jq
+          else
+            sudo apt-get update
+            sudo apt-get install -y osmium-tool jq
+          fi
       - name: Validate protected import configuration
         run: |
           test -n "$ONTARIO_INGESTION_SECRET" || { echo "Missing ONTARIO_INGESTION_SECRET." >&2; exit 1; }
@@ -102,7 +117,11 @@ jobs:
           if (resume && start < 0) throw new Error('resume_municipality must be in municipalities.');
           console.log(selected.slice(start).join('\n'));
           NODE
-          source_checksum="$(sha256sum ontario.osm.pbf | awk '{print $1}')"
+          if command -v sha256sum >/dev/null 2>&1; then
+            source_checksum="$(sha256sum ontario.osm.pbf | awk '{print $1}')"
+          else
+            source_checksum="$(shasum -a 256 ontario.osm.pbf | awk '{print $1}')"
+          fi
           while IFS= read -r municipality; do
             slug="$(echo "$municipality" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')"
             echo "Importing $municipality"

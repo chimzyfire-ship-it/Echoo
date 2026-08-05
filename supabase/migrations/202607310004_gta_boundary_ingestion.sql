@@ -64,7 +64,7 @@ begin
     nullif(trim(p_source_record_id), ''),
     now()
   )
-  on conflict (municipality) do update set
+  on conflict on constraint gta_municipality_boundaries_municipality_key do update set
     regional_municipality = excluded.regional_municipality,
     boundary = excluded.boundary,
     source_name = excluded.source_name,

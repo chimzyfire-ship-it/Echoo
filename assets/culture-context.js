@@ -189,8 +189,9 @@
   }
 
   function queryFor(query, culture = active()) {
-    const base = clean(query).toLowerCase() || "trending";
+    const base = clean(query).toLowerCase() || "discover";
     const topics = {
+      discover: "restaurants food music events markets community spots",
       trending: "restaurants food music events markets community spots",
       events: "events festivals performances community gatherings",
       "upcoming drop": "upcoming events pop-ups festivals performances",
@@ -201,7 +202,7 @@
       nature: "parks walks outdoor community activities",
     };
     const topic = topics[base] || base;
-    if (!culture) return base === "trending" ? "popular places things to do" : topic;
+    if (!culture) return base === "trending" || base === "discover" ? "popular places things to do" : topic;
     return `${culture.label} ${topic}`;
   }
 
