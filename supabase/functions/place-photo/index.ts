@@ -49,7 +49,10 @@ Deno.serve(async (req) => {
     if (response.status >= 300 && response.status < 400 && location) {
       return new Response(null, {
         status: 302,
-        headers: { ...CORS_HEADERS, Location: location, "Cache-Control": "no-store" },
+        // Tokens are short-lived and signed, so this response can be cached
+        // briefly without widening access. It avoids refetching the same cover
+        // for every card repaint and keeps Discover image-heavy screens snappy.
+        headers: { ...CORS_HEADERS, Location: location, "Cache-Control": "public, max-age=300, immutable" },
       });
     }
     return jsonResponse({ error: "Photo provider did not return media" }, 502);
