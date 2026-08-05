@@ -929,6 +929,17 @@
         outline: none;
       }
 
+      .bored-cta:active,
+      .bored-cta.is-pressed {
+        transform: scale(0.94);
+        background: #ffe6d7;
+        box-shadow: 0 5px 15px rgba(243, 215, 196, 0.2);
+      }
+
+      .bored-cta[aria-busy="true"] {
+        pointer-events: none;
+      }
+
       .bored-cta svg {
         width: 20px;
         height: 20px;
@@ -1455,15 +1466,21 @@
         });
       });
 
-      document.getElementById("bored-plan").addEventListener("click", () => {
-        ensureLocationContext(async () => {
-          const currentCity =
-            window.EchooLocationPlatform.readPreferences().city || "Greater Toronto Area";
-          const context = activityContext(currentCity);
-          await openProtectedRoute(
+      document.getElementById("bored-plan").addEventListener("click", (event) => {
+        const button = event.currentTarget;
+        if (button.getAttribute("aria-busy") === "true") return;
+        button.setAttribute("aria-busy", "true");
+        button.classList.add("is-pressed");
+        const currentCity =
+          window.EchooLocationPlatform.readPreferences().city || "Greater Toronto Area";
+        const context = activityContext(currentCity);
+        // Discover is available to guests. Starting the reveal immediately is
+        // more important than blocking a spontaneous choice on account setup.
+        window.setTimeout(() => {
+          window.location.assign(
             `events.html?query=${encodeURIComponent(`surprise me ${context.label} in ${currentCity}`)}&mode=surprise`,
           );
-        });
+        }, 130);
       });
 
       sheetBudgetActions.addEventListener("click", (event) => {
