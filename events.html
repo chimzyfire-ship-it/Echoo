@@ -684,8 +684,6 @@
         margin-top: 2px;
       }
 
-      .place-hot { position: absolute; top: 10px; left: 10px; z-index: 2; min-height: 23px; display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid rgba(247,213,178,.3); border-radius: 999px; color: var(--peach); background: rgba(5,5,5,.56); backdrop-filter: blur(10px); font-size: 9px; font-weight: 780; letter-spacing: .06em; text-transform: uppercase; }
-
       .recommendation-grid {
         display: flex;
         gap: 14px;
@@ -718,15 +716,6 @@
       .recommendation-card-copy strong { overflow: hidden; font-size: 14px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
       .recommendation-card-copy span { overflow: hidden; color: rgba(248,245,239,.72); font-size: 10px; font-weight: 600; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
       .discover-refresh { min-height: 30px; padding: 0; color: var(--peach); border: 0; background: transparent; font: inherit; font-size: 11px; font-weight: 720; }
-
-      .more-to-try-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-      .more-to-try-card { position: relative; min-height: 128px; overflow: hidden; padding: 0; color: var(--ink); border: 1px solid var(--line); border-radius: 18px; background: #151515; text-align: left; }
-      .more-to-try-card:active { transform: scale(.98); }
-      .more-to-try-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .more-to-try-card .place-visual-fallback { position: absolute; inset: 0; }
-      .more-to-try-copy { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; padding: 13px; background: linear-gradient(to top, rgba(5,5,5,.94), rgba(5,5,5,.08) 74%, transparent); }
-      .more-to-try-copy strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
-      .more-to-try-copy span { overflow: hidden; color: rgba(248,245,239,.72); font-size: 10px; font-weight: 650; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 
       .discovery-results { display: grid; gap: 9px; }
       .discovery-result { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; min-height: 94px; padding: 7px; color: var(--ink); border: 1px solid var(--line); border-radius: 17px; background: rgba(248,245,239,.035); text-align: left; }
@@ -765,9 +754,15 @@
         animation: skeleton-shimmer 1.5s infinite;
       }
 
-      .section-loading-note { display: flex; align-items: center; gap: 8px; min-height: 44px; color: var(--muted); font-size: 12px; }
-      .section-loading-note::before { content: ""; width: 15px; height: 15px; border: 2px solid rgba(247,213,178,.22); border-top-color: var(--peach); border-radius: 50%; animation: discover-spin .72s linear infinite; }
-      @keyframes discover-spin { to { transform: rotate(360deg); } }
+      .discovery-fallback-note { min-height: 40px; display: flex; align-items: center; color: var(--muted); font-size: 12px; line-height: 1.4; }
+
+      .surprise-loader { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 28px; background: rgba(5,5,5,.92); backdrop-filter: blur(18px); transition: opacity .32s ease, visibility .32s ease; }
+      .surprise-loader[hidden] { display: none; }
+      .surprise-loader-card { width: min(100%, 280px); display: grid; justify-items: center; gap: 16px; padding: 30px 22px; border: 1px solid rgba(247,213,178,.25); border-radius: 28px; background: radial-gradient(circle at 50% 0%, rgba(247,213,178,.16), transparent 58%), #171716; box-shadow: 0 24px 64px rgba(0,0,0,.52); text-align: center; }
+      .surprise-die { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 20px; color: #17130e; background: var(--peach); box-shadow: 0 12px 30px rgba(247,213,178,.25); font-size: 39px; animation: surprise-roll 1.05s cubic-bezier(.2,.75,.25,1) infinite; }
+      .surprise-loader h2 { margin: 0; font-size: 23px; letter-spacing: -.04em; }
+      .surprise-loader p { margin: -8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+      @keyframes surprise-roll { 0%,100% { transform: rotate(0) scale(1); } 28% { transform: rotate(105deg) scale(.84); } 63% { transform: rotate(230deg) scale(1.06); } }
 
       @keyframes skeleton-shimmer {
         100% {
@@ -1136,11 +1131,6 @@
           </div>
         </section>
 
-        <section aria-label="More places to try">
-          <div class="section-header"><h2 id="more-to-try-heading">More to try</h2></div>
-          <div class="more-to-try-grid" id="more-to-try-container" aria-live="polite"><div class="more-to-try-card skeleton-card"></div><div class="more-to-try-card skeleton-card"></div></div>
-        </section>
-
         <section id="search-results-section" aria-label="All places">
           <div class="section-header"><h2 id="results-heading">All places</h2><span class="results-page-status" id="results-page-status"></span></div>
           <div class="discovery-results" id="results"></div>
@@ -1148,6 +1138,10 @@
         </section>
 
       </main>
+
+      <div class="surprise-loader" id="surprise-loader" role="status" aria-live="polite" hidden>
+        <div class="surprise-loader-card"><span class="surprise-die" aria-hidden="true">⚄</span><h2>Rolling something good</h2><p>Mixing your location, interests, and the moment.</p></div>
+      </div>
 
       <!-- AI Chat Floating Button -->
       <a class="fab-chat" href="app.html" aria-label="Open AI chat">
@@ -1270,7 +1264,7 @@
         mapPins = document.getElementById("map-pins"),
         popularContainer = document.getElementById("popular-nearby-container"),
         recommendationContainer = document.getElementById("recommendation-container"),
-        moreToTryContainer = document.getElementById("more-to-try-container"),
+        surpriseLoader = document.getElementById("surprise-loader"),
         locationSheet = document.getElementById("discover-location-sheet"),
         locationMunicipality = document.getElementById("discover-municipality"),
         useLocationButton = document.getElementById("discover-use-location"),
@@ -1286,7 +1280,8 @@
         culturePickerSearch = document.getElementById("culture-picker-search"),
         cultureClear = document.getElementById("culture-clear");
 
-      let activeQuery = params.get("query") === "trending" ? "discover" : (params.get("query") || "discover"),
+      const surpriseMode = params.get("mode") === "surprise";
+      let activeQuery = surpriseMode ? "discover" : (params.get("query") === "trending" ? "food" : (params.get("query") || "food")),
         items = [],
         view = "list",
         suggestionTimer,
@@ -1667,21 +1662,32 @@
       }
 
       const FALLBACK_PLACE_IMAGE = "";
-      const defaultPlaces = [];
+      const defaultPlaces = [
+        { id: "fallback-alo", title: "Alo", category: "restaurant", city: "Toronto", address: "163 Spadina Ave, Toronto", description: "A considered dinner pick for a special evening.", latitude: 43.6474, longitude: -79.3950, community: { ratingAverage: 4.7 } },
+        { id: "fallback-pai", title: "PAI Northern Thai Kitchen", category: "restaurant", city: "Toronto", address: "18 Duncan St, Toronto", description: "A lively downtown table with bold Thai flavours.", latitude: 43.6472, longitude: -79.3891, community: { ratingAverage: 4.6 } },
+        { id: "fallback-koh", title: "Koh Lipe", category: "restaurant", city: "Toronto", address: "35 Baldwin St, Toronto", description: "A relaxed local dinner pick on Baldwin Street.", latitude: 43.6564, longitude: -79.3931, community: { ratingAverage: 4.5 } },
+        { id: "fallback-maha", title: "Maha's", category: "restaurant", city: "Toronto", address: "226 Greenwood Ave, Toronto", description: "An all-day food stop worth planning around.", latitude: 43.6694, longitude: -79.3290, community: { ratingAverage: 4.7 } },
+        { id: "fallback-bar-isp", title: "Bar Isabel", category: "restaurant", city: "Toronto", address: "797 College St, Toronto", description: "A warm late-evening room for plates and conversation.", latitude: 43.6549, longitude: -79.4210, community: { ratingAverage: 4.6 } },
+        { id: "fallback-mothers", title: "Mother's Dumplings", category: "restaurant", city: "Toronto", address: "421 Spadina Ave, Toronto", description: "Comforting dumplings in the heart of Chinatown.", latitude: 43.6570, longitude: -79.3999, community: { ratingAverage: 4.5 } },
+      ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
 
       function realImageUrl(item) {
         return imageUrlFor(item) || "";
       }
 
-      function visualLabel(item) {
+      function categoryGroup(item) {
         const category = String(item?.category || "").toLowerCase();
-        if (/restaurant|cafe|coffee|bakery|food|bar|pub/.test(category)) return "Food & drink";
-        if (/music|concert|nightclub|venue/.test(category)) return "Local sound";
-        if (/comedy|theatre|cinema|arts/.test(category)) return "Live culture";
-        if (/museum|gallery|tourism|attraction/.test(category)) return "Local find";
-        if (/park|nature|trail|outdoor/.test(category)) return "Outside";
-        return "Local place";
+        if (/restaurant|cafe|coffee|bakery|food|bar|pub/.test(category)) return "food";
+        if (/music|concert|nightclub|venue/.test(category)) return "music";
+        if (/comedy|theatre|cinema|arts/.test(category)) return "culture";
+        if (/museum|gallery|tourism|attraction/.test(category)) return "tourism";
+        if (/park|nature|trail|outdoor/.test(category)) return "nature";
+        return "local";
+      }
+
+      function visualLabel() {
+        return "Discover";
       }
 
       function placeVisual(item, className, alt = "") {
@@ -1701,11 +1707,9 @@
       }
 
       function renderDiscoverLoading() {
-        popularContainer.innerHTML = `<div class="location-card skeleton-card"></div><div class="location-card skeleton-card"></div><div class="location-card skeleton-card"></div>`;
-        recommendationContainer.innerHTML = `<div class="recommendation-card skeleton-card"></div><div class="recommendation-card skeleton-card"></div><div class="recommendation-card skeleton-card"></div>`;
-        moreToTryContainer.innerHTML = `<div class="more-to-try-card skeleton-card"></div><div class="more-to-try-card skeleton-card"></div>`;
-        resultsSection.hidden = false; resultsHeading.textContent = "All places"; resultsPageStatus.textContent = "Finding great local places";
-        resultsEl.innerHTML = `<div class="discovery-result skeleton-card"></div><div class="discovery-result skeleton-card"></div><div class="discovery-result skeleton-card"></div>`; resultsPagination.hidden = true;
+        if (!items.length) items = defaultPlaces.map((place) => ({ ...place }));
+        renderItems();
+        resultsPageStatus.textContent = "";
       }
 
       function placeKey(item) {
@@ -1748,7 +1752,7 @@
         if (unique.length < 2) return unique;
         if (activeQuery === "discover") {
           const groups = new Map();
-          unique.forEach((item) => { const key = visualLabel(item); groups.set(key, [...(groups.get(key) || []), item]); });
+          unique.forEach((item) => { const key = categoryGroup(item); groups.set(key, [...(groups.get(key) || []), item]); });
           const buckets = [...groups.values()], mixed = [];
           while (buckets.some((bucket) => bucket.length)) buckets.forEach((bucket) => { if (bucket.length) mixed.push(bucket.shift()); });
           const offset = stableNumber(`${city}|${activeCulture()?.slug || "local"}|${discoveryRefreshNonce}|${Math.floor(Date.now() / 14_400_000)}`) % mixed.length;
@@ -1777,21 +1781,19 @@
       function renderPopularNearby(placeList) {
         const list = Array.isArray(placeList) ? placeList : [];
         if (!list.length) {
-          popularContainer.innerHTML = `<div class="section-loading-note">Refreshing nearby places</div>`;
+          popularContainer.innerHTML = "";
           return;
         }
         popularContainer.innerHTML = list.map((item, idx) => {
           const rating = item.community?.ratingAverage ? Number(item.community.ratingAverage).toFixed(1) : "New";
           const dist = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.city || "GTA";
-          const cat = item.category || "Place";
 
           return `
             <div class="location-card" onclick="openDetail(${items.indexOf(item)})">
               ${placeVisual(item, "location-card-img", item.title || "Local place")}
-              ${isHotPlace(item) ? `<span class="place-hot">Well loved</span>` : ""}
               <div class="location-card-overlay">
                 <div class="location-card-title">${esc(item.title)}</div>
-                <div class="location-card-meta">${esc(cat)} • ${esc(dist)}</div>
+                <div class="location-card-meta">${esc(dist)}</div>
                 <div class="location-card-rating">★ ${esc(rating)}</div>
               </div>
             </div>
@@ -1802,24 +1804,16 @@
       function renderRecommendations(placeList) {
         const list = Array.isArray(placeList) ? placeList.slice(0, 6) : [];
         if (!list.length) {
-          recommendationContainer.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">More recommendations are loading for this view.</div>`;
+          recommendationContainer.innerHTML = "";
           return;
         }
         recommendationContainer.innerHTML = list.map((item) => {
-          const category = item.category || "Local pick";
           const placeIndex = items.indexOf(item);
-          return `<button class="recommendation-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick")}${isHotPlace(item) ? `<span class="place-hot">Well loved</span>` : ""}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(category)} · ${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`;
+          return `<button class="recommendation-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick")}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`;
         }).join("");
         recommendationContainer.querySelectorAll("[data-place-index]").forEach((button) => {
           button.addEventListener("click", () => openDetail(Number(button.dataset.placeIndex)));
         });
-      }
-
-      function renderMoreToTry(placeList) {
-        const list = Array.isArray(placeList) ? placeList.slice(0, 4) : [];
-        if (!list.length) { moreToTryContainer.innerHTML = `<div class="section-loading-note" style="grid-column: 1 / -1;">Curating more local places</div>`; return; }
-        moreToTryContainer.innerHTML = list.map((item) => { const placeIndex = items.indexOf(item); return `<button class="more-to-try-card" type="button" data-more-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "more-to-try-img", item.title || "Local place")}<span class="more-to-try-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.category || "Place")} · ${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`; }).join("");
-        moreToTryContainer.querySelectorAll("[data-more-place-index]").forEach((button) => button.addEventListener("click", () => openDetail(Number(button.dataset.morePlaceIndex))));
       }
 
       function updateFeaturedCard(featured) {
@@ -1866,14 +1860,52 @@
         if (items.length) {
           renderPopularNearby(items.slice(0, 5));
           renderRecommendations(items.slice(5, 11).length ? items.slice(5, 11) : items.slice(0, 6));
-          renderMoreToTry(items.slice(11, 15).length ? items.slice(11, 15) : items.slice(2, 6));
           rememberShown(items.slice(0, 12));
         } else {
-          popularContainer.innerHTML = `<div class="section-loading-note">Refreshing local picks</div>`;
-          recommendationContainer.innerHTML = `<div class="section-loading-note">Finding recommendations</div>`;
-          renderMoreToTry([]);
+          items = defaultPlaces.map((place) => ({ ...place }));
+          renderPopularNearby(items.slice(0, 5));
+          renderRecommendations(items.slice(0, 6));
         }
         renderResultsPage();
+      }
+
+      function surpriseProfileAffinity(item) {
+        const terms = onboardingSignals().map((value) => String(value).toLowerCase()).filter((value) => value.length > 2);
+        if (!terms.length) return 0.35;
+        const text = `${item?.title || ""} ${item?.category || ""} ${item?.description || ""} ${(item?.features || []).join(" ")}`.toLowerCase();
+        return Math.min(1, terms.filter((term) => text.includes(term)).length / Math.min(terms.length, 3));
+      }
+
+      function surpriseScore(item) {
+        const distance = Number(item?.distanceMeters);
+        const nearby = Number.isFinite(distance) ? Math.max(0, 1 - distance / 35_000) : 0.48;
+        const profileMatch = surpriseProfileAffinity(item);
+        const time = timeContext().query;
+        const text = `${item?.title || ""} ${item?.category || ""} ${item?.description || ""}`.toLowerCase();
+        const timeMatch = time.split(" ").filter((word) => word.length > 3 && text.includes(word)).length * .08;
+        return nearby * .45 + profileMatch * .32 + Math.min(timeMatch, .16) + hotScoreFor(item) * .07;
+      }
+
+      async function revealSurprise() {
+        const candidates = [...items]
+          .map((item) => ({ item, score: surpriseScore(item) }))
+          .sort((left, right) => right.score - left.score)
+          .slice(0, Math.min(8, items.length));
+        const pool = candidates.length ? candidates : items.map((item) => ({ item, score: 0 }));
+        if (!pool.length) return;
+        const fiveMinuteWindow = Math.floor(Date.now() / (1000 * 60 * 5));
+        const choice = pool[stableNumber(`${city}|${lat}|${lng}|${onboardingSignals().join("|")}|${fiveMinuteWindow}`) % pool.length].item;
+        const loaderStartedAt = Number(surpriseLoader.dataset.startedAt || Date.now());
+        const remaining = Math.max(0, 1250 - (Date.now() - loaderStartedAt));
+        if (remaining) await new Promise((resolve) => setTimeout(resolve, remaining));
+        surpriseLoader.hidden = true;
+        const opensPlan = stableNumber(`${choice.id}|${fiveMinuteWindow}|${onboardingSignals().join("|")}`) % 3 === 0;
+        await openDetailByItem(choice);
+        if (opensPlan) {
+          setTimeout(() => window.dispatchEvent(new CustomEvent("echoo:quick-plan", {
+            detail: { anchor: { id: choice.id, name: choice.title, category: choice.category, address: choice.address, latitude: choice.latitude, longitude: choice.longitude, imageUrl: imageUrlFor(choice) } },
+          })), 180);
+        }
       }
 
       function renderFeaturedEmpty() {
@@ -1912,10 +1944,10 @@
         resultsEl.innerHTML = pageItems.length
           ? pageItems.map((item, index) => {
             const itemIndex = items.indexOf(item);
-            const meta = [item.category || "Place", item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.neighborhood || item.city || "GTA"].filter(Boolean).join(" · ");
-              return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place")}<span class="discovery-result-copy"><small>${isHotPlace(item) ? "Well loved · " : ""}${esc(meta)}</small><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.description || item.address || "A local Echoo recommendation")}</span></span><span class="discovery-result-index">${start + index + 1}</span></button>`;
+            const meta = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km away` : item.neighborhood || item.city || "GTA";
+              return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place")}<span class="discovery-result-copy"><small>${esc(meta)}</small><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.description || item.address || "A local Echoo recommendation")}</span></span><span class="discovery-result-index">${start + index + 1}</span></button>`;
             }).join("")
-          : `<div class="section-loading-note">We’re refreshing this neighbourhood. Try again in a moment.</div>`;
+          : `<div class="discovery-fallback-note">A few local favourites are being lined up for you.</div>`;
         resultsEl.querySelectorAll("[data-result-index]").forEach((button) => button.addEventListener("click", () => openDetail(Number(button.dataset.resultIndex))));
         resultsPagination.hidden = !items.length || (pageCount === 1 && !discoveryPaging.hasMore);
         resultsPrevious.disabled = resultPage === 0;
@@ -2180,6 +2212,8 @@
         if (!request || discoveryPaging.loading) return;
         discoveryPaging.loading = true;
         renderResultsPage();
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 9000);
         try {
           const response = await fetch(CONFIG.exploreUrl, {
             method: "POST",
@@ -2189,6 +2223,7 @@
               cursor: append ? discoveryPaging.cursor : undefined,
               livePageToken: append ? discoveryPaging.livePageToken : undefined,
             }),
+            signal: controller.signal,
           });
           const payload = await response.json().catch(() => ({}));
           if (requestId !== discoveryRequestId) return;
@@ -2210,10 +2245,11 @@
           renderItems();
         } catch (_) {
           if (requestId !== discoveryRequestId) return;
-          items = [];
+          if (!items.length) items = defaultPlaces.map((place) => ({ ...place }));
           discoveryPaging.hasMore = false;
           renderItems();
         } finally {
+          clearTimeout(timeout);
           if (requestId === discoveryRequestId) {
             discoveryPaging.loading = false;
             renderResultsPage();
@@ -2240,6 +2276,7 @@
         discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: discoveryRequestForActiveView(), loading: false };
         renderDiscoverLoading();
         await fetchDiscoveryPage({ requestId: discoveryRequestId });
+        if (options.surprise) await revealSurprise();
       }
 
       async function showNextResultsPage() {
@@ -2531,7 +2568,11 @@
       // Initial setup
       applyCultureMood();
       renderPopularNearby(defaultPlaces);
-      search(activeQuery);
+      if (surpriseMode) {
+        surpriseLoader.hidden = false;
+        surpriseLoader.dataset.startedAt = String(Date.now());
+      }
+      search(activeQuery, { surprise: surpriseMode });
       hydrateOnboardingSignals();
       if (params.get("culturePicker") === "1") setTimeout(openCulturePicker, 180);
       // Refresh a granted device location when Discover opens. Session GPS is
