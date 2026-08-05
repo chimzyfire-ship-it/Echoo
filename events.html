@@ -482,12 +482,23 @@
       .featured-card.has-visual-fallback::before {
         display: grid;
         place-items: center;
+        isolation: isolate;
+        overflow: hidden;
         color: rgba(248, 245, 239, 0.92);
         background:
           radial-gradient(circle at 72% 16%, rgba(247, 213, 178, 0.26), transparent 34%),
           radial-gradient(circle at 20% 86%, rgba(133, 156, 201, 0.2), transparent 40%),
           linear-gradient(145deg, #2a2926, #11110f 62%, #25211d);
       }
+      .place-visual-fallback::before { position:absolute; width:62%; aspect-ratio:1; border:1px solid rgba(255,255,255,.18); border-radius:50%; background:radial-gradient(circle at 35% 32%, rgba(255,255,255,.22), transparent 8%), rgba(247,213,178,.11); content:""; transform:translate(30%, -26%); }
+      .place-visual-fallback::after { position:absolute; inset:0; background:linear-gradient(145deg, transparent 40%, rgba(0,0,0,.42)); content:""; }
+      .place-cover-copy { position:relative; z-index:1; display:grid; gap:3px; padding:11px; text-align:left; }
+      .place-cover-copy small { color:rgba(248,245,239,.62); font-size:8px; font-weight:760; letter-spacing:.13em; text-transform:uppercase; }
+      .place-cover-copy strong { max-width:104px; font-size:clamp(10px, 2.8vw, 15px); line-height:1.05; letter-spacing:-.04em; }
+      .place-visual-fallback[data-cover="music"] { background:radial-gradient(circle at 78% 20%, rgba(178,146,241,.38), transparent 32%), linear-gradient(145deg, #241d31, #111015 68%); }
+      .place-visual-fallback[data-cover="culture"], .place-visual-fallback[data-cover="tourism"] { background:radial-gradient(circle at 75% 18%, rgba(223,128,153,.34), transparent 34%), linear-gradient(145deg, #302026, #111013 68%); }
+      .place-visual-fallback[data-cover="nature"] { background:radial-gradient(circle at 75% 18%, rgba(130,193,155,.34), transparent 34%), linear-gradient(145deg, #1d2d26, #0e1210 68%); }
+      .place-visual-fallback[data-cover="food"] { background:radial-gradient(circle at 75% 18%, rgba(245,172,112,.35), transparent 34%), linear-gradient(145deg, #35231b, #16110e 68%); }
       .place-visual-fallback[hidden] { display: none; }
       .featured-card.has-visual-fallback::before {
         position: absolute;
@@ -738,17 +749,42 @@
       }
 
       .discovery-fallback-note { min-height: 40px; display: flex; align-items: center; color: var(--muted); font-size: 12px; line-height: 1.4; }
+      .discover-loading-grid { display:grid; gap:9px; }
+      .discover-loading-row { display:grid; grid-template-columns:78px minmax(0, 1fr) 24px; gap:12px; align-items:center; min-height:94px; padding:7px; border:1px solid var(--line); border-radius:17px; background:rgba(248,245,239,.035); }
+      .discover-loading-thumb, .discover-loading-line, .discover-loading-index { display:block; border-radius:11px; background:linear-gradient(100deg, rgba(248,245,239,.055), rgba(248,245,239,.13), rgba(248,245,239,.055)); background-size:210% 100%; animation:skeleton-shimmer 1.35s ease-in-out infinite; }
+      .discover-loading-thumb { width:78px; height:78px; }
+      .discover-loading-copy { display:grid; gap:8px; }
+      .discover-loading-line { height:10px; }
+      .discover-loading-line:first-child { width:42%; }
+      .discover-loading-line:nth-child(2) { width:78%; height:14px; }
+      .discover-loading-line:last-child { width:60%; }
+      .discover-loading-index { width:24px; height:24px; border-radius:50%; }
 
-      .surprise-loader { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 28px; background: rgba(5,5,5,.92); backdrop-filter: blur(18px); transition: opacity .32s ease, visibility .32s ease; }
-      .surprise-loader[hidden] { display: none; }
-      .surprise-loader-card { width: min(100%, 300px); display: grid; justify-items: center; gap: 16px; padding: 30px 22px; border: 1px solid rgba(247,213,178,.25); border-radius: 28px; background: radial-gradient(circle at 50% 0%, rgba(247,213,178,.16), transparent 58%), #171716; box-shadow: 0 24px 64px rgba(0,0,0,.52); text-align: center; }
-      .surprise-die { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 20px; color: #17130e; background: var(--peach); box-shadow: 0 12px 30px rgba(247,213,178,.25); font-size: 39px; animation: surprise-roll 1.05s cubic-bezier(.2,.75,.25,1) infinite; }
-      .surprise-loader h2 { margin: 0; font-size: 23px; letter-spacing: -.04em; }
-      .surprise-loader p { margin: -8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-      .surprise-loader-signals { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:-2px; }
-      .surprise-loader-signals span { padding:5px 8px; border:1px solid rgba(247,213,178,.18); border-radius:999px; color:rgba(248,245,239,.76); font-size:10px; }
-      @keyframes surprise-roll { 0%,100% { transform: rotate(0) scale(1); } 28% { transform: rotate(105deg) scale(.84); } 63% { transform: rotate(230deg) scale(1.06); } }
-      @media (prefers-reduced-motion: reduce) { .surprise-die { animation:none; } }
+      .surprise-loader { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:28px; overflow:hidden; background:radial-gradient(circle at 50% 43%, rgba(247,213,178,.12), transparent 22%), #080808; transition:opacity .32s ease, visibility .32s ease; }
+      .surprise-loader::before { position:absolute; width:min(74vw,340px); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle, rgba(247,213,178,.12), transparent 66%); content:""; filter:blur(8px); animation:surprise-glow 2.4s ease-in-out infinite; }
+      .surprise-loader[hidden] { display:none; }
+      .surprise-loader-card { position:relative; width:min(100%,300px); display:grid; justify-items:center; gap:16px; text-align:center; }
+      .surprise-die-stage { width:112px; height:112px; display:grid; place-items:center; perspective:520px; }
+      .surprise-die { position:relative; width:84px; height:84px; transform-style:preserve-3d; animation:surprise-roll 2.15s cubic-bezier(.33,.06,.17,1) infinite; }
+      .surprise-die-face { position:absolute; inset:0; border:1px solid rgba(255,255,255,.5); border-radius:20px; background:linear-gradient(145deg, #fff3e9 0%, #f7d5b2 62%, #dca882 100%); box-shadow:inset 4px 4px 9px rgba(255,255,255,.38), inset -7px -7px 13px rgba(89,52,29,.2); backface-visibility:hidden; }
+      .surprise-die-face::before { position:absolute; width:9px; height:9px; border-radius:50%; background:#15110f; box-shadow:0 1px 1px rgba(255,255,255,.18); content:""; }
+      .surprise-die-face--one { transform:translateZ(42px); }
+      .surprise-die-face--one::before { top:37px; left:37px; }
+      .surprise-die-face--two { transform:rotateY(90deg) translateZ(42px); }
+      .surprise-die-face--two::before { top:17px; left:17px; box-shadow:41px 41px #15110f; }
+      .surprise-die-face--three { transform:rotateY(180deg) translateZ(42px); }
+      .surprise-die-face--three::before { top:17px; left:17px; box-shadow:20.5px 20.5px #15110f, 41px 41px #15110f; }
+      .surprise-die-face--four { transform:rotateY(-90deg) translateZ(42px); }
+      .surprise-die-face--four::before { top:17px; left:17px; box-shadow:41px 0 #15110f, 0 41px #15110f, 41px 41px #15110f; }
+      .surprise-die-face--five { transform:rotateX(90deg) translateZ(42px); }
+      .surprise-die-face--five::before { top:17px; left:17px; box-shadow:41px 0 #15110f, 20.5px 20.5px #15110f, 0 41px #15110f, 41px 41px #15110f; }
+      .surprise-die-face--six { transform:rotateX(-90deg) translateZ(42px); }
+      .surprise-die-face--six::before { top:17px; left:17px; box-shadow:41px 0 #15110f, 0 20.5px #15110f, 41px 20.5px #15110f, 0 41px #15110f, 41px 41px #15110f; }
+      .surprise-loader h2 { margin:6px 0 0; font-size:24px; letter-spacing:-.045em; }
+      .surprise-loader p { max-width:220px; margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
+      @keyframes surprise-roll { 0% { transform:rotateX(-16deg) rotateY(0deg) rotateZ(0deg); } 42% { transform:rotateX(305deg) rotateY(428deg) rotateZ(9deg); } 72% { transform:rotateX(690deg) rotateY(610deg) rotateZ(-7deg); } 100% { transform:rotateX(704deg) rotateY(720deg) rotateZ(0deg); } }
+      @keyframes surprise-glow { 0%,100% { opacity:.45; transform:scale(.9); } 50% { opacity:1; transform:scale(1.08); } }
+      @media (prefers-reduced-motion:reduce) { .surprise-die, .surprise-loader::before { animation:none; } }
 
       @keyframes skeleton-shimmer {
         100% {
@@ -1126,7 +1162,7 @@
       </main>
 
       <div class="surprise-loader" id="surprise-loader" role="status" aria-live="polite" hidden>
-        <div class="surprise-loader-card"><span class="surprise-die" aria-hidden="true">⚄</span><h2>Rolling something good</h2><p id="surprise-loader-copy">Mixing your location, interests, and the moment.</p><div class="surprise-loader-signals" aria-hidden="true"><span>Nearby</span><span>Your taste</span><span>Right now</span></div></div>
+        <div class="surprise-loader-card"><div class="surprise-die-stage" aria-hidden="true"><div class="surprise-die"><i class="surprise-die-face surprise-die-face--one"></i><i class="surprise-die-face surprise-die-face--two"></i><i class="surprise-die-face surprise-die-face--three"></i><i class="surprise-die-face surprise-die-face--four"></i><i class="surprise-die-face surprise-die-face--five"></i><i class="surprise-die-face surprise-die-face--six"></i></div></div><h2>Let’s make it lovely.</h2><p id="surprise-loader-copy">A local pick is on its way.</p></div>
       </div>
 
       <!-- AI Chat Floating Button -->
@@ -1650,13 +1686,16 @@
       const FALLBACK_PLACE_IMAGE = "";
       const defaultPlaces = [
         { id: "fallback-alo", title: "Alo", category: "restaurant", city: "Toronto", address: "163 Spadina Ave, Toronto", description: "A considered dinner pick for a special evening.", latitude: 43.6474, longitude: -79.3950, community: { ratingAverage: 4.7 } },
-        { id: "fallback-pai", title: "PAI Northern Thai Kitchen", category: "restaurant", city: "Toronto", address: "18 Duncan St, Toronto", description: "A lively downtown table with bold Thai flavours.", latitude: 43.6472, longitude: -79.3891, community: { ratingAverage: 4.6 } },
-        { id: "fallback-koh", title: "Koh Lipe", category: "restaurant", city: "Toronto", address: "35 Baldwin St, Toronto", description: "A relaxed local dinner pick on Baldwin Street.", latitude: 43.6564, longitude: -79.3931, community: { ratingAverage: 4.5 } },
-        { id: "fallback-maha", title: "Maha's", category: "restaurant", city: "Toronto", address: "226 Greenwood Ave, Toronto", description: "An all-day food stop worth planning around.", latitude: 43.6694, longitude: -79.3290, community: { ratingAverage: 4.7 } },
-        { id: "fallback-bar-isp", title: "Bar Isabel", category: "restaurant", city: "Toronto", address: "797 College St, Toronto", description: "A warm late-evening room for plates and conversation.", latitude: 43.6549, longitude: -79.4210, community: { ratingAverage: 4.6 } },
-        { id: "fallback-mothers", title: "Mother's Dumplings", category: "restaurant", city: "Toronto", address: "421 Spadina Ave, Toronto", description: "Comforting dumplings in the heart of Chinatown.", latitude: 43.6570, longitude: -79.3999, community: { ratingAverage: 4.5 } },
+        { id: "fallback-ago", title: "Art Gallery of Ontario", category: "gallery", city: "Toronto", address: "317 Dundas St W, Toronto", description: "A calm, culture-forward reset in the centre of town.", latitude: 43.6540, longitude: -79.3925, community: { ratingAverage: 4.7 } },
+        { id: "fallback-trinity", title: "Trinity Bellwoods Park", category: "park", city: "Toronto", address: "1053 Dundas St W, Toronto", description: "A generous green pause when the day needs air.", latitude: 43.6478, longitude: -79.4140, community: { ratingAverage: 4.6 } },
+        { id: "fallback-danforth", title: "The Danforth Music Hall", category: "music venue", city: "Toronto", address: "147 Danforth Ave, Toronto", description: "A lively room for whatever is on tonight.", latitude: 43.6761, longitude: -79.3561, community: { ratingAverage: 4.6 } },
+        { id: "fallback-comedy-bar", title: "Comedy Bar", category: "comedy theatre", city: "Toronto", address: "945 Bloor St W, Toronto", description: "An easy laugh with a little downtown energy.", latitude: 43.6615, longitude: -79.4280, community: { ratingAverage: 4.5 } },
+        { id: "fallback-kensington", title: "Kensington Market", category: "market", city: "Toronto", address: "Kensington Ave, Toronto", description: "A loose, colourful browse with plenty of detours.", latitude: 43.6544, longitude: -79.4002, community: { ratingAverage: 4.5 } },
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
+      const SURPRISE_HISTORY_KEY = "echoo_surprise_history_v1";
+      const SURPRISE_TURN_KEY = "echoo_surprise_turn_v1";
+      let discoveryUiLoading = false;
 
       function realImageUrl(item) {
         return imageUrlFor(item) || "";
@@ -1672,10 +1711,25 @@
         return "local";
       }
 
+      function coverCopyFor(item) {
+        const group = categoryGroup(item);
+        const copy = {
+          food: "A good table",
+          music: "Live nearby",
+          culture: "A little culture",
+          tourism: "Worth seeing",
+          nature: "A breath outside",
+          local: "A local find",
+        }[group] || "A local find";
+        return { group, copy };
+      }
+
       function placeVisual(item, className, alt = "") {
         const image = realImageUrl(item);
-        if (image) return `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="lazy" decoding="async" onerror="this.hidden=true; this.nextElementSibling.hidden=false" /><div class="${className} place-visual-fallback" role="img" aria-label="${esc(alt || "Place image")}" hidden></div>`;
-        return `<div class="${className} place-visual-fallback" role="img" aria-label="${esc(alt || "Place image")}"></div>`;
+        const cover = coverCopyFor(item);
+        const fallback = `<div class="${className} place-visual-fallback" data-cover="${cover.group}" role="img" aria-label="${esc(alt || "Place image")}"${image ? " hidden" : ""}><span class="place-cover-copy" aria-hidden="true"><small>Echoo pick</small><strong>${esc(cover.copy)}</strong></span></div>`;
+        if (image) return `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="lazy" decoding="async" onerror="this.hidden=true; this.nextElementSibling.hidden=false" />${fallback}`;
+        return fallback;
       }
 
       function hotScoreFor(item) {
@@ -1687,10 +1741,14 @@
         return Boolean(item?.community?.isHot) || hotScoreFor(item) >= 0.68;
       }
 
-      function renderDiscoverLoading() {
-        if (!items.length) items = defaultPlaces.map((place) => ({ ...place }));
-        renderItems();
-        resultsPageStatus.textContent = "";
+      function renderDiscoverLoading({ allowFallback = false } = {}) {
+        discoveryUiLoading = true;
+        document.body.classList.add("discover-is-loading");
+        if (allowFallback && !items.length) items = defaultPlaces.map((place) => ({ ...place }));
+        const loadingCards = `<div class="location-card skeleton-card" aria-hidden="true"></div>`;
+        popularContainer.innerHTML = loadingCards.repeat(3);
+        recommendationContainer.innerHTML = `<div class="recommendation-card skeleton-card" aria-hidden="true"></div>`.repeat(3);
+        renderResultsPage();
       }
 
       function placeKey(item) {
@@ -1837,6 +1895,8 @@
       }
 
       function renderItems() {
+        discoveryUiLoading = false;
+        document.body.classList.remove("discover-is-loading");
         items = diversifyPlaces(items);
         if (items.length) {
           renderPopularNearby(items.slice(0, 5));
@@ -1867,22 +1927,62 @@
         return nearby * .45 + profileMatch * .32 + Math.min(timeMatch, .16) + hotScoreFor(item) * .07;
       }
 
+      function surpriseHistory() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(SURPRISE_HISTORY_KEY) || "[]");
+          return Array.isArray(saved) ? saved.filter((entry) => entry?.id && entry?.style).slice(0, 24) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function rememberSurprise(item) {
+        const entry = { id: placeKey(item), style: categoryGroup(item), city, seenAt: Date.now() };
+        const previous = surpriseHistory().filter((saved) => saved.id !== entry.id);
+        try { localStorage.setItem(SURPRISE_HISTORY_KEY, JSON.stringify([entry, ...previous].slice(0, 24))); } catch (_) {}
+      }
+
+      function randomIndex(length) {
+        if (length <= 1) return 0;
+        const values = new Uint32Array(1);
+        if (window.crypto?.getRandomValues) {
+          window.crypto.getRandomValues(values);
+          return values[0] % length;
+        }
+        return Math.floor(Math.random() * length);
+      }
+
+      function nextSurpriseRoute() {
+        let turn = 0;
+        try { turn = Number(sessionStorage.getItem(SURPRISE_TURN_KEY) || "0") + 1; sessionStorage.setItem(SURPRISE_TURN_KEY, String(turn)); } catch (_) { turn = Date.now(); }
+        // The first roll in a session opens a ready-to-go plan, then the
+        // experience alternates so each path remains discoverable.
+        return turn % 2 === 1 ? "quick-plan" : "place-detail";
+      }
+
       async function revealSurprise() {
         const candidates = [...items]
           .map((item) => ({ item, score: surpriseScore(item) }))
           .sort((left, right) => right.score - left.score)
-          .slice(0, Math.min(8, items.length));
-        const pool = candidates.length ? candidates : items.map((item) => ({ item, score: 0 }));
+          .slice(0, Math.min(30, items.length));
+        const curated = candidates.length ? candidates : items.map((item) => ({ item, score: 0 }));
+        const history = surpriseHistory();
+        const cityHistory = history.filter((entry) => entry.city === city);
+        const unseen = curated.filter(({ item }) => !cityHistory.some((entry) => entry.id === placeKey(item)));
+        const unseenPool = unseen.length ? unseen : curated;
+        const previousStyle = cityHistory[0]?.style;
+        const varied = unseenPool.filter(({ item }) => categoryGroup(item) !== previousStyle);
+        const pool = varied.length ? varied : unseenPool;
         if (!pool.length) return;
-        const fiveMinuteWindow = Math.floor(Date.now() / (1000 * 60 * 5));
-        const choice = pool[stableNumber(`${city}|${lat}|${lng}|${onboardingSignals().join("|")}|${fiveMinuteWindow}`) % pool.length].item;
+        const choice = pool[randomIndex(pool.length)].item;
+        rememberSurprise(choice);
         const loaderCopy = document.getElementById("surprise-loader-copy");
         if (loaderCopy) loaderCopy.textContent = `Matching ${city}, your preferences, and ${timeContext().label}.`;
         const loaderStartedAt = Number(surpriseLoader.dataset.startedAt || Date.now());
         const remaining = Math.max(0, 3000 - (Date.now() - loaderStartedAt));
         if (remaining) await new Promise((resolve) => setTimeout(resolve, remaining));
         surpriseLoader.hidden = true;
-        const opensPlan = stableNumber(`${choice.id}|${fiveMinuteWindow}|${onboardingSignals().join("|")}`) % 3 === 0;
+        const opensPlan = nextSurpriseRoute() === "quick-plan";
         await openDetailByItem(choice);
         if (opensPlan) {
           setTimeout(() => window.dispatchEvent(new CustomEvent("echoo:quick-plan", {
@@ -1915,6 +2015,13 @@
         const shouldShow = view !== "map";
         resultsSection.hidden = !shouldShow;
         if (!shouldShow) return;
+        if (discoveryUiLoading) {
+          resultsHeading.textContent = activeQuery === "discover" ? "Finding your next place" : `Finding ${activeQuery}`;
+          resultsPageStatus.textContent = "Refreshing nearby picks…";
+          resultsEl.innerHTML = `<div class="discover-loading-grid" aria-live="polite"><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div></div>`;
+          resultsPagination.hidden = true;
+          return;
+        }
         const pageSize = 10;
         const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
         resultPage = Math.min(resultPage, pageCount - 1);
@@ -2257,7 +2364,7 @@
         suggestionsEl.hidden = true;
         discoveryRequestId += 1;
         discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: discoveryRequestForActiveView(), loading: false };
-        renderDiscoverLoading();
+        renderDiscoverLoading({ allowFallback: options.surprise });
         const discoveryPromise = fetchDiscoveryPage({ requestId: discoveryRequestId });
         if (options.surprise) {
           await Promise.race([discoveryPromise, new Promise((resolve) => setTimeout(resolve, 3000))]);
@@ -2456,17 +2563,9 @@
         }
       }
 
-      window.addEventListener("echoo:quick-plan", async (event) => {
+      window.addEventListener("echoo:quick-plan", (event) => {
         const anchor = event.detail?.anchor;
         if (!anchor?.id) return;
-        const access = await window.EchooAuth?.requireAuthenticatedAction?.({
-          next: window.EchooAuth.currentRelativeUrl(),
-          mode: "signup",
-          intent: "quick_plan",
-          reason: "quick_plan_required",
-          caption: "Create an account to build a personal Quick Plan.",
-        });
-        if (!access?.ok) return;
         quickPlanState = {
           anchor,
           stopCount: 3,

@@ -372,6 +372,21 @@ async function profileForMember(
   };
 }
 
+function profileForGuest(value: Record<string, unknown> | undefined, city = "Greater Toronto Area") {
+  const profile = value && typeof value === "object" ? value : {};
+  const budget = text(profile.budget, "$");
+  const energy = text(profile.energy, "chill");
+  return {
+    interests: list(profile.interests),
+    eventStyles: list(profile.eventStyles || profile.event_styles),
+    audiences: list(profile.audiences),
+    motivations: list(profile.motivations),
+    budget: ["$", "$$", "$$$"].includes(budget) ? budget : "$",
+    energy: ["chill", "hype", "curious"].includes(energy) ? energy : "chill",
+    city: text(profile.city, city),
+  };
+}
+
 async function loadProfiles(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   placeIds: string[],
@@ -413,17 +428,17 @@ Deno.serve(async (req) => {
     if (!anchorId) return jsonResponse({ error: "Choose a place to build around" }, 422);
 
     const supabase = getSupabaseAdmin();
+    // A Quick Plan is an on-the-spot utility, so guests can use their local
+    // preference cache. A completed member profile still takes precedence.
+    const requestCity = text(body.anchor?.city, "Greater Toronto Area");
+    let profile = profileForGuest(body.profile, requestCity);
     const token = authToken(req);
-    if (!token) {
-      return jsonResponse({ error: "Sign in to build a Quick Plan." }, 401);
-    }
-    const { data: auth, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !auth?.user) {
-      return jsonResponse({ error: "Your session has ended. Sign in to build a Quick Plan." }, 401);
-    }
-    const profile = await profileForMember(supabase, auth.user.id);
-    if (!profile) {
-      return jsonResponse({ error: "Finish onboarding to build your Quick Plan." }, 403);
+    if (token) {
+      const { data: auth } = await supabase.auth.getUser(token);
+      if (auth?.user) {
+        const memberProfile = await profileForMember(supabase, auth.user.id);
+        if (memberProfile) profile = memberProfile;
+      }
     }
     const requestedBudget = normalizeBudget(body.budgetStyle || budgetFromProfile(profile.budget));
     const stopCount = clampStopCount(body.stopCount);
