@@ -16,6 +16,7 @@ type QuickPlanRequest = {
     address?: unknown;
     latitude?: unknown;
     longitude?: unknown;
+    imageUrl?: unknown;
   };
   stopCount?: unknown;
   budgetStyle?: unknown;
@@ -277,7 +278,12 @@ function requestAnchor(anchor: QuickPlanRequest["anchor"]): Place | null {
     latitude,
     longitude,
     timezone: "America/Toronto",
+    image_url: text(anchor?.imageUrl),
   };
+}
+
+function hasCoverImage(place: Place) {
+  return /^https?:\/\//i.test(text(place.image_url));
 }
 
 function liveSearchTypes(anchor: Place) {
@@ -372,6 +378,21 @@ async function profileForMember(
   };
 }
 
+function profileForGuest(value: Record<string, unknown> | undefined, city = "Greater Toronto Area") {
+  const profile = value && typeof value === "object" ? value : {};
+  const budget = text(profile.budget, "$");
+  const energy = text(profile.energy, "chill");
+  return {
+    interests: list(profile.interests),
+    eventStyles: list(profile.eventStyles || profile.event_styles),
+    audiences: list(profile.audiences),
+    motivations: list(profile.motivations),
+    budget: ["$", "$$", "$$$"].includes(budget) ? budget : "$",
+    energy: ["chill", "hype", "curious"].includes(energy) ? energy : "chill",
+    city: text(profile.city, city),
+  };
+}
+
 async function loadProfiles(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   placeIds: string[],
@@ -402,6 +423,28 @@ async function loadHours(
   return byPlace;
 }
 
+async function loadApprovedCoverImages(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  placeIds: string[],
+) {
+  if (!placeIds.length) return new Map<string, string>();
+  const { data, error } = await supabase
+    .from("place_photos")
+    .select("place_id,image_url,sort_order,created_at")
+    .in("place_id", placeIds)
+    .eq("approval_status", "approved")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  const covers = new Map<string, string>();
+  for (const row of data || []) {
+    const placeId = text(row.place_id);
+    const imageUrl = text(row.image_url);
+    if (placeId && !covers.has(placeId) && /^https?:\/\//i.test(imageUrl)) covers.set(placeId, imageUrl);
+  }
+  return covers;
+}
+
 Deno.serve(async (req) => {
   const startedAt = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -413,17 +456,17 @@ Deno.serve(async (req) => {
     if (!anchorId) return jsonResponse({ error: "Choose a place to build around" }, 422);
 
     const supabase = getSupabaseAdmin();
+    // A Quick Plan is an on-the-spot utility, so guests can use their local
+    // preference cache. A completed member profile still takes precedence.
+    const requestCity = text(body.anchor?.city, "Greater Toronto Area");
+    let profile = profileForGuest(body.profile, requestCity);
     const token = authToken(req);
-    if (!token) {
-      return jsonResponse({ error: "Sign in to build a Quick Plan." }, 401);
-    }
-    const { data: auth, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !auth?.user) {
-      return jsonResponse({ error: "Your session has ended. Sign in to build a Quick Plan." }, 401);
-    }
-    const profile = await profileForMember(supabase, auth.user.id);
-    if (!profile) {
-      return jsonResponse({ error: "Finish onboarding to build your Quick Plan." }, 403);
+    if (token) {
+      const { data: auth } = await supabase.auth.getUser(token);
+      if (auth?.user) {
+        const memberProfile = await profileForMember(supabase, auth.user.id);
+        if (memberProfile) profile = memberProfile;
+      }
     }
     const requestedBudget = normalizeBudget(body.budgetStyle || budgetFromProfile(profile.budget));
     const stopCount = clampStopCount(body.stopCount);
@@ -438,8 +481,12 @@ Deno.serve(async (req) => {
     if (anchorError) throw anchorError;
     // A place discovered live from Google has not necessarily been saved to
     // canonical_places. Its tapped coordinates are still valid for a plan.
-    const anchor = (anchorRow as Place | null) || requestAnchor(body.anchor);
+    const requestPlace = requestAnchor(body.anchor);
+    let anchor = (anchorRow as Place | null) || requestPlace;
     if (!anchor) return jsonResponse({ error: "This place needs a name and precise location before Echoo can plan around it" }, 422);
+    // An Explore card can already have a verified cover while the canonical
+    // record awaits photo enrichment. Preserve it for the plan's anchor.
+    if (!hasCoverImage(anchor) && requestPlace?.image_url) anchor.image_url = requestPlace.image_url;
     if (!Number.isFinite(number(anchor.latitude, NaN)) || !Number.isFinite(number(anchor.longitude, NaN))) {
       return jsonResponse({ error: "This place needs a precise location before Echoo can route around it" }, 422);
     }
@@ -464,19 +511,24 @@ Deno.serve(async (req) => {
       : { data: [], error: null };
     if (fullError) throw fullError;
 
-    const places = new Map<string, Place>([
-      [anchor.id, anchor],
-      ...((fullRows || []) as Place[]).map((place) => [place.id, place]),
-    ]);
     // Profile and hours tables use UUID foreign keys. Live Google IDs are not
     // persisted there yet, so never send them into a UUID `in (...)` filter.
     const placeIds = [
       ...(anchorRow ? [anchor.id] : []),
       ...((fullRows || []) as Place[]).map((place) => place.id),
     ];
-    const [profiles, hoursByPlace] = await Promise.all([
+    const [profiles, hoursByPlace, coverImages] = await Promise.all([
       loadProfiles(supabase, placeIds),
       loadHours(supabase, placeIds),
+      loadApprovedCoverImages(supabase, placeIds),
+    ]);
+    anchor = { ...anchor, image_url: coverImages.get(anchor.id) || anchor.image_url };
+    const places = new Map<string, Place>([
+      [anchor.id, anchor],
+      ...((fullRows || []) as Place[]).map((place) => [
+        place.id,
+        { ...place, image_url: coverImages.get(place.id) || place.image_url },
+      ]),
     ]);
     const timezone = text(anchor.timezone, "America/Toronto");
     const anchorCandidate: Candidate = {
@@ -489,6 +541,10 @@ Deno.serve(async (req) => {
 
     const inventoryCandidates: Candidate[] = [...places.values()]
       .filter((place) => place.id !== anchor.id)
+      // Quick Plan never falls back to generic live-search results. Every
+      // additional stop is from Echoo's persisted local inventory; the UI
+      // supplies the same polished cover treatment when photo enrichment is
+      // still pending for an otherwise curated place.
       .map((place) => ({
         ...place,
         profile: profiles.get(place.id),
@@ -504,8 +560,7 @@ Deno.serve(async (req) => {
         const status = openAt(hoursByPlace.get(place.id) || [], timezone, new Date());
         return !status.known || status.open;
       });
-    const liveCandidates = await liveNearbyCandidates(anchor, stopCount + 6);
-    const candidates = Array.from(new Map([...inventoryCandidates, ...liveCandidates].map((place) => [place.id, place])).values());
+    const candidates = inventoryCandidates;
     const recentPlaceIds = recentIds(body.recentPlaceIds);
 
     const score = (candidate: Candidate) => {

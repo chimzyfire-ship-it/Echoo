@@ -951,16 +951,25 @@
       }
 
       /* A tap should feel immediate, even while the next screen is loading. */
-      .surprise-launcher { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; opacity: 0; visibility: hidden; pointer-events: none; background: rgba(5, 5, 5, .94); backdrop-filter: blur(18px); transition: opacity .22s ease, visibility .22s ease; }
+      .surprise-launcher { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; overflow: hidden; opacity: 0; visibility: hidden; pointer-events: none; background: radial-gradient(circle at 50% 43%, rgba(247,213,178,.12), transparent 22%), #080808; transition: opacity .22s ease, visibility .22s ease; }
       .surprise-launcher.is-visible { opacity: 1; visibility: visible; }
-      .surprise-launcher-card { width: min(100%, 300px); display: grid; justify-items: center; gap: 14px; padding: 30px 24px; border: 1px solid rgba(247, 213, 178, .3); border-radius: 30px; background: radial-gradient(circle at 50% 0%, rgba(247, 213, 178, .19), transparent 56%), #171716; box-shadow: 0 26px 72px rgba(0, 0, 0, .58); text-align: center; }
-      .surprise-launcher-die { width: 78px; height: 78px; display: grid; place-items: center; border-radius: 22px; color: #17130e; background: var(--peach); box-shadow: 0 13px 34px rgba(247, 213, 178, .3); font-size: 42px; animation: surprise-launch-roll .82s cubic-bezier(.2, .75, .25, 1) infinite; }
+      .surprise-launcher::before { position:absolute; width:min(74vw,340px); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle, rgba(247,213,178,.12), transparent 66%); content:""; filter:blur(8px); animation:surprise-launch-glow 2.4s ease-in-out infinite; }
+      .surprise-launcher-card { position:relative; width:min(100%,300px); display:grid; justify-items:center; gap:14px; text-align:center; }
+      .surprise-launcher-stage { width:112px; height:112px; display:grid; place-items:center; perspective:520px; }
+      .surprise-launcher-die { position:relative; width:84px; height:84px; transform-style:preserve-3d; animation:surprise-launch-roll 2.15s cubic-bezier(.33,.06,.17,1) infinite; }
+      .surprise-launcher-face { position:absolute; inset:0; border:1px solid rgba(255,255,255,.5); border-radius:20px; background:linear-gradient(145deg, #fff3e9 0%, #f7d5b2 62%, #dca882 100%); box-shadow:inset 4px 4px 9px rgba(255,255,255,.38), inset -7px -7px 13px rgba(89,52,29,.2); backface-visibility:hidden; }
+      .surprise-launcher-face::before { position:absolute; width:9px; height:9px; border-radius:50%; background:#15110f; content:""; }
+      .surprise-launcher-face--one { transform:translateZ(42px); }.surprise-launcher-face--one::before { top:37px; left:37px; }
+      .surprise-launcher-face--two { transform:rotateY(90deg) translateZ(42px); }.surprise-launcher-face--two::before { top:17px; left:17px; box-shadow:41px 41px #15110f; }
+      .surprise-launcher-face--three { transform:rotateY(180deg) translateZ(42px); }.surprise-launcher-face--three::before { top:17px; left:17px; box-shadow:20.5px 20.5px #15110f,41px 41px #15110f; }
+      .surprise-launcher-face--four { transform:rotateY(-90deg) translateZ(42px); }.surprise-launcher-face--four::before { top:17px; left:17px; box-shadow:41px 0 #15110f,0 41px #15110f,41px 41px #15110f; }
+      .surprise-launcher-face--five { transform:rotateX(90deg) translateZ(42px); }.surprise-launcher-face--five::before { top:17px; left:17px; box-shadow:41px 0 #15110f,20.5px 20.5px #15110f,0 41px #15110f,41px 41px #15110f; }
+      .surprise-launcher-face--six { transform:rotateX(-90deg) translateZ(42px); }.surprise-launcher-face--six::before { top:17px; left:17px; box-shadow:41px 0 #15110f,0 20.5px #15110f,41px 20.5px #15110f,0 41px #15110f,41px 41px #15110f; }
       .surprise-launcher h2 { margin: 2px 0 0; font-size: 23px; letter-spacing: -.04em; }
       .surprise-launcher p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-      .surprise-launcher-signals { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-      .surprise-launcher-signals span { padding: 5px 8px; border: 1px solid rgba(247, 213, 178, .18); border-radius: 999px; color: rgba(248, 245, 239, .78); font-size: 10px; }
-      @keyframes surprise-launch-roll { 0%, 100% { transform: rotate(0) scale(1); } 32% { transform: rotate(118deg) scale(.83); } 66% { transform: rotate(244deg) scale(1.07); } }
-      @media (prefers-reduced-motion: reduce) { .surprise-launcher-die { animation: none; } }
+      @keyframes surprise-launch-roll { 0% { transform:rotateX(-16deg) rotateY(0deg) rotateZ(0deg); } 42% { transform:rotateX(305deg) rotateY(428deg) rotateZ(9deg); } 72% { transform:rotateX(690deg) rotateY(610deg) rotateZ(-7deg); } 100% { transform:rotateX(704deg) rotateY(720deg) rotateZ(0deg); } }
+      @keyframes surprise-launch-glow { 0%,100% { opacity:.45; transform:scale(.9); } 50% { opacity:1; transform:scale(1.08); } }
+      @media (prefers-reduced-motion: reduce) { .surprise-launcher-die, .surprise-launcher::before { animation: none; } }
 
       .category-grid {
         display: grid;
@@ -1111,10 +1120,9 @@
   <body>
     <div class="surprise-launcher" id="surprise-launcher" role="status" aria-live="polite" aria-hidden="true">
       <div class="surprise-launcher-card">
-        <span class="surprise-launcher-die" aria-hidden="true">⚄</span>
-        <h2>Rolling something good</h2>
-        <p id="surprise-launcher-copy">Finding a fit for right now.</p>
-        <div class="surprise-launcher-signals" aria-hidden="true"><span>Nearby</span><span>Your taste</span><span>Right now</span></div>
+        <div class="surprise-launcher-stage" aria-hidden="true"><div class="surprise-launcher-die"><i class="surprise-launcher-face surprise-launcher-face--one"></i><i class="surprise-launcher-face surprise-launcher-face--two"></i><i class="surprise-launcher-face surprise-launcher-face--three"></i><i class="surprise-launcher-face surprise-launcher-face--four"></i><i class="surprise-launcher-face surprise-launcher-face--five"></i><i class="surprise-launcher-face surprise-launcher-face--six"></i></div></div>
+        <h2>Let’s make it lovely.</h2>
+        <p id="surprise-launcher-copy">A local pick is on its way.</p>
       </div>
     </div>
     <div class="app-shell">

@@ -696,7 +696,7 @@
 .echoo-quick-plan-stop {
   width: 100%;
   display: grid;
-  grid-template-columns: 29px minmax(0, 1fr) auto;
+  grid-template-columns: 29px 46px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 12px 11px;
@@ -718,6 +718,38 @@
   font-size: 11px;
   font-weight: 850;
 }
+.echoo-quick-plan-stop-image,
+.echoo-quick-plan-stop-cover {
+  width: 46px;
+  height: 46px;
+  border-radius: 11px;
+}
+.echoo-quick-plan-stop-image {
+  display: block;
+  object-fit: cover;
+  background: #191919;
+}
+.echoo-quick-plan-stop-cover {
+  position: relative;
+  display: grid;
+  place-items: end start;
+  overflow: hidden;
+  padding: 6px;
+  color: rgba(255,255,255,.78);
+  background: radial-gradient(circle at 75% 18%, rgba(243,209,161,.37), transparent 35%), linear-gradient(145deg, #35231b, #11100f 72%);
+}
+.echoo-quick-plan-stop-cover::before {
+  position: absolute;
+  top: -11px;
+  right: -9px;
+  width: 31px;
+  height: 31px;
+  border: 1px solid rgba(255,255,255,.17);
+  border-radius: 50%;
+  background: rgba(255,255,255,.07);
+  content: "";
+}
+.echoo-quick-plan-stop-cover span { position: relative; font-size: 7px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .echoo-quick-plan-stop-copy { min-width: 0; display: grid; gap: 3px; }
 .echoo-quick-plan-stop-copy strong { overflow: hidden; color: #fff; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .echoo-quick-plan-stop-copy span { color: rgba(248,245,239,.63); font-size: 11px; line-height: 1.25; }
