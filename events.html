@@ -764,27 +764,28 @@
       .discover-loading-line:last-child { width:60%; }
       .discover-loading-index { width:24px; height:24px; border-radius:50%; }
 
-      .surprise-loader { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:28px; overflow:hidden; isolation:isolate; background:radial-gradient(circle at 50% 43%, rgba(247,213,178,.2), transparent 19%), radial-gradient(circle at 15% 85%, rgba(123,147,214,.16), transparent 38%), #080808; transition:opacity .32s ease, visibility .32s ease; }
+      .surprise-loader { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:28px; overflow:hidden; isolation:isolate; contain:layout paint; background:radial-gradient(circle at 50% 43%, rgba(247,213,178,.2), transparent 19%), radial-gradient(circle at 15% 85%, rgba(123,147,214,.16), transparent 38%), #080808; }
       .surprise-loader::before { position:absolute; width:min(82vw,390px); aspect-ratio:1; border:1px solid rgba(247,213,178,.13); border-radius:50%; background:repeating-radial-gradient(circle, transparent 0 28px, rgba(247,213,178,.055) 29px 30px), radial-gradient(circle, rgba(247,213,178,.18), transparent 66%); content:""; filter:blur(1px); animation:surprise-glow 2.4s ease-in-out infinite; }
       .surprise-loader::after { position:absolute; inset:-30%; z-index:-1; background:conic-gradient(from 90deg at 50% 50%, transparent, rgba(247,213,178,.08), transparent 32%); content:""; animation:surprise-orbit 5s linear infinite; }
       .surprise-loader[hidden] { display:none; }
       .surprise-loader-card { position:relative; width:min(100%,300px); display:grid; justify-items:center; gap:16px; padding:26px 18px; border:1px solid rgba(248,245,239,.09); border-radius:28px; background:linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.015)); box-shadow:0 26px 80px rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.1); text-align:center; backdrop-filter:blur(14px); }
-      .surprise-die-stage { width:128px; height:128px; display:grid; place-items:center; perspective:520px; filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)); }
-      .surprise-die { position:relative; width:84px; height:84px; transform-style:preserve-3d; animation:surprise-roll 2.15s cubic-bezier(.33,.06,.17,1) infinite; }
-      .surprise-die-face { position:absolute; inset:0; border:1px solid rgba(255,255,255,.5); border-radius:20px; background:linear-gradient(145deg, #fff3e9 0%, #f7d5b2 62%, #dca882 100%); box-shadow:inset 4px 4px 9px rgba(255,255,255,.38), inset -7px -7px 13px rgba(89,52,29,.2); backface-visibility:hidden; }
-      .surprise-die-face::before { position:absolute; width:9px; height:9px; border-radius:50%; background:#15110f; box-shadow:0 1px 1px rgba(255,255,255,.18); content:""; }
+      .surprise-die-stage { width:128px; height:128px; display:grid; place-items:center; perspective:520px; -webkit-perspective:520px; filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)); }
+      .surprise-die { position:relative; width:84px; height:84px; transform-style:preserve-3d; -webkit-transform-style:preserve-3d; will-change:transform; animation:surprise-roll 2.15s cubic-bezier(.33,.06,.17,1) infinite; }
+      .surprise-die-face { position:absolute; inset:0; display:grid; grid-template:repeat(3, 1fr) / repeat(3, 1fr); box-sizing:border-box; padding:17px; border:1px solid rgba(255,255,255,.5); border-radius:20px; background:linear-gradient(145deg, #fff3e9 0%, #f7d5b2 62%, #dca882 100%); box-shadow:inset 4px 4px 9px rgba(255,255,255,.38), inset -7px -7px 13px rgba(89,52,29,.2); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+      .surprise-die-pip { width:9px; height:9px; align-self:center; justify-self:center; border-radius:50%; background:#15110f; box-shadow:inset 1px 1px rgba(255,255,255,.2), 0 1px 1px rgba(255,255,255,.18); }
+      .surprise-die-face--one .surprise-die-pip:nth-child(1), .surprise-die-face--three .surprise-die-pip:nth-child(2), .surprise-die-face--five .surprise-die-pip:nth-child(3) { grid-row:2; grid-column:2; }
+      .surprise-die-face--two .surprise-die-pip:nth-child(1), .surprise-die-face--three .surprise-die-pip:nth-child(1), .surprise-die-face--four .surprise-die-pip:nth-child(1), .surprise-die-face--five .surprise-die-pip:nth-child(1), .surprise-die-face--six .surprise-die-pip:nth-child(1) { grid-row:1; grid-column:1; }
+      .surprise-die-face--two .surprise-die-pip:nth-child(2), .surprise-die-face--three .surprise-die-pip:nth-child(3), .surprise-die-face--four .surprise-die-pip:nth-child(4), .surprise-die-face--five .surprise-die-pip:nth-child(5), .surprise-die-face--six .surprise-die-pip:nth-child(6) { grid-row:3; grid-column:3; }
+      .surprise-die-face--four .surprise-die-pip:nth-child(2), .surprise-die-face--five .surprise-die-pip:nth-child(2), .surprise-die-face--six .surprise-die-pip:nth-child(2) { grid-row:1; grid-column:3; }
+      .surprise-die-face--four .surprise-die-pip:nth-child(3), .surprise-die-face--five .surprise-die-pip:nth-child(4), .surprise-die-face--six .surprise-die-pip:nth-child(5) { grid-row:3; grid-column:1; }
+      .surprise-die-face--six .surprise-die-pip:nth-child(3) { grid-row:2; grid-column:1; }
+      .surprise-die-face--six .surprise-die-pip:nth-child(4) { grid-row:2; grid-column:3; }
       .surprise-die-face--one { transform:translateZ(42px); }
-      .surprise-die-face--one::before { top:37px; left:37px; }
       .surprise-die-face--two { transform:rotateY(90deg) translateZ(42px); }
-      .surprise-die-face--two::before { top:17px; left:17px; box-shadow:41px 41px #15110f; }
       .surprise-die-face--three { transform:rotateY(180deg) translateZ(42px); }
-      .surprise-die-face--three::before { top:17px; left:17px; box-shadow:20.5px 20.5px #15110f, 41px 41px #15110f; }
       .surprise-die-face--four { transform:rotateY(-90deg) translateZ(42px); }
-      .surprise-die-face--four::before { top:17px; left:17px; box-shadow:41px 0 #15110f, 0 41px #15110f, 41px 41px #15110f; }
       .surprise-die-face--five { transform:rotateX(90deg) translateZ(42px); }
-      .surprise-die-face--five::before { top:17px; left:17px; box-shadow:41px 0 #15110f, 20.5px 20.5px #15110f, 0 41px #15110f, 41px 41px #15110f; }
       .surprise-die-face--six { transform:rotateX(-90deg) translateZ(42px); }
-      .surprise-die-face--six::before { top:17px; left:17px; box-shadow:41px 0 #15110f, 0 20.5px #15110f, 41px 20.5px #15110f, 0 41px #15110f, 41px 41px #15110f; }
       .surprise-loader h2 { margin:6px 0 0; font-size:24px; letter-spacing:-.045em; }
       .surprise-loader p { max-width:220px; margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
       @keyframes surprise-roll { 0% { transform:rotateX(-16deg) rotateY(0deg) rotateZ(0deg); } 42% { transform:rotateX(305deg) rotateY(428deg) rotateZ(9deg); } 72% { transform:rotateX(690deg) rotateY(610deg) rotateZ(-7deg); } 100% { transform:rotateX(704deg) rotateY(720deg) rotateZ(0deg); } }
@@ -1168,7 +1169,20 @@
       </main>
 
       <div class="surprise-loader" id="surprise-loader" role="status" aria-live="polite" hidden>
-        <div class="surprise-loader-card"><div class="surprise-die-stage" aria-hidden="true"><div class="surprise-die"><i class="surprise-die-face surprise-die-face--one"></i><i class="surprise-die-face surprise-die-face--two"></i><i class="surprise-die-face surprise-die-face--three"></i><i class="surprise-die-face surprise-die-face--four"></i><i class="surprise-die-face surprise-die-face--five"></i><i class="surprise-die-face surprise-die-face--six"></i></div></div><h2>Let’s make it lovely.</h2><p id="surprise-loader-copy">A local pick is on its way.</p></div>
+        <div class="surprise-loader-card">
+          <div class="surprise-die-stage" aria-hidden="true">
+            <div class="surprise-die">
+              <i class="surprise-die-face surprise-die-face--one"><b class="surprise-die-pip"></b></i>
+              <i class="surprise-die-face surprise-die-face--two"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
+              <i class="surprise-die-face surprise-die-face--three"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
+              <i class="surprise-die-face surprise-die-face--four"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
+              <i class="surprise-die-face surprise-die-face--five"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
+              <i class="surprise-die-face surprise-die-face--six"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
+            </div>
+          </div>
+          <h2>Let’s make it lovely.</h2>
+          <p id="surprise-loader-copy">A local pick is on its way.</p>
+        </div>
       </div>
 
       <!-- AI Chat Floating Button -->
@@ -1309,7 +1323,7 @@
         cultureClear = document.getElementById("culture-clear");
 
       const surpriseMode = params.get("mode") === "surprise";
-      let activeQuery = surpriseMode ? "discover" : (params.get("query") === "trending" ? "food" : (params.get("query") || "food")),
+      let activeQuery = surpriseMode ? "discover" : (params.get("query") === "trending" ? "discover" : (params.get("query") || "discover")),
         items = [],
         view = "list",
         suggestionTimer,
@@ -1690,7 +1704,7 @@
         }
       }
 
-      const FALLBACK_PLACE_IMAGE = "";
+      const FALLBACK_PLACE_IMAGE = "assets/optimized/background-1400.jpg";
       const defaultPlaces = [
         { id: "fallback-alo", title: "Alo", category: "restaurant", city: "Toronto", address: "163 Spadina Ave, Toronto", description: "A considered dinner pick for a special evening.", imageUrl: "assets/optimized/news-date-768.jpg", latitude: 43.6474, longitude: -79.3950, community: { ratingAverage: 4.7 } },
         { id: "fallback-ago", title: "Art Gallery of Ontario", category: "gallery", city: "Toronto", address: "317 Dundas St W, Toronto", description: "A calm, culture-forward reset in the centre of town.", imageUrl: "assets/optimized/news-movie-768.jpg", latitude: 43.6540, longitude: -79.3925, community: { ratingAverage: 4.7 } },
@@ -1701,8 +1715,17 @@
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
       const SURPRISE_HISTORY_KEY = "echoo_surprise_history_v1";
-      const SURPRISE_TURN_KEY = "echoo_surprise_turn_v1";
+      const PLACE_FALLBACK_IMAGES = {
+        food: "assets/optimized/news-date-768.webp",
+        music: "assets/optimized/news-music-768.webp",
+        culture: "assets/optimized/news-movie-768.webp",
+        tourism: "assets/optimized/news-movie-768.webp",
+        nature: "assets/optimized/echoo-mobile-bg-768.webp",
+        local: "assets/optimized/background-1400.jpg",
+      };
       let discoveryUiLoading = false;
+      let surpriseRevealId = 0;
+      let discoveryFastFallbackTimer = 0;
 
       function realImageUrl(item) {
         return imageUrlFor(item) || "";
@@ -1718,11 +1741,16 @@
         return "local";
       }
 
-      function placeVisual(item, className, alt = "") {
+      function fallbackImageFor(item) {
+        return PLACE_FALLBACK_IMAGES[categoryGroup(item)] || PLACE_FALLBACK_IMAGES.local;
+      }
+
+      function placeVisual(item, className, alt = "", { eager = false } = {}) {
         const image = realImageUrl(item);
-        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}"${image ? " hidden" : ""}></div>`;
-        if (image) return `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="lazy" decoding="async" onerror="this.hidden=true; this.nextElementSibling.hidden=false" />${fallback}`;
-        return fallback;
+        const fallbackImage = fallbackImageFor(item);
+        const source = image || fallbackImage;
+        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}" hidden></div>`;
+        return `<img class="${className}" src="${esc(source)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" data-fallback-src="${esc(image ? fallbackImage : "")}" onerror="if(this.dataset.fallbackSrc){this.src=this.dataset.fallbackSrc;this.dataset.fallbackSrc='';return;}this.hidden=true;this.nextElementSibling.hidden=false" />${fallback}`;
       }
 
       function hotScoreFor(item) {
@@ -1816,14 +1844,14 @@
           popularContainer.innerHTML = "";
           return;
         }
-        popularContainer.innerHTML = list.map((item) => {
+        popularContainer.innerHTML = list.map((item, index) => {
           const rating = item.community?.ratingAverage ? Number(item.community.ratingAverage).toFixed(1) : "New";
           const dist = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.city || "GTA";
           const placeIndex = items.indexOf(item);
 
           return `
             <button class="location-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">
-              ${placeVisual(item, "location-card-img", item.title || "Local place")}
+              ${placeVisual(item, "location-card-img", item.title || "Local place", { eager: index < 3 })}
               <div class="location-card-overlay">
                 <div class="location-card-title">${esc(item.title)}</div>
                 <div class="location-card-meta">${esc(dist)}</div>
@@ -1843,9 +1871,9 @@
           recommendationContainer.innerHTML = "";
           return;
         }
-        recommendationContainer.innerHTML = list.map((item) => {
+        recommendationContainer.innerHTML = list.map((item, index) => {
           const placeIndex = items.indexOf(item);
-          return `<button class="recommendation-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick")}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`;
+          return `<button class="recommendation-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick", { eager: index < 3 })}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`;
         }).join("");
         recommendationContainer.querySelectorAll("[data-place-index]").forEach((button) => {
           button.addEventListener("click", () => openDetail(Number(button.dataset.placeIndex)));
@@ -1854,10 +1882,12 @@
 
       function updateFeaturedCard(featured) {
         if (!featured) return;
-        const img = realImageUrl(featured);
+        const primaryImage = realImageUrl(featured);
+        const fallbackImage = fallbackImageFor(featured);
         const card = document.getElementById("featured-destination-card");
         const image = document.getElementById("featured-img");
         const fallbackLabel = visualLabel(featured);
+        let isShowingFallbackImage = !primaryImage;
         const reveal = () => {
           image.hidden = false;
           card.classList.remove("has-visual-fallback");
@@ -1866,6 +1896,11 @@
         };
         image.onload = reveal;
         image.onerror = () => {
+          if (!isShowingFallbackImage) {
+            isShowingFallbackImage = true;
+            image.src = fallbackImage;
+            return;
+          }
           image.removeAttribute("src");
           image.hidden = true;
           card.dataset.visualLabel = fallbackLabel;
@@ -1874,8 +1909,8 @@
           card.setAttribute("aria-busy", "false");
         };
         image.alt = featured.title || "Local place";
-        if (img) {
-          image.src = img;
+        if (primaryImage || fallbackImage) {
+          image.src = primaryImage || fallbackImage;
           if (image.complete && image.naturalWidth > 0) reveal();
         } else {
           image.removeAttribute("src");
@@ -1892,6 +1927,10 @@
       }
 
       function renderItems() {
+        if (discoveryFastFallbackTimer) {
+          window.clearTimeout(discoveryFastFallbackTimer);
+          discoveryFastFallbackTimer = 0;
+        }
         discoveryUiLoading = false;
         document.body.classList.remove("discover-is-loading");
         items = diversifyPlaces(items);
@@ -1949,15 +1988,8 @@
         return Math.floor(Math.random() * length);
       }
 
-      function nextSurpriseRoute() {
-        let turn = 0;
-        try { turn = Number(sessionStorage.getItem(SURPRISE_TURN_KEY) || "0") + 1; sessionStorage.setItem(SURPRISE_TURN_KEY, String(turn)); } catch (_) { turn = Date.now(); }
-        // The first roll in a session opens a ready-to-go plan, then the
-        // experience alternates so each path remains discoverable.
-        return turn % 2 === 1 ? "quick-plan" : "place-detail";
-      }
-
       async function revealSurprise() {
+        const revealId = ++surpriseRevealId;
         // A Surprise result must have a usable hero image: this is the image
         // carried into the place-detail sheet, not a decorative fallback.
         const candidates = items.filter((item) => Boolean(realImageUrl(item)))
@@ -1987,20 +2019,16 @@
         const loaderStartedAt = Number(surpriseLoader.dataset.startedAt || Date.now());
         const remaining = Math.max(0, 3000 - (Date.now() - loaderStartedAt));
         if (remaining) await new Promise((resolve) => setTimeout(resolve, remaining));
-        const opensPlan = nextSurpriseRoute() === "quick-plan";
+        if (revealId !== surpriseRevealId) return;
         let handedOff = false;
         await openDetailByItem(choice, {
           onReady: () => {
+            if (revealId !== surpriseRevealId) return;
             handedOff = true;
             surpriseLoader.hidden = true;
           },
         });
-        if (!handedOff) surpriseLoader.hidden = true;
-        if (opensPlan) {
-          setTimeout(() => window.dispatchEvent(new CustomEvent("echoo:quick-plan", {
-            detail: { anchor: { id: choice.id, name: choice.title, category: choice.category, address: choice.address, latitude: choice.latitude, longitude: choice.longitude, imageUrl: imageUrlFor(choice) } },
-          })), 180);
-        }
+        if (!handedOff && revealId === surpriseRevealId) surpriseLoader.hidden = true;
       }
 
       function renderFeaturedEmpty() {
@@ -2374,15 +2402,34 @@
         }
         if (options.fromSearch) queryInput.value = cleanQuery === "discover" ? "" : String(query || "").trim();
         suggestionsEl.hidden = true;
-        discoveryRequestId += 1;
+        const requestId = ++discoveryRequestId;
+        if (discoveryFastFallbackTimer) window.clearTimeout(discoveryFastFallbackTimer);
+        items = [];
         discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: discoveryRequestForActiveView(), loading: false };
         renderDiscoverLoading({ allowFallback: options.surprise });
-        const discoveryPromise = fetchDiscoveryPage({ requestId: discoveryRequestId, render: !options.surprise });
+        // Remote inventory can enrich in the background, but Discover itself
+        // must always become useful promptly. A slow provider never leaves a
+        // person staring at skeletons with no way forward.
+        discoveryFastFallbackTimer = window.setTimeout(() => {
+          if (requestId !== discoveryRequestId || !discoveryUiLoading) return;
+          if (!items.length) items = defaultPlaces.map((place) => ({ ...place }));
+          discoveryPaging.hasMore = false;
+          renderItems();
+        }, 1400);
+        const discoveryPromise = fetchDiscoveryPage({ requestId, render: true });
         if (options.surprise) {
-          // Keep the dice on top until discovery has either returned eligible
-          // places or its own fallback. Rendering is deliberately suppressed
-          // during this request, so Discover can never flash underneath.
-          await discoveryPromise;
+          // The full-screen loader owns the transition, so Discover can render
+          // behind it. Race the provider against the local starter set so the
+          // animated die can never be stranded by a slow network request.
+          await Promise.race([
+            discoveryPromise,
+            new Promise((resolve) => window.setTimeout(resolve, 1450)),
+          ]);
+          if (!items.length) {
+            items = defaultPlaces.map((place) => ({ ...place }));
+            discoveryPaging.hasMore = false;
+            renderItems();
+          }
           await revealSurprise();
           return;
         }
@@ -2468,10 +2515,12 @@
         const name = String(anchor?.name || "this place");
         const choice = (kind, value, label, active) =>
           `<button type="button" class="echoo-quick-plan-choice" data-quick-plan-choice="${kind}" data-quick-plan-value="${value}" aria-pressed="${active}">${label}</button>`;
-        const stops = plan?.stops || [];
+        const expectedStopCount = Number(stopCount) === 2 ? 2 : 3;
+        const stops = Array.isArray(plan?.stops) ? plan.stops : [];
+        const planHasExactStops = stops.length === expectedStopCount;
         const result = loading
           ? `<div class="echoo-quick-plan-loading" aria-live="polite"><span class="echoo-quick-plan-loading-label">Reading the area, your pace, and what is open.</span><span class="echoo-quick-plan-skeleton"></span><span class="echoo-quick-plan-skeleton"></span></div>`
-          : plan
+          : plan && planHasExactStops
           ? `<div class="echoo-quick-plan-result">
                 <div class="echoo-quick-plan-route-meta"><span>${esc(plan.subtitle || `Built around ${name}`)}</span><strong>${plan.totalTravelMinutes ? `~${plan.totalTravelMinutes} min between stops` : "A close-by loop"}</strong></div>
                 <div class="echoo-quick-plan-plan-meta"><span>${esc(plan.budgetStyle || budgetStyle)} plan</span><span>Starts ${esc(stops[0]?.time || "now")}</span></div>
@@ -2484,7 +2533,7 @@
                   </button>`).join("")}
                 </div>
               </div>`
-            : `<p class="echoo-quick-plan-error">${esc(error || "Echoo could not make a reliable plan around this place yet.")}</p>`;
+            : `<p class="echoo-quick-plan-error">${esc(error || `Echoo could not make a reliable ${expectedStopCount}-stop plan around this place yet.`)}</p>`;
         quickPlanContent.innerHTML = `
           <div class="echoo-quick-plan-topline"><p class="echoo-quick-plan-kicker">Quick Plan</p><button class="echoo-quick-plan-close" type="button" data-quick-plan-close aria-label="Close Quick Plan">×</button></div>
           <div class="echoo-quick-plan-heading"><div><h2 id="quick-plan-title">Around ${esc(name)}</h2><p>One useful plan, already shaped to your profile.</p></div></div>
@@ -2493,7 +2542,7 @@
             <div class="echoo-quick-plan-control-row">${choice("budget", "value", "Value", budgetStyle === "value")}${choice("budget", "balanced", "Balanced", budgetStyle === "balanced")}${choice("budget", "elevated", "Elevated", budgetStyle === "elevated")}</div>
           </div>
           ${result}
-          ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${esc(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Start directions</button></div>` : ""}`;
+          ${plan && planHasExactStops ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${esc(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Start directions</button></div>` : ""}`;
         quickPlanContent.querySelector("[data-quick-plan-close]")?.addEventListener("click", closeQuickPlan);
         quickPlanContent.querySelectorAll("[data-quick-plan-choice]").forEach((button) => {
           button.addEventListener("click", () => {
@@ -2575,10 +2624,15 @@
           });
           const payload = await response.json().catch(() => ({}));
           if (requestId !== quickPlanRequestId) return;
+          const expectedStopCount = Number(quickPlanState.stopCount) === 2 ? 2 : 3;
+          const stops = Array.isArray(payload?.plan?.stops) ? payload.plan.stops : [];
           if (!response.ok || !payload?.plan) throw new Error(payload?.error || "Quick Plan could not build a reliable route right now.");
+          if (stops.length !== expectedStopCount) {
+            throw new Error(`Echoo received an incomplete plan. Please try the ${expectedStopCount}-stop option again.`);
+          }
           quickPlanState.loading = false;
-          quickPlanState.plan = payload.plan;
-          rememberQuickPlan(quickPlanState.anchor, payload.plan);
+          quickPlanState.plan = { ...payload.plan, stops, stopCount: expectedStopCount, requestedStopCount: expectedStopCount };
+          rememberQuickPlan(quickPlanState.anchor, quickPlanState.plan);
           renderQuickPlan();
         } catch (error) {
           if (requestId !== quickPlanRequestId) return;
@@ -2726,11 +2780,13 @@
       // Refresh a granted device location when Discover opens. Session GPS is
       // useful as an immediate fallback, but it must not quietly become an
       // all-day location if the person has moved between GTA municipalities.
-      setTimeout(async () => {
-        const refreshed = await refreshGrantedDeviceLocation();
-        if (!refreshed) showLocationSheetIfNeeded();
-      }, 150);
-      resumePendingDetail();
+      if (!surpriseMode) {
+        setTimeout(async () => {
+          const refreshed = await refreshGrantedDeviceLocation();
+          if (!refreshed) showLocationSheetIfNeeded();
+        }, 150);
+        resumePendingDetail();
+      }
     </script>
     <script src="assets/page-loader.js"></script>
   </body>

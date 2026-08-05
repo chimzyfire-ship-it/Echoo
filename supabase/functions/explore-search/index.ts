@@ -162,6 +162,20 @@ async function signedPhotoUrl(req: Request, photoName: unknown) {
   return `${url.origin}/functions/v1/place-photo?token=${encodeURIComponent(token)}&signature=${signature}`;
 }
 
+async function providerFetch(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs: number,
+) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function normalizedName(value: unknown) {
   return cleanDiscoveryText(value, 200)
     .toLowerCase()
@@ -236,7 +250,7 @@ async function photoForOwnedCard(input: {
 
   try {
     if (googlePlaceId) {
-      const response = await fetch(
+      const response = await providerFetch(
         `https://places.googleapis.com/v1/places/${encodeURIComponent(googlePlaceId)}`,
         {
           headers: {
@@ -244,13 +258,14 @@ async function photoForOwnedCard(input: {
             "X-Goog-FieldMask": "photos",
           },
         },
+        1_500,
       );
       if (response.ok) {
         const place = await response.json();
         photoName = cleanDiscoveryText(place?.photos?.[0]?.name, 500);
       }
     } else {
-      const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      const response = await providerFetch("https://places.googleapis.com/v1/places:searchText", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -273,7 +288,7 @@ async function photoForOwnedCard(input: {
             }
             : {}),
         }),
-      });
+      }, 1_500);
       if (!response.ok) return null;
       const candidate = (await response.json())?.places?.[0];
       const distance = metersBetween(
@@ -381,19 +396,26 @@ async function googleLiveSearch(input: {
     // and is blended with relevance below rather than becoming a hard sort.
     body.rankPreference = "RELEVANCE";
   }
-  const response = await fetch(
-    "https://places.googleapis.com/v1/places:searchText",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": key,
-        "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri,places.photos,places.rating,places.userRatingCount",
+  let response: Response;
+  try {
+    response = await providerFetch(
+      "https://places.googleapis.com/v1/places:searchText",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": key,
+          "X-Goog-FieldMask":
+            "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri,places.photos,places.rating,places.userRatingCount",
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    },
-  );
+      3_500,
+    );
+  } catch (error) {
+    console.warn("Explore Google fallback timed out:", cleanDiscoveryText((error as Error)?.message, 160));
+    return { results: [], nextPageToken: null };
+  }
   if (!response.ok) {
     console.warn("Explore Google fallback failed:", await response.text());
     return { results: [], nextPageToken: null };
@@ -713,27 +735,31 @@ Deno.serve(async (req) => {
     const page = owned.slice(0, limit);
     const ownedCards = page.map(ownedCard);
     const includeLiveFallback = asBoolean(get("includeLiveFallback"), true);
-    const liveRequest = includeLiveFallback
-      ? await googleLiveSearch({
-          req,
-          // Do not concatenate onboarding or time prose into the provider
-          // query. A quick filter must remain a clean, unambiguous intent.
-          query: searchQuery || category || "things to do",
-          category,
-          city: city.name,
-          lat,
-          lng,
-          limit,
-          pageToken: livePageToken,
-        })
-      : { results: [], nextPageToken: null };
-    await hydrateOwnedCardPhotos(req, supabase, ownedCards);
-    const live = liveRequest;
+    // The two potentially slow provider lanes are independent. Run them in
+    // parallel so owned cards with newly resolved covers never wait behind the
+    // live catalogue request.
+    const [live, hydratedOwnedCards] = await Promise.all([
+      includeLiveFallback
+        ? googleLiveSearch({
+            req,
+            // Do not concatenate onboarding or time prose into the provider
+            // query. A quick filter must remain a clean, unambiguous intent.
+            query: searchQuery || category || "things to do",
+            category,
+            city: city.name,
+            lat,
+            lng,
+            limit,
+            pageToken: livePageToken,
+          })
+        : Promise.resolve({ results: [], nextPageToken: null }),
+      hydrateOwnedCardPhotos(req, supabase, ownedCards),
+    ]);
     const last = page.at(-1);
     // Every photo that is shown is a real provider or approved venue photo.
     // Missing photography must never make a real local business disappear:
     // clients render an honest category fallback while enrichment continues.
-    const merged = [...ownedCards, ...live.results]
+    const merged = [...hydratedOwnedCards, ...live.results]
       .filter((item, index, all) =>
         all.findIndex((candidate) => discoveryResultKey(candidate) === discoveryResultKey(item)) === index,
       );

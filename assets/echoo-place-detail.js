@@ -429,6 +429,7 @@
               data-quick-plan-latitude="${escapeHtml(String(routeLatitude))}"
               data-quick-plan-longitude="${escapeHtml(String(routeLongitude))}"
               data-quick-plan-timezone="${escapeHtml(placeTimeZone)}"
+              data-quick-plan-image="${escapeHtml(/^https?:\/\//i.test(heroImage) ? heroImage : "")}"
             ><span>Quick plan</span><span aria-hidden="true">→</span></button>
           </div>
           ${canRouteInsideEchoo ? `
@@ -502,6 +503,7 @@
               latitude: Number.isFinite(latitude) ? latitude : null,
               longitude: Number.isFinite(longitude) ? longitude : null,
               timeZone: cleanText(button.getAttribute("data-quick-plan-timezone"), "America/Toronto"),
+              imageUrl: cleanText(button.getAttribute("data-quick-plan-image")),
             },
           },
         }));
