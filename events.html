@@ -764,11 +764,12 @@
       .discover-loading-line:last-child { width:60%; }
       .discover-loading-index { width:24px; height:24px; border-radius:50%; }
 
-      .surprise-loader { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:28px; overflow:hidden; background:radial-gradient(circle at 50% 43%, rgba(247,213,178,.12), transparent 22%), #080808; transition:opacity .32s ease, visibility .32s ease; }
-      .surprise-loader::before { position:absolute; width:min(74vw,340px); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle, rgba(247,213,178,.12), transparent 66%); content:""; filter:blur(8px); animation:surprise-glow 2.4s ease-in-out infinite; }
+      .surprise-loader { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:28px; overflow:hidden; isolation:isolate; background:radial-gradient(circle at 50% 43%, rgba(247,213,178,.2), transparent 19%), radial-gradient(circle at 15% 85%, rgba(123,147,214,.16), transparent 38%), #080808; transition:opacity .32s ease, visibility .32s ease; }
+      .surprise-loader::before { position:absolute; width:min(82vw,390px); aspect-ratio:1; border:1px solid rgba(247,213,178,.13); border-radius:50%; background:repeating-radial-gradient(circle, transparent 0 28px, rgba(247,213,178,.055) 29px 30px), radial-gradient(circle, rgba(247,213,178,.18), transparent 66%); content:""; filter:blur(1px); animation:surprise-glow 2.4s ease-in-out infinite; }
+      .surprise-loader::after { position:absolute; inset:-30%; z-index:-1; background:conic-gradient(from 90deg at 50% 50%, transparent, rgba(247,213,178,.08), transparent 32%); content:""; animation:surprise-orbit 5s linear infinite; }
       .surprise-loader[hidden] { display:none; }
-      .surprise-loader-card { position:relative; width:min(100%,300px); display:grid; justify-items:center; gap:16px; text-align:center; }
-      .surprise-die-stage { width:112px; height:112px; display:grid; place-items:center; perspective:520px; }
+      .surprise-loader-card { position:relative; width:min(100%,300px); display:grid; justify-items:center; gap:16px; padding:26px 18px; border:1px solid rgba(248,245,239,.09); border-radius:28px; background:linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.015)); box-shadow:0 26px 80px rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.1); text-align:center; backdrop-filter:blur(14px); }
+      .surprise-die-stage { width:128px; height:128px; display:grid; place-items:center; perspective:520px; filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)); }
       .surprise-die { position:relative; width:84px; height:84px; transform-style:preserve-3d; animation:surprise-roll 2.15s cubic-bezier(.33,.06,.17,1) infinite; }
       .surprise-die-face { position:absolute; inset:0; border:1px solid rgba(255,255,255,.5); border-radius:20px; background:linear-gradient(145deg, #fff3e9 0%, #f7d5b2 62%, #dca882 100%); box-shadow:inset 4px 4px 9px rgba(255,255,255,.38), inset -7px -7px 13px rgba(89,52,29,.2); backface-visibility:hidden; }
       .surprise-die-face::before { position:absolute; width:9px; height:9px; border-radius:50%; background:#15110f; box-shadow:0 1px 1px rgba(255,255,255,.18); content:""; }
@@ -788,7 +789,8 @@
       .surprise-loader p { max-width:220px; margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
       @keyframes surprise-roll { 0% { transform:rotateX(-16deg) rotateY(0deg) rotateZ(0deg); } 42% { transform:rotateX(305deg) rotateY(428deg) rotateZ(9deg); } 72% { transform:rotateX(690deg) rotateY(610deg) rotateZ(-7deg); } 100% { transform:rotateX(704deg) rotateY(720deg) rotateZ(0deg); } }
       @keyframes surprise-glow { 0%,100% { opacity:.45; transform:scale(.9); } 50% { opacity:1; transform:scale(1.08); } }
-      @media (prefers-reduced-motion:reduce) { .surprise-die, .surprise-loader::before { animation:none; } }
+      @keyframes surprise-orbit { to { transform:rotate(360deg); } }
+      @media (prefers-reduced-motion:reduce) { .surprise-die, .surprise-loader::before, .surprise-loader::after { animation:none; } }
 
       @keyframes skeleton-shimmer {
         100% {
@@ -1471,11 +1473,11 @@
       const DETAIL_PENDING_KEY = "echoo_pending_place_detail";
 
       function imageUrlFor(item) {
-        const image = item?.image;
+        const image = item?.image || {};
         const rawUrl = image?.url || (image?.storagePath
           ? `https://chimzyfire-ship-it.supabase.co/storage/v1/object/public/discovery-covers/${image.storagePath}`
-          : item?.imageUrl || "");
-        return /^https?:\/\//i.test(rawUrl) ? rawUrl : "";
+          : item?.imageUrl || item?.image_url || "");
+        return /^(https?:\/\/|assets\/)/i.test(rawUrl) ? rawUrl : "";
       }
 
       function openDetailSheet() {
@@ -1619,7 +1621,7 @@
       }
 
       async function openDetailByItem(item, options = {}) {
-        const heroImage = imageUrlFor(item) || item?.image || FALLBACK_PLACE_IMAGE;
+        const heroImage = imageUrlFor(item) || FALLBACK_PLACE_IMAGE;
         const authState = window.EchooAuth?.getAuthState
           ? await window.EchooAuth.getAuthState({ requireFresh: true })
           : { ok: false };
@@ -1659,6 +1661,7 @@
             },
           ),
         );
+        options.onReady?.();
 
         try {
           const detail = await fetchPlaceDetail(item);
@@ -1689,12 +1692,12 @@
 
       const FALLBACK_PLACE_IMAGE = "";
       const defaultPlaces = [
-        { id: "fallback-alo", title: "Alo", category: "restaurant", city: "Toronto", address: "163 Spadina Ave, Toronto", description: "A considered dinner pick for a special evening.", latitude: 43.6474, longitude: -79.3950, community: { ratingAverage: 4.7 } },
-        { id: "fallback-ago", title: "Art Gallery of Ontario", category: "gallery", city: "Toronto", address: "317 Dundas St W, Toronto", description: "A calm, culture-forward reset in the centre of town.", latitude: 43.6540, longitude: -79.3925, community: { ratingAverage: 4.7 } },
-        { id: "fallback-trinity", title: "Trinity Bellwoods Park", category: "park", city: "Toronto", address: "1053 Dundas St W, Toronto", description: "A generous green pause when the day needs air.", latitude: 43.6478, longitude: -79.4140, community: { ratingAverage: 4.6 } },
-        { id: "fallback-danforth", title: "The Danforth Music Hall", category: "music venue", city: "Toronto", address: "147 Danforth Ave, Toronto", description: "A lively room for whatever is on tonight.", latitude: 43.6761, longitude: -79.3561, community: { ratingAverage: 4.6 } },
-        { id: "fallback-comedy-bar", title: "Comedy Bar", category: "comedy theatre", city: "Toronto", address: "945 Bloor St W, Toronto", description: "An easy laugh with a little downtown energy.", latitude: 43.6615, longitude: -79.4280, community: { ratingAverage: 4.5 } },
-        { id: "fallback-kensington", title: "Kensington Market", category: "market", city: "Toronto", address: "Kensington Ave, Toronto", description: "A loose, colourful browse with plenty of detours.", latitude: 43.6544, longitude: -79.4002, community: { ratingAverage: 4.5 } },
+        { id: "fallback-alo", title: "Alo", category: "restaurant", city: "Toronto", address: "163 Spadina Ave, Toronto", description: "A considered dinner pick for a special evening.", imageUrl: "assets/optimized/news-date-768.jpg", latitude: 43.6474, longitude: -79.3950, community: { ratingAverage: 4.7 } },
+        { id: "fallback-ago", title: "Art Gallery of Ontario", category: "gallery", city: "Toronto", address: "317 Dundas St W, Toronto", description: "A calm, culture-forward reset in the centre of town.", imageUrl: "assets/optimized/news-movie-768.jpg", latitude: 43.6540, longitude: -79.3925, community: { ratingAverage: 4.7 } },
+        { id: "fallback-trinity", title: "Trinity Bellwoods Park", category: "park", city: "Toronto", address: "1053 Dundas St W, Toronto", description: "A generous green pause when the day needs air.", imageUrl: "assets/optimized/echoo-mobile-bg-768.jpg", latitude: 43.6478, longitude: -79.4140, community: { ratingAverage: 4.6 } },
+        { id: "fallback-danforth", title: "The Danforth Music Hall", category: "music venue", city: "Toronto", address: "147 Danforth Ave, Toronto", description: "A lively room for whatever is on tonight.", imageUrl: "assets/optimized/news-music-768.jpg", latitude: 43.6761, longitude: -79.3561, community: { ratingAverage: 4.6 } },
+        { id: "fallback-comedy-bar", title: "Comedy Bar", category: "comedy theatre", city: "Toronto", address: "945 Bloor St W, Toronto", description: "An easy laugh with a little downtown energy.", imageUrl: "assets/optimized/news-movie-768.jpg", latitude: 43.6615, longitude: -79.4280, community: { ratingAverage: 4.5 } },
+        { id: "fallback-kensington", title: "Kensington Market", category: "market", city: "Toronto", address: "Kensington Ave, Toronto", description: "A loose, colourful browse with plenty of detours.", imageUrl: "assets/optimized/news-date-768.jpg", latitude: 43.6544, longitude: -79.4002, community: { ratingAverage: 4.5 } },
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
       const SURPRISE_HISTORY_KEY = "echoo_surprise_history_v1";
@@ -1955,11 +1958,20 @@
       }
 
       async function revealSurprise() {
-        const candidates = [...items]
+        // A Surprise result must have a usable hero image: this is the image
+        // carried into the place-detail sheet, not a decorative fallback.
+        const candidates = items.filter((item) => Boolean(realImageUrl(item)))
           .map((item) => ({ item, score: surpriseScore(item) }))
           .sort((left, right) => right.score - left.score)
           .slice(0, Math.min(30, items.length));
-        const curated = candidates.length ? candidates : items.map((item) => ({ item, score: 0 }));
+        // Do not quietly fall back to an image-less result. The local fallback
+        // set has intentional cover art and keeps the detailed view polished
+        // if the discovery service is temporarily unavailable.
+        const curated = candidates.length
+          ? candidates
+          : defaultPlaces
+            .filter((item) => Boolean(realImageUrl(item)))
+            .map((item) => ({ item, score: surpriseScore(item) }));
         const history = surpriseHistory();
         const cityHistory = history.filter((entry) => entry.city === city);
         const unseen = curated.filter(({ item }) => !cityHistory.some((entry) => entry.id === placeKey(item)));
@@ -1975,9 +1987,15 @@
         const loaderStartedAt = Number(surpriseLoader.dataset.startedAt || Date.now());
         const remaining = Math.max(0, 3000 - (Date.now() - loaderStartedAt));
         if (remaining) await new Promise((resolve) => setTimeout(resolve, remaining));
-        surpriseLoader.hidden = true;
         const opensPlan = nextSurpriseRoute() === "quick-plan";
-        await openDetailByItem(choice);
+        let handedOff = false;
+        await openDetailByItem(choice, {
+          onReady: () => {
+            handedOff = true;
+            surpriseLoader.hidden = true;
+          },
+        });
+        if (!handedOff) surpriseLoader.hidden = true;
         if (opensPlan) {
           setTimeout(() => window.dispatchEvent(new CustomEvent("echoo:quick-plan", {
             detail: { anchor: { id: choice.id, name: choice.title, category: choice.category, address: choice.address, latitude: choice.latitude, longitude: choice.longitude, imageUrl: imageUrlFor(choice) } },
@@ -2291,11 +2309,11 @@
         });
       }
 
-      async function fetchDiscoveryPage({ append = false, requestId = discoveryRequestId } = {}) {
+      async function fetchDiscoveryPage({ append = false, requestId = discoveryRequestId, render = true } = {}) {
         const request = discoveryPaging.request;
         if (!request || discoveryPaging.loading) return;
         discoveryPaging.loading = true;
-        renderResultsPage();
+        if (render) renderResultsPage();
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 9000);
         try {
@@ -2324,19 +2342,19 @@
             city = DEFAULT_DISCOVERY_CITY;
             discoveryPaging.request = discoveryRequestForActiveView();
             discoveryPaging.loading = false;
-            return fetchDiscoveryPage({ append: false, requestId });
+            return fetchDiscoveryPage({ append: false, requestId, render });
           }
-          renderItems();
+          if (render) renderItems();
         } catch (_) {
           if (requestId !== discoveryRequestId) return;
           if (!items.length) items = defaultPlaces.map((place) => ({ ...place }));
           discoveryPaging.hasMore = false;
-          renderItems();
+          if (render) renderItems();
         } finally {
           clearTimeout(timeout);
           if (requestId === discoveryRequestId) {
             discoveryPaging.loading = false;
-            renderResultsPage();
+            if (render) renderResultsPage();
           }
         }
       }
@@ -2359,9 +2377,12 @@
         discoveryRequestId += 1;
         discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: discoveryRequestForActiveView(), loading: false };
         renderDiscoverLoading({ allowFallback: options.surprise });
-        const discoveryPromise = fetchDiscoveryPage({ requestId: discoveryRequestId });
+        const discoveryPromise = fetchDiscoveryPage({ requestId: discoveryRequestId, render: !options.surprise });
         if (options.surprise) {
-          await Promise.race([discoveryPromise, new Promise((resolve) => setTimeout(resolve, 3000))]);
+          // Keep the dice on top until discovery has either returned eligible
+          // places or its own fallback. Rendering is deliberately suppressed
+          // during this request, so Discover can never flash underneath.
+          await discoveryPromise;
           await revealSurprise();
           return;
         }
@@ -2435,7 +2456,7 @@
 
       function quickPlanStopCover(stop) {
         const image = String(stop?.imageUrl || "").trim();
-        const fallback = `<span class="echoo-quick-plan-stop-cover" aria-hidden="true"><span>Curated</span></span>`;
+        const fallback = `<span class="echoo-quick-plan-stop-cover" aria-hidden="true"></span>`;
         return /^https?:\/\//i.test(image)
           ? `<img class="echoo-quick-plan-stop-image" src="${esc(image)}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />${fallback.replace(" aria-hidden", " hidden aria-hidden")}`
           : fallback;
@@ -2451,8 +2472,9 @@
         const result = loading
           ? `<div class="echoo-quick-plan-loading" aria-live="polite"><span class="echoo-quick-plan-loading-label">Reading the area, your pace, and what is open.</span><span class="echoo-quick-plan-skeleton"></span><span class="echoo-quick-plan-skeleton"></span></div>`
           : plan
-            ? `<div class="echoo-quick-plan-result">
+          ? `<div class="echoo-quick-plan-result">
                 <div class="echoo-quick-plan-route-meta"><span>${esc(plan.subtitle || `Built around ${name}`)}</span><strong>${plan.totalTravelMinutes ? `~${plan.totalTravelMinutes} min between stops` : "A close-by loop"}</strong></div>
+                <div class="echoo-quick-plan-plan-meta"><span>${esc(plan.budgetStyle || budgetStyle)} plan</span><span>Starts ${esc(stops[0]?.time || "now")}</span></div>
                 <div class="echoo-quick-plan-stops">${stops.map((stop, index) => `
                   <button class="echoo-quick-plan-stop" type="button" data-quick-plan-stop="${esc(stop.id)}">
                     <span class="echoo-quick-plan-stop-number">${index + 1}</span>
@@ -2539,6 +2561,7 @@
               stopCount: quickPlanState.stopCount,
               budgetStyle: quickPlanState.budgetStyle,
               recentPlaceIds: quickPlanRecent(quickPlanState.anchor),
+              rotationKey: `${quickPlanState.anchor.id}:${quickPlanState.stopCount}:${quickPlanState.budgetStyle}:${++quickPlanState.variation}`,
               profile: {
                 interests: prefs.interests || [],
                 eventStyles: prefs.eventStyles || [],
@@ -2576,6 +2599,7 @@
           loading: false,
           error: "",
           plan: null,
+          variation: 0,
         };
         quickPlanModal?.setAttribute("aria-hidden", "false");
         loadQuickPlan();
@@ -2671,12 +2695,29 @@
         surpriseLoader.dataset.startedAt = String(Date.now());
       }
       if (surpriseMode) {
-        // Cached preferences are instant; give a signed-in profile a short
-        // head start before the random local pick is scored.
-        Promise.race([
-          hydrateOnboardingSignals({ refresh: false }),
-          new Promise((resolve) => setTimeout(resolve, 850)),
-        ]).finally(() => search(activeQuery, { surprise: true }));
+        // Guard direct links too. The landing CTA performs this check before
+        // navigation, while this keeps a pasted Surprise URL from exposing a
+        // partial Discover view to a guest.
+        (async () => {
+          const authState = window.EchooAuth?.getAuthState
+            ? await window.EchooAuth.getAuthState({ requireFresh: true })
+            : { ok: false };
+          if (!authState.ok) {
+            window.EchooAuth?.redirectToAuth?.(
+              window.EchooAuth?.currentRelativeUrl?.() || "events.html?mode=surprise",
+              "signup",
+              { intent: "surprise", reason: "surprise_required", caption: "Sign in and Echoo will roll a pick made for you." },
+            );
+            return;
+          }
+          // Cached preferences are instant; give a signed-in profile a short
+          // head start before the random local pick is scored.
+          await Promise.race([
+            hydrateOnboardingSignals({ refresh: false }),
+            new Promise((resolve) => setTimeout(resolve, 850)),
+          ]);
+          search(activeQuery, { surprise: true });
+        })();
       } else {
         search(activeQuery);
         hydrateOnboardingSignals();
