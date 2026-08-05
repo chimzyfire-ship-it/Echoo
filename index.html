@@ -1453,9 +1453,8 @@
         }
       }
 
-      document
-        .getElementById("search-form")
-        .addEventListener("submit", async (event) => {
+      const searchForm = document.getElementById("search-form");
+      searchForm?.addEventListener("submit", async (event) => {
           event.preventDefault();
           const query = searchInput.value.trim() || "tonight near me";
           ensureLocationContext(async () => {
@@ -1471,9 +1470,9 @@
                 : `app.html?q=${encodeURIComponent(query)}`,
             );
           });
-        });
+      });
 
-      dayPlanBtn.addEventListener("click", () => {
+      dayPlanBtn?.addEventListener("click", () => {
         ensureLocationContext(async () => {
           const currentCity =
             window.EchooLocationPlatform.readPreferences().city || "Greater Toronto Area";
@@ -1551,7 +1550,7 @@
         });
       }
 
-      cityPill.addEventListener("click", () => {
+      cityPill?.addEventListener("click", () => {
         pendingLocationCallback = null;
         if (modalInstructions) modalInstructions.style.display = "none";
         locationModal.classList.add("active");
