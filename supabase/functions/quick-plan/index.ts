@@ -21,6 +21,7 @@ type QuickPlanRequest = {
   stopCount?: unknown;
   budgetStyle?: unknown;
   recentPlaceIds?: unknown;
+  rotationKey?: unknown;
   profile?: Record<string, unknown>;
 };
 
@@ -153,6 +154,15 @@ function recentIds(value: unknown) {
   return new Set(
     list(value).filter((id) => id.length <= 180).slice(0, 30),
   );
+}
+
+function stableNumber(value: unknown) {
+  let hash = 2166136261;
+  for (const character of text(value)) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) / 0xffffffff;
 }
 
 function profileTags(profile?: PlaceProfile) {
@@ -492,8 +502,9 @@ Deno.serve(async (req) => {
     }
 
     const city = text(anchor.municipality || anchor.city || profile.city || "Ontario");
-    const { data: nearbyRows, error: nearbyError } = anchorRow
-      ? await supabase.rpc("search_ontario_places", {
+    const { data: nearbyRows, error: nearbyError } = await supabase.rpc(
+      "search_ontario_places",
+      {
         p_query: null,
         p_city: city,
         p_lat: Number(anchor.latitude),
@@ -501,8 +512,8 @@ Deno.serve(async (req) => {
         p_radius_meters: 14000,
         p_category: null,
         p_limit: 80,
-      })
-      : { data: [], error: null };
+      },
+    );
     if (nearbyError) throw nearbyError;
     const nearbyIds = Array.from(new Set((nearbyRows || []).map((row: any) => text(row.id)).filter(Boolean)));
 
@@ -523,6 +534,11 @@ Deno.serve(async (req) => {
       loadApprovedCoverImages(supabase, placeIds),
     ]);
     anchor = { ...anchor, image_url: coverImages.get(anchor.id) || anchor.image_url };
+    if (!hasCoverImage(anchor)) {
+      return jsonResponse({
+        error: "Echoo needs a verified cover for this starting place before it can make a polished Quick Plan.",
+      }, 422);
+    }
     const places = new Map<string, Place>([
       [anchor.id, anchor],
       ...((fullRows || []) as Place[]).map((place) => [
@@ -556,6 +572,9 @@ Deno.serve(async (req) => {
         ),
       }))
       .filter((place) => Number.isFinite(place.distanceMeters) && place.distanceMeters <= 14000)
+      // Every stop shown in a Quick Plan has a real approved cover. A route
+      // with a blank image tile feels unfinished and is harder to scan.
+      .filter(hasCoverImage)
       .filter((place) => {
         const status = openAt(hoursByPlace.get(place.id) || [], timezone, new Date());
         return !status.known || status.open;
@@ -563,6 +582,7 @@ Deno.serve(async (req) => {
     const candidates = inventoryCandidates;
     const recentPlaceIds = recentIds(body.recentPlaceIds);
 
+    const rotationKey = text(body.rotationKey, "default");
     const score = (candidate: Candidate) => {
       const distance = Math.max(0, 1 - candidate.distanceMeters / 14000);
       const profileConfidence = number(candidate.profile?.confidence_score, number(candidate.confidence_score, 0.46));
@@ -571,7 +591,11 @@ Deno.serve(async (req) => {
         personalizationFit(candidate, profile) * 0.22 +
         categoryComplement(anchorCandidate, candidate) * 0.16 +
         distance * 0.10 +
-        profileConfidence * 0.08
+        profileConfidence * 0.08 +
+        // Keep personalization, price and distance dominant, then use a tiny
+        // deterministic rotation among similarly strong choices so revisiting
+        // a control does not keep returning the identical combination.
+        stableNumber(`${rotationKey}:${candidate.id}`) * 0.055
       );
     };
 
@@ -596,6 +620,11 @@ Deno.serve(async (req) => {
     for (const candidate of sorted) {
       if (selected.length >= stopCount) break;
       if (!selected.some((picked) => picked.id === candidate.id)) selected.push(candidate);
+    }
+    if (selected.length !== stopCount) {
+      return jsonResponse({
+        error: `Echoo could not make a reliable ${stopCount}-stop route here yet. Try ${stopCount === 3 ? "2 stops" : "a different anchor"}.`,
+      }, 422);
     }
 
     let elapsed = 0;
@@ -626,11 +655,7 @@ Deno.serve(async (req) => {
       return stop;
     });
 
-    const availabilityNote = selected.length < 2
-      ? `Start at ${text(anchor.name, "this place")}. Nearby matches are temporarily unavailable, so Echoo kept your route focused instead of guessing.`
-      : selected.length < stopCount
-      ? `Echoo found ${selected.length} nearby places it can stand behind right now, so it kept this plan tight.`
-      : anchorAvailability.known && !anchorAvailability.open
+    const availabilityNote = anchorAvailability.known && !anchorAvailability.open
         ? `${text(anchor.name, "Your anchor")} is not marked open right now—check its hours before heading out.`
         : stops.some((stop) => stop.availability === "unverified")
           ? "Echoo matched this on place, profile, and distance data; check hours before you leave."

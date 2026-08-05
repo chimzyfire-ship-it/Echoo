@@ -3343,7 +3343,7 @@
 
       function quickPlanStopCover(stop) {
         const image = String(stop?.imageUrl || "").trim();
-        const fallback = `<span class="echoo-quick-plan-stop-cover" aria-hidden="true"><span>Curated</span></span>`;
+        const fallback = `<span class="echoo-quick-plan-stop-cover" aria-hidden="true"></span>`;
         return /^https?:\/\//i.test(image)
           ? `<img class="echoo-quick-plan-stop-image" src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />${fallback.replace(" aria-hidden", " hidden aria-hidden")}`
           : fallback;
@@ -3400,10 +3400,13 @@
         const routeMeta = plan
           ? `<div class="echoo-quick-plan-route-meta"><span>${escapeHtml(plan.subtitle || `Built around ${name}`)}</span><strong>${Number(plan.totalTravelMinutes || 0) ? `~${plan.totalTravelMinutes} min between stops` : "A close-by loop"}</strong></div>`
           : "";
+        const planMeta = plan
+          ? `<div class="echoo-quick-plan-plan-meta"><span>${escapeHtml(plan.budgetStyle || budgetStyle)} plan</span><span>Starts ${escapeHtml(plan.stops?.[0]?.time || "now")}</span></div>`
+          : "";
         const result = loading
           ? `<div class="echoo-quick-plan-loading" aria-live="polite"><span class="echoo-quick-plan-loading-label">Reading the area, your pace, and what is open.</span><span class="echoo-quick-plan-skeleton"></span><span class="echoo-quick-plan-skeleton"></span></div>`
           : plan
-            ? `<div class="echoo-quick-plan-result">${routeMeta}<div class="echoo-quick-plan-stops">${(plan.stops || []).map(quickPlanStopMarkup).join("")}</div></div>`
+            ? `<div class="echoo-quick-plan-result">${routeMeta}${planMeta}<div class="echoo-quick-plan-stops">${(plan.stops || []).map(quickPlanStopMarkup).join("")}</div></div>`
             : `<p class="echoo-quick-plan-error">${escapeHtml(error || "Echoo could not make a reliable plan around this place yet.")}</p>`;
         const stayAnchor = plan ? quickPlanStayAnchor() : null;
         const lateStayAction = stayAnchor && window.EchooLiveStays?.isLateNight(stayAnchor.timeZone)
@@ -3483,6 +3486,7 @@
               stopCount: quickPlanState.stopCount,
               budgetStyle: quickPlanState.budgetStyle,
               recentPlaceIds: quickPlanRecent(quickPlanState.anchor),
+              rotationKey: `${quickPlanState.anchor.id}:${quickPlanState.stopCount}:${quickPlanState.budgetStyle}:${++quickPlanState.variation}`,
               profile: personalizationProfile,
             }),
           });
@@ -3521,6 +3525,7 @@
           loading: false,
           error: "",
           plan: null,
+          variation: 0,
         };
         if (quickPlanModal) quickPlanModal.setAttribute("aria-hidden", "false");
         loadQuickPlan();
@@ -4419,13 +4424,20 @@
         openChat(q);
       });
 
-      document.getElementById("surprise").addEventListener("click", () => {
-        overlay.classList.add("open");
-        document.body.classList.add("chat-open");
-        askBudgetBeforeSurprise(
-          "honestly just need to get out of the house",
-          "Surprise me",
-        );
+      document.getElementById("surprise").addEventListener("click", async () => {
+        const surpriseUrl = "events.html?mode=surprise";
+        const authState = window.EchooAuth?.getAuthState
+          ? await window.EchooAuth.getAuthState({ requireFresh: true })
+          : { ok: false };
+        if (!authState.ok) {
+          window.EchooAuth?.redirectToAuth?.(surpriseUrl, "signup", {
+            intent: "surprise",
+            reason: "surprise_required",
+            caption: "Sign in and Echoo will roll a pick made for you.",
+          });
+          return;
+        }
+        window.location.assign(surpriseUrl);
       });
 
       /* ── Nav plan link ── */
