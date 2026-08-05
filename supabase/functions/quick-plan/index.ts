@@ -423,6 +423,28 @@ async function loadHours(
   return byPlace;
 }
 
+async function loadApprovedCoverImages(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  placeIds: string[],
+) {
+  if (!placeIds.length) return new Map<string, string>();
+  const { data, error } = await supabase
+    .from("place_photos")
+    .select("place_id,image_url,sort_order,created_at")
+    .in("place_id", placeIds)
+    .eq("approval_status", "approved")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  const covers = new Map<string, string>();
+  for (const row of data || []) {
+    const placeId = text(row.place_id);
+    const imageUrl = text(row.image_url);
+    if (placeId && !covers.has(placeId) && /^https?:\/\//i.test(imageUrl)) covers.set(placeId, imageUrl);
+  }
+  return covers;
+}
+
 Deno.serve(async (req) => {
   const startedAt = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -460,7 +482,7 @@ Deno.serve(async (req) => {
     // A place discovered live from Google has not necessarily been saved to
     // canonical_places. Its tapped coordinates are still valid for a plan.
     const requestPlace = requestAnchor(body.anchor);
-    const anchor = (anchorRow as Place | null) || requestPlace;
+    let anchor = (anchorRow as Place | null) || requestPlace;
     if (!anchor) return jsonResponse({ error: "This place needs a name and precise location before Echoo can plan around it" }, 422);
     // An Explore card can already have a verified cover while the canonical
     // record awaits photo enrichment. Preserve it for the plan's anchor.
@@ -489,19 +511,24 @@ Deno.serve(async (req) => {
       : { data: [], error: null };
     if (fullError) throw fullError;
 
-    const places = new Map<string, Place>([
-      [anchor.id, anchor],
-      ...((fullRows || []) as Place[]).map((place) => [place.id, place]),
-    ]);
     // Profile and hours tables use UUID foreign keys. Live Google IDs are not
     // persisted there yet, so never send them into a UUID `in (...)` filter.
     const placeIds = [
       ...(anchorRow ? [anchor.id] : []),
       ...((fullRows || []) as Place[]).map((place) => place.id),
     ];
-    const [profiles, hoursByPlace] = await Promise.all([
+    const [profiles, hoursByPlace, coverImages] = await Promise.all([
       loadProfiles(supabase, placeIds),
       loadHours(supabase, placeIds),
+      loadApprovedCoverImages(supabase, placeIds),
+    ]);
+    anchor = { ...anchor, image_url: coverImages.get(anchor.id) || anchor.image_url };
+    const places = new Map<string, Place>([
+      [anchor.id, anchor],
+      ...((fullRows || []) as Place[]).map((place) => [
+        place.id,
+        { ...place, image_url: coverImages.get(place.id) || place.image_url },
+      ]),
     ]);
     const timezone = text(anchor.timezone, "America/Toronto");
     const anchorCandidate: Candidate = {
