@@ -541,9 +541,10 @@ Deno.serve(async (req) => {
 
     const inventoryCandidates: Candidate[] = [...places.values()]
       .filter((place) => place.id !== anchor.id)
-      // Quick Plan only uses Echoo's persisted, cover-backed inventory. This
-      // keeps every additional stop curated and visually complete.
-      .filter(hasCoverImage)
+      // Quick Plan never falls back to generic live-search results. Every
+      // additional stop is from Echoo's persisted local inventory; the UI
+      // supplies the same polished cover treatment when photo enrichment is
+      // still pending for an otherwise curated place.
       .map((place) => ({
         ...place,
         profile: profiles.get(place.id),
