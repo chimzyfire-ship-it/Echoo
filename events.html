@@ -482,7 +482,6 @@
       .featured-card.has-visual-fallback::before {
         display: grid;
         place-items: center;
-        isolation: isolate;
         overflow: hidden;
         color: rgba(248, 245, 239, 0.92);
         background:
@@ -490,11 +489,6 @@
           radial-gradient(circle at 20% 86%, rgba(133, 156, 201, 0.2), transparent 40%),
           linear-gradient(145deg, #2a2926, #11110f 62%, #25211d);
       }
-      .place-visual-fallback::before { position:absolute; width:62%; aspect-ratio:1; border:1px solid rgba(255,255,255,.18); border-radius:50%; background:radial-gradient(circle at 35% 32%, rgba(255,255,255,.22), transparent 8%), rgba(247,213,178,.11); content:""; transform:translate(30%, -26%); }
-      .place-visual-fallback::after { position:absolute; inset:0; background:linear-gradient(145deg, transparent 40%, rgba(0,0,0,.42)); content:""; }
-      .place-cover-copy { position:relative; z-index:1; display:grid; gap:3px; padding:11px; text-align:left; }
-      .place-cover-copy small { color:rgba(248,245,239,.62); font-size:8px; font-weight:760; letter-spacing:.13em; text-transform:uppercase; }
-      .place-cover-copy strong { max-width:104px; font-size:clamp(10px, 2.8vw, 15px); line-height:1.05; letter-spacing:-.04em; }
       .place-visual-fallback[data-cover="music"] { background:radial-gradient(circle at 78% 20%, rgba(178,146,241,.38), transparent 32%), linear-gradient(145deg, #241d31, #111015 68%); }
       .place-visual-fallback[data-cover="culture"], .place-visual-fallback[data-cover="tourism"] { background:radial-gradient(circle at 75% 18%, rgba(223,128,153,.34), transparent 34%), linear-gradient(145deg, #302026, #111013 68%); }
       .place-visual-fallback[data-cover="nature"] { background:radial-gradient(circle at 75% 18%, rgba(130,193,155,.34), transparent 34%), linear-gradient(145deg, #1d2d26, #0e1210 68%); }
@@ -600,6 +594,10 @@
         display: flex;
         gap: 14px;
         overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        touch-action: pan-x;
         padding-bottom: 8px;
         margin: 0 -24px;
         padding-left: 24px;
@@ -616,11 +614,17 @@
         flex: 0 0 178px;
         height: 244px;
         position: relative;
+        appearance: none;
+        padding: 0;
+        color: inherit;
+        font: inherit;
+        text-align: left;
         border-radius: 20px;
         overflow: hidden;
         background: #151515;
         border: 1px solid var(--line);
         cursor: pointer;
+        scroll-snap-align: start;
         transition: transform 0.2s ease;
       }
 
@@ -1711,23 +1715,9 @@
         return "local";
       }
 
-      function coverCopyFor(item) {
-        const group = categoryGroup(item);
-        const copy = {
-          food: "A good table",
-          music: "Live nearby",
-          culture: "A little culture",
-          tourism: "Worth seeing",
-          nature: "A breath outside",
-          local: "A local find",
-        }[group] || "A local find";
-        return { group, copy };
-      }
-
       function placeVisual(item, className, alt = "") {
         const image = realImageUrl(item);
-        const cover = coverCopyFor(item);
-        const fallback = `<div class="${className} place-visual-fallback" data-cover="${cover.group}" role="img" aria-label="${esc(alt || "Place image")}"${image ? " hidden" : ""}><span class="place-cover-copy" aria-hidden="true"><small>Echoo pick</small><strong>${esc(cover.copy)}</strong></span></div>`;
+        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}"${image ? " hidden" : ""}></div>`;
         if (image) return `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="lazy" decoding="async" onerror="this.hidden=true; this.nextElementSibling.hidden=false" />${fallback}`;
         return fallback;
       }
@@ -1823,21 +1813,25 @@
           popularContainer.innerHTML = "";
           return;
         }
-        popularContainer.innerHTML = list.map((item, idx) => {
+        popularContainer.innerHTML = list.map((item) => {
           const rating = item.community?.ratingAverage ? Number(item.community.ratingAverage).toFixed(1) : "New";
           const dist = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.city || "GTA";
+          const placeIndex = items.indexOf(item);
 
           return `
-            <div class="location-card" onclick="openDetail(${items.indexOf(item)})">
+            <button class="location-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">
               ${placeVisual(item, "location-card-img", item.title || "Local place")}
               <div class="location-card-overlay">
                 <div class="location-card-title">${esc(item.title)}</div>
                 <div class="location-card-meta">${esc(dist)}</div>
                 <div class="location-card-rating">★ ${esc(rating)}</div>
               </div>
-            </div>
+            </button>
           `;
         }).join("");
+        popularContainer.querySelectorAll("[data-place-index]").forEach((button) => {
+          button.addEventListener("click", () => openDetail(Number(button.dataset.placeIndex)));
+        });
       }
 
       function renderRecommendations(placeList) {
