@@ -252,11 +252,29 @@ function parseRoutePlan(value: string): RoutePlan | null {
   }
 }
 
+type LinkupMessage =
+  | { type: 'badge'; count: number }
+  | { type: 'open-chat' };
+
+function parseLinkupMessage(value: string): LinkupMessage | null {
+  try {
+    const payload = JSON.parse(value) as { type?: unknown };
+    if (payload.type === 'badge') {
+      return { type: 'badge', count: Number((payload as { count?: unknown }).count) || 0 };
+    }
+    if (payload.type === 'open-chat') return { type: 'open-chat' };
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function EchooShell() {
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(ECHOO_WEB_URL ?? '');
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const [linkupBadge, setLinkupBadge] = useState(0);
 
   const returnToHome = useCallback(() => {
     if (!ECHOO_WEB_URL) return;
@@ -376,6 +394,14 @@ function EchooShell() {
             startNavigation(destination).catch(() => undefined);
             return;
           }
+          if (message.startsWith('echoo:linkup:')) {
+            const payload = parseLinkupMessage(message.slice('echoo:linkup:'.length));
+            if (!payload) return;
+            if (payload.type === 'badge') {
+              setLinkupBadge(Math.max(0, Number(payload.count) || 0));
+            }
+            return;
+          }
           if (message === 'echoo:detail-sheet:true') {
             setIsDetailSheetOpen(true);
           }
@@ -403,6 +429,7 @@ function EchooShell() {
         <BlurView intensity={30} tint="dark" style={styles.nativeBottomNav}>
           {NAVIGATION_ITEMS.map((item) => {
             const active = item.key === activeTab;
+            const showBadge = item.key === 'discover' && linkupBadge > 0;
             return (
               <Pressable
                 key={item.key}
@@ -412,7 +439,10 @@ function EchooShell() {
                 onPress={() => navigateToTab(item.target)}
                 style={styles.nativeNavItem}
               >
-                <NavigationIcon active={active} tab={item.key} />
+                <View style={styles.nativeNavIconWrap}>
+                  <NavigationIcon active={active} tab={item.key} />
+                  {showBadge ? <View style={styles.linkupBadgeDot} /> : null}
+                </View>
                 <Text style={[styles.nativeNavLabel, active && styles.nativeNavLabelActive]}>
                   {item.label}
                 </Text>
@@ -511,6 +541,22 @@ const styles = StyleSheet.create({
   },
   nativeNavLabelActive: {
     color: '#f7d5b2',
+  },
+  nativeNavIconWrap: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkupBadgeDot: {
+    position: 'absolute',
+    top: -1,
+    right: -6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#f7d5b2',
+    borderWidth: 1.5,
+    borderColor: 'rgba(25, 25, 24, 0.92)',
   },
   configurationScreen: {
     flex: 1,
