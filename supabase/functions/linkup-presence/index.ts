@@ -3,11 +3,13 @@
 // POST with { action: 'checkin' | 'checkout', placeId, sessionToken? }
 //
 // checkin:
-//   1. Verify eligibility (onboarding complete + verified identity + 18+).
+//   1. Verify eligibility (onboarding complete). Email/DOB are advisory.
 //   2. Enforce rate limit on 'checkin' actions.
 //   3. Upsert one active presence (per user-per-place) with a TTL.
-//   4. Find eligible co-present members at the same place and propose matches
-//      (skip if blocked, recently matched, or age-incompatible).
+//   4. Find compatible co-present members at the same place and propose
+//      matches — prioritizing whoever has been there longest ("already
+//      there"). Skip if blocked, open match exists, age-incompatible (when
+//      both have a DOB), or below the affinity threshold.
 //
 // checkout:
 //   Mark the user's active presence(s) ended and end any accepted matches.
@@ -21,10 +23,10 @@ import {
   LINKUP_ENABLED,
   PRESENCE_TTL_MINUTES,
   MATCH_FUSE_MINUTES,
+  AFFINITY_THRESHOLD,
   bearerToken,
   isUuid,
   isUserEligible,
-  ageFromDob,
   ageBandCompatible,
   getOnboardingProfile,
   computeAffinity,
@@ -137,16 +139,19 @@ Deno.serve(async (req) => {
 
     // ── Matching ───────────────────────────────────────────────────────
     const myProfile = await getOnboardingProfile(supabase, userId);
-    const myAge = eligibility.age ?? ageFromDob(myProfile?.date_of_birth) ?? null;
+    const myAge = eligibility.age ?? null;
 
-    // Active presences at the same place, not me.
+    // Active presences at the same place, not me. Order by arrived_at ASC so
+    // the person who has been "already there" the longest is considered first —
+    // they're the one waiting, and the newcomer's check-in is the trigger.
     const { data: others, error: othersError } = await supabase
       .from("linkup_presence")
       .select("user_id, arrived_at")
       .eq("place_id", placeId)
       .eq("status", "active")
       .neq("user_id", userId)
-      .gt("expires_at", now.toISOString());
+      .gt("expires_at", now.toISOString())
+      .order("arrived_at", { ascending: true });
     if (othersError) throw othersError;
 
     const newMatches: { matchId: string; withUserId: string }[] = [];
@@ -156,18 +161,23 @@ Deno.serve(async (req) => {
 
       // Skip if blocked either direction.
       if (await activeBlockBetween(supabase, userId, otherId)) continue;
-      // Skip if proposed recently.
+      // Skip if there's an open (pending/accepted) match with this person.
       if (await recentlyMatched(supabase, userId, otherId)) continue;
 
-      // Eligibility + age band on the other side.
+      // Eligibility on the other side.
       const otherElig = await isUserEligible(supabase, otherId);
       if (!otherElig.eligible) continue;
-      const otherAge = otherElig.age ?? null;
-      if (myAge === null || otherAge === null) continue;
-      if (!ageBandCompatible(myAge, otherAge)) continue;
+
+      // Age band — only enforced when BOTH have a DOB (advisory, not a hard
+      // gate, since DOB is optional in onboarding).
+      if (!ageBandCompatible(myAge, otherElig.age ?? null)) continue;
 
       const otherProfile = await getOnboardingProfile(supabase, otherId);
       const { affinity, reason_tags } = computeAffinity(myProfile, otherProfile);
+
+      // Only propose when there's real compatibility signal. This is the line
+      // between "magical" (the right person) and "spammy" (any person).
+      if (affinity < AFFINITY_THRESHOLD) continue;
 
       const fuse = new Date(
         now.getTime() + MATCH_FUSE_MINUTES * 60_000,

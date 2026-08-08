@@ -72,7 +72,7 @@ export async function getOnboardingProfile(
   const { data, error } = await supabase
     .from("user_onboarding_profiles")
     .select(
-      "display_name, username, home_city, interests, event_styles, motivations, date_of_birth, completed_at",
+      "display_name, username, home_city, interests, event_styles, motivations, audiences, budget, energy, tone, gender, date_of_birth, completed_at",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -95,37 +95,39 @@ export async function isUserEligible(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<LinkupEligibility> {
+  // Relaxed gates: the only hard requirement is a completed onboarding
+  // profile. Email verification and DOB are advisory — DOB is optional in the
+  // onboarding form ("private and optional"), and email verification is not
+  // enforced consistently across signup paths yet. When a DOB is present we
+  // still use it for age-band compatibility below, but its absence no longer
+  // blocks the feature.
   const profile = await getOnboardingProfile(supabase, userId);
   if (!profile || !profile.completed_at) {
     return { eligible: false, reason: "no_onboarding" };
   }
   const age = ageFromDob(profile.date_of_birth);
-  if (age === null || age < MIN_AGE) {
-    return { eligible: false, reason: "underage", age, dateOfBirth: profile.date_of_birth ?? undefined };
-  }
-  // Verified identity: email or phone confirmed on the auth user.
-  const { data: user, error } = await supabase.auth.admin.getUserById(userId);
-  if (error || !user?.user) {
-    return { eligible: false, reason: "unverified" };
-  }
-  const emailVerified = Boolean(user.user.email_confirmed_at);
-  const phoneVerified = Boolean(user.user.phone_confirmed_at);
-  if (!emailVerified && !phoneVerified) {
-    return { eligible: false, reason: "unverified" };
-  }
-  return { eligible: true, age, dateOfBirth: profile.date_of_birth ?? undefined };
+  return { eligible: true, age: age ?? undefined, dateOfBirth: profile.date_of_birth ?? undefined };
 }
 
-export function ageBandCompatible(ageA: number, ageB: number): boolean {
+export function ageBandCompatible(ageA: number | null | undefined, ageB: number | null | undefined): boolean {
+  // If either side has no DOB, we can't enforce a band — allow it (identity is
+  // gated by completed onboarding + the affinity threshold elsewhere). If both
+  // have a DOB, enforce the band and the 18+ floor.
+  if (ageA === null || ageA === undefined || ageB === null || ageB === undefined) return true;
   if (ageA < MIN_AGE || ageB < MIN_AGE) return false;
   return Math.abs(ageA - ageB) <= Math.min(ageBandHalfWidth(ageA), ageBandHalfWidth(ageB));
 }
 
 // ─────────────────────────────────────────────────────────────────────────
 // Affinity + reason tags (explainability cues surfaced as eyebrow caps).
-// Weighted Jaccard over interests / event_styles / motivations + a small
-// same-home-city bonus. Returns 0–100 and a tag set.
+// Weighted blend of array overlaps (interests, event_styles, motivations,
+// audiences) and scalar matches (energy, budget, tone, home_city). Returns a
+// 0–100 score and human-readable reason tags. AFFINITY_THRESHOLD is the bar a
+// pair must clear to be proposed — this is what makes matching feel magical
+// (right person) rather than spammy (any person).
 // ─────────────────────────────────────────────────────────────────────────
+export const AFFINITY_THRESHOLD = 20; // 0–100; tuned for "only compatible people"
+
 function jaccard(a: string[] | null, b: string[] | null): number {
   const setA = new Set((a ?? []).map((x) => String(x).toLowerCase().trim()));
   const setB = new Set((b ?? []).map((x) => String(x).toLowerCase().trim()));
@@ -136,25 +138,59 @@ function jaccard(a: string[] | null, b: string[] | null): number {
   return union === 0 ? 0 : inter / union;
 }
 
+function sameScalar(a?: string | null, b?: string | null): boolean {
+  if (!a || !b) return false;
+  return String(a).toLowerCase().trim() === String(b).toLowerCase().trim();
+}
+
+export interface AffinityProfile {
+  interests?: string[];
+  event_styles?: string[];
+  motivations?: string[];
+  audiences?: string[];
+  budget?: string;
+  energy?: string;
+  tone?: string;
+  gender?: string;
+  home_city?: string;
+}
+
 export function computeAffinity(
-  profileA: { interests?: string[]; event_styles?: string[]; motivations?: string[]; home_city?: string } | null,
-  profileB: { interests?: string[]; event_styles?: string[]; motivations?: string[]; home_city?: string } | null,
+  profileA: AffinityProfile | null,
+  profileB: AffinityProfile | null,
 ): { affinity: number; reason_tags: string[] } {
+  // Array overlaps (the strongest signal).
   const interests = jaccard(profileA?.interests, profileB?.interests);
   const styles = jaccard(profileA?.event_styles, profileB?.event_styles);
   const motiv = jaccard(profileA?.motivations, profileB?.motivations);
-  const sameCity =
-    profileA?.home_city && profileB?.home_city &&
-    String(profileA.home_city).toLowerCase() === String(profileB.home_city).toLowerCase();
+  const audiences = jaccard(profileA?.audiences, profileB?.audiences);
 
-  const raw = interests * 0.5 + styles * 0.3 + motiv * 0.15 + (sameCity ? 0.05 : 0);
+  // Scalar matches (lighter, tie-breaking signal).
+  const sameEnergy = sameScalar(profileA?.energy, profileB?.energy);
+  const sameBudget = sameScalar(profileA?.budget, profileB?.budget);
+  const sameTone = sameScalar(profileA?.tone, profileB?.tone);
+  const sameCity = sameScalar(profileA?.home_city, profileB?.home_city);
+
+  // Weighted blend. Arrays dominate; scalars nudge.
+  const raw =
+    interests * 0.34 +
+    styles * 0.22 +
+    motiv * 0.14 +
+    audiences * 0.10 +
+    (sameEnergy ? 0.06 : 0) +
+    (sameBudget ? 0.05 : 0) +
+    (sameTone ? 0.04 : 0) +
+    (sameCity ? 0.05 : 0);
   const affinity = Math.max(0, Math.min(100, Math.round(raw * 100)));
 
   const reason_tags: string[] = [];
   if (interests > 0) reason_tags.push("shared_interests");
   if (styles > 0) reason_tags.push("shared_style");
   if (motiv > 0) reason_tags.push("shared_energy");
+  if (audiences > 0) reason_tags.push("shared_crowd");
   if (sameCity) reason_tags.push("same_home_city");
+  if (sameEnergy) reason_tags.push("same_energy");
+  if (sameBudget) reason_tags.push("same_budget");
   return { affinity, reason_tags };
 }
 
@@ -239,8 +275,10 @@ export async function recentlyMatched(
   userB: string,
   withinHours = 24,
 ): Promise<boolean> {
-  // Avoid re-proposing the same pair within a cooldown window. Find A's recent
-  // match ids, then check if B shares any of them.
+  // Suppress re-proposing ONLY when a prior match between this pair is still
+  // open (pending) or was accepted (a real conversation happened). A declined
+  // or expired match does NOT block a natural re-encounter — two people can
+  // still cross paths again at the same place and get another shot.
   if (userA === userB) return false;
   const since = new Date(Date.now() - withinHours * 60 * 60_000).toISOString();
   const { data: aRows, error: e1 } = await supabase
@@ -250,11 +288,19 @@ export async function recentlyMatched(
     .gte("created_at", since);
   if (e1 || !aRows || aRows.length === 0) return false;
   const ids = aRows.map((r: { match_id: string }) => r.match_id);
-  const { count, error: e2 } = await supabase
+  // Are any of those shared matches still pending or accepted?
+  const { data: shared, error: e2 } = await supabase
     .from("linkup_match_members")
-    .select("match_id", { count: "exact", head: true })
+    .select("match_id")
     .eq("user_id", userB)
     .in("match_id", ids);
-  if (e2) return false;
+  if (e2 || !shared || shared.length === 0) return false;
+  const sharedIds = shared.map((r: { match_id: string }) => r.match_id);
+  const { count, error: e3 } = await supabase
+    .from("linkup_matches")
+    .select("id", { count: "exact", head: true })
+    .in("id", sharedIds)
+    .in("status", ["pending", "accepted"]);
+  if (e3) return false;
   return (count ?? 0) > 0;
 }
