@@ -274,10 +274,10 @@
       .eq("match_id", match.id);
     const other = (members || []).find((m) => m.user_id !== state.userId);
     if (!other) return;
+    // Onboarding profiles are owner-read only; use the security-definer RPC
+    // that exposes share-safe fields for a matched peer.
     const { data: profile } = await state.supabase
-      .from("user_onboarding_profiles")
-      .select("display_name, username, home_city, interests")
-      .eq("user_id", other.user_id)
+      .rpc("linkup_peer_profile", { target_user: other.user_id })
       .maybeSingle();
     const { data: place } = await state.supabase
       .from("canonical_places")
@@ -328,7 +328,7 @@
     const modal = document.getElementById("echoo-linkup-modal");
     const card = modal.querySelector(".echoo-linkup-card");
     const eyebrow = modal.querySelector(".echoo-linkup-eyebrow");
-    eyebrow.textContent = reasonLabel(item.reasonTags[0]);
+    eyebrow.textContent = reasonLabel(item.reasonTags);
     modal.querySelector(".echoo-linkup-name").textContent = item.peer.displayName;
     modal.querySelector(".echoo-linkup-cue").textContent = item.peer.cue || "Also out tonight";
     modal.querySelector(".echoo-linkup-place").textContent = `at ${truncate(item.placeName, 42)}`;
@@ -344,14 +344,20 @@
     modal._current = item;
   }
 
-  function reasonLabel(tag) {
-    const map = {
-      shared_interests: "Same taste",
-      shared_style: "Same vibe",
-      shared_energy: "Same energy",
-      same_home_city: "Same city",
-    };
-    return map[tag] || "Link up?";
+  // Pick the strongest available reason tag (order = signal strength).
+  function reasonLabel(tags) {
+    const ordered = [
+      ["shared_interests", "Same taste"],
+      ["shared_style", "Same vibe"],
+      ["shared_crowd", "Same crowd"],
+      ["same_energy", "Same energy"],
+      ["shared_energy", "Same wavelength"],
+      ["same_home_city", "Same city"],
+      ["same_budget", "Same budget"],
+    ];
+    const set = new Set(tags || []);
+    for (const [tag, label] of ordered) if (set.has(tag)) return label;
+    return "Link up?";
   }
   function truncate(s, n) { s = String(s || ""); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
 

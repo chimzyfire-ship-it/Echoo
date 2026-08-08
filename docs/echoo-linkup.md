@@ -110,16 +110,62 @@ triad from `_shared/location.ts`.
 
 ## Eligibility
 
-A member can Link Up only if all of:
+A member can Link Up only if:
 
-- Onboarding completed (`user_onboarding_profiles.completed_at` is set).
-- Verified identity — confirmed email **or** phone (from `auth.users`).
-- **18 or older**, derived server-side from `date_of_birth`. The client never
-  asserts age.
+- **Onboarding is completed** (`user_onboarding_profiles.completed_at` is set) —
+  this is the one hard gate.
 - Not in a symmetric block with the other member.
 
-Age bands: compatible if `|ageA − ageB| ≤ band`, where the band widens with
-age (±5 under 30, ±8 under 45, ±12 otherwise). Tunable in `_shared/linkup.ts`.
+**Email verification and DOB are advisory, not hard gates** (for now). The
+onboarding form makes DOB optional ("private and optional"), and email
+verification isn't enforced consistently across signup paths yet. When both
+members *have* a DOB, age-band compatibility is still enforced (±5 under 30,
+±8 under 45, ±12 otherwise); when either lacks a DOB, the band is skipped and
+affinity alone decides. Once you ship email + age verification in onboarding,
+re-tighten `isUserEligible()` in `_shared/linkup.ts` to make them hard gates.
+
+---
+
+## Matching
+
+The matching engine runs on every check-in. When person B checks in at a place
+where person A is already there (active presence), B's check-in is the trigger:
+
+1. Query every active presence at the same place (ordered oldest-first, so the
+   person waiting longest is considered first).
+2. Skip if blocked, if there's already an open (`pending`/`accepted`) match
+   with that person, or if both have DOBs and the age band doesn't fit.
+3. Compute **affinity** from onboarding overlap and only propose a match if it
+   clears `AFFINITY_THRESHOLD` (default 20/100). This is the line between
+   "magical" (the right person) and "spammy" (any person).
+4. Insert a `pending` match + two member rows. Realtime notifies **both** A and
+   B, so the pop-up appears for the person already there *and* the newcomer.
+
+### Affinity weights
+
+A 0–100 blend of array overlaps (strong) and scalar matches (light nudges):
+
+| Signal | Weight | Source |
+| --- | --- | --- |
+| Interests overlap | 0.34 | `interests[]` Jaccard |
+| Event-style overlap | 0.22 | `event_styles[]` Jaccard |
+| Motivations overlap | 0.14 | `motivations[]` Jaccard |
+| Audiences overlap | 0.10 | `audiences[]` Jaccard |
+| Same energy | 0.06 | `energy` scalar |
+| Same budget | 0.05 | `budget` scalar |
+| Same home city | 0.05 | `home_city` scalar |
+| Same tone | 0.04 | `tone` scalar |
+
+The strongest available reason is surfaced as the pop-up eyebrow ("Same taste",
+"Same vibe", …). Tunable in `_shared/linkup.ts` (`computeAffinity`,
+`AFFINITY_THRESHOLD`).
+
+### Re-encounters
+
+A declined or expired match does **not** block a future match — if two people
+cross paths again at the same place, they get another shot. Only an open
+(`pending`) or `accepted` match suppresses re-proposal (an accepted match means
+a real conversation already happened).
 
 ---
 
@@ -129,21 +175,21 @@ Link Up is a real-world stranger-meeting surface. The safety floor is:
 
 1. **Explicit per-session consent.** Link Up is off by default; "I'm here" is
    an explicit per-outing act. Presence auto-expires (3h TTL, 6h cap).
-2. **Identity floor.** Verified email/phone + completed onboarding. No
-   anonymous or throwaway accounts.
-3. **18+ hard gate** with compatible age bands.
-4. **Symmetric block** (one tap, instant, permanent for matching) and
+2. **Onboarding floor.** A completed profile is required (no anonymous
+   throwaway accounts). Email/age verification is advisory for now and will be
+   tightened to a hard gate once those are implemented in onboarding.
+3. **Symmetric block** (one tap, instant, permanent for matching) and
    **report** (with the same workflow as discovery abuse reports). Severe
    reasons (`harassment`, `hate`) auto-block.
-5. **Per-action rate limits**, server-enforced, to curb spam and abuse.
-6. **Ephemeral by design.** Matches, messages, and presences all expire. The
+4. **Per-action rate limits**, server-enforced, to curb spam and abuse.
+5. **Ephemeral by design.** Matches, messages, and presences all expire. The
    chat is in-app only — no contact sharing, no phone numbers, no external
    links. This reduces offline-safety risk.
-7. **Durable audit trail.** Because state lives in Postgres (not ephemeral
+6. **Durable audit trail.** Because state lives in Postgres (not ephemeral
    broadcast), every match, message, block, and report is a row you can
    produce for a safety investigation or legal request. This is the key
    reason Link Up uses Postgres + Realtime rather than in-memory broadcast.
-8. **Per-region readiness.** The flag + schema let you enable city-by-city
+7. **Per-region readiness.** The flag + schema let you enable city-by-city
    (start with Toronto) and keep it disabled where regulatory review is
    pending. No PII beyond what onboarding already lawfully collects.
 
@@ -211,8 +257,9 @@ All in `supabase/functions/_shared/linkup.ts`:
 | `PRESENCE_TTL_MAX_MINUTES` | 360 | Hard cap. |
 | `MATCH_FUSE_MINUTES` | 10 | How long a pending match stays open. |
 | `CONVERSATION_GRACE_HOURS` | 24 | Chat stays readable after match ends. |
-| `MIN_AGE` | 18 | Hard age floor. |
+| `MIN_AGE` | 18 | Hard age floor (advisory until age verification ships). |
 | `ageBandHalfWidth` | 5 / 8 / 12 | Compatible-age half-width by age. |
+| `AFFINITY_THRESHOLD` | 20 | Minimum affinity (0–100) for a match to be proposed. |
 | `ACTION_LIMITS` | see above | Per-action rate limits. |
 
 ---
@@ -226,6 +273,7 @@ supabase/migrations/
   202608070003_linkup_chat.sql
   202608070004_linkup_safety.sql
   202608070005_linkup_rls_and_realtime.sql
+  202608080001_linkup_peer_profile.sql
 supabase/functions/_shared/linkup.ts
 supabase/functions/linkup-presence/index.ts
 supabase/functions/linkup-match/index.ts
