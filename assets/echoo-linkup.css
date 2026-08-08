@@ -1,0 +1,329 @@
+/*
+ * Echoo · Link Up
+ *
+ * Styles for the "I'm here" check-in affordance, the match pop-up, and the
+ * ephemeral chat sheet. Follows docs/ui-ux-design-system.md: single accent
+ * (--peach), glass surfaces, Inter, radius 24px for the modal / 14px for cards,
+ * 180ms motion, reduced-motion respected. No new color tokens.
+ *
+ * Loaded by events.html alongside echoo-linkup.js.
+ */
+
+:root {
+  /* Link Up reuses the page tokens; these are local-only conveniences. */
+  --linkup-glass: rgba(21, 21, 20, 0.92);
+  --linkup-scrim: rgba(0, 0, 0, 0.64);
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Check-in affordance — a flat dot + caps label (no heavy pill). Sits in
+   the place-detail action row next to Directions / Uber.
+   ─────────────────────────────────────────────────────────────────────── */
+.echoo-linkup-checkin {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 4px;
+  background: transparent;
+  border: 0;
+  color: var(--soft);
+  font: 650 11px/1 var(--echoo-font, "Inter", sans-serif);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.echoo-linkup-checkin .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--peach);
+  box-shadow: 0 0 0 4px rgba(247, 213, 178, 0.12);
+}
+.echoo-linkup-checkin.is-active {
+  color: var(--ink);
+}
+.echoo-linkup-checkin.is-active .dot {
+  background: var(--peach);
+  animation: echoo-linkup-pulse 1.8s ease-in-out infinite;
+}
+@keyframes echoo-linkup-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(247, 213, 178, 0.12); }
+  50%      { box-shadow: 0 0 0 7px rgba(247, 213, 178, 0.04); }
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Match pop-up — center modal, scale-in (mirrors .location-modal).
+   ─────────────────────────────────────────────────────────────────────── */
+#echoo-linkup-modal[hidden] { display: none; }
+
+.echoo-linkup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: var(--linkup-scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 27px;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.echoo-linkup-backdrop.is-open { opacity: 1; }
+
+.echoo-linkup-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--linkup-glass);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 26px 22px 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  transform: scale(0.97);
+  opacity: 0;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.echoo-linkup-backdrop.is-open .echoo-linkup-card {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.echoo-linkup-eyebrow {
+  margin: 0 0 14px;
+  font: 650 11px/1 "Inter", sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--peach);
+}
+
+.echoo-linkup-avatars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.echoo-linkup-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(248, 245, 239, 0.06);
+  border: 1px solid var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 680 20px/1 "Inter", sans-serif;
+  color: var(--ink);
+}
+.echoo-linkup-connector {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--peach);
+}
+
+.echoo-linkup-name {
+  margin: 0 0 4px;
+  font: 680 22px/1.1 "Inter", sans-serif;
+  color: var(--ink);
+}
+.echoo-linkup-cue {
+  margin: 0 0 14px;
+  font: 520 13px/1.4 "Inter", sans-serif;
+  color: var(--muted);
+}
+.echoo-linkup-place {
+  margin: 0 0 18px;
+  font: 520 12px/1 "Inter", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(248, 245, 239, 0.5);
+}
+
+.echoo-linkup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.echoo-linkup-btn {
+  min-height: 48px;
+  border-radius: 999px;
+  border: 0;
+  font: 680 14px/1 "Inter", sans-serif;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.echoo-linkup-btn:active { transform: scale(0.98); }
+.echoo-linkup-btn--primary {
+  background: var(--peach);
+  color: #111;
+}
+.echoo-linkup-btn--secondary {
+  background: rgba(248, 245, 239, 0.06);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.echoo-linkup-btn[disabled] { opacity: 0.5; cursor: default; }
+
+.echoo-linkup-footer {
+  margin: 14px 0 0;
+  font: 520 11px/1.3 "Inter", sans-serif;
+  color: rgba(248, 245, 239, 0.42);
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Chat sheet — bottom-anchored, slides up (mirrors .sheet motion).
+   ─────────────────────────────────────────────────────────────────────── */
+#echoo-linkup-chat[hidden] { display: none; }
+
+.echoo-linkup-chat-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: var(--linkup-scrim);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.echoo-linkup-chat-backdrop.is-open { opacity: 1; }
+
+.echoo-linkup-chat-sheet {
+  width: 100%;
+  max-width: 430px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--linkup-glass);
+  border-top: 1px solid var(--line-strong);
+  border-radius: 24px 24px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  transform: translateY(18px);
+  transition: transform 220ms ease;
+}
+.echoo-linkup-chat-backdrop.is-open .echoo-linkup-chat-sheet {
+  transform: translateY(0);
+}
+
+.echoo-linkup-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.echoo-linkup-chat-title {
+  font: 650 15px/1.2 "Inter", sans-serif;
+  color: var(--ink);
+}
+.echoo-linkup-chat-sub {
+  font: 520 11px/1 "Inter", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(248, 245, 239, 0.5);
+  margin-top: 4px;
+}
+.echoo-linkup-chat-actions {
+  display: flex;
+  gap: 6px;
+}
+.echoo-linkup-chat-action {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(248, 245, 239, 0.04);
+  color: var(--muted);
+  font: 520 11px/1 "Inter", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.echoo-linkup-chat-action:active { transform: scale(0.97); }
+
+.echoo-linkup-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.echoo-linkup-bubble {
+  max-width: 76%;
+  padding: 9px 13px;
+  border-radius: 16px;
+  font: 520 14px/1.35 "Inter", sans-serif;
+  word-break: break-word;
+}
+.echoo-linkup-bubble--mine {
+  align-self: flex-end;
+  background: var(--peach);
+  color: #111;
+  border-bottom-right-radius: 5px;
+}
+.echoo-linkup-bubble--theirs {
+  align-self: flex-start;
+  background: rgba(248, 245, 239, 0.06);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 5px;
+}
+.echoo-linkup-system {
+  align-self: center;
+  font: 520 11px/1.3 "Inter", sans-serif;
+  color: rgba(248, 245, 239, 0.42);
+  text-align: center;
+  padding: 8px 14px;
+}
+
+.echoo-linkup-composer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--line);
+}
+.echoo-linkup-composer input {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(248, 245, 239, 0.04);
+  color: var(--ink);
+  padding: 0 16px;
+  font: 520 14px/1 "Inter", sans-serif;
+  outline: none;
+}
+.echoo-linkup-composer input:focus { border-color: var(--peach); }
+.echoo-linkup-composer button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--peach);
+  color: #111;
+  font-size: 16px;
+  cursor: pointer;
+}
+.echoo-linkup-composer button[disabled] { opacity: 0.4; }
+
+/* ───────────────────────────────────────────────────────────────────────
+   Reduced motion
+   ─────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .echoo-linkup-checkin.is-active .dot { animation: none; }
+  .echoo-linkup-card,
+  .echoo-linkup-chat-sheet,
+  .echoo-linkup-backdrop,
+  .echoo-linkup-chat-backdrop {
+    transition-duration: 0.01ms !important;
+  }
+}

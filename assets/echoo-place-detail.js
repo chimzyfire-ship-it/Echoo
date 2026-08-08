@@ -307,6 +307,7 @@
       bindRouteInteractions();
       bindStayInteractions();
       bindUberInteractions();
+      bindCheckinInteractions();
     }, 0);
 
     return `
@@ -431,6 +432,7 @@
               data-quick-plan-timezone="${escapeHtml(placeTimeZone)}"
               data-quick-plan-image="${escapeHtml(/^https?:\/\//i.test(heroImage) ? heroImage : "")}"
             ><span>Quick plan</span><span aria-hidden="true">→</span></button>
+            <span class="echoo-linkup-host" data-echoo-linkup-host data-linkup-place-id="${escapeHtml(cleanText(place.id || place.place_id))}" data-linkup-place-name="${escapeHtml(title)}" aria-hidden="true"></span>
           </div>
           ${canRouteInsideEchoo ? `
             <button
@@ -574,6 +576,24 @@
     });
   }
 
+  // Link Up: surface the "I'm here" check-in affordance when a place detail
+  // opens, and tell the EchooLinkUp module what place is in context. The host
+  // element is rendered inert (aria-hidden) until the module fills it; the
+  // feature flag is checked inside the module so nothing renders when off.
+  function bindCheckinInteractions() {
+    document.querySelectorAll("[data-echoo-linkup-host]").forEach((host) => {
+      host.setAttribute("aria-hidden", "false");
+      const place = {
+        id: cleanText(host.getAttribute("data-linkup-place-id")),
+        name: cleanText(host.getAttribute("data-linkup-place-name"), "this place"),
+      };
+      if (window.EchooLinkUp) {
+        window.EchooLinkUp.setPlaceContext(place);
+        document.dispatchEvent(new CustomEvent("echoo:place-detail:open", { detail: place }));
+      }
+    });
+  }
+
   async function gateMemberAction(intent, reason) {
     const nextUrl = `${window.location.pathname.split("/").pop() || "events.html"}${window.location.search}${window.location.hash}`;
     if (window.EchooAuth?.requireAuthenticatedAction) {
@@ -637,6 +657,7 @@
     bindRouteInteractions,
     bindStayInteractions,
     bindUberInteractions,
+    bindCheckinInteractions,
     buildAuthUrl,
     confidenceLabel,
     escapeHtml,
