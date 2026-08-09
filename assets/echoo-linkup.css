@@ -16,41 +16,53 @@
 }
 
 /* ───────────────────────────────────────────────────────────────────────
-   Check-in affordance — a flat dot + caps label (no heavy pill). Sits in
-   the place-detail action row next to Directions / Uber.
+   Check-in affordance — three quiet states, no dots, no labels.
+   Sits in the place-detail action row next to Directions / Uber.
+     is-locked : blurred + dimmed, not tappable (default / far / location off)
+     is-ready  : crisp, full opacity, peach (within proximity, tappable)
+     is-here   : text becomes "You're here" (checked in)
    ─────────────────────────────────────────────────────────────────────── */
 .echoo-linkup-checkin {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   min-height: 44px;
   padding: 0 4px;
   background: transparent;
   border: 0;
   color: var(--soft);
-  font: 650 11px/1 var(--echoo-font, "Inter", sans-serif);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: 540 13px/1 "Inter", sans-serif;
+  letter-spacing: 0.01em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: color 220ms ease, filter 320ms ease, opacity 320ms ease;
 }
-.echoo-linkup-checkin .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--peach);
-  box-shadow: 0 0 0 4px rgba(247, 213, 178, 0.12);
+
+/* Locked — blurred, dimmed, inert. The blur is the whole signal. */
+.echoo-linkup-checkin.is-locked {
+  filter: blur(3.5px);
+  opacity: 0.32;
+  color: var(--muted);
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
 }
-.echoo-linkup-checkin.is-active {
+
+/* Ready — within proximity. Crisp, peach, tappable. */
+.echoo-linkup-checkin.is-ready {
+  filter: none;
+  opacity: 1;
+  color: var(--peach);
+}
+.echoo-linkup-checkin.is-ready:active {
+  opacity: 0.7;
+  transition-duration: 80ms;
+}
+
+/* Here — checked in. Same quiet weight, ink not peach, to feel settled. */
+.echoo-linkup-checkin.is-here {
+  filter: none;
+  opacity: 1;
   color: var(--ink);
-}
-.echoo-linkup-checkin.is-active .dot {
-  background: var(--peach);
-  animation: echoo-linkup-pulse 1.8s ease-in-out infinite;
-}
-@keyframes echoo-linkup-pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(247, 213, 178, 0.12); }
-  50%      { box-shadow: 0 0 0 7px rgba(247, 213, 178, 0.04); }
 }
 
 /* ───────────────────────────────────────────────────────────────────────
@@ -319,7 +331,7 @@
    Reduced motion
    ─────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .echoo-linkup-checkin.is-active .dot { animation: none; }
+  .echoo-linkup-checkin,
   .echoo-linkup-card,
   .echoo-linkup-chat-sheet,
   .echoo-linkup-backdrop,

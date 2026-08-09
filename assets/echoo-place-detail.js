@@ -535,6 +535,12 @@
           timeZone: cleanText(button.getAttribute("data-route-timezone"), "America/Toronto"),
         };
         await window.EchooLiveStays?.maybePromptLateRoute(route);
+        // Remember this destination so Link Up can silently check the user in
+        // when they return to the app and are within proximity.
+        window.EchooLinkUp?.rememberDirections?.({
+          id: route.id,
+          name: route.name,
+        });
         if (window.ReactNativeWebView?.postMessage) {
           window.ReactNativeWebView.postMessage(`echoo:route:${JSON.stringify(route)}`);
           return;
