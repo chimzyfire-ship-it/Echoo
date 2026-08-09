@@ -15,7 +15,9 @@
   "use strict";
 
   const PRESENCE_TTL_MS = 3 * 60 * 60 * 1000; // mirror of server PRESENCE_TTL_MINUTES
-  const ENDPOINT_BASE = ""; // same origin; functions are served by Supabase via the project
+  const PROXIMITY_RADIUS_M = 150; // within this distance → "ready" to check in
+  const GPS_MAX_ACCURACY_M = 500; // accept a fix only if reported accuracy ≤ this
+  const RETURN_TRIP_DELAY_MS = 25_000; // min time away before a return-trip ping fires
 
   const state = {
     enabled: null, // unknown until probed; null | true | false
@@ -23,7 +25,11 @@
     userId: null,
     supabase: null,
     placeContext: null, // { id, name } of the currently open place detail
+    placeCoords: null, // { lat, lng } for the open place detail (for proximity)
+    presenceState: "locked", // "locked" | "ready" | "here" (affordance state machine)
     activePresence: null, // { id, placeId, expiresAt }
+    pendingDirections: null, // { placeId, lat, lng, leftAt } remembered for return-trip
+    visibility: "visible", // tab visibility — used for return-trip detection
     matchChannel: null,
     chatChannel: null,
     openChat: null, // { conversationId, matchId, peerProfile, expiresAt }
@@ -84,6 +90,153 @@
   }
 
   // ────────────────────────────────────────────────────────────────────
+  // Proximity — single foreground GPS pings only. No background tracking,
+  // no watchPosition. This keeps the feature within free-tier / Expo Go
+  // constraints while still enabling a smart, quiet "you're near" signal.
+  // ────────────────────────────────────────────────────────────────────
+
+  // Haversine distance in metres between two {lat,lng}.
+  function distanceMeters(a, b) {
+    if (!a || !b) return Infinity;
+    const R = 6371000;
+    const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+    const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+    const s =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((a.lat * Math.PI) / 180) *
+        Math.cos((b.lat * Math.PI) / 180) *
+        Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+  }
+
+  // One-shot GPS fix. Resolves to { lat, lng, accuracy } or null on any failure
+  // (denied, unavailable, timeout). Never throws — failures are silence.
+  function pingLocation() {
+    return new Promise((resolve) => {
+      if (!navigator?.geolocation?.getCurrentPosition) return resolve(null);
+      const timer = setTimeout(() => resolve(null), 8000);
+      try {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            clearTimeout(timer);
+            const acc = pos.coords?.accuracy ?? Infinity;
+            if (acc > GPS_MAX_ACCURACY_M) return resolve(null); // too fuzzy → treat as unknown
+            resolve({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: acc,
+            });
+          },
+          () => {
+            clearTimeout(timer);
+            resolve(null);
+          },
+          { enableHighAccuracy: false, timeout: 7000, maximumAge: 30000 },
+        );
+      } catch (_e) {
+        clearTimeout(timer);
+        resolve(null);
+      }
+    });
+  }
+
+  // Resolve the place's coordinates from the place-detail host's route attrs.
+  function resolvePlaceCoords() {
+    const host = document.querySelector("[data-echoo-linkup-host]");
+    if (!host) return null;
+    // The sibling route button carries lat/lng; fall back to any route button.
+    const routeBtn =
+      host.parentElement?.querySelector("[data-echoo-route]") ||
+      document.querySelector("[data-echoo-route]");
+    const lat = Number(routeBtn?.getAttribute("data-route-latitude"));
+    const lng = Number(routeBtn?.getAttribute("data-route-longitude"));
+    if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+    return null;
+  }
+
+  // Run a single proximity check for the current place and update the
+  // affordance state. Returns the resolved state.
+  async function refreshProximity() {
+    if (!state.placeContext || !state.enabled) return state.presenceState;
+    if (state.activePresence && state.activePresence.placeId === state.placeContext.id) {
+      setPresenceState("here");
+      return "here";
+    }
+    const placeCoords = state.placeCoords || resolvePlaceCoords();
+    state.placeCoords = placeCoords;
+    if (!placeCoords) {
+      setPresenceState("locked");
+      return "locked";
+    }
+    const fix = await pingLocation();
+    if (!fix) {
+      setPresenceState("locked");
+      return "locked";
+    }
+    const within = distanceMeters(fix, placeCoords) <= PROXIMITY_RADIUS_M;
+    setPresenceState(within ? "ready" : "locked");
+    return state.presenceState;
+  }
+
+  function setPresenceState(s) {
+    if (state.presenceState === s) return;
+    state.presenceState = s;
+    renderCheckinAffordance();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Return-trip detection: when the user gets directions we remember the
+  // destination. When they come back to the app (visibilitychange → visible)
+  // after enough time away, we do ONE proximity ping. If it places them at
+  // the destination, we silently check them in — no banner, no tap. The text
+  // just flips to "You're here."
+  // ────────────────────────────────────────────────────────────────────
+  function rememberDirectionsForReturnTrip(place) {
+    const coords = resolvePlaceCoords();
+    if (!place?.id || !coords) return;
+    state.pendingDirections = {
+      placeId: place.id,
+      name: place.name,
+      lat: coords.lat,
+      lng: coords.lng,
+      leftAt: Date.now(),
+    };
+  }
+
+  function wireReturnTrip() {
+    document.addEventListener("visibilitychange", () => {
+      state.visibility = document.visibilityState;
+      if (document.visibilityState !== "visible") return;
+      const pd = state.pendingDirections;
+      if (!pd) return;
+      if (Date.now() - pd.leftAt < RETURN_TRIP_DELAY_MS) return; // too quick, probably accidental
+      // Only auto-check-in if the place detail for that destination is still
+      // the open context (otherwise the user moved on — don't surprise them).
+      if (!state.placeContext || state.placeContext.id !== pd.placeId) return;
+      attemptReturnTripCheckin(pd);
+    });
+    // On mobile, the page often stays "visible" while backgrounded behind the
+    // maps app. Also catch the window regaining focus as a second signal.
+    window.addEventListener("pageshow", () => {
+      const pd = state.pendingDirections;
+      if (pd && Date.now() - pd.leftAt >= RETURN_TRIP_DELAY_MS &&
+          state.placeContext?.id === pd.placeId) {
+        attemptReturnTripCheckin(pd);
+      }
+    });
+  }
+
+  async function attemptReturnTripCheckin(pd) {
+    state.pendingDirections = null; // one-shot
+    const fix = await pingLocation();
+    if (!fix) return; // GPS unavailable → user can tap the (locked) affordance manually
+    const within = distanceMeters(fix, { lat: pd.lat, lng: pd.lng }) <= PROXIMITY_RADIUS_M;
+    if (!within) return;
+    // Silently check in. No banner. The text flip is the whole confirmation.
+    await performCheckin(pd.placeId, pd.name);
+  }
+
+  // ────────────────────────────────────────────────────────────────────
   // Bootstrap + feature flag
   // ────────────────────────────────────────────────────────────────────
   async function ensureUser() {
@@ -124,14 +277,27 @@
     state.enabled = true;
 
     subscribeToMatches();
+    wireReturnTrip();
 
-    // Listen for place-detail open/close so we can surface the check-in toggle.
+    // Listen for place-detail open/close. On open, reset to the locked
+    // (blurred) state immediately, then run a single proximity ping to
+    // potentially promote to "ready" or "here".
     document.addEventListener("echoo:place-detail:open", (e) => {
       state.placeContext = e.detail || null;
+      state.placeCoords = null;
+      state.presenceState = "locked";
       renderCheckinAffordance();
+      // No await — let the ping resolve async; it updates the state when done.
+      if (state.activePresence && state.activePresence.placeId === state.placeContext?.id) {
+        setPresenceState("here");
+      } else {
+        refreshProximity();
+      }
     });
     document.addEventListener("echoo:place-detail:close", () => {
       state.placeContext = null;
+      state.placeCoords = null;
+      state.presenceState = "locked";
     });
   }
 
@@ -191,7 +357,12 @@
   }
 
   // ────────────────────────────────────────────────────────────────────
-  // Check-in affordance in the place detail.
+  // Check-in affordance — three quiet states, one element, zero noise.
+  //   locked : blurred + dimmed, not tappable (default / location unknown)
+  //   ready  : crisp, full opacity, peach — within proximity, tappable
+  //   here   : text becomes "You're here" — checked in
+  // No dots, no helper text, no exclamation. The blur and the word change
+  // carry the whole interaction.
   // ────────────────────────────────────────────────────────────────────
   function renderCheckinAffordance() {
     if (!state.placeContext || !state.placeContext.id) return;
@@ -199,66 +370,82 @@
     if (!host) return;
     host.innerHTML = "";
 
+    const here = state.activePresence && state.activePresence.placeId === state.placeContext.id;
+    const s = here ? "here" : state.presenceState; // "here" overrides everything
+
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "echoo-linkup-checkin";
-    btn.setAttribute("aria-label", "Mark yourself as here for Link Up");
-    const isActive = state.activePresence && state.activePresence.placeId === state.placeContext.id;
-    btn.classList.toggle("is-active", Boolean(isActive));
-    btn.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${isActive ? "You're here" : "I'm here"}</span>`;
-    btn.addEventListener("click", () => onCheckinToggle());
+    btn.className = `echoo-linkup-checkin is-${s}`;
+    btn.textContent = here ? "You're here" : "I'm here";
+
+    if (s === "ready" || s === "here") {
+      btn.setAttribute("aria-label", here ? "You're checked in here — tap to leave" : "Mark yourself as here for Link Up");
+      btn.addEventListener("click", () => onCheckinToggle());
+    } else {
+      // Locked: blurred, not focusable, not clickable.
+      btn.setAttribute("disabled", "disabled");
+      btn.setAttribute("aria-disabled", "true");
+      btn.setAttribute("tabindex", "-1");
+      btn.setAttribute("aria-label", "Link Up check-in is nearby only");
+    }
     host.appendChild(btn);
   }
 
   async function onCheckinToggle() {
     if (state.enabled === false) return;
+    // Checkout path: already here → leave.
+    if (state.activePresence && state.placeContext?.id === state.activePresence.placeId) {
+      await callFunction("linkup-presence", { action: "checkout" }).catch(() => {});
+      state.activePresence = null;
+      // Re-proximity to drop back to ready/locked rather than re-check-in.
+      await refreshProximity();
+      return;
+    }
+    // Require the "ready" state — the blur already gates this, but double-check.
+    if (state.presenceState !== "ready") return;
+
     // Auth gate — reuse the place-detail gate so the flow is consistent.
     if (window.EchooAuth?.requireAuthenticatedAction) {
-      const ok = await window.EchooAuth.requireAuthenticatedAction({
+      const gate = await window.EchooAuth.requireAuthenticatedAction({
         next: window.location.pathname.split("/").pop() || "events.html",
         mode: "signup",
         intent: "linkup_checkin",
         reason: "linkup_required",
         caption: "Create an account to Link Up with people around you.",
       });
-      if (!ok?.ok && !ok) return;
+      if (!gate?.ok) return;
     }
     state.userId = await ensureUser();
     if (!state.userId) return;
 
-    if (state.activePresence && state.placeContext?.id === state.activePresence.placeId) {
-      // Checkout.
-      await callFunction("linkup-presence", { action: "checkout" });
-      state.activePresence = null;
-      renderCheckinAffordance();
-      return;
-    }
+    await performCheckin(state.placeContext.id, state.placeContext.name);
+  }
 
-    const place = state.placeContext;
+  // Shared check-in path used by both the manual tap and the silent return-trip.
+  async function performCheckin(placeId /*, placeName */) {
     const res = await callFunction("linkup-presence", {
       action: "checkin",
-      placeId: place.id,
+      placeId,
       sessionToken: sessionStorage.getItem("echoo_linkup_session") || null,
     });
     if (res?.ok && res.presence) {
       state.activePresence = {
         id: res.presence.id,
-        placeId: place.id,
+        placeId,
         expiresAt: res.presence.expiresAt,
       };
       sessionStorage.setItem("echoo_linkup_session", state.activePresence.id);
-      // Auto-checkout when the TTL elapses (client-side backstop).
       setTimeout(() => {
         if (state.activePresence?.id === res.presence.id) autoCheckout();
       }, PRESENCE_TTL_MS);
-      renderCheckinAffordance();
+      setPresenceState("here");
     }
   }
 
   async function autoCheckout() {
     await callFunction("linkup-presence", { action: "checkout" }).catch(() => {});
     state.activePresence = null;
-    renderCheckinAffordance();
+    await refreshProximity();
   }
 
   // ────────────────────────────────────────────────────────────────────
@@ -581,6 +768,9 @@
     // For the place-detail integration to call when a place sheet opens.
     setPlaceContext(ctx) { state.placeContext = ctx; renderCheckinAffordance(); },
     clearPlaceContext() { state.placeContext = null; },
+    // Call this when the user taps Directions so the return-trip check can
+    // silently check them in when they come back to Echoo.
+    rememberDirections(place) { rememberDirectionsForReturnTrip(place); },
   };
 
   // Auto-init on DOMContentLoaded if a script flag asks for it.
