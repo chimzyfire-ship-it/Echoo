@@ -428,6 +428,12 @@
       placeId,
       sessionToken: sessionStorage.getItem("echoo_linkup_session") || null,
     });
+    // The server requires a profile photo + bio to be eligible. If the user
+    // hasn't added them yet, prompt quietly rather than failing silently.
+    if (res && res.reason === "incomplete_profile") {
+      showIncompleteProfilePrompt();
+      return;
+    }
     if (res?.ok && res.presence) {
       state.activePresence = {
         id: res.presence.id,
@@ -439,6 +445,24 @@
         if (state.activePresence?.id === res.presence.id) autoCheckout();
       }, PRESENCE_TTL_MS);
       setPresenceState("here");
+    }
+  }
+
+  function showIncompleteProfilePrompt() {
+    let el = document.getElementById("echoo-linkup-notice");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "echoo-linkup-notice";
+      el.className = "echoo-linkup-notice";
+      el.innerHTML = `
+        <span class="echoo-linkup-notice-copy">Add a photo and a one-liner to start linking up.</span>
+        <a class="echoo-linkup-notice-link" href="auth.html#profile">Add</a>`;
+      document.body.appendChild(el);
+      requestAnimationFrame(() => el.classList.add("is-open"));
+      setTimeout(() => {
+        el.classList.remove("is-open");
+        setTimeout(() => el.remove(), 300);
+      }, 6000);
     }
   }
 
@@ -479,6 +503,8 @@
       peer: {
         userId: other.user_id,
         displayName: profile?.display_name || profile?.username || "Someone",
+        photoUrl: profile?.profile_photo_url || null,
+        bio: profile?.bio || "",
         cue: cueFrom(profile),
       },
       placeName: place?.formatted_address || state.placeContext?.name || "this place",
@@ -513,11 +539,28 @@
   function showPopup(item) {
     ensureModalMount();
     const modal = document.getElementById("echoo-linkup-modal");
-    const card = modal.querySelector(".echoo-linkup-card");
     const eyebrow = modal.querySelector(".echoo-linkup-eyebrow");
     eyebrow.textContent = reasonLabel(item.reasonTags);
-    modal.querySelector(".echoo-linkup-name").textContent = item.peer.displayName;
-    modal.querySelector(".echoo-linkup-cue").textContent = item.peer.cue || "Also out tonight";
+
+    // Hero avatar: peer's photo, or initials fallback.
+    const avatar = modal.querySelector("[data-linkup-avatar-peer]");
+    const name = item.peer.displayName || "Someone";
+    if (item.peer.photoUrl) {
+      avatar.style.backgroundImage = `url('${item.peer.photoUrl}')`;
+      avatar.classList.add("has-photo");
+      avatar.textContent = "";
+    } else {
+      avatar.style.backgroundImage = "";
+      avatar.classList.remove("has-photo");
+      avatar.textContent = initials(name);
+    }
+
+    modal.querySelector(".echoo-linkup-name").textContent = name;
+    // Bio line takes precedence over the computed cue — it's the human line.
+    const bioNode = modal.querySelector("[data-linkup-bio]");
+    bioNode.textContent = item.peer.bio || item.peer.cue || "";
+    bioNode.style.display = bioNode.textContent ? "" : "none";
+
     modal.querySelector(".echoo-linkup-place").textContent = `at ${truncate(item.placeName, 42)}`;
     modal.querySelector("[data-linkup-accept]").disabled = false;
     modal.querySelector("[data-linkup-decline]").disabled = false;
@@ -556,14 +599,10 @@
     wrap.innerHTML = `
       <div class="echoo-linkup-backdrop" role="presentation">
         <div class="echoo-linkup-card" role="dialog" aria-modal="true" aria-labelledby="echoo-linkup-title">
-          <p class="echoo-linkup-eyebrow">Link up?</p>
-          <div class="echoo-linkup-avatars" aria-hidden="true">
-            <div class="echoo-linkup-avatar" data-linkup-avatar-self>?</div>
-            <div class="echoo-linkup-connector"></div>
-            <div class="echoo-linkup-avatar" data-linkup-avatar-peer>?</div>
-          </div>
+          <div class="echoo-linkup-hero-avatar" data-linkup-avatar-peer aria-hidden="true"></div>
           <h2 class="echoo-linkup-name" id="echoo-linkup-title">Someone</h2>
-          <p class="echoo-linkup-cue">Also out tonight</p>
+          <p class="echoo-linkup-bio" data-linkup-bio></p>
+          <p class="echoo-linkup-eyebrow">Link up?</p>
           <p class="echoo-linkup-place">at this place</p>
           <div class="echoo-linkup-actions">
             <button type="button" class="echoo-linkup-btn echoo-linkup-btn--primary" data-linkup-accept>Link up</button>

@@ -72,7 +72,7 @@ export async function getOnboardingProfile(
   const { data, error } = await supabase
     .from("user_onboarding_profiles")
     .select(
-      "display_name, username, home_city, interests, event_styles, motivations, audiences, budget, energy, tone, gender, date_of_birth, completed_at",
+      "display_name, username, home_city, interests, event_styles, motivations, audiences, budget, energy, tone, gender, date_of_birth, profile_photo_url, bio, completed_at",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -95,15 +95,18 @@ export async function isUserEligible(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<LinkupEligibility> {
-  // Relaxed gates: the only hard requirement is a completed onboarding
-  // profile. Email verification and DOB are advisory — DOB is optional in the
-  // onboarding form ("private and optional"), and email verification is not
-  // enforced consistently across signup paths yet. When a DOB is present we
-  // still use it for age-band compatibility below, but its absence no longer
-  // blocks the feature.
+  // Hard gates for Link Up matching:
+  //   1. Completed onboarding.
+  //   2. A profile photo AND a bio — so every match pop-up has a face and a
+  //      self-written line. This is the quality bar for the feature.
+  // Email verification and DOB remain advisory (see notes below); tighten them
+  // here once email + age verification ship in onboarding.
   const profile = await getOnboardingProfile(supabase, userId);
   if (!profile || !profile.completed_at) {
     return { eligible: false, reason: "no_onboarding" };
+  }
+  if (!profile.profile_photo_url || !profile.bio?.trim()) {
+    return { eligible: false, reason: "incomplete_profile" };
   }
   const age = ageFromDob(profile.date_of_birth);
   return { eligible: true, age: age ?? undefined, dateOfBirth: profile.date_of_birth ?? undefined };

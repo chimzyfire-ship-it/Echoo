@@ -207,6 +207,8 @@
       nationalities,
       dob,
       tone,
+      profilePhotoUrl: clean(row.profile_photo_url) || null,
+      bio: clean(row.bio),
       onboardingCompletedAt: row.completed_at,
       personalizationProfile,
       pipeda_consent_at: row.metadata?.pipeda_consent_at || null,
@@ -251,6 +253,8 @@
           : null,
       date_of_birth: safeDate(profile.dob || profile.date_of_birth),
       tone,
+      profile_photo_url: clean(profile.profilePhotoUrl || profile.profile_photo_url) || null,
+      bio: clean(profile.bio, ""),
       profile_version: 1,
       completed_at: new Date().toISOString(),
       personality_signals: {
@@ -427,6 +431,28 @@
     sessionStorageAdapter.removeItem(AUTH_STORAGE_KEY);
   }
 
+  // Upload a profile photo to the owner-only folder profile-photos/<userId>/avatar.<ext>
+  // and return the public URL. upsert:true replaces any previous photo.
+  const PHOTO_EXT_BY_TYPE = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+
+  async function uploadProfilePhoto(file, userId) {
+    if (!client) throw new Error("Supabase is not loaded.");
+    if (!file || !userId) throw new Error("File and user id are required.");
+    const ext = PHOTO_EXT_BY_TYPE[file.type] || "jpg";
+    const path = `${userId}/avatar.${ext}`;
+    const { error: upError } = await client.storage
+      .from("profile-photos")
+      .upload(path, file, { upsert: true, contentType: file.type || `image/${ext}` });
+    if (upError) throw upError;
+    const { data } = client.storage.from("profile-photos").getPublicUrl(path);
+    // Cache-bust so the freshly-uploaded image replaces any cached version.
+    return data?.publicUrl ? `${data.publicUrl}?t=${Date.now()}` : null;
+  }
+
   async function saveOnboardingProfile(profile) {
     const { session, error } = await getSession();
     if (error || !session?.user) {
@@ -513,6 +539,7 @@
     requireAuthenticatedAction,
     saveOnboardingProfile,
     signOut,
+    uploadProfilePhoto,
     syncPendingProfile,
     updateOnboardingPatch,
     normalizeUsername,

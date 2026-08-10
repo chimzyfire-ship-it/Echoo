@@ -828,10 +828,66 @@
         display: grid;
         place-items: center;
         background: var(--peach);
+        background-size: cover;
+        background-position: center;
         color: #111;
         font-size: 24px;
         font-weight: 780;
         letter-spacing: -0.02em;
+      }
+      .avatar-circle.has-photo {
+        background-color: transparent;
+        color: transparent;
+        box-shadow: 0 0 0 2px var(--line-strong);
+      }
+
+      /* Onboarding profile step — circular photo picker + bio input. */
+      .profile-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 22px;
+        padding: 8px 0 4px;
+      }
+      .profile-photo-picker {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+      }
+      .profile-photo-preview {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: rgba(248, 245, 239, 0.05);
+        background-size: cover;
+        background-position: center;
+        border: 1px solid var(--line-strong);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 0 0 3px rgba(247, 213, 178, 0.08);
+        transition: box-shadow 200ms ease, border-color 200ms ease;
+      }
+      .profile-photo-preview.has-photo {
+        border-color: transparent;
+        box-shadow: 0 0 0 3px rgba(247, 213, 178, 0.18);
+      }
+      .profile-photo-initials {
+        font-size: 26px;
+        font-weight: 680;
+        color: var(--muted);
+      }
+      .profile-photo-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--peach);
+      }
+      .profile-step .field {
+        width: 100%;
+        max-width: 320px;
       }
 
       .profile-name {
@@ -1578,6 +1634,12 @@
 
       const OB_STEPS = [
         {
+          type: "profile",
+          title: "Show up.",
+          sub: "A photo and a one-liner so people know who's linking up.",
+          btn: "Continue",
+        },
+        {
           type: "interest-map",
           title: "Build your interest map.",
           sub: "Choose the signals Echoo should use when it reads the city for you.",
@@ -1951,6 +2013,29 @@
                 `,
                   )
                   .join("")}
+              </div>
+            `;
+          }
+
+          if (step.type === "profile") {
+            const photoBg = state.profilePhotoUrl
+              ? `style="background-image:url('${escapeHtml(state.profilePhotoUrl)}')"`
+              : "";
+            const photoInitials = (state.name || "U").split(/\s+/).map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+            body = `
+              <div class="profile-step">
+                <label class="profile-photo-picker" for="ob-photo">
+                  <div class="profile-photo-preview${state.profilePhotoUrl ? " has-photo" : ""}" id="ob-photo-preview" ${photoBg}>
+                    ${state.profilePhotoUrl ? "" : `<span class="profile-photo-initials" aria-hidden="true">${escapeHtml(photoInitials)}</span>`}
+                  </div>
+                  <span class="profile-photo-label">${state.profilePhotoUrl ? "Change photo" : "Add photo"}</span>
+                </label>
+                <input id="ob-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+                <div class="field">
+                  <label for="ob-bio">One line about you</label>
+                  <input id="ob-bio" type="text" maxlength="50" value="${escapeHtml(state.bio || "")}" placeholder="Photographer, usually at jazz shows." autocomplete="off">
+                  <p class="privacy-note">Shown when Echoo suggests a link-up. Keep it to 50 characters.</p>
+                </div>
               </div>
             `;
           }
@@ -2529,6 +2614,10 @@
             state.dob = event.target.value;
           }
 
+          if (event.target.id === "ob-bio") {
+            state.bio = event.target.value.slice(0, 50);
+          }
+
           if (event.target.id === "nationalities") {
             state.nationalities = event.target.value
               .split(",")
@@ -2541,6 +2630,36 @@
             state[event.target.dataset.custom] = event.target.value.trim();
           }
         });
+
+        // Profile photo picker — validate + preview + stash the file for upload
+        // at finishOnboarding time. Single photo, ≤5MB, jpeg/png/webp only.
+        obStepsWrap.addEventListener("change", (event) => {
+          if (event.target.id !== "ob-photo") return;
+          const file = event.target.files && event.target.files[0];
+          if (!file) return;
+          const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
+          if (!OK_TYPES.includes(file.type)) {
+            setObStatus("Please choose a JPEG, PNG, or WebP image.");
+            event.target.value = "";
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            setObStatus("That image is over 5MB — try a smaller one.");
+            event.target.value = "";
+            return;
+          }
+          state.pendingPhotoFile = file;
+          const url = URL.createObjectURL(file);
+          const preview = document.getElementById("ob-photo-preview");
+          if (preview) {
+            preview.style.backgroundImage = `url('${url}')`;
+            preview.classList.add("has-photo");
+            const fallback = preview.querySelector(".profile-photo-initials");
+            if (fallback) fallback.remove();
+          }
+          const label = document.querySelector(".profile-photo-label");
+          if (label) label.textContent = "Change photo";
+        });
       }
 
       renderOnboardingUI();
@@ -2549,6 +2668,39 @@
       async function finishOnboarding() {
         const name = state.userName || "User";
         const email = state.userEmail;
+
+        // Photo + bio are required to finish onboarding (and to match in Link
+        // Up). Block completion if either is missing.
+        if (!state.bio || !state.bio.trim()) {
+          setObStatus("Add a one-liner about yourself to continue.", true);
+          return;
+        }
+        // Upload the chosen photo (if a new one is pending) before saving.
+        // If the user already has a photo URL and didn't pick a new one, reuse it.
+        try {
+          if (state.pendingPhotoFile) {
+            const session = window.EchooAuth?.client
+              ? (await window.EchooAuth.client.auth.getSession()).data?.session
+              : null;
+            const uid = session?.user?.id || state.userId;
+            if (!uid) {
+              setObStatus("Sign in again to upload your photo.", true);
+              return;
+            }
+            setObStatus("Uploading your photo…");
+            const url = await window.EchooAuth.uploadProfilePhoto(state.pendingPhotoFile, uid);
+            if (url) state.profilePhotoUrl = url;
+            state.pendingPhotoFile = null;
+          }
+        } catch (uploadError) {
+          console.warn("Echoo: profile photo upload failed.", uploadError);
+          setObStatus("Your photo couldn't be uploaded. Try again.", true);
+          return;
+        }
+        if (!state.profilePhotoUrl) {
+          setObStatus("Add a profile photo to continue.", true);
+          return;
+        }
         const customInterest = state.customInterest
           ? [state.customInterest]
           : [];
@@ -2613,6 +2765,8 @@
           nationalities,
           dob,
           tone,
+          profilePhotoUrl: state.profilePhotoUrl || null,
+          bio: state.bio || "",
           personalizationProfile,
           pipeda_consent_at:
             localStorage.getItem("echoo_pipeda_consent_at") ||
@@ -2724,7 +2878,19 @@
           .toUpperCase()
           .slice(0, 2);
 
-        document.getElementById("profile-avatar").textContent = initials || "U";
+        const avatarEl = document.getElementById("profile-avatar");
+        const photoUrl = prefs?.profilePhotoUrl || state.profilePhotoUrl || null;
+        if (avatarEl) {
+          avatarEl.innerHTML = "";
+          if (photoUrl) {
+            avatarEl.style.backgroundImage = `url('${photoUrl}')`;
+            avatarEl.classList.add("has-photo");
+          } else {
+            avatarEl.style.backgroundImage = "";
+            avatarEl.classList.remove("has-photo");
+            avatarEl.textContent = initials || "U";
+          }
+        }
         document.getElementById("profile-name").textContent = name;
         document.getElementById("profile-email").textContent = email;
 
