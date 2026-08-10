@@ -112,8 +112,13 @@ triad from `_shared/location.ts`.
 
 A member can Link Up only if:
 
-- **Onboarding is completed** (`user_onboarding_profiles.completed_at` is set) —
-  this is the one hard gate.
+- **Onboarding is completed** (`user_onboarding_profiles.completed_at` is set).
+- **A profile photo AND a bio are set** — so every match pop-up has a face and
+  a self-written line. This is the quality bar for the feature. An existing
+  user who finished onboarding before this gate shipped is prompted to add a
+  photo + bio the first time they try to check in (the Edge Function returns
+  `reason: "incomplete_profile"`, and the client shows a quiet toast linking
+  to `auth.html#profile`).
 - Not in a symmetric block with the other member.
 
 **Email verification and DOB are advisory, not hard gates** (for now). The
@@ -123,6 +128,18 @@ members *have* a DOB, age-band compatibility is still enforced (±5 under 30,
 ±8 under 45, ±12 otherwise); when either lacks a DOB, the band is skipped and
 affinity alone decides. Once you ship email + age verification in onboarding,
 re-tighten `isUserEligible()` in `_shared/linkup.ts` to make them hard gates.
+
+### Profile photos
+
+- Stored in a public Supabase Storage bucket (`profile-photos`), under a
+  per-user folder `<user_id>/avatar.<ext>`. RLS allows public read but
+  restricts writes/deletes to the owner's own folder.
+- Upload happens client-side at onboarding completion via
+  `window.EchooAuth.uploadProfilePhoto(file, userId)`; the returned public URL
+  is persisted to `user_onboarding_profiles.profile_photo_url`.
+- The match pop-up renders the peer's photo as a single 88px hero circle,
+  falling back to initials if a URL is missing or fails to load.
+- Bio is capped at 50 characters in the UI (80 at the DB for safety margin).
 
 ---
 
@@ -274,6 +291,9 @@ supabase/migrations/
   202608070004_linkup_safety.sql
   202608070005_linkup_rls_and_realtime.sql
   202608080001_linkup_peer_profile.sql
+  202608100001_profile_photo_and_bio.sql
+  202608100002_linkup_peer_profile_photo_bio.sql
+  202608100003_linkup_require_photo_bio.sql
 supabase/functions/_shared/linkup.ts
 supabase/functions/linkup-presence/index.ts
 supabase/functions/linkup-match/index.ts

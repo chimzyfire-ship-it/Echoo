@@ -105,37 +105,35 @@
 }
 
 .echoo-linkup-eyebrow {
-  margin: 0 0 14px;
+  margin: 4px 0 6px;
   font: 650 11px/1 "Inter", sans-serif;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--peach);
 }
 
-.echoo-linkup-avatars {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-.echoo-linkup-avatar {
-  width: 58px;
-  height: 58px;
+/* Single hero avatar — the peer's photo (or initials fallback). */
+.echoo-linkup-hero-avatar {
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
+  margin: 0 auto 16px;
   background: rgba(248, 245, 239, 0.06);
+  background-size: cover;
+  background-position: center;
   border: 1px solid var(--line-strong);
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 680 20px/1 "Inter", sans-serif;
+  font: 680 28px/1 "Inter", sans-serif;
   color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(247, 213, 178, 0.1);
+  transition: box-shadow 220ms ease;
 }
-.echoo-linkup-connector {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--peach);
+.echoo-linkup-hero-avatar.has-photo {
+  border-color: transparent;
+  color: transparent;
+  box-shadow: 0 0 0 3px rgba(247, 213, 178, 0.2);
 }
 
 .echoo-linkup-name {
@@ -143,10 +141,14 @@
   font: 680 22px/1.1 "Inter", sans-serif;
   color: var(--ink);
 }
-.echoo-linkup-cue {
-  margin: 0 0 14px;
+.echoo-linkup-bio {
+  margin: 0 0 10px;
   font: 520 13px/1.4 "Inter", sans-serif;
   color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .echoo-linkup-place {
   margin: 0 0 18px;
@@ -154,6 +156,45 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(248, 245, 239, 0.5);
+}
+
+/* Incomplete-profile notice — quiet toast, dismisses itself. */
+.echoo-linkup-notice {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translate(-50%, 12px);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100% - 54px);
+  padding: 12px 14px 12px 18px;
+  background: var(--linkup-glass);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  opacity: 0;
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+.echoo-linkup-notice.is-open {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.echoo-linkup-notice-copy {
+  font: 520 13px/1.35 "Inter", sans-serif;
+  color: var(--ink);
+}
+.echoo-linkup-notice-link {
+  flex-shrink: 0;
+  font: 680 12px/1 "Inter", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--peach);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .echoo-linkup-actions {
