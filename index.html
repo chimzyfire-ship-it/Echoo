@@ -105,8 +105,19 @@
         z-index: -2;
         content: "";
         background:
-          linear-gradient(90deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.3) 55%, rgba(0, 0, 0, 0.1) 100%),
-          linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, transparent 22%, transparent 70%, rgba(0, 0, 0, 0.85) 100%),
+          linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0.72) 0%,
+            rgba(0, 0, 0, 0.3) 55%,
+            rgba(0, 0, 0, 0.1) 100%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.45) 0%,
+            transparent 22%,
+            transparent 70%,
+            rgba(0, 0, 0, 0.85) 100%
+          ),
           url("assets/echoo-mobile-bg.jpg");
         background-size: cover;
         background-position: center;
@@ -119,12 +130,11 @@
         inset: 0;
         z-index: -1;
         content: "";
-        background:
-          radial-gradient(
-            ellipse at center,
-            transparent 40%,
-            rgba(0, 0, 0, 0.55) 100%
-          );
+        background: radial-gradient(
+          ellipse at center,
+          transparent 40%,
+          rgba(0, 0, 0, 0.55) 100%
+        );
         pointer-events: none;
       }
 
@@ -489,14 +499,18 @@
       .vibe-expanded {
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+        transition:
+          max-height 0.3s ease-out,
+          opacity 0.2s ease-out;
         opacity: 0;
       }
 
       .vibe-expanded.open {
         max-height: 140px;
         opacity: 1;
-        transition: max-height 0.3s ease-in, opacity 0.2s ease-in;
+        transition:
+          max-height 0.3s ease-in,
+          opacity 0.2s ease-in;
         margin-top: 12px;
       }
 
@@ -635,7 +649,10 @@
         flex-shrink: 0;
         box-sizing: border-box;
         margin: 0 auto;
-        transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+        transition:
+          transform 0.18s ease,
+          background 0.18s ease,
+          border-color 0.18s ease;
       }
 
       .vibe span {
@@ -907,7 +924,7 @@
         min-height: 52px;
         border: none;
         border-radius: 999px;
-        background: #F3D7C4;
+        background: #f3d7c4;
         color: #0b0b0d;
         font-size: 15px;
         font-weight: 700;
@@ -917,7 +934,9 @@
         padding: 0 19px;
         box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
         cursor: pointer;
-        transition: transform 0.2s ease, background-color 0.2s ease;
+        transition:
+          transform 0.2s ease,
+          background-color 0.2s ease;
         margin-top: 2px;
         justify-self: start;
       }
@@ -951,25 +970,196 @@
       }
 
       /* A tap should feel immediate, even while the next screen is loading. */
-      .surprise-launcher { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; overflow: hidden; opacity: 0; visibility: hidden; pointer-events: none; background: radial-gradient(circle at 50% 43%, rgba(247,213,178,.12), transparent 22%), #080808; transition: opacity .22s ease, visibility .22s ease; }
-      .surprise-launcher.is-visible { opacity: 1; visibility: visible; }
-      .surprise-launcher::before { position:absolute; width:min(74vw,340px); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle, rgba(247,213,178,.12), transparent 66%); content:""; filter:blur(8px); animation:surprise-launch-glow 2.4s ease-in-out infinite; }
-      .surprise-launcher-card { position:relative; width:min(100%,300px); display:grid; justify-items:center; gap:14px; text-align:center; }
-      .surprise-launcher-stage { width:112px; height:112px; display:grid; place-items:center; perspective:520px; }
-      .surprise-launcher-die { position:relative; width:84px; height:84px; transform-style:preserve-3d; animation:surprise-launch-roll 2.15s cubic-bezier(.33,.06,.17,1) infinite; }
-      .surprise-launcher-face { position:absolute; inset:0; border:1px solid rgba(255,255,255,.5); border-radius:20px; background:linear-gradient(145deg, #fff3e9 0%, #f7d5b2 62%, #dca882 100%); box-shadow:inset 4px 4px 9px rgba(255,255,255,.38), inset -7px -7px 13px rgba(89,52,29,.2); backface-visibility:hidden; }
-      .surprise-launcher-face::before { position:absolute; width:9px; height:9px; border-radius:50%; background:#15110f; content:""; }
-      .surprise-launcher-face--one { transform:translateZ(42px); }.surprise-launcher-face--one::before { top:37px; left:37px; }
-      .surprise-launcher-face--two { transform:rotateY(90deg) translateZ(42px); }.surprise-launcher-face--two::before { top:17px; left:17px; box-shadow:41px 41px #15110f; }
-      .surprise-launcher-face--three { transform:rotateY(180deg) translateZ(42px); }.surprise-launcher-face--three::before { top:17px; left:17px; box-shadow:20.5px 20.5px #15110f,41px 41px #15110f; }
-      .surprise-launcher-face--four { transform:rotateY(-90deg) translateZ(42px); }.surprise-launcher-face--four::before { top:17px; left:17px; box-shadow:41px 0 #15110f,0 41px #15110f,41px 41px #15110f; }
-      .surprise-launcher-face--five { transform:rotateX(90deg) translateZ(42px); }.surprise-launcher-face--five::before { top:17px; left:17px; box-shadow:41px 0 #15110f,20.5px 20.5px #15110f,0 41px #15110f,41px 41px #15110f; }
-      .surprise-launcher-face--six { transform:rotateX(-90deg) translateZ(42px); }.surprise-launcher-face--six::before { top:17px; left:17px; box-shadow:41px 0 #15110f,0 20.5px #15110f,41px 20.5px #15110f,0 41px #15110f,41px 41px #15110f; }
-      .surprise-launcher h2 { margin: 2px 0 0; font-size: 23px; letter-spacing: -.04em; }
-      .surprise-launcher p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-      @keyframes surprise-launch-roll { 0% { transform:rotateX(-16deg) rotateY(0deg) rotateZ(0deg); } 42% { transform:rotateX(305deg) rotateY(428deg) rotateZ(9deg); } 72% { transform:rotateX(690deg) rotateY(610deg) rotateZ(-7deg); } 100% { transform:rotateX(704deg) rotateY(720deg) rotateZ(0deg); } }
-      @keyframes surprise-launch-glow { 0%,100% { opacity:.45; transform:scale(.9); } 50% { opacity:1; transform:scale(1.08); } }
-      @media (prefers-reduced-motion: reduce) { .surprise-launcher-die, .surprise-launcher::before { animation: none; } }
+      .surprise-launcher {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            circle at 50% 43%,
+            rgba(247, 213, 178, 0.12),
+            transparent 22%
+          ),
+          #080808;
+        transition:
+          opacity 0.22s ease,
+          visibility 0.22s ease;
+      }
+      .surprise-launcher.is-visible {
+        opacity: 1;
+        visibility: visible;
+      }
+      .surprise-launcher::before {
+        position: absolute;
+        width: min(74vw, 340px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(247, 213, 178, 0.12),
+          transparent 66%
+        );
+        content: "";
+        filter: blur(8px);
+        animation: surprise-launch-glow 2.4s ease-in-out infinite;
+      }
+      .surprise-launcher-card {
+        position: relative;
+        width: min(100%, 300px);
+        display: grid;
+        justify-items: center;
+        gap: 14px;
+        text-align: center;
+      }
+      .surprise-launcher-stage {
+        width: 112px;
+        height: 112px;
+        display: grid;
+        place-items: center;
+        perspective: 520px;
+      }
+      .surprise-launcher-die {
+        position: relative;
+        width: 84px;
+        height: 84px;
+        transform-style: preserve-3d;
+        animation: surprise-launch-roll 2.15s cubic-bezier(0.33, 0.06, 0.17, 1)
+          infinite;
+      }
+      .surprise-launcher-face {
+        position: absolute;
+        inset: 0;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        background: linear-gradient(
+          145deg,
+          #fff3e9 0%,
+          #f7d5b2 62%,
+          #dca882 100%
+        );
+        box-shadow:
+          inset 4px 4px 9px rgba(255, 255, 255, 0.38),
+          inset -7px -7px 13px rgba(89, 52, 29, 0.2);
+        backface-visibility: hidden;
+      }
+      .surprise-launcher-face::before {
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #15110f;
+        content: "";
+      }
+      .surprise-launcher-face--one {
+        transform: translateZ(42px);
+      }
+      .surprise-launcher-face--one::before {
+        top: 37px;
+        left: 37px;
+      }
+      .surprise-launcher-face--two {
+        transform: rotateY(90deg) translateZ(42px);
+      }
+      .surprise-launcher-face--two::before {
+        top: 17px;
+        left: 17px;
+        box-shadow: 41px 41px #15110f;
+      }
+      .surprise-launcher-face--three {
+        transform: rotateY(180deg) translateZ(42px);
+      }
+      .surprise-launcher-face--three::before {
+        top: 17px;
+        left: 17px;
+        box-shadow:
+          20.5px 20.5px #15110f,
+          41px 41px #15110f;
+      }
+      .surprise-launcher-face--four {
+        transform: rotateY(-90deg) translateZ(42px);
+      }
+      .surprise-launcher-face--four::before {
+        top: 17px;
+        left: 17px;
+        box-shadow:
+          41px 0 #15110f,
+          0 41px #15110f,
+          41px 41px #15110f;
+      }
+      .surprise-launcher-face--five {
+        transform: rotateX(90deg) translateZ(42px);
+      }
+      .surprise-launcher-face--five::before {
+        top: 17px;
+        left: 17px;
+        box-shadow:
+          41px 0 #15110f,
+          20.5px 20.5px #15110f,
+          0 41px #15110f,
+          41px 41px #15110f;
+      }
+      .surprise-launcher-face--six {
+        transform: rotateX(-90deg) translateZ(42px);
+      }
+      .surprise-launcher-face--six::before {
+        top: 17px;
+        left: 17px;
+        box-shadow:
+          41px 0 #15110f,
+          0 20.5px #15110f,
+          41px 20.5px #15110f,
+          0 41px #15110f,
+          41px 41px #15110f;
+      }
+      .surprise-launcher h2 {
+        margin: 2px 0 0;
+        font-size: 23px;
+        letter-spacing: -0.04em;
+      }
+      .surprise-launcher p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      @keyframes surprise-launch-roll {
+        0% {
+          transform: rotateX(-16deg) rotateY(0deg) rotateZ(0deg);
+        }
+        42% {
+          transform: rotateX(305deg) rotateY(428deg) rotateZ(9deg);
+        }
+        72% {
+          transform: rotateX(690deg) rotateY(610deg) rotateZ(-7deg);
+        }
+        100% {
+          transform: rotateX(704deg) rotateY(720deg) rotateZ(0deg);
+        }
+      }
+      @keyframes surprise-launch-glow {
+        0%,
+        100% {
+          opacity: 0.45;
+          transform: scale(0.9);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.08);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .surprise-launcher-die,
+        .surprise-launcher::before {
+          animation: none;
+        }
+      }
 
       .category-grid {
         display: grid;
@@ -981,7 +1171,9 @@
         padding: 12px;
         backdrop-filter: blur(28px);
         -webkit-backdrop-filter: blur(28px);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 44px rgba(0, 0, 0, 0.4);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 18px 44px rgba(0, 0, 0, 0.4);
         margin-top: 28px;
       }
 
@@ -1115,12 +1307,29 @@
       }
     </style>
     <link rel="stylesheet" href="assets/page-loader.css" />
-    <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
   </head>
   <body>
-    <div class="surprise-launcher" id="surprise-launcher" role="status" aria-live="polite" aria-hidden="true">
+    <div
+      class="surprise-launcher"
+      id="surprise-launcher"
+      role="status"
+      aria-live="polite"
+      aria-hidden="true"
+    >
       <div class="surprise-launcher-card">
-        <div class="surprise-launcher-stage" aria-hidden="true"><div class="surprise-launcher-die"><i class="surprise-launcher-face surprise-launcher-face--one"></i><i class="surprise-launcher-face surprise-launcher-face--two"></i><i class="surprise-launcher-face surprise-launcher-face--three"></i><i class="surprise-launcher-face surprise-launcher-face--four"></i><i class="surprise-launcher-face surprise-launcher-face--five"></i><i class="surprise-launcher-face surprise-launcher-face--six"></i></div></div>
+        <div class="surprise-launcher-stage" aria-hidden="true">
+          <div class="surprise-launcher-die">
+            <i class="surprise-launcher-face surprise-launcher-face--one"></i
+            ><i class="surprise-launcher-face surprise-launcher-face--two"></i
+            ><i class="surprise-launcher-face surprise-launcher-face--three"></i
+            ><i class="surprise-launcher-face surprise-launcher-face--four"></i
+            ><i class="surprise-launcher-face surprise-launcher-face--five"></i
+            ><i class="surprise-launcher-face surprise-launcher-face--six"></i>
+          </div>
+        </div>
         <h2>Let’s make it lovely.</h2>
         <p id="surprise-launcher-copy">A local pick is on its way.</p>
       </div>
@@ -1135,9 +1344,9 @@
 
         <main>
           <section class="hero" aria-labelledby="landing-title">
-            <h1 id="landing-title">Pick a lane.<br>Make it<br>lovely.</h1>
+            <h1 id="landing-title">Pick a lane.<br />Make it<br />lovely.</h1>
             <p class="tagline">
-              Shows, tables, and places<br>that make tonight worth it.
+              Shows, tables, and places<br />that make tonight worth it.
             </p>
 
             <button class="bored-cta" id="bored-plan" type="button">
@@ -1188,7 +1397,9 @@
               </a>
               <a class="category-card" href="events.html?query=experiences">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                  <path
+                    d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"
+                  />
                 </svg>
                 <span>Experiences</span>
               </a>
@@ -1200,6 +1411,15 @@
                   <line x1="3" x2="21" y1="10" y2="10" />
                 </svg>
                 <span>Events</span>
+              </a>
+              <a class="category-card" href="films.html">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path
+                    d="M2 8h3v2H2zM2 14h3v2H2zM19 8h3v2h-3zM19 14h3v2h-3zM7 4v16M17 4v16"
+                  />
+                </svg>
+                <span>Movies</span>
               </a>
             </div>
           </section>
@@ -1230,7 +1450,9 @@
 
       <a class="fab-chat" href="app.html" aria-label="Open Echo A.I.">
         <svg viewBox="0 0 24 24">
-          <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
+          <path
+            d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z"
+          />
         </svg>
       </a>
 
@@ -1463,27 +1685,28 @@
 
       const searchForm = document.getElementById("search-form");
       searchForm?.addEventListener("submit", async (event) => {
-          event.preventDefault();
-          const query = searchInput.value.trim() || "tonight near me";
-          ensureLocationContext(async () => {
-            // Place/category searches belong in Explore, which can show a
-            // browsable local list instead of the companion's short route.
-            const isPlaceSearch =
-              /\b(restaurant|resturant|resturants|restaraunt|restaraunts|cafe|coffee|bar|pub|food|eat|lunch|brunch|dinner|breakfast|bakery|museum|gallery|park|trail|library|shopping|mall|hotel|spa|gym|things to do|place|places)\b/i.test(
-                query,
-              );
-            await openProtectedRoute(
-              isPlaceSearch
-                ? `events.html?query=${encodeURIComponent(query)}`
-                : `app.html?q=${encodeURIComponent(query)}`,
+        event.preventDefault();
+        const query = searchInput.value.trim() || "tonight near me";
+        ensureLocationContext(async () => {
+          // Place/category searches belong in Explore, which can show a
+          // browsable local list instead of the companion's short route.
+          const isPlaceSearch =
+            /\b(restaurant|resturant|resturants|restaraunt|restaraunts|cafe|coffee|bar|pub|food|eat|lunch|brunch|dinner|breakfast|bakery|museum|gallery|park|trail|library|shopping|mall|hotel|spa|gym|things to do|place|places)\b/i.test(
+              query,
             );
-          });
+          await openProtectedRoute(
+            isPlaceSearch
+              ? `events.html?query=${encodeURIComponent(query)}`
+              : `app.html?q=${encodeURIComponent(query)}`,
+          );
+        });
       });
 
       dayPlanBtn?.addEventListener("click", () => {
         ensureLocationContext(async () => {
           const currentCity =
-            window.EchooLocationPlatform.readPreferences().city || "Greater Toronto Area";
+            window.EchooLocationPlatform.readPreferences().city ||
+            "Greater Toronto Area";
           const context = activityContext(currentCity);
           await showProtectedPlanSheet(
             `Built for ${context.label}.`,
@@ -1493,29 +1716,34 @@
         });
       });
 
-      document.getElementById("bored-plan").addEventListener("click", (event) => {
-        const button = event.currentTarget;
-        if (button.getAttribute("aria-busy") === "true") return;
-        button.setAttribute("aria-busy", "true");
-        button.classList.add("is-pressed");
-        const launcher = document.getElementById("surprise-launcher");
-        const launcherCopy = document.getElementById("surprise-launcher-copy");
-        const preference = window.EchooLocationPlatform.readPreferences();
-        const currentCity = preference.city || "Greater Toronto Area";
-        const context = activityContext(currentCity);
-        if (launcher) {
-          launcher.classList.add("is-visible");
-          launcher.setAttribute("aria-hidden", "false");
-        }
-        if (launcherCopy) launcherCopy.textContent = `Checking ${currentCity}, your taste, and ${context.label.toLowerCase()}.`;
-        // Keep the first animation on this page long enough to be felt, then
-        // continue it on Discover while live local results are ranked.
-        window.setTimeout(() => {
-          window.location.assign(
-            `events.html?query=${encodeURIComponent(`surprise me ${context.label} in ${currentCity}`)}&mode=surprise&city=${encodeURIComponent(currentCity)}`,
+      document
+        .getElementById("bored-plan")
+        .addEventListener("click", (event) => {
+          const button = event.currentTarget;
+          if (button.getAttribute("aria-busy") === "true") return;
+          button.setAttribute("aria-busy", "true");
+          button.classList.add("is-pressed");
+          const launcher = document.getElementById("surprise-launcher");
+          const launcherCopy = document.getElementById(
+            "surprise-launcher-copy",
           );
-        }, 900);
-      });
+          const preference = window.EchooLocationPlatform.readPreferences();
+          const currentCity = preference.city || "Greater Toronto Area";
+          const context = activityContext(currentCity);
+          if (launcher) {
+            launcher.classList.add("is-visible");
+            launcher.setAttribute("aria-hidden", "false");
+          }
+          if (launcherCopy)
+            launcherCopy.textContent = `Checking ${currentCity}, your taste, and ${context.label.toLowerCase()}.`;
+          // Keep the first animation on this page long enough to be felt, then
+          // continue it on Discover while live local results are ranked.
+          window.setTimeout(() => {
+            window.location.assign(
+              `events.html?query=${encodeURIComponent(`surprise me ${context.label} in ${currentCity}`)}&mode=surprise&city=${encodeURIComponent(currentCity)}`,
+            );
+          }, 900);
+        });
 
       sheetBudgetActions.addEventListener("click", (event) => {
         const button = event.target.closest("[data-budget]");
@@ -1622,8 +1850,7 @@
 
       function cardHref(card) {
         if (card.detailUrl) return card.detailUrl;
-        if (card.type === "event")
-          return "happenings.html";
+        if (card.type === "event") return "happenings.html";
         if (card.type === "place")
           return `app.html?q=${encodeURIComponent(card.title || "places GTA")}`;
         return "events.html";
@@ -1672,7 +1899,9 @@
           }
 
           if (livePicksTitle) {
-            livePicksTitle.textContent = coords ? `Near you in ${cityName}` : `Live picks in ${cityName}`;
+            livePicksTitle.textContent = coords
+              ? `Near you in ${cityName}`
+              : `Live picks in ${cityName}`;
           }
           livePicks.innerHTML = cards
             .map((card) => {
@@ -1704,12 +1933,15 @@
       // Initialize control events for Vibes expander and Carousel arrows
       (function initHomeControls() {
         const moreVibesBtn = document.getElementById("more-vibes-btn");
-        const moreVibesContainer = document.getElementById("more-vibes-container");
+        const moreVibesContainer = document.getElementById(
+          "more-vibes-container",
+        );
         const moreVibeIcon = document.getElementById("more-vibe-icon");
 
         if (moreVibesBtn && moreVibesContainer) {
           moreVibesBtn.addEventListener("click", () => {
-            const isExpanded = moreVibesBtn.getAttribute("aria-expanded") === "true";
+            const isExpanded =
+              moreVibesBtn.getAttribute("aria-expanded") === "true";
             moreVibesBtn.setAttribute("aria-expanded", !isExpanded);
             moreVibesContainer.classList.toggle("open");
 
@@ -1719,14 +1951,16 @@
                   <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
                   <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
                 `;
-                moreVibesBtn.querySelector("span:not(.vibe-icon)").textContent = "Close";
+                moreVibesBtn.querySelector("span:not(.vibe-icon)").textContent =
+                  "Close";
               } else {
                 moreVibeIcon.innerHTML = `
                   <path d="M5 12h.01" />
                   <path d="M12 12h.01" />
                   <path d="M19 12h.01" />
                 `;
-                moreVibesBtn.querySelector("span:not(.vibe-icon)").textContent = "More";
+                moreVibesBtn.querySelector("span:not(.vibe-icon)").textContent =
+                  "More";
               }
             }
           });
@@ -1783,7 +2017,10 @@
               });
               if (response.ok) context = await response.json();
             } catch (_) {}
-            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
+            const resolved = window.EchooLocationPlatform.resolveCoordinates(
+              lat,
+              lng,
+            );
             if (context?.supported) {
               updatePageCity(context.municipality || "Greater Toronto Area", {
                 lat,
@@ -1791,7 +2028,9 @@
                 accuracy: position.coords.accuracy,
               });
             } else if (!resolved.supported) {
-              updatePageCity(resolved.fallbackRegion?.name || "Greater Toronto Area");
+              updatePageCity(
+                resolved.fallbackRegion?.name || "Greater Toronto Area",
+              );
             } else {
               // Do not mislabel a person at a municipal border. The GPS still
               // ranks nearby results precisely, while the label stays GTA-wide.
@@ -1862,7 +2101,9 @@
 
         const restorePosition = () => {
           try {
-            const saved = JSON.parse(localStorage.getItem("echoo-ai-fab-position"));
+            const saved = JSON.parse(
+              localStorage.getItem("echoo-ai-fab-position"),
+            );
             if (!saved) return;
             fab.style.left = `${Math.max(12, Math.min(saved.left, window.innerWidth - fab.offsetWidth - 12))}px`;
             fab.style.top = `${Math.max(12, Math.min(saved.top, window.innerHeight - fab.offsetHeight - 96))}px`;
@@ -1898,12 +2139,22 @@
           fab.releasePointerCapture?.(event.pointerId);
           if (!moved) return;
           const rect = fab.getBoundingClientRect();
-          const left = rect.left < window.innerWidth / 2 ? 12 : window.innerWidth - rect.width - 12;
+          const left =
+            rect.left < window.innerWidth / 2
+              ? 12
+              : window.innerWidth - rect.width - 12;
           fab.style.left = `${left}px`;
           fab.style.top = `${Math.max(12, Math.min(rect.top, window.innerHeight - rect.height - 96))}px`;
-          try { localStorage.setItem("echoo-ai-fab-position", JSON.stringify({ left, top: parseFloat(fab.style.top) })); } catch (_) {}
+          try {
+            localStorage.setItem(
+              "echoo-ai-fab-position",
+              JSON.stringify({ left, top: parseFloat(fab.style.top) }),
+            );
+          } catch (_) {}
         });
-        fab.addEventListener("click", (event) => { if (moved) event.preventDefault(); });
+        fab.addEventListener("click", (event) => {
+          if (moved) event.preventDefault();
+        });
         restorePosition();
       })();
     </script>

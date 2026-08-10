@@ -7,6 +7,7 @@
     <title>Discover · echoo</title>
     <link rel="stylesheet" href="assets/echoo-place-detail.css" />
     <link rel="stylesheet" href="assets/echoo-linkup.css" />
+    <link rel="stylesheet" href="assets/echoo-cinema.css" />
     <style>
       :root {
         color-scheme: dark;
@@ -36,7 +37,8 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      html, body {
+      html,
+      body {
         margin: 0;
         padding: 0;
         min-height: 100%;
@@ -52,7 +54,8 @@
         justify-content: center;
       }
 
-      button, input {
+      button,
+      input {
         font: inherit;
         color: inherit;
         background: none;
@@ -77,8 +80,16 @@
         isolation: isolate;
         position: relative;
         background:
-          radial-gradient(circle at 50% -2%, rgba(247, 213, 178, 0.1), transparent 22rem),
-          radial-gradient(circle at 15% 45%, rgba(120, 140, 180, 0.06), transparent 18rem),
+          radial-gradient(
+            circle at 50% -2%,
+            rgba(247, 213, 178, 0.1),
+            transparent 22rem
+          ),
+          radial-gradient(
+            circle at 15% 45%,
+            rgba(120, 140, 180, 0.06),
+            transparent 18rem
+          ),
           linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
         padding-bottom: 94px;
       }
@@ -109,7 +120,11 @@
         filter: brightness(1.2);
       }
 
-      .culture-control { display: flex; align-items: center; gap: 5px; }
+      .culture-control {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
       .culture-toggle {
         display: flex;
         min-width: 102px;
@@ -122,19 +137,79 @@
         border-radius: 999px;
         background: rgba(248, 245, 239, 0.055);
         text-align: left;
-        transition: transform 0.18s ease, color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        transition:
+          transform 0.18s ease,
+          color 0.18s ease,
+          border-color 0.18s ease,
+          background 0.18s ease;
       }
-      .culture-toggle:active { transform: scale(0.97); }
-      .culture-toggle-icon { display: grid; width: 26px; height: 26px; flex: 0 0 26px; place-items: center; border-radius: 50%; background: rgba(247,213,178,.12); }
-      .culture-toggle svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-      .culture-toggle-copy { display: grid; min-width: 0; gap: 1px; }
-      .culture-toggle-label { font-size: 11px; font-weight: 760; letter-spacing: .01em; }
-      .culture-toggle-state { overflow: hidden; color: var(--muted); font-size: 9px; font-weight: 600; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
-      .culture-toggle.is-active { color: #1b1711; border-color: var(--peach); background: var(--peach); }
-      .culture-toggle.is-active .culture-toggle-icon { background: rgba(27,23,17,.1); }
-      .culture-toggle.is-active .culture-toggle-state { color: rgba(27,23,17,.67); }
-      .culture-toggle-clear { display: none; width: 32px; height: 32px; place-items: center; padding: 0 0 2px; color: var(--peach); border: 1px solid rgba(247,213,178,.36); border-radius: 50%; background: rgba(247,213,178,.08); font-size: 20px; line-height: 1; }
-      .culture-toggle-clear.is-visible { display: grid; }
+      .culture-toggle:active {
+        transform: scale(0.97);
+      }
+      .culture-toggle-icon {
+        display: grid;
+        width: 26px;
+        height: 26px;
+        flex: 0 0 26px;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(247, 213, 178, 0.12);
+      }
+      .culture-toggle svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .culture-toggle-copy {
+        display: grid;
+        min-width: 0;
+        gap: 1px;
+      }
+      .culture-toggle-label {
+        font-size: 11px;
+        font-weight: 760;
+        letter-spacing: 0.01em;
+      }
+      .culture-toggle-state {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 600;
+        line-height: 1.1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .culture-toggle.is-active {
+        color: #1b1711;
+        border-color: var(--peach);
+        background: var(--peach);
+      }
+      .culture-toggle.is-active .culture-toggle-icon {
+        background: rgba(27, 23, 17, 0.1);
+      }
+      .culture-toggle.is-active .culture-toggle-state {
+        color: rgba(27, 23, 17, 0.67);
+      }
+      .culture-toggle-clear {
+        display: none;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        padding: 0 0 2px;
+        color: var(--peach);
+        border: 1px solid rgba(247, 213, 178, 0.36);
+        border-radius: 50%;
+        background: rgba(247, 213, 178, 0.08);
+        font-size: 20px;
+        line-height: 1;
+      }
+      .culture-toggle-clear.is-visible {
+        display: grid;
+      }
 
       .profile-link {
         display: grid;
@@ -145,7 +220,9 @@
         background: rgba(248, 245, 239, 0.06);
         border: 1px solid rgba(248, 245, 239, 0.12);
         color: var(--ink);
-        transition: transform 0.2s ease, background 0.2s ease;
+        transition:
+          transform 0.2s ease,
+          background 0.2s ease;
       }
 
       .profile-link:active {
@@ -196,10 +273,23 @@
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       }
 
-      .discover-location-sheet[hidden] { display: none; }
-      .discover-location-sheet h2 { margin: 0 0 8px; font-size: 24px; }
-      .discover-location-sheet p { margin: 0 0 16px; color: var(--muted); line-height: 1.4; }
-      .discover-location-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .discover-location-sheet[hidden] {
+        display: none;
+      }
+      .discover-location-sheet h2 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+      .discover-location-sheet p {
+        margin: 0 0 16px;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+      .discover-location-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+      }
       .discover-location-actions button,
       .discover-location-select {
         min-height: 46px;
@@ -210,8 +300,16 @@
         font: inherit;
         font-weight: 650;
       }
-      .discover-location-actions .primary { border-color: transparent; background: var(--peach); color: #111; }
-      .discover-location-select { width: 100%; margin: 0 0 9px; padding: 0 12px; }
+      .discover-location-actions .primary {
+        border-color: transparent;
+        background: var(--peach);
+        color: #111;
+      }
+      .discover-location-select {
+        width: 100%;
+        margin: 0 0 9px;
+        padding: 0 12px;
+      }
 
       /* Hero Section */
       .hero {
@@ -243,38 +341,244 @@
         max-width: 340px;
       }
 
-      .culture-picker { position: fixed; inset: 0; z-index: 70; display: grid; align-items: end; pointer-events: none; }
-      .culture-picker.is-open { pointer-events: auto; }
-      .culture-picker-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; background: rgba(0, 0, 0, 0.68); transition: opacity 0.22s ease; }
-      .culture-picker.is-open .culture-picker-backdrop { opacity: 1; }
-      .culture-picker-sheet { position: relative; width: min(100%, 430px); max-height: min(76svh, 650px); display: flex; flex-direction: column; gap: 13px; padding: 10px 22px calc(17px + env(safe-area-inset-bottom)); overflow: hidden; border: 1px solid rgba(248,245,239,.12); border-bottom: 0; border-radius: 27px 27px 0 0; background: #181817; box-shadow: 0 -20px 50px rgba(0,0,0,.38); transform: translateY(104%); transition: transform .32s cubic-bezier(.2,.8,.2,1); }
-      .culture-picker.is-open .culture-picker-sheet { transform: translateY(0); }
-      .culture-picker-handle { width: 33px; height: 4px; margin: 0 auto 1px; border-radius: 99px; background: rgba(248,245,239,.24); }
-      .culture-picker-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
-      .culture-picker-heading div { display: grid; gap: 6px; }
-      .culture-picker-heading small { color: var(--peach); font-size: 9px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
-      .culture-picker-heading h2 { margin: 0; font-size: 26px; line-height: 1; letter-spacing: -.045em; }
-      .culture-picker-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.42; }
-      .culture-picker-close { display: grid; width: 31px; height: 31px; flex: 0 0 31px; place-items: center; padding: 0 0 2px; color: var(--muted); border: 0; border-radius: 50%; background: rgba(248,245,239,.07); font-size: 23px; }
-      .culture-group-label { margin: 1px 0 -5px; color: var(--muted); font-size: 10px; font-weight: 720; letter-spacing: .07em; text-transform: uppercase; }
-      .culture-group-strip { display: flex; gap: 7px; min-height: 34px; overflow-x: auto; padding: 1px; scroll-snap-type: x proximity; scrollbar-width: none; }
-      .culture-group-strip::-webkit-scrollbar { display: none; }
-      .culture-group { flex: 0 0 auto; min-height: 32px; padding: 0 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; background: rgba(248,245,239,.025); font: inherit; font-size: 10px; font-weight: 700; scroll-snap-align: start; }
-      .culture-group.is-active { color: #1b1711; border-color: var(--peach); background: var(--peach); }
-      .culture-picker-search { display: flex; width: 100%; box-sizing: border-box; flex: 0 0 auto; align-items: center; gap: 9px; min-height: 43px; margin: 0; padding: 0 13px; border: 1px solid var(--line); border-radius: 14px; background: rgba(248,245,239,.045); }
-      .culture-picker-search svg { width: 16px; height: 16px; flex: 0 0 16px; fill: none; stroke: var(--muted); stroke-width: 1.8; }
-      .culture-picker-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font: inherit; font-size: 12px; }
-      .culture-picker-search input::placeholder { color: var(--muted); }
-      .culture-picker-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 1 1 auto; align-content: start; gap: 8px; min-height: 0; overflow-y: auto; padding: 1px; overscroll-behavior: contain; }
-      .culture-choice { display: flex; align-items: center; justify-content: space-between; min-height: 47px; padding: 8px 10px 8px 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 13px; background: rgba(248,245,239,.035); font-size: 11px; font-weight: 670; text-align: left; }
-      .culture-choice.is-active { color: var(--ink); border-color: rgba(247,213,178,.6); background: rgba(247,213,178,.1); }
-      .culture-choice-mark { display: grid; width: 17px; height: 17px; place-items: center; color: #1b1711; border: 1px solid rgba(248,245,239,.28); border-radius: 50%; font-size: 10px; }
-      .culture-choice.is-active .culture-choice-mark { border-color: var(--peach); background: var(--peach); }
-      .culture-picker-footer { display: flex; justify-content: center; padding-top: 3px; }
-      .culture-clear { min-height: 34px; padding: 0 12px; color: var(--muted); border: 0; background: transparent; font-size: 11px; font-weight: 680; }
-      .culture-clear strong { color: var(--peach); font-weight: 750; }
-      .culture-picker-empty { grid-column: 1 / -1; margin: 5px 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-      body.culture-picker-open { overflow: hidden; }
+      .culture-picker {
+        position: fixed;
+        inset: 0;
+        z-index: 70;
+        display: grid;
+        align-items: end;
+        pointer-events: none;
+      }
+      .culture-picker.is-open {
+        pointer-events: auto;
+      }
+      .culture-picker-backdrop {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        opacity: 0;
+        background: rgba(0, 0, 0, 0.68);
+        transition: opacity 0.22s ease;
+      }
+      .culture-picker.is-open .culture-picker-backdrop {
+        opacity: 1;
+      }
+      .culture-picker-sheet {
+        position: relative;
+        width: min(100%, 430px);
+        max-height: min(76svh, 650px);
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+        padding: 10px 22px calc(17px + env(safe-area-inset-bottom));
+        overflow: hidden;
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        border-bottom: 0;
+        border-radius: 27px 27px 0 0;
+        background: #181817;
+        box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.38);
+        transform: translateY(104%);
+        transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .culture-picker.is-open .culture-picker-sheet {
+        transform: translateY(0);
+      }
+      .culture-picker-handle {
+        width: 33px;
+        height: 4px;
+        margin: 0 auto 1px;
+        border-radius: 99px;
+        background: rgba(248, 245, 239, 0.24);
+      }
+      .culture-picker-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+      }
+      .culture-picker-heading div {
+        display: grid;
+        gap: 6px;
+      }
+      .culture-picker-heading small {
+        color: var(--peach);
+        font-size: 9px;
+        font-weight: 760;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .culture-picker-heading h2 {
+        margin: 0;
+        font-size: 26px;
+        line-height: 1;
+        letter-spacing: -0.045em;
+      }
+      .culture-picker-heading p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.42;
+      }
+      .culture-picker-close {
+        display: grid;
+        width: 31px;
+        height: 31px;
+        flex: 0 0 31px;
+        place-items: center;
+        padding: 0 0 2px;
+        color: var(--muted);
+        border: 0;
+        border-radius: 50%;
+        background: rgba(248, 245, 239, 0.07);
+        font-size: 23px;
+      }
+      .culture-group-label {
+        margin: 1px 0 -5px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 720;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+      .culture-group-strip {
+        display: flex;
+        gap: 7px;
+        min-height: 34px;
+        overflow-x: auto;
+        padding: 1px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+      }
+      .culture-group-strip::-webkit-scrollbar {
+        display: none;
+      }
+      .culture-group {
+        flex: 0 0 auto;
+        min-height: 32px;
+        padding: 0 11px;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(248, 245, 239, 0.025);
+        font: inherit;
+        font-size: 10px;
+        font-weight: 700;
+        scroll-snap-align: start;
+      }
+      .culture-group.is-active {
+        color: #1b1711;
+        border-color: var(--peach);
+        background: var(--peach);
+      }
+      .culture-picker-search {
+        display: flex;
+        width: 100%;
+        box-sizing: border-box;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 9px;
+        min-height: 43px;
+        margin: 0;
+        padding: 0 13px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(248, 245, 239, 0.045);
+      }
+      .culture-picker-search svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+        fill: none;
+        stroke: var(--muted);
+        stroke-width: 1.8;
+      }
+      .culture-picker-search input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        color: var(--ink);
+        background: transparent;
+        font: inherit;
+        font-size: 12px;
+      }
+      .culture-picker-search input::placeholder {
+        color: var(--muted);
+      }
+      .culture-picker-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        flex: 1 1 auto;
+        align-content: start;
+        gap: 8px;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 1px;
+        overscroll-behavior: contain;
+      }
+      .culture-choice {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 47px;
+        padding: 8px 10px 8px 12px;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: rgba(248, 245, 239, 0.035);
+        font-size: 11px;
+        font-weight: 670;
+        text-align: left;
+      }
+      .culture-choice.is-active {
+        color: var(--ink);
+        border-color: rgba(247, 213, 178, 0.6);
+        background: rgba(247, 213, 178, 0.1);
+      }
+      .culture-choice-mark {
+        display: grid;
+        width: 17px;
+        height: 17px;
+        place-items: center;
+        color: #1b1711;
+        border: 1px solid rgba(248, 245, 239, 0.28);
+        border-radius: 50%;
+        font-size: 10px;
+      }
+      .culture-choice.is-active .culture-choice-mark {
+        border-color: var(--peach);
+        background: var(--peach);
+      }
+      .culture-picker-footer {
+        display: flex;
+        justify-content: center;
+        padding-top: 3px;
+      }
+      .culture-clear {
+        min-height: 34px;
+        padding: 0 12px;
+        color: var(--muted);
+        border: 0;
+        background: transparent;
+        font-size: 11px;
+        font-weight: 680;
+      }
+      .culture-clear strong {
+        color: var(--peach);
+        font-weight: 750;
+      }
+      .culture-picker-empty {
+        grid-column: 1 / -1;
+        margin: 5px 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      body.culture-picker-open {
+        overflow: hidden;
+      }
 
       /* Search Bar */
       .search-wrap {
@@ -293,7 +597,10 @@
         border: 1px solid var(--line-strong);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        transition:
+          border-color 0.2s ease,
+          background 0.2s ease,
+          box-shadow 0.2s ease;
       }
 
       .search-form:focus-within {
@@ -333,7 +640,9 @@
         color: #050505;
         display: grid;
         place-items: center;
-        transition: transform 0.18s ease, filter 0.18s ease;
+        transition:
+          transform 0.18s ease,
+          filter 0.18s ease;
         flex-shrink: 0;
       }
 
@@ -384,7 +693,8 @@
         transition: background 0.15s ease;
       }
 
-      .suggestion-item:hover, .suggestion-item:focus {
+      .suggestion-item:hover,
+      .suggestion-item:focus {
         background: rgba(248, 245, 239, 0.08);
       }
 
@@ -465,7 +775,9 @@
         border: 1px solid var(--line);
         box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
         cursor: pointer;
-        transition: transform 0.22s ease, border-color 0.22s ease;
+        transition:
+          transform 0.22s ease,
+          border-color 0.22s ease;
       }
 
       .featured-card:active {
@@ -486,15 +798,58 @@
         overflow: hidden;
         color: rgba(248, 245, 239, 0.92);
         background:
-          radial-gradient(circle at 72% 16%, rgba(247, 213, 178, 0.26), transparent 34%),
-          radial-gradient(circle at 20% 86%, rgba(133, 156, 201, 0.2), transparent 40%),
+          radial-gradient(
+            circle at 72% 16%,
+            rgba(247, 213, 178, 0.26),
+            transparent 34%
+          ),
+          radial-gradient(
+            circle at 20% 86%,
+            rgba(133, 156, 201, 0.2),
+            transparent 40%
+          ),
           linear-gradient(145deg, #2a2926, #11110f 62%, #25211d);
       }
-      .place-visual-fallback[data-cover="music"] { background:radial-gradient(circle at 78% 20%, rgba(178,146,241,.38), transparent 32%), linear-gradient(145deg, #241d31, #111015 68%); }
-      .place-visual-fallback[data-cover="culture"], .place-visual-fallback[data-cover="tourism"] { background:radial-gradient(circle at 75% 18%, rgba(223,128,153,.34), transparent 34%), linear-gradient(145deg, #302026, #111013 68%); }
-      .place-visual-fallback[data-cover="nature"] { background:radial-gradient(circle at 75% 18%, rgba(130,193,155,.34), transparent 34%), linear-gradient(145deg, #1d2d26, #0e1210 68%); }
-      .place-visual-fallback[data-cover="food"] { background:radial-gradient(circle at 75% 18%, rgba(245,172,112,.35), transparent 34%), linear-gradient(145deg, #35231b, #16110e 68%); }
-      .place-visual-fallback[hidden] { display: none; }
+      .place-visual-fallback[data-cover="music"] {
+        background:
+          radial-gradient(
+            circle at 78% 20%,
+            rgba(178, 146, 241, 0.38),
+            transparent 32%
+          ),
+          linear-gradient(145deg, #241d31, #111015 68%);
+      }
+      .place-visual-fallback[data-cover="culture"],
+      .place-visual-fallback[data-cover="tourism"] {
+        background:
+          radial-gradient(
+            circle at 75% 18%,
+            rgba(223, 128, 153, 0.34),
+            transparent 34%
+          ),
+          linear-gradient(145deg, #302026, #111013 68%);
+      }
+      .place-visual-fallback[data-cover="nature"] {
+        background:
+          radial-gradient(
+            circle at 75% 18%,
+            rgba(130, 193, 155, 0.34),
+            transparent 34%
+          ),
+          linear-gradient(145deg, #1d2d26, #0e1210 68%);
+      }
+      .place-visual-fallback[data-cover="food"] {
+        background:
+          radial-gradient(
+            circle at 75% 18%,
+            rgba(245, 172, 112, 0.35),
+            transparent 34%
+          ),
+          linear-gradient(145deg, #35231b, #16110e 68%);
+      }
+      .place-visual-fallback[hidden] {
+        display: none;
+      }
       .featured-card.has-visual-fallback::before {
         position: absolute;
         inset: 0;
@@ -504,19 +859,59 @@
         border: 0;
         border-radius: 0;
         background:
-          radial-gradient(circle at 72% 16%, rgba(247, 213, 178, 0.26), transparent 34%),
-          radial-gradient(circle at 20% 86%, rgba(133, 156, 201, 0.2), transparent 40%),
+          radial-gradient(
+            circle at 72% 16%,
+            rgba(247, 213, 178, 0.26),
+            transparent 34%
+          ),
+          radial-gradient(
+            circle at 20% 86%,
+            rgba(133, 156, 201, 0.2),
+            transparent 40%
+          ),
           linear-gradient(145deg, #2a2926, #11110f 62%, #25211d);
       }
 
-      .featured-card.is-loading { cursor: default; background: rgba(248,245,239,.045); }
+      .featured-card.is-loading {
+        cursor: default;
+        background: rgba(248, 245, 239, 0.045);
+      }
       .featured-card.is-loading .featured-img,
-      .featured-card.is-loading .featured-overlay { visibility: hidden; }
-      .featured-loading { position: absolute; inset: 0; display: grid; align-content: end; gap: 10px; padding: 22px; background: linear-gradient(115deg, rgba(248,245,239,.035), rgba(248,245,239,.09), rgba(248,245,239,.035)); background-size: 220% 100%; animation: skeleton-shimmer 1.55s infinite; }
-      .featured-loading span { display: block; height: 13px; border-radius: 99px; background: rgba(248,245,239,.15); }
-      .featured-loading span:first-child { width: 44%; height: 22px; }
-      .featured-loading span:last-child { width: 70%; }
-      .featured-card:not(.is-loading) .featured-loading { display: none; }
+      .featured-card.is-loading .featured-overlay {
+        visibility: hidden;
+      }
+      .featured-loading {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        align-content: end;
+        gap: 10px;
+        padding: 22px;
+        background: linear-gradient(
+          115deg,
+          rgba(248, 245, 239, 0.035),
+          rgba(248, 245, 239, 0.09),
+          rgba(248, 245, 239, 0.035)
+        );
+        background-size: 220% 100%;
+        animation: skeleton-shimmer 1.55s infinite;
+      }
+      .featured-loading span {
+        display: block;
+        height: 13px;
+        border-radius: 99px;
+        background: rgba(248, 245, 239, 0.15);
+      }
+      .featured-loading span:first-child {
+        width: 44%;
+        height: 22px;
+      }
+      .featured-loading span:last-child {
+        width: 70%;
+      }
+      .featured-card:not(.is-loading) .featured-loading {
+        display: none;
+      }
 
       .featured-overlay {
         position: absolute;
@@ -639,7 +1034,10 @@
         object-fit: cover;
         display: block;
       }
-      .location-card .place-visual-fallback { position: absolute; inset: 0; }
+      .location-card .place-visual-fallback {
+        position: absolute;
+        inset: 0;
+      }
 
       .location-card-overlay {
         position: absolute;
@@ -692,12 +1090,14 @@
         scroll-snap-type: x proximity;
         scrollbar-width: none;
       }
-      .recommendation-grid::-webkit-scrollbar { display: none; }
+      .recommendation-grid::-webkit-scrollbar {
+        display: none;
+      }
 
       .recommendation-card {
         position: relative;
         flex: 0 0 178px;
-        aspect-ratio: .78;
+        aspect-ratio: 0.78;
         overflow: hidden;
         padding: 0;
         border: 1px solid var(--line);
@@ -708,28 +1108,161 @@
         text-align: left;
       }
 
-      .recommendation-card:active { transform: scale(.98); }
-      .recommendation-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .recommendation-card .place-visual-fallback { position: absolute; inset: 0; }
-      .recommendation-card-copy { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; padding: 13px; background: linear-gradient(to top, rgba(5,5,5,.94), rgba(5,5,5,.16) 62%, transparent); }
-      .recommendation-card-copy strong { overflow: hidden; font-size: 14px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
-      .recommendation-card-copy span { overflow: hidden; color: rgba(248,245,239,.72); font-size: 10px; font-weight: 600; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-      .discover-refresh { min-height: 30px; padding: 0; color: var(--peach); border: 0; background: transparent; font: inherit; font-size: 11px; font-weight: 720; }
+      .recommendation-card:active {
+        transform: scale(0.98);
+      }
+      .recommendation-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .recommendation-card .place-visual-fallback {
+        position: absolute;
+        inset: 0;
+      }
+      .recommendation-card-copy {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 3px;
+        padding: 13px;
+        background: linear-gradient(
+          to top,
+          rgba(5, 5, 5, 0.94),
+          rgba(5, 5, 5, 0.16) 62%,
+          transparent
+        );
+      }
+      .recommendation-card-copy strong {
+        overflow: hidden;
+        font-size: 14px;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .recommendation-card-copy span {
+        overflow: hidden;
+        color: rgba(248, 245, 239, 0.72);
+        font-size: 10px;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .discover-refresh {
+        min-height: 30px;
+        padding: 0;
+        color: var(--peach);
+        border: 0;
+        background: transparent;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 720;
+      }
 
-      .discovery-results { display: grid; gap: 9px; }
-      .discovery-result { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; min-height: 94px; padding: 7px; color: var(--ink); border: 1px solid var(--line); border-radius: 17px; background: rgba(248,245,239,.035); text-align: left; }
-      .discovery-result:active { transform: scale(.985); }
-      .discovery-result img { width:78px; height:78px; border-radius:11px; object-fit:cover; background:#171717; }
-      .discovery-result .place-visual-fallback { width:78px; height:78px; border-radius:11px; }
-      .discovery-result-copy { display:grid; min-width:0; gap:4px; }
-      .discovery-result-copy small { overflow:hidden; color:var(--peach); font-size:9px; font-weight:760; letter-spacing:.07em; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; }
-      .discovery-result-copy strong { overflow:hidden; font-size:15px; letter-spacing:-.02em; text-overflow:ellipsis; white-space:nowrap; }
-      .discovery-result-copy span { overflow:hidden; color:var(--muted); font-size:11px; line-height:1.25; text-overflow:ellipsis; white-space:nowrap; }
-      .discovery-result-index { width:25px; height:25px; display:grid; place-items:center; color:var(--muted); border:1px solid var(--line); border-radius:50%; font-size:10px; font-weight:720; }
-      .results-pagination { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:13px; }
-      .results-pagination button { min-height:36px; min-width:78px; padding:0 11px; color:var(--ink); border:1px solid var(--line); border-radius:11px; background:rgba(248,245,239,.045); font-size:11px; font-weight:720; }
-      .results-pagination button:disabled { opacity:.36; }
-      .results-page-status { color:var(--muted); font-size:10px; font-weight:670; }
+      .discovery-results {
+        display: grid;
+        gap: 9px;
+      }
+      .discovery-result {
+        display: grid;
+        grid-template-columns: 78px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        width: 100%;
+        min-height: 94px;
+        padding: 7px;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        background: rgba(248, 245, 239, 0.035);
+        text-align: left;
+      }
+      .discovery-result:active {
+        transform: scale(0.985);
+      }
+      .discovery-result img {
+        width: 78px;
+        height: 78px;
+        border-radius: 11px;
+        object-fit: cover;
+        background: #171717;
+      }
+      .discovery-result .place-visual-fallback {
+        width: 78px;
+        height: 78px;
+        border-radius: 11px;
+      }
+      .discovery-result-copy {
+        display: grid;
+        min-width: 0;
+        gap: 4px;
+      }
+      .discovery-result-copy small {
+        overflow: hidden;
+        color: var(--peach);
+        font-size: 9px;
+        font-weight: 760;
+        letter-spacing: 0.07em;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .discovery-result-copy strong {
+        overflow: hidden;
+        font-size: 15px;
+        letter-spacing: -0.02em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .discovery-result-copy span {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.25;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .discovery-result-index {
+        width: 25px;
+        height: 25px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 720;
+      }
+      .results-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 13px;
+      }
+      .results-pagination button {
+        min-height: 36px;
+        min-width: 78px;
+        padding: 0 11px;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: rgba(248, 245, 239, 0.045);
+        font-size: 11px;
+        font-weight: 720;
+      }
+      .results-pagination button:disabled {
+        opacity: 0.36;
+      }
+      .results-page-status {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 670;
+      }
 
       /* Skeleton Loader Styles */
       .skeleton-card {
@@ -753,46 +1286,306 @@
         animation: skeleton-shimmer 1.5s infinite;
       }
 
-      .discovery-fallback-note { min-height: 40px; display: flex; align-items: center; color: var(--muted); font-size: 12px; line-height: 1.4; }
-      .discover-loading-grid { display:grid; gap:9px; }
-      .discover-loading-row { display:grid; grid-template-columns:78px minmax(0, 1fr) 24px; gap:12px; align-items:center; min-height:94px; padding:7px; border:1px solid var(--line); border-radius:17px; background:rgba(248,245,239,.035); }
-      .discover-loading-thumb, .discover-loading-line, .discover-loading-index { display:block; border-radius:11px; background:linear-gradient(100deg, rgba(248,245,239,.055), rgba(248,245,239,.13), rgba(248,245,239,.055)); background-size:210% 100%; animation:skeleton-shimmer 1.35s ease-in-out infinite; }
-      .discover-loading-thumb { width:78px; height:78px; }
-      .discover-loading-copy { display:grid; gap:8px; }
-      .discover-loading-line { height:10px; }
-      .discover-loading-line:first-child { width:42%; }
-      .discover-loading-line:nth-child(2) { width:78%; height:14px; }
-      .discover-loading-line:last-child { width:60%; }
-      .discover-loading-index { width:24px; height:24px; border-radius:50%; }
+      .discovery-fallback-note {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .discover-loading-grid {
+        display: grid;
+        gap: 9px;
+      }
+      .discover-loading-row {
+        display: grid;
+        grid-template-columns: 78px minmax(0, 1fr) 24px;
+        gap: 12px;
+        align-items: center;
+        min-height: 94px;
+        padding: 7px;
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        background: rgba(248, 245, 239, 0.035);
+      }
+      .discover-loading-thumb,
+      .discover-loading-line,
+      .discover-loading-index {
+        display: block;
+        border-radius: 11px;
+        background: linear-gradient(
+          100deg,
+          rgba(248, 245, 239, 0.055),
+          rgba(248, 245, 239, 0.13),
+          rgba(248, 245, 239, 0.055)
+        );
+        background-size: 210% 100%;
+        animation: skeleton-shimmer 1.35s ease-in-out infinite;
+      }
+      .discover-loading-thumb {
+        width: 78px;
+        height: 78px;
+      }
+      .discover-loading-copy {
+        display: grid;
+        gap: 8px;
+      }
+      .discover-loading-line {
+        height: 10px;
+      }
+      .discover-loading-line:first-child {
+        width: 42%;
+      }
+      .discover-loading-line:nth-child(2) {
+        width: 78%;
+        height: 14px;
+      }
+      .discover-loading-line:last-child {
+        width: 60%;
+      }
+      .discover-loading-index {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+      }
 
-      .surprise-loader { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:28px; overflow:hidden; isolation:isolate; contain:layout paint; background:radial-gradient(circle at 50% 43%, rgba(247,213,178,.2), transparent 19%), radial-gradient(circle at 15% 85%, rgba(123,147,214,.16), transparent 38%), #080808; }
-      .surprise-loader::before { position:absolute; width:min(82vw,390px); aspect-ratio:1; border:1px solid rgba(247,213,178,.13); border-radius:50%; background:repeating-radial-gradient(circle, transparent 0 28px, rgba(247,213,178,.055) 29px 30px), radial-gradient(circle, rgba(247,213,178,.18), transparent 66%); content:""; filter:blur(1px); animation:surprise-glow 2.4s ease-in-out infinite; }
-      .surprise-loader::after { position:absolute; inset:-30%; z-index:-1; background:conic-gradient(from 90deg at 50% 50%, transparent, rgba(247,213,178,.08), transparent 32%); content:""; animation:surprise-orbit 5s linear infinite; }
-      .surprise-loader[hidden] { display:none; }
-      .surprise-loader-card { position:relative; width:min(100%,300px); display:grid; justify-items:center; gap:16px; padding:26px 18px; border:1px solid rgba(248,245,239,.09); border-radius:28px; background:linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.015)); box-shadow:0 26px 80px rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.1); text-align:center; backdrop-filter:blur(14px); }
-      .surprise-die-stage { width:128px; height:128px; display:grid; place-items:center; perspective:520px; -webkit-perspective:520px; filter:drop-shadow(0 18px 18px rgba(0,0,0,.38)); }
-      .surprise-die { position:relative; width:84px; height:84px; transform-style:preserve-3d; -webkit-transform-style:preserve-3d; will-change:transform; animation:surprise-roll 2.15s cubic-bezier(.33,.06,.17,1) infinite; }
-      .surprise-die-face { position:absolute; inset:0; display:grid; grid-template:repeat(3, 1fr) / repeat(3, 1fr); box-sizing:border-box; padding:17px; border:1px solid rgba(255,255,255,.5); border-radius:20px; background:linear-gradient(145deg, #fff3e9 0%, #f7d5b2 62%, #dca882 100%); box-shadow:inset 4px 4px 9px rgba(255,255,255,.38), inset -7px -7px 13px rgba(89,52,29,.2); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
-      .surprise-die-pip { width:9px; height:9px; align-self:center; justify-self:center; border-radius:50%; background:#15110f; box-shadow:inset 1px 1px rgba(255,255,255,.2), 0 1px 1px rgba(255,255,255,.18); }
-      .surprise-die-face--one .surprise-die-pip:nth-child(1), .surprise-die-face--three .surprise-die-pip:nth-child(2), .surprise-die-face--five .surprise-die-pip:nth-child(3) { grid-row:2; grid-column:2; }
-      .surprise-die-face--two .surprise-die-pip:nth-child(1), .surprise-die-face--three .surprise-die-pip:nth-child(1), .surprise-die-face--four .surprise-die-pip:nth-child(1), .surprise-die-face--five .surprise-die-pip:nth-child(1), .surprise-die-face--six .surprise-die-pip:nth-child(1) { grid-row:1; grid-column:1; }
-      .surprise-die-face--two .surprise-die-pip:nth-child(2), .surprise-die-face--three .surprise-die-pip:nth-child(3), .surprise-die-face--four .surprise-die-pip:nth-child(4), .surprise-die-face--five .surprise-die-pip:nth-child(5), .surprise-die-face--six .surprise-die-pip:nth-child(6) { grid-row:3; grid-column:3; }
-      .surprise-die-face--four .surprise-die-pip:nth-child(2), .surprise-die-face--five .surprise-die-pip:nth-child(2), .surprise-die-face--six .surprise-die-pip:nth-child(2) { grid-row:1; grid-column:3; }
-      .surprise-die-face--four .surprise-die-pip:nth-child(3), .surprise-die-face--five .surprise-die-pip:nth-child(4), .surprise-die-face--six .surprise-die-pip:nth-child(5) { grid-row:3; grid-column:1; }
-      .surprise-die-face--six .surprise-die-pip:nth-child(3) { grid-row:2; grid-column:1; }
-      .surprise-die-face--six .surprise-die-pip:nth-child(4) { grid-row:2; grid-column:3; }
-      .surprise-die-face--one { transform:translateZ(42px); }
-      .surprise-die-face--two { transform:rotateY(90deg) translateZ(42px); }
-      .surprise-die-face--three { transform:rotateY(180deg) translateZ(42px); }
-      .surprise-die-face--four { transform:rotateY(-90deg) translateZ(42px); }
-      .surprise-die-face--five { transform:rotateX(90deg) translateZ(42px); }
-      .surprise-die-face--six { transform:rotateX(-90deg) translateZ(42px); }
-      .surprise-loader h2 { margin:6px 0 0; font-size:24px; letter-spacing:-.045em; }
-      .surprise-loader p { max-width:220px; margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
-      @keyframes surprise-roll { 0% { transform:rotateX(-16deg) rotateY(0deg) rotateZ(0deg); } 42% { transform:rotateX(305deg) rotateY(428deg) rotateZ(9deg); } 72% { transform:rotateX(690deg) rotateY(610deg) rotateZ(-7deg); } 100% { transform:rotateX(704deg) rotateY(720deg) rotateZ(0deg); } }
-      @keyframes surprise-glow { 0%,100% { opacity:.45; transform:scale(.9); } 50% { opacity:1; transform:scale(1.08); } }
-      @keyframes surprise-orbit { to { transform:rotate(360deg); } }
-      @media (prefers-reduced-motion:reduce) { .surprise-die, .surprise-loader::before, .surprise-loader::after { animation:none; } }
+      .surprise-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 120;
+        display: grid;
+        place-items: center;
+        padding: 28px;
+        overflow: hidden;
+        isolation: isolate;
+        contain: layout paint;
+        background:
+          radial-gradient(
+            circle at 50% 43%,
+            rgba(247, 213, 178, 0.2),
+            transparent 19%
+          ),
+          radial-gradient(
+            circle at 15% 85%,
+            rgba(123, 147, 214, 0.16),
+            transparent 38%
+          ),
+          #080808;
+      }
+      .surprise-loader::before {
+        position: absolute;
+        width: min(82vw, 390px);
+        aspect-ratio: 1;
+        border: 1px solid rgba(247, 213, 178, 0.13);
+        border-radius: 50%;
+        background:
+          repeating-radial-gradient(
+            circle,
+            transparent 0 28px,
+            rgba(247, 213, 178, 0.055) 29px 30px
+          ),
+          radial-gradient(circle, rgba(247, 213, 178, 0.18), transparent 66%);
+        content: "";
+        filter: blur(1px);
+        animation: surprise-glow 2.4s ease-in-out infinite;
+      }
+      .surprise-loader::after {
+        position: absolute;
+        inset: -30%;
+        z-index: -1;
+        background: conic-gradient(
+          from 90deg at 50% 50%,
+          transparent,
+          rgba(247, 213, 178, 0.08),
+          transparent 32%
+        );
+        content: "";
+        animation: surprise-orbit 5s linear infinite;
+      }
+      .surprise-loader[hidden] {
+        display: none;
+      }
+      .surprise-loader-card {
+        position: relative;
+        width: min(100%, 300px);
+        display: grid;
+        justify-items: center;
+        gap: 16px;
+        padding: 26px 18px;
+        border: 1px solid rgba(248, 245, 239, 0.09);
+        border-radius: 28px;
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.08),
+          rgba(255, 255, 255, 0.015)
+        );
+        box-shadow:
+          0 26px 80px rgba(0, 0, 0, 0.45),
+          inset 0 1px rgba(255, 255, 255, 0.1);
+        text-align: center;
+        backdrop-filter: blur(14px);
+      }
+      .surprise-die-stage {
+        width: 128px;
+        height: 128px;
+        display: grid;
+        place-items: center;
+        perspective: 520px;
+        -webkit-perspective: 520px;
+        filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.38));
+      }
+      .surprise-die {
+        position: relative;
+        width: 84px;
+        height: 84px;
+        transform-style: preserve-3d;
+        -webkit-transform-style: preserve-3d;
+        will-change: transform;
+        animation: surprise-roll 2.15s cubic-bezier(0.33, 0.06, 0.17, 1)
+          infinite;
+      }
+      .surprise-die-face {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+        box-sizing: border-box;
+        padding: 17px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        background: linear-gradient(
+          145deg,
+          #fff3e9 0%,
+          #f7d5b2 62%,
+          #dca882 100%
+        );
+        box-shadow:
+          inset 4px 4px 9px rgba(255, 255, 255, 0.38),
+          inset -7px -7px 13px rgba(89, 52, 29, 0.2);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+      .surprise-die-pip {
+        width: 9px;
+        height: 9px;
+        align-self: center;
+        justify-self: center;
+        border-radius: 50%;
+        background: #15110f;
+        box-shadow:
+          inset 1px 1px rgba(255, 255, 255, 0.2),
+          0 1px 1px rgba(255, 255, 255, 0.18);
+      }
+      .surprise-die-face--one .surprise-die-pip:nth-child(1),
+      .surprise-die-face--three .surprise-die-pip:nth-child(2),
+      .surprise-die-face--five .surprise-die-pip:nth-child(3) {
+        grid-row: 2;
+        grid-column: 2;
+      }
+      .surprise-die-face--two .surprise-die-pip:nth-child(1),
+      .surprise-die-face--three .surprise-die-pip:nth-child(1),
+      .surprise-die-face--four .surprise-die-pip:nth-child(1),
+      .surprise-die-face--five .surprise-die-pip:nth-child(1),
+      .surprise-die-face--six .surprise-die-pip:nth-child(1) {
+        grid-row: 1;
+        grid-column: 1;
+      }
+      .surprise-die-face--two .surprise-die-pip:nth-child(2),
+      .surprise-die-face--three .surprise-die-pip:nth-child(3),
+      .surprise-die-face--four .surprise-die-pip:nth-child(4),
+      .surprise-die-face--five .surprise-die-pip:nth-child(5),
+      .surprise-die-face--six .surprise-die-pip:nth-child(6) {
+        grid-row: 3;
+        grid-column: 3;
+      }
+      .surprise-die-face--four .surprise-die-pip:nth-child(2),
+      .surprise-die-face--five .surprise-die-pip:nth-child(2),
+      .surprise-die-face--six .surprise-die-pip:nth-child(2) {
+        grid-row: 1;
+        grid-column: 3;
+      }
+      .surprise-die-face--four .surprise-die-pip:nth-child(3),
+      .surprise-die-face--five .surprise-die-pip:nth-child(4),
+      .surprise-die-face--six .surprise-die-pip:nth-child(5) {
+        grid-row: 3;
+        grid-column: 1;
+      }
+      .surprise-die-face--six .surprise-die-pip:nth-child(3) {
+        grid-row: 2;
+        grid-column: 1;
+      }
+      .surprise-die-face--six .surprise-die-pip:nth-child(4) {
+        grid-row: 2;
+        grid-column: 3;
+      }
+      .surprise-die-face--one {
+        transform: translateZ(42px);
+      }
+      .surprise-die-face--two {
+        transform: rotateY(90deg) translateZ(42px);
+      }
+      .surprise-die-face--three {
+        transform: rotateY(180deg) translateZ(42px);
+      }
+      .surprise-die-face--four {
+        transform: rotateY(-90deg) translateZ(42px);
+      }
+      .surprise-die-face--five {
+        transform: rotateX(90deg) translateZ(42px);
+      }
+      .surprise-die-face--six {
+        transform: rotateX(-90deg) translateZ(42px);
+      }
+      .surprise-loader h2 {
+        margin: 6px 0 0;
+        font-size: 24px;
+        letter-spacing: -0.045em;
+      }
+      .surprise-loader p {
+        max-width: 220px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      @keyframes surprise-roll {
+        0% {
+          transform: rotateX(-16deg) rotateY(0deg) rotateZ(0deg);
+        }
+        42% {
+          transform: rotateX(305deg) rotateY(428deg) rotateZ(9deg);
+        }
+        72% {
+          transform: rotateX(690deg) rotateY(610deg) rotateZ(-7deg);
+        }
+        100% {
+          transform: rotateX(704deg) rotateY(720deg) rotateZ(0deg);
+        }
+      }
+      @keyframes surprise-glow {
+        0%,
+        100% {
+          opacity: 0.45;
+          transform: scale(0.9);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.08);
+        }
+      }
+      @keyframes surprise-orbit {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .surprise-die,
+        .surprise-loader::before,
+        .surprise-loader::after {
+          animation: none;
+        }
+      }
 
       @keyframes skeleton-shimmer {
         100% {
@@ -821,7 +1614,7 @@
       .view-switch button.active {
         background: var(--surface-dark);
         color: var(--ink);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
       }
 
       /* Map View Container */
@@ -859,7 +1652,7 @@
         display: grid;
         place-items: center;
         transform: translate(-50%, -50%);
-        box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
         border: 2px solid #050505;
       }
 
@@ -949,7 +1742,9 @@
         z-index: 100;
         visibility: hidden;
         opacity: 0;
-        transition: opacity 0.25s ease, visibility 0.25s ease;
+        transition:
+          opacity 0.25s ease,
+          visibility 0.25s ease;
         display: flex;
         justify-content: center;
         align-items: flex-end;
@@ -994,7 +1789,9 @@
         opacity: 0 !important;
         pointer-events: none !important;
         transform: translate(-50%, 40px) !important;
-        transition: transform 0.25s ease, opacity 0.2s ease;
+        transition:
+          transform 0.25s ease,
+          opacity 0.2s ease;
       }
 
       body.sheet-open .fab-chat {
@@ -1048,7 +1845,8 @@
         margin-top: 24px;
       }
 
-      .detail-actions button, .detail-actions a {
+      .detail-actions button,
+      .detail-actions a {
         flex: 1;
         padding: 14px;
         border-radius: var(--pill-radius);
@@ -1067,7 +1865,9 @@
       }
     </style>
     <link rel="stylesheet" href="assets/page-loader.css" />
-    <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
   </head>
   <body>
     <div class="app-shell">
@@ -1077,11 +1877,37 @@
           <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
         <div class="culture-control">
-          <button class="culture-toggle" id="culture-toggle" type="button" aria-label="Choose a culture" aria-haspopup="dialog" aria-expanded="false">
-            <span class="culture-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.25" /><path d="M12 4.75c2.1 2.13 3.17 4.55 3.17 7.25S14.1 17.12 12 19.25C9.9 17.12 8.83 14.7 8.83 12S9.9 6.88 12 4.75ZM4.75 12h14.5" /></svg></span>
-            <span class="culture-toggle-copy"><span class="culture-toggle-label">Culture</span><span class="culture-toggle-state" id="culture-toggle-state">Local mode</span></span>
+          <button
+            class="culture-toggle"
+            id="culture-toggle"
+            type="button"
+            aria-label="Choose a culture"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+          >
+            <span class="culture-toggle-icon" aria-hidden="true"
+              ><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="7.25" />
+                <path
+                  d="M12 4.75c2.1 2.13 3.17 4.55 3.17 7.25S14.1 17.12 12 19.25C9.9 17.12 8.83 14.7 8.83 12S9.9 6.88 12 4.75ZM4.75 12h14.5"
+                /></svg
+            ></span>
+            <span class="culture-toggle-copy"
+              ><span class="culture-toggle-label">Culture</span
+              ><span class="culture-toggle-state" id="culture-toggle-state"
+                >Local mode</span
+              ></span
+            >
           </button>
-          <button class="culture-toggle-clear" id="culture-toggle-clear" type="button" aria-label="Turn off Culture Lens" title="Turn off Culture Lens">×</button>
+          <button
+            class="culture-toggle-clear"
+            id="culture-toggle-clear"
+            type="button"
+            aria-label="Turn off Culture Lens"
+            title="Turn off Culture Lens"
+          >
+            ×
+          </button>
         </div>
       </header>
 
@@ -1090,15 +1916,33 @@
         <!-- Hero Section -->
         <section class="hero">
           <div class="location-badge" id="location-note">
-            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span>
+            <span
+              style="
+                display: inline-block;
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--peach);
+              "
+            ></span>
             <span>GTA TRENDS</span>
           </div>
-          <h1 id="discover-title">Discover the GTA<span class="accent-dot">.</span></h1>
-          <p id="discover-copy">Thoughtful places, plans, and experiences — all grounded in what Echoo knows locally.</p>
-          
+          <h1 id="discover-title">
+            Discover the GTA<span class="accent-dot">.</span>
+          </h1>
+          <p id="discover-copy">
+            Thoughtful places, plans, and experiences — all grounded in what
+            Echoo knows locally.
+          </p>
+
           <!-- Search Bar -->
           <div class="search-wrap">
-            <form class="search-form" id="search-form" role="search" aria-label="Search Echoo">
+            <form
+              class="search-form"
+              id="search-form"
+              role="search"
+              aria-label="Search Echoo"
+            >
               <svg class="search-icon" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7" />
                 <path d="m16.5 16.5 4.5 4.5" />
@@ -1111,13 +1955,22 @@
                 aria-controls="suggestions"
                 aria-expanded="false"
               />
-              <button class="search-submit-btn" type="submit" aria-label="Search">
+              <button
+                class="search-submit-btn"
+                type="submit"
+                aria-label="Search"
+              >
                 <svg viewBox="0 0 24 24">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
             </form>
-            <div class="suggestions-popover" id="suggestions" role="listbox" hidden></div>
+            <div
+              class="suggestions-popover"
+              id="suggestions"
+              role="listbox"
+              hidden
+            ></div>
           </div>
         </section>
 
@@ -1129,6 +1982,28 @@
           <button class="chip" data-query="tourism">Tourism</button>
           <button class="chip" data-query="nature">Nature</button>
         </div>
+
+        <!-- Now Showing — Echoo Cinema trailers rail -->
+        <section aria-label="Now Showing" id="cinema-now-showing" hidden>
+          <div class="section-header">
+            <h2>Now showing</h2>
+            <a
+              class="section-link"
+              href="films.html"
+              style="
+                font-size: 11px;
+                font-weight: 650;
+                color: var(--peach);
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+              "
+              >All trailers</a
+            >
+          </div>
+          <div class="poster-carousel" id="cinema-discover-rail">
+            <!-- Populated by the inline cinema-discover init script below -->
+          </div>
+        </section>
 
         <!-- Popular Nearby Section with inline List/Map View Switch -->
         <section aria-label="Popular Nearby">
@@ -1153,32 +2028,71 @@
         <section aria-label="Recommendations">
           <div class="section-header">
             <h2 id="recommendations-heading">Recommended for you</h2>
-            <button class="discover-refresh" id="discover-refresh" type="button">Refresh</button>
+            <button
+              class="discover-refresh"
+              id="discover-refresh"
+              type="button"
+            >
+              Refresh
+            </button>
           </div>
-          <div class="recommendation-grid" id="recommendation-container" aria-live="polite">
+          <div
+            class="recommendation-grid"
+            id="recommendation-container"
+            aria-live="polite"
+          >
             <div class="recommendation-card skeleton-card"></div>
             <div class="recommendation-card skeleton-card"></div>
           </div>
         </section>
 
         <section id="search-results-section" aria-label="All places">
-          <div class="section-header"><h2 id="results-heading">All places</h2><span class="results-page-status" id="results-page-status"></span></div>
+          <div class="section-header">
+            <h2 id="results-heading">All places</h2>
+            <span class="results-page-status" id="results-page-status"></span>
+          </div>
           <div class="discovery-results" id="results"></div>
-          <div class="results-pagination" id="results-pagination" hidden><button id="results-previous" type="button">Previous</button><button id="results-next" type="button">Next</button></div>
+          <div class="results-pagination" id="results-pagination" hidden>
+            <button id="results-previous" type="button">Previous</button
+            ><button id="results-next" type="button">Next</button>
+          </div>
         </section>
-
       </main>
 
-      <div class="surprise-loader" id="surprise-loader" role="status" aria-live="polite" hidden>
+      <div
+        class="surprise-loader"
+        id="surprise-loader"
+        role="status"
+        aria-live="polite"
+        hidden
+      >
         <div class="surprise-loader-card">
           <div class="surprise-die-stage" aria-hidden="true">
             <div class="surprise-die">
-              <i class="surprise-die-face surprise-die-face--one"><b class="surprise-die-pip"></b></i>
-              <i class="surprise-die-face surprise-die-face--two"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
-              <i class="surprise-die-face surprise-die-face--three"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
-              <i class="surprise-die-face surprise-die-face--four"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
-              <i class="surprise-die-face surprise-die-face--five"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
-              <i class="surprise-die-face surprise-die-face--six"><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b></i>
+              <i class="surprise-die-face surprise-die-face--one"
+                ><b class="surprise-die-pip"></b
+              ></i>
+              <i class="surprise-die-face surprise-die-face--two"
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+              ></i>
+              <i class="surprise-die-face surprise-die-face--three"
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+                ><b class="surprise-die-pip"></b
+              ></i>
+              <i class="surprise-die-face surprise-die-face--four"
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+              ></i>
+              <i class="surprise-die-face surprise-die-face--five"
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+                ><b class="surprise-die-pip"></b
+              ></i>
+              <i class="surprise-die-face surprise-die-face--six"
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+                ><b class="surprise-die-pip"></b><b class="surprise-die-pip"></b
+              ></i>
             </div>
           </div>
           <h2>Let’s make it lovely.</h2>
@@ -1189,7 +2103,9 @@
       <!-- AI Chat Floating Button -->
       <a class="fab-chat" href="app.html" aria-label="Open AI chat">
         <svg viewBox="0 0 24 24">
-          <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
+          <path
+            d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z"
+          />
         </svg>
       </a>
 
@@ -1228,72 +2144,225 @@
     <!-- Detail Sheet Modal -->
     <div class="sheet" id="detail-sheet" aria-hidden="true">
       <div class="sheet-backdrop" data-close-sheet></div>
-      <section class="sheet-panel" role="dialog" aria-modal="true" aria-label="Place details">
+      <section
+        class="sheet-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Place details"
+      >
         <div class="sheet-handle"></div>
         <div id="detail-content"></div>
       </section>
     </div>
 
-    <section id="quick-plan-modal" class="echoo-quick-plan-modal" aria-hidden="true" aria-label="Quick Plan">
-      <button id="quick-plan-backdrop" class="echoo-quick-plan-backdrop" type="button" tabindex="-1" aria-label="Close Quick Plan"></button>
-      <div class="echoo-quick-plan-sheet" role="dialog" aria-modal="true" aria-labelledby="quick-plan-title">
+    <section
+      id="quick-plan-modal"
+      class="echoo-quick-plan-modal"
+      aria-hidden="true"
+      aria-label="Quick Plan"
+    >
+      <button
+        id="quick-plan-backdrop"
+        class="echoo-quick-plan-backdrop"
+        type="button"
+        tabindex="-1"
+        aria-label="Close Quick Plan"
+      ></button>
+      <div
+        class="echoo-quick-plan-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-plan-title"
+      >
         <div class="echoo-quick-plan-handle" aria-hidden="true"></div>
         <div id="quick-plan-content"></div>
       </div>
     </section>
 
-    <section class="discover-location-sheet" id="discover-location-sheet" aria-labelledby="discover-location-title" hidden>
+    <section
+      class="discover-location-sheet"
+      id="discover-location-sheet"
+      aria-labelledby="discover-location-title"
+      hidden
+    >
       <h2 id="discover-location-title">Find places close to you?</h2>
-      <p>Use your current location to rank GTA places by distance. You can also browse a municipality instead.</p>
-      <select class="discover-location-select" id="discover-municipality" aria-label="Choose a GTA municipality"></select>
+      <p>
+        Use your current location to rank GTA places by distance. You can also
+        browse a municipality instead.
+      </p>
+      <select
+        class="discover-location-select"
+        id="discover-municipality"
+        aria-label="Choose a GTA municipality"
+      ></select>
       <div class="discover-location-actions">
-        <button class="primary" type="button" id="discover-use-location">Use my location</button>
-        <button type="button" id="discover-use-municipality">Use municipality</button>
+        <button class="primary" type="button" id="discover-use-location">
+          Use my location
+        </button>
+        <button type="button" id="discover-use-municipality">
+          Use municipality
+        </button>
         <button type="button" id="discover-location-later">Not now</button>
       </div>
     </section>
 
     <section class="culture-picker" id="culture-picker" aria-hidden="true">
-      <button class="culture-picker-backdrop" type="button" data-close-culture tabindex="-1" aria-label="Close culture picker"></button>
-      <div class="culture-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="culture-picker-title">
+      <button
+        class="culture-picker-backdrop"
+        type="button"
+        data-close-culture
+        tabindex="-1"
+        aria-label="Close culture picker"
+      ></button>
+      <div
+        class="culture-picker-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="culture-picker-title"
+      >
         <div class="culture-picker-handle" aria-hidden="true"></div>
         <div class="culture-picker-heading">
-          <div><small>Discover mode</small><h2 id="culture-picker-title">Choose a culture.</h2><p>Choose a region, then a culture — or search the full catalogue.</p></div>
-          <button class="culture-picker-close" type="button" data-close-culture aria-label="Close">×</button>
+          <div>
+            <small>Discover mode</small>
+            <h2 id="culture-picker-title">Choose a culture.</h2>
+            <p>
+              Choose a region, then a culture — or search the full catalogue.
+            </p>
+          </div>
+          <button
+            class="culture-picker-close"
+            type="button"
+            data-close-culture
+            aria-label="Close"
+          >
+            ×
+          </button>
         </div>
         <p class="culture-group-label">Browse regions</p>
-        <div class="culture-group-strip" id="culture-group-strip" aria-label="Browse culture regions"></div>
-        <label class="culture-picker-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg><input id="culture-picker-search" type="search" autocomplete="off" placeholder="Search any culture or language" /></label>
-        <div class="culture-picker-list" id="culture-picker-list" role="list" aria-label="Choose a culture"></div>
-        <div class="culture-picker-footer"><button class="culture-clear" id="culture-clear" type="button">Turn off Culture Lens · show <strong>local picks</strong></button></div>
+        <div
+          class="culture-group-strip"
+          id="culture-group-strip"
+          aria-label="Browse culture regions"
+        ></div>
+        <label class="culture-picker-search"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m16 16 4 4" /></svg
+          ><input
+            id="culture-picker-search"
+            type="search"
+            autocomplete="off"
+            placeholder="Search any culture or language"
+        /></label>
+        <div
+          class="culture-picker-list"
+          id="culture-picker-list"
+          role="list"
+          aria-label="Choose a culture"
+        ></div>
+        <div class="culture-picker-footer">
+          <button class="culture-clear" id="culture-clear" type="button">
+            Turn off Culture Lens · show <strong>local picks</strong>
+          </button>
+        </div>
       </div>
     </section>
 
-      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-      <script src="assets/echoo-auth.js"></script>
-      <script src="assets/echoo-place-detail.js"></script>
-      <script src="assets/echoo-linkup.js"></script>
-      <script src="assets/location-platform.js"></script>
-      <script src="assets/culture-context.js"></script>
-      <script>
-        const CONFIG = {
-          anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-          exploreUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
-          locationContextUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-context",
-          suggestionsUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/search-suggestions",
-          communityUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discovery-community",
-          placeDetailUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
-          quickPlanUrl: "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/quick-plan",
-        };
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
+    <script src="assets/echoo-place-detail.js"></script>
+    <script src="assets/echoo-linkup.js"></script>
+    <script src="assets/location-platform.js"></script>
+    <script src="assets/culture-context.js"></script>
+    <script>
+      // ── Now Showing rail: lightweight fetch of now_playing movies ──
+      // Kept inline (not echoo-cinema.js) because Discover only needs one rail.
+      (function () {
+        const rail = document.getElementById("cinema-discover-rail");
+        const section = document.getElementById("cinema-now-showing");
+        if (!rail || !section) return;
+
+        const PLACEHOLDER =
+          "data:image/svg+xml," +
+          encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="132" height="198"><rect width="132" height="198" fill="#1a1a1a"/></svg>',
+          );
+
+        fetch(
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/movies-feed?rail=now_playing&limit=10",
+          { headers: { accept: "application/json" } },
+        )
+          .then(function (res) {
+            return res.ok ? res.json() : null;
+          })
+          .then(function (data) {
+            const movies = ((data && data.movies) || []).filter(function (m) {
+              return m.poster_url;
+            });
+            if (movies.length === 0) return; // keep section hidden
+
+            rail.innerHTML = "";
+            movies.forEach(function (movie) {
+              const a = document.createElement("a");
+              a.className = "poster-card";
+              a.href = `films.html?movie=${encodeURIComponent(movie.tmdb_id)}`;
+              const hasTrailer = Boolean(movie.trailer_youtube_id);
+              a.innerHTML =
+                `<div class="poster-thumb${hasTrailer ? "" : " no-trailer"}">` +
+                (hasTrailer
+                  ? '<span class="poster-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>'
+                  : "") +
+                `<img src="${movie.poster_url}" alt="${(movie.title || "").replace(/"/g, "&quot;")} poster" loading="lazy" decoding="async" onerror="this.src='${PLACEHOLDER}'"></div>` +
+                `<span class="poster-title"></span>` +
+                `<span class="poster-meta"></span>`;
+              a.querySelector(".poster-title").textContent = movie.title || "";
+              const bits = [];
+              if (movie.year) bits.push(movie.year);
+              if (movie.vote_average)
+                bits.push("★ " + Number(movie.vote_average).toFixed(1));
+              a.querySelector(".poster-meta").innerHTML = bits
+                .map(function (b) {
+                  return b.replace(/</g, "&lt;");
+                })
+                .join('<span class="dot"></span>');
+              rail.appendChild(a);
+            });
+            section.hidden = false;
+          })
+          .catch(function () {
+            /* keep section hidden on failure */
+          });
+      })();
+    </script>
+    <script>
+      const CONFIG = {
+        anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+        exploreUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
+        locationContextUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-context",
+        suggestionsUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/search-suggestions",
+        communityUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/discovery-community",
+        placeDetailUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
+        quickPlanUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/quick-plan",
+      };
 
       const params = new URLSearchParams(location.search);
       const DEFAULT_DISCOVERY_CITY = "Toronto";
       let prefs = window.EchooLocationPlatform.readPreferences();
       let city = params.get("city") || prefs.city || DEFAULT_DISCOVERY_CITY;
-      city = window.EchooLocationPlatform.cityByName(city)?.name || DEFAULT_DISCOVERY_CITY;
-      let lat = Number(prefs.lastLat), lng = Number(prefs.lastLng);
+      city =
+        window.EchooLocationPlatform.cityByName(city)?.name ||
+        DEFAULT_DISCOVERY_CITY;
+      let lat = Number(prefs.lastLat),
+        lng = Number(prefs.lastLng);
       const cultureContext = window.EchooCultureContext;
-      if (params.get("culture")) cultureContext?.setActive(params.get("culture"), { silent: true });
+      if (params.get("culture"))
+        cultureContext?.setActive(params.get("culture"), { silent: true });
 
       const queryInput = document.getElementById("query"),
         resultsEl = document.getElementById("results"),
@@ -1307,13 +2376,19 @@
         mapView = document.getElementById("map-view"),
         mapPins = document.getElementById("map-pins"),
         popularContainer = document.getElementById("popular-nearby-container"),
-        recommendationContainer = document.getElementById("recommendation-container"),
+        recommendationContainer = document.getElementById(
+          "recommendation-container",
+        ),
         surpriseLoader = document.getElementById("surprise-loader"),
         locationSheet = document.getElementById("discover-location-sheet"),
         locationMunicipality = document.getElementById("discover-municipality"),
         useLocationButton = document.getElementById("discover-use-location"),
-        useMunicipalityButton = document.getElementById("discover-use-municipality"),
-        locationLaterButton = document.getElementById("discover-location-later");
+        useMunicipalityButton = document.getElementById(
+          "discover-use-municipality",
+        ),
+        locationLaterButton = document.getElementById(
+          "discover-location-later",
+        );
 
       const cultureToggle = document.getElementById("culture-toggle"),
         cultureToggleState = document.getElementById("culture-toggle-state"),
@@ -1325,20 +2400,37 @@
         cultureClear = document.getElementById("culture-clear");
 
       const surpriseMode = params.get("mode") === "surprise";
-      let activeQuery = surpriseMode ? "discover" : (params.get("query") === "trending" ? "discover" : (params.get("query") || "discover")),
+      let activeQuery = surpriseMode
+          ? "discover"
+          : params.get("query") === "trending"
+            ? "discover"
+            : params.get("query") || "discover",
         items = [],
         view = "list",
         suggestionTimer,
         selectedCultureGroup = "",
         discoveryRefreshNonce = 0,
         resultPage = 0,
-        discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: null },
+        discoveryPaging = {
+          cursor: null,
+          livePageToken: null,
+          hasMore: false,
+          request: null,
+        },
         discoveryRequestId = 0;
 
       const esc = (value) =>
-        String(value || "").replace(/[&<>"']/g, (char) => ({
-          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-        })[char]);
+        String(value || "").replace(
+          /[&<>"']/g,
+          (char) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[char],
+        );
 
       function activeCulture() {
         return cultureContext?.getActive?.() || null;
@@ -1347,10 +2439,18 @@
       function onboardingSignals() {
         const profile = prefs.personalizationProfile || {};
         return [
-          ...(Array.isArray(profile.interests) ? profile.interests : []), ...(Array.isArray(prefs.interests) ? prefs.interests : []),
-          ...(Array.isArray(profile.eventStyles) ? profile.eventStyles : []), ...(Array.isArray(prefs.eventStyles) ? prefs.eventStyles : []),
-          ...(Array.isArray(profile.motivations) ? profile.motivations : []), ...(Array.isArray(prefs.motivations) ? prefs.motivations : []),
-        ].map((value) => String(value || "").trim()).filter((value, index, all) => Boolean(value) && all.indexOf(value) === index);
+          ...(Array.isArray(profile.interests) ? profile.interests : []),
+          ...(Array.isArray(prefs.interests) ? prefs.interests : []),
+          ...(Array.isArray(profile.eventStyles) ? profile.eventStyles : []),
+          ...(Array.isArray(prefs.eventStyles) ? prefs.eventStyles : []),
+          ...(Array.isArray(profile.motivations) ? profile.motivations : []),
+          ...(Array.isArray(prefs.motivations) ? prefs.motivations : []),
+        ]
+          .map((value) => String(value || "").trim())
+          .filter(
+            (value, index, all) =>
+              Boolean(value) && all.indexOf(value) === index,
+          );
       }
 
       function preferenceFeatureSlugs() {
@@ -1358,37 +2458,65 @@
         // category a person just tapped. These slugs are deliberately broad
         // and are applied as a gentle ranking boost by Explore.
         const profile = prefs.personalizationProfile || {};
-        const signals = onboardingSignals().map((value) => String(value).toLowerCase());
+        const signals = onboardingSignals().map((value) =>
+          String(value).toLowerCase(),
+        );
         const slugs = new Set();
         const add = (...values) => values.forEach((value) => slugs.add(value));
         signals.forEach((signal) => {
           if (/music|musician|concert|dj|band/.test(signal)) add("live_music");
-          if (/theat(er|re)|performing art|play|musical/.test(signal)) add("theatre");
-          if (/art|artist|paint|creativ/.test(signal)) add("gallery", "museum", "arts_crafts", "creative");
-          if (/sport|fitness|yoga|wellness|health/.test(signal)) add("fitness", "live_sports");
+          if (/theat(er|re)|performing art|play|musical/.test(signal))
+            add("theatre");
+          if (/art|artist|paint|creativ/.test(signal))
+            add("gallery", "museum", "arts_crafts", "creative");
+          if (/sport|fitness|yoga|wellness|health/.test(signal))
+            add("fitness", "live_sports");
           if (/dance|salsa/.test(signal)) add("nightlife", "social");
           if (/game|gaming|board game|card game/.test(signal)) add("games");
-          if (/food|drink|dining/.test(signal)) add("brunch", "cocktails", "coffee");
-          if (/tourism|attraction|museum/.test(signal)) add("museum", "gallery");
-          if (/family|parent|kid/.test(signal)) add("family_friendly", "kid_friendly");
-          if (/meet new|community|network|social/.test(signal)) add("social", "group_hang");
+          if (/food|drink|dining/.test(signal))
+            add("brunch", "cocktails", "coffee");
+          if (/tourism|attraction|museum/.test(signal))
+            add("museum", "gallery");
+          if (/family|parent|kid/.test(signal))
+            add("family_friendly", "kid_friendly");
+          if (/meet new|community|network|social/.test(signal))
+            add("social", "group_hang");
           if (/date/.test(signal)) add("date_night", "romantic");
           if (/quiet|thoughtful|deep/.test(signal)) add("quiet", "cozy");
         });
         if ((profile.energy || prefs.energy) === "chill") add("quiet", "cozy");
-        if ((profile.energy || prefs.energy) === "hype") add("lively", "nightlife");
-        if ((profile.budget || prefs.budget) === "$") add("budget_friendly", "free");
-        if ((profile.budget || prefs.budget) === "$$$") add("splurge", "upscale");
+        if ((profile.energy || prefs.energy) === "hype")
+          add("lively", "nightlife");
+        if ((profile.budget || prefs.budget) === "$")
+          add("budget_friendly", "free");
+        if ((profile.budget || prefs.budget) === "$$$")
+          add("splurge", "upscale");
         return [...slugs].slice(0, 10);
       }
 
       function timeContext() {
         const hour = new Date().getHours();
-        if (hour < 6) return { label: "late night", query: "late night open now" };
-        if (hour < 11) return { label: "this morning", query: "breakfast coffee brunch morning" };
-        if (hour < 16) return { label: "this afternoon", query: "lunch cafes galleries afternoon" };
-        if (hour < 21) return { label: "this evening", query: "dinner date night live music evening" };
-        return { label: "tonight", query: "nightlife late dinner live music tonight" };
+        if (hour < 6)
+          return { label: "late night", query: "late night open now" };
+        if (hour < 11)
+          return {
+            label: "this morning",
+            query: "breakfast coffee brunch morning",
+          };
+        if (hour < 16)
+          return {
+            label: "this afternoon",
+            query: "lunch cafes galleries afternoon",
+          };
+        if (hour < 21)
+          return {
+            label: "this evening",
+            query: "dinner date night live music evening",
+          };
+        return {
+          label: "tonight",
+          query: "nightlife late dinner live music tonight",
+        };
       }
 
       function timePreferenceSlugs() {
@@ -1402,25 +2530,54 @@
 
       function renderCultureGroups() {
         const groups = cultureContext?.browseGroups || [];
-        cultureGroupStrip.innerHTML = groups.map((group) => `<button class="culture-group${group.slug === selectedCultureGroup ? " is-active" : ""}" type="button" data-culture-group="${esc(group.slug)}" aria-pressed="${group.slug === selectedCultureGroup}">${esc(group.label)}</button>`).join("");
+        cultureGroupStrip.innerHTML = groups
+          .map(
+            (group) =>
+              `<button class="culture-group${group.slug === selectedCultureGroup ? " is-active" : ""}" type="button" data-culture-group="${esc(group.slug)}" aria-pressed="${group.slug === selectedCultureGroup}">${esc(group.label)}</button>`,
+          )
+          .join("");
       }
 
       function renderCulturePicker() {
-        const term = String(culturePickerSearch?.value || "").trim().toLowerCase();
+        const term = String(culturePickerSearch?.value || "")
+          .trim()
+          .toLowerCase();
         const selected = activeCulture()?.slug || "";
-        const groups = new Map((cultureContext?.browseGroups || []).map((group) => [group.slug, group.label]));
+        const groups = new Map(
+          (cultureContext?.browseGroups || []).map((group) => [
+            group.slug,
+            group.label,
+          ]),
+        );
         const searchable = cultureContext?.catalogue || [];
-        const options = searchable.filter((culture) => {
-          const searchValues = [culture.label, ...(culture.aliases || []), groups.get(culture.group) || culture.group || ""];
-          if (term) return searchValues.some((value) => String(value).toLowerCase().includes(term));
-          return Boolean(selectedCultureGroup) && culture.group === selectedCultureGroup;
-        }).slice(0, term ? 48 : 24);
+        const options = searchable
+          .filter((culture) => {
+            const searchValues = [
+              culture.label,
+              ...(culture.aliases || []),
+              groups.get(culture.group) || culture.group || "",
+            ];
+            if (term)
+              return searchValues.some((value) =>
+                String(value).toLowerCase().includes(term),
+              );
+            return (
+              Boolean(selectedCultureGroup) &&
+              culture.group === selectedCultureGroup
+            );
+          })
+          .slice(0, term ? 48 : 24);
         if (!term && !selectedCultureGroup) {
           culturePickerList.innerHTML = `<p class="culture-picker-empty">Choose a region above, or search from more than 100 cultures and languages.</p>`;
           return;
         }
         culturePickerList.innerHTML = options.length
-          ? options.map((culture) => `<button type="button" class="culture-choice${culture.slug === selected ? " is-active" : ""}" role="listitem" data-culture="${esc(culture.slug)}" aria-pressed="${culture.slug === selected}"><span>${esc(culture.label)}</span><span class="culture-choice-mark" aria-hidden="true">${culture.slug === selected ? "✓" : ""}</span></button>`).join("")
+          ? options
+              .map(
+                (culture) =>
+                  `<button type="button" class="culture-choice${culture.slug === selected ? " is-active" : ""}" role="listitem" data-culture="${esc(culture.slug)}" aria-pressed="${culture.slug === selected}"><span>${esc(culture.label)}</span><span class="culture-choice-mark" aria-hidden="true">${culture.slug === selected ? "✓" : ""}</span></button>`,
+              )
+              .join("")
           : `<p class="culture-picker-empty">No culture matches that search. Try a language, place, or culture name.</p>`;
       }
 
@@ -1433,7 +2590,10 @@
         culturePicker.setAttribute("aria-hidden", "false");
         cultureToggle.setAttribute("aria-expanded", "true");
         document.body.classList.add("culture-picker-open");
-        setTimeout(() => culturePickerSearch.focus({ preventScroll: true }), 180);
+        setTimeout(
+          () => culturePickerSearch.focus({ preventScroll: true }),
+          180,
+        );
       }
 
       function closeCulturePicker() {
@@ -1448,21 +2608,60 @@
         const title = document.getElementById("discover-title");
         const copy = document.getElementById("discover-copy");
         const nearbyHeading = document.getElementById("nearby-heading");
-        const recommendationsHeading = document.getElementById("recommendations-heading");
+        const recommendationsHeading = document.getElementById(
+          "recommendations-heading",
+        );
         const time = timeContext();
         const category = {
-          discover: { nearby: "Near you", recommendations: "Recommended for you", noun: "places, sounds, and neighbourhood finds" },
-          food: { nearby: "Food near you", recommendations: "More tables to try", noun: "restaurants, cafes, bakeries, and markets" },
-          music: { nearby: "Music nearby", recommendations: "More sound to explore", noun: "venues, records, and local sound" },
-          nightlife: { nearby: "Tonight nearby", recommendations: "More after-dark picks", noun: "late rooms, bars, and live energy" },
-          tourism: { nearby: "Places to visit", recommendations: "More local landmarks", noun: "museums, galleries, and places worth seeing" },
-          nature: { nearby: "Outside nearby", recommendations: "More ways to get out", noun: "parks, walks, and easy outdoor plans" },
-          "upcoming drop": { nearby: "Fresh drops", recommendations: "What is coming up", noun: "new openings, pop-ups, and fresh local plans" },
-        }[activeQuery] || { nearby: "Popular nearby", recommendations: "Recommended for you", noun: "places and local plans" };
+          discover: {
+            nearby: "Near you",
+            recommendations: "Recommended for you",
+            noun: "places, sounds, and neighbourhood finds",
+          },
+          food: {
+            nearby: "Food near you",
+            recommendations: "More tables to try",
+            noun: "restaurants, cafes, bakeries, and markets",
+          },
+          music: {
+            nearby: "Music nearby",
+            recommendations: "More sound to explore",
+            noun: "venues, records, and local sound",
+          },
+          nightlife: {
+            nearby: "Tonight nearby",
+            recommendations: "More after-dark picks",
+            noun: "late rooms, bars, and live energy",
+          },
+          tourism: {
+            nearby: "Places to visit",
+            recommendations: "More local landmarks",
+            noun: "museums, galleries, and places worth seeing",
+          },
+          nature: {
+            nearby: "Outside nearby",
+            recommendations: "More ways to get out",
+            noun: "parks, walks, and easy outdoor plans",
+          },
+          "upcoming drop": {
+            nearby: "Fresh drops",
+            recommendations: "What is coming up",
+            noun: "new openings, pop-ups, and fresh local plans",
+          },
+        }[activeQuery] || {
+          nearby: "Popular nearby",
+          recommendations: "Recommended for you",
+          noun: "places and local plans",
+        };
         cultureToggle.classList.toggle("is-active", Boolean(culture));
         cultureToggleClear.classList.toggle("is-visible", Boolean(culture));
         cultureClear.hidden = !culture;
-        cultureToggle.setAttribute("aria-label", culture ? `${culture.label} is selected. Change culture` : "Choose a culture");
+        cultureToggle.setAttribute(
+          "aria-label",
+          culture
+            ? `${culture.label} is selected. Change culture`
+            : "Choose a culture",
+        );
         cultureToggleState.textContent = culture ? culture.label : "Local mode";
         if (culture) {
           title.innerHTML = `Discover ${esc(culture.label)} locally<span class="accent-dot">.</span>`;
@@ -1490,9 +2689,11 @@
 
       function imageUrlFor(item) {
         const image = item?.image || {};
-        const rawUrl = image?.url || (image?.storagePath
-          ? `https://chimzyfire-ship-it.supabase.co/storage/v1/object/public/discovery-covers/${image.storagePath}`
-          : item?.imageUrl || item?.image_url || "");
+        const rawUrl =
+          image?.url ||
+          (image?.storagePath
+            ? `https://chimzyfire-ship-it.supabase.co/storage/v1/object/public/discovery-covers/${image.storagePath}`
+            : item?.imageUrl || item?.image_url || "");
         return /^(https?:\/\/|assets\/)/i.test(rawUrl) ? rawUrl : "";
       }
 
@@ -1525,7 +2726,10 @@
       }
 
       function buildFallbackDetail(item) {
-        const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
+        const normalize = (value) =>
+          String(value || "")
+            .replace(/\s+/g, " ")
+            .trim();
         const rating = Number(
           item.community?.ratingAverage ||
             item.rating ||
@@ -1533,10 +2737,7 @@
             "",
         );
         const ratingCount = Number(
-          item.community?.ratingCount ||
-            item.rating_count ||
-            item.reviews ||
-            0,
+          item.community?.ratingCount || item.rating_count || item.reviews || 0,
         );
         const hasRating = Number.isFinite(rating);
         return {
@@ -1547,7 +2748,9 @@
             subcategory: item.subcategory || "",
             municipality: normalize(item.neighborhood || item.city || city),
             city: normalize(item.city || city),
-            formatted_address: normalize(item.neighborhood || item.address || city),
+            formatted_address: normalize(
+              item.neighborhood || item.address || city,
+            ),
             latitude: item.latitude || null,
             longitude: item.longitude || null,
             timezone: "America/Toronto",
@@ -1571,7 +2774,9 @@
             meal_tags: item.meal_tags || [],
             price_band: item.price_band || item.priceBand || "",
             noise_level: item.noise_level || "",
-            confidence_score: hasRating ? Math.min(1, Math.max(0.45, rating / 5)) : null,
+            confidence_score: hasRating
+              ? Math.min(1, Math.max(0.45, rating / 5))
+              : null,
           },
           hours: [],
           sources: [],
@@ -1579,14 +2784,17 @@
           alternatives: [],
           sourceStatus: {
             sourceCount: 0,
-            confidenceScore: hasRating ? Math.min(1, Math.max(0.45, rating / 5)) : null,
+            confidenceScore: hasRating
+              ? Math.min(1, Math.max(0.45, rating / 5))
+              : null,
           },
         };
       }
 
       async function fetchPlaceDetail(item) {
         const detailId = item?.canonicalId || item?.entityId || item?.id;
-        if (!detailId || String(detailId).startsWith("google:")) return buildFallbackDetail(item);
+        if (!detailId || String(detailId).startsWith("google:"))
+          return buildFallbackDetail(item);
         const headersForDetail = window.EchooAuth?.authHeaders
           ? await window.EchooAuth.authHeaders({
               "Content-Type": "application/json",
@@ -1650,7 +2858,8 @@
             window.EchooPlaceDetail.renderAuthPrompt({
               title: "Sign in to see this place",
               note: "Create an account and Echoo will bring you straight back here.",
-              nextUrl: window.EchooAuth?.currentRelativeUrl?.() || "events.html",
+              nextUrl:
+                window.EchooAuth?.currentRelativeUrl?.() || "events.html",
               seed: item?.title || item?.name || "place",
               mode: "signup",
               intent: "place_detail",
@@ -1665,31 +2874,30 @@
 
         openDetailSheet();
         setDetailContent(
-          window.EchooPlaceDetail.renderPlaceDetail(
-            buildFallbackDetail(item),
-            {
-              heroImage,
-              preview: true,
-              directionsHref:
-                item?.id && Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude))
-                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.latitude},${item.longitude}`)}`
-                  : undefined,
-            },
-          ),
+          window.EchooPlaceDetail.renderPlaceDetail(buildFallbackDetail(item), {
+            heroImage,
+            preview: true,
+            directionsHref:
+              item?.id &&
+              Number.isFinite(Number(item.latitude)) &&
+              Number.isFinite(Number(item.longitude))
+                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.latitude},${item.longitude}`)}`
+                : undefined,
+          }),
         );
         options.onReady?.();
 
         try {
           const detail = await fetchPlaceDetail(item);
           const resolvedHeroImage =
-            detail?.place?.image_url ||
-            detail?.place?.imageUrl ||
-            heroImage;
+            detail?.place?.image_url || detail?.place?.imageUrl || heroImage;
           setDetailContent(
             window.EchooPlaceDetail.renderPlaceDetail(detail, {
               heroImage: resolvedHeroImage,
               directionsHref:
-                item?.id && Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude))
+                item?.id &&
+                Number.isFinite(Number(item.latitude)) &&
+                Number.isFinite(Number(item.longitude))
                   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.latitude},${item.longitude}`)}`
                   : undefined,
             }),
@@ -1698,9 +2906,12 @@
         } catch (error) {
           console.warn("Echoo: place detail load failed.", error);
           setDetailContent(
-            window.EchooPlaceDetail.renderPlaceDetail(buildFallbackDetail(item), {
-              heroImage,
-            }),
+            window.EchooPlaceDetail.renderPlaceDetail(
+              buildFallbackDetail(item),
+              {
+                heroImage,
+              },
+            ),
           );
           clearPendingDetail();
         }
@@ -1708,12 +2919,78 @@
 
       const FALLBACK_PLACE_IMAGE = "assets/optimized/background-1400.jpg";
       const defaultPlaces = [
-        { id: "fallback-alo", title: "Alo", category: "restaurant", city: "Toronto", address: "163 Spadina Ave, Toronto", description: "A considered dinner pick for a special evening.", imageUrl: "assets/optimized/news-date-768.jpg", latitude: 43.6474, longitude: -79.3950, community: { ratingAverage: 4.7 } },
-        { id: "fallback-ago", title: "Art Gallery of Ontario", category: "gallery", city: "Toronto", address: "317 Dundas St W, Toronto", description: "A calm, culture-forward reset in the centre of town.", imageUrl: "assets/optimized/news-movie-768.jpg", latitude: 43.6540, longitude: -79.3925, community: { ratingAverage: 4.7 } },
-        { id: "fallback-trinity", title: "Trinity Bellwoods Park", category: "park", city: "Toronto", address: "1053 Dundas St W, Toronto", description: "A generous green pause when the day needs air.", imageUrl: "assets/optimized/echoo-mobile-bg-768.jpg", latitude: 43.6478, longitude: -79.4140, community: { ratingAverage: 4.6 } },
-        { id: "fallback-danforth", title: "The Danforth Music Hall", category: "music venue", city: "Toronto", address: "147 Danforth Ave, Toronto", description: "A lively room for whatever is on tonight.", imageUrl: "assets/optimized/news-music-768.jpg", latitude: 43.6761, longitude: -79.3561, community: { ratingAverage: 4.6 } },
-        { id: "fallback-comedy-bar", title: "Comedy Bar", category: "comedy theatre", city: "Toronto", address: "945 Bloor St W, Toronto", description: "An easy laugh with a little downtown energy.", imageUrl: "assets/optimized/news-movie-768.jpg", latitude: 43.6615, longitude: -79.4280, community: { ratingAverage: 4.5 } },
-        { id: "fallback-kensington", title: "Kensington Market", category: "market", city: "Toronto", address: "Kensington Ave, Toronto", description: "A loose, colourful browse with plenty of detours.", imageUrl: "assets/optimized/news-date-768.jpg", latitude: 43.6544, longitude: -79.4002, community: { ratingAverage: 4.5 } },
+        {
+          id: "fallback-alo",
+          title: "Alo",
+          category: "restaurant",
+          city: "Toronto",
+          address: "163 Spadina Ave, Toronto",
+          description: "A considered dinner pick for a special evening.",
+          imageUrl: "assets/optimized/news-date-768.jpg",
+          latitude: 43.6474,
+          longitude: -79.395,
+          community: { ratingAverage: 4.7 },
+        },
+        {
+          id: "fallback-ago",
+          title: "Art Gallery of Ontario",
+          category: "gallery",
+          city: "Toronto",
+          address: "317 Dundas St W, Toronto",
+          description: "A calm, culture-forward reset in the centre of town.",
+          imageUrl: "assets/optimized/news-movie-768.jpg",
+          latitude: 43.654,
+          longitude: -79.3925,
+          community: { ratingAverage: 4.7 },
+        },
+        {
+          id: "fallback-trinity",
+          title: "Trinity Bellwoods Park",
+          category: "park",
+          city: "Toronto",
+          address: "1053 Dundas St W, Toronto",
+          description: "A generous green pause when the day needs air.",
+          imageUrl: "assets/optimized/echoo-mobile-bg-768.jpg",
+          latitude: 43.6478,
+          longitude: -79.414,
+          community: { ratingAverage: 4.6 },
+        },
+        {
+          id: "fallback-danforth",
+          title: "The Danforth Music Hall",
+          category: "music venue",
+          city: "Toronto",
+          address: "147 Danforth Ave, Toronto",
+          description: "A lively room for whatever is on tonight.",
+          imageUrl: "assets/optimized/news-music-768.jpg",
+          latitude: 43.6761,
+          longitude: -79.3561,
+          community: { ratingAverage: 4.6 },
+        },
+        {
+          id: "fallback-comedy-bar",
+          title: "Comedy Bar",
+          category: "comedy theatre",
+          city: "Toronto",
+          address: "945 Bloor St W, Toronto",
+          description: "An easy laugh with a little downtown energy.",
+          imageUrl: "assets/optimized/news-movie-768.jpg",
+          latitude: 43.6615,
+          longitude: -79.428,
+          community: { ratingAverage: 4.5 },
+        },
+        {
+          id: "fallback-kensington",
+          title: "Kensington Market",
+          category: "market",
+          city: "Toronto",
+          address: "Kensington Ave, Toronto",
+          description: "A loose, colourful browse with plenty of detours.",
+          imageUrl: "assets/optimized/news-date-768.jpg",
+          latitude: 43.6544,
+          longitude: -79.4002,
+          community: { ratingAverage: 4.5 },
+        },
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
       const SURPRISE_HISTORY_KEY = "echoo_surprise_history_v1";
@@ -1735,16 +3012,21 @@
 
       function categoryGroup(item) {
         const category = String(item?.category || "").toLowerCase();
-        if (/restaurant|cafe|coffee|bakery|food|bar|pub/.test(category)) return "food";
+        if (/restaurant|cafe|coffee|bakery|food|bar|pub/.test(category))
+          return "food";
         if (/music|concert|nightclub|venue/.test(category)) return "music";
         if (/comedy|theatre|cinema|arts/.test(category)) return "culture";
-        if (/museum|gallery|tourism|attraction/.test(category)) return "tourism";
+        if (/museum|gallery|tourism|attraction/.test(category))
+          return "tourism";
         if (/park|nature|trail|outdoor/.test(category)) return "nature";
         return "local";
       }
 
       function fallbackImageFor(item) {
-        return PLACE_FALLBACK_IMAGES[categoryGroup(item)] || PLACE_FALLBACK_IMAGES.local;
+        return (
+          PLACE_FALLBACK_IMAGES[categoryGroup(item)] ||
+          PLACE_FALLBACK_IMAGES.local
+        );
       }
 
       function placeVisual(item, className, alt = "", { eager = false } = {}) {
@@ -1767,21 +3049,31 @@
       function renderDiscoverLoading({ allowFallback = false } = {}) {
         discoveryUiLoading = true;
         document.body.classList.add("discover-is-loading");
-        if (allowFallback && !items.length) items = defaultPlaces.map((place) => ({ ...place }));
+        if (allowFallback && !items.length)
+          items = defaultPlaces.map((place) => ({ ...place }));
         const loadingCards = `<div class="location-card skeleton-card" aria-hidden="true"></div>`;
         popularContainer.innerHTML = loadingCards.repeat(3);
-        recommendationContainer.innerHTML = `<div class="recommendation-card skeleton-card" aria-hidden="true"></div>`.repeat(3);
+        recommendationContainer.innerHTML =
+          `<div class="recommendation-card skeleton-card" aria-hidden="true"></div>`.repeat(
+            3,
+          );
         renderResultsPage();
       }
 
       function placeKey(item) {
-        return String(item?.id || item?.title || item?.name || "").trim().toLowerCase();
+        return String(item?.id || item?.title || item?.name || "")
+          .trim()
+          .toLowerCase();
       }
 
       function readDiscoveryHistory() {
         try {
-          const value = JSON.parse(localStorage.getItem(DISCOVERY_HISTORY_KEY) || "[]");
-          return Array.isArray(value) ? value.filter((entry) => entry?.key && entry?.seenAt).slice(0, 80) : [];
+          const value = JSON.parse(
+            localStorage.getItem(DISCOVERY_HISTORY_KEY) || "[]",
+          );
+          return Array.isArray(value)
+            ? value.filter((entry) => entry?.key && entry?.seenAt).slice(0, 80)
+            : [];
         } catch (_) {
           return [];
         }
@@ -1793,13 +3085,20 @@
         if (!shown.length) return;
         const next = [
           ...shown.map((key) => ({ key, seenAt: now })),
-          ...readDiscoveryHistory().filter((entry) => !shown.includes(entry.key)),
+          ...readDiscoveryHistory().filter(
+            (entry) => !shown.includes(entry.key),
+          ),
         ].slice(0, 80);
-        try { localStorage.setItem(DISCOVERY_HISTORY_KEY, JSON.stringify(next)); } catch (_) {}
+        try {
+          localStorage.setItem(DISCOVERY_HISTORY_KEY, JSON.stringify(next));
+        } catch (_) {}
       }
 
       function stableNumber(value) {
-        return [...String(value || "")].reduce((total, character) => ((total * 31) + character.charCodeAt(0)) >>> 0, 7);
+        return [...String(value || "")].reduce(
+          (total, character) => (total * 31 + character.charCodeAt(0)) >>> 0,
+          7,
+        );
       }
 
       function diversifyPlaces(placeList) {
@@ -1814,29 +3113,51 @@
         if (unique.length < 2) return unique;
         if (activeQuery === "discover") {
           const groups = new Map();
-          unique.forEach((item) => { const key = categoryGroup(item); groups.set(key, [...(groups.get(key) || []), item]); });
-          const buckets = [...groups.values()], mixed = [];
-          while (buckets.some((bucket) => bucket.length)) buckets.forEach((bucket) => { if (bucket.length) mixed.push(bucket.shift()); });
-          const offset = stableNumber(`${city}|${activeCulture()?.slug || "local"}|${discoveryRefreshNonce}|${Math.floor(Date.now() / 14_400_000)}`) % mixed.length;
+          unique.forEach((item) => {
+            const key = categoryGroup(item);
+            groups.set(key, [...(groups.get(key) || []), item]);
+          });
+          const buckets = [...groups.values()],
+            mixed = [];
+          while (buckets.some((bucket) => bucket.length))
+            buckets.forEach((bucket) => {
+              if (bucket.length) mixed.push(bucket.shift());
+            });
+          const offset =
+            stableNumber(
+              `${city}|${activeCulture()?.slug || "local"}|${discoveryRefreshNonce}|${Math.floor(Date.now() / 14_400_000)}`,
+            ) % mixed.length;
           return [...mixed.slice(offset), ...mixed.slice(0, offset)];
         }
         // The API already balances relevance, profile affinity, time and
         // distance. Do not shuffle that order when a person has shared GPS:
         // it makes a carefully ranked local feed look arbitrary.
         if (Number.isFinite(lat) && Number.isFinite(lng)) return unique;
-        const seen = new Map(readDiscoveryHistory().map((entry) => [entry.key, entry.seenAt]));
+        const seen = new Map(
+          readDiscoveryHistory().map((entry) => [entry.key, entry.seenAt]),
+        );
         const recentlySeen = 1000 * 60 * 60 * 36;
         const now = Date.now();
-        const fresh = unique.filter((item) => now - Number(seen.get(placeKey(item)) || 0) > recentlySeen);
-        const base = fresh.length >= Math.min(4, unique.length) ? [...fresh, ...unique.filter((item) => !fresh.includes(item))] : unique;
-        const hot = base.filter(isHotPlace).sort((a, b) => hotScoreFor(b) - hotScoreFor(a));
+        const fresh = unique.filter(
+          (item) => now - Number(seen.get(placeKey(item)) || 0) > recentlySeen,
+        );
+        const base =
+          fresh.length >= Math.min(4, unique.length)
+            ? [...fresh, ...unique.filter((item) => !fresh.includes(item))]
+            : unique;
+        const hot = base
+          .filter(isHotPlace)
+          .sort((a, b) => hotScoreFor(b) - hotScoreFor(a));
         const freshHot = hot.filter((item) => fresh.includes(item));
         const lead = freshHot[0] || hot[0] || base[0];
         const remaining = base.filter((item) => item !== lead);
         const fourHourWindow = Math.floor(now / (1000 * 60 * 60 * 4));
         const seed = `${city}|${activeQuery}|${activeCulture()?.slug || "local"}|${fourHourWindow}|${discoveryRefreshNonce}`;
         const offset = stableNumber(seed) % remaining.length;
-        const rotated = [...remaining.slice(offset), ...remaining.slice(0, offset)];
+        const rotated = [
+          ...remaining.slice(offset),
+          ...remaining.slice(0, offset),
+        ];
         return [lead, ...rotated];
       }
 
@@ -1846,12 +3167,17 @@
           popularContainer.innerHTML = "";
           return;
         }
-        popularContainer.innerHTML = list.map((item, index) => {
-          const rating = item.community?.ratingAverage ? Number(item.community.ratingAverage).toFixed(1) : "New";
-          const dist = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km` : item.city || "GTA";
-          const placeIndex = items.indexOf(item);
+        popularContainer.innerHTML = list
+          .map((item, index) => {
+            const rating = item.community?.ratingAverage
+              ? Number(item.community.ratingAverage).toFixed(1)
+              : "New";
+            const dist = item.distanceMeters
+              ? `${(item.distanceMeters / 1000).toFixed(1)} km`
+              : item.city || "GTA";
+            const placeIndex = items.indexOf(item);
 
-          return `
+            return `
             <button class="location-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">
               ${placeVisual(item, "location-card-img", item.title || "Local place", { eager: index < 3 })}
               <div class="location-card-overlay">
@@ -1861,10 +3187,15 @@
               </div>
             </button>
           `;
-        }).join("");
-        popularContainer.querySelectorAll("[data-place-index]").forEach((button) => {
-          button.addEventListener("click", () => openDetail(Number(button.dataset.placeIndex)));
-        });
+          })
+          .join("");
+        popularContainer
+          .querySelectorAll("[data-place-index]")
+          .forEach((button) => {
+            button.addEventListener("click", () =>
+              openDetail(Number(button.dataset.placeIndex)),
+            );
+          });
       }
 
       function renderRecommendations(placeList) {
@@ -1873,13 +3204,19 @@
           recommendationContainer.innerHTML = "";
           return;
         }
-        recommendationContainer.innerHTML = list.map((item, index) => {
-          const placeIndex = items.indexOf(item);
-          return `<button class="recommendation-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick", { eager: index < 3 })}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`;
-        }).join("");
-        recommendationContainer.querySelectorAll("[data-place-index]").forEach((button) => {
-          button.addEventListener("click", () => openDetail(Number(button.dataset.placeIndex)));
-        });
+        recommendationContainer.innerHTML = list
+          .map((item, index) => {
+            const placeIndex = items.indexOf(item);
+            return `<button class="recommendation-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick", { eager: index < 3 })}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`;
+          })
+          .join("");
+        recommendationContainer
+          .querySelectorAll("[data-place-index]")
+          .forEach((button) => {
+            button.addEventListener("click", () =>
+              openDetail(Number(button.dataset.placeIndex)),
+            );
+          });
       }
 
       function updateFeaturedCard(featured) {
@@ -1922,10 +3259,16 @@
           card.classList.remove("is-loading");
           card.setAttribute("aria-busy", "false");
         }
-        document.getElementById("featured-title").textContent = featured.title || "Explore the GTA";
-        document.getElementById("featured-sub").textContent = `${featured.category || 'Place'} • ${featured.neighborhood || featured.city || 'Greater Toronto Area'}`;
-        document.getElementById("featured-score").textContent = featured.community?.ratingAverage ? Number(featured.community.ratingAverage).toFixed(1) : "New";
-        document.getElementById("featured-destination-card").onclick = () => openDetail(0);
+        document.getElementById("featured-title").textContent =
+          featured.title || "Explore the GTA";
+        document.getElementById("featured-sub").textContent =
+          `${featured.category || "Place"} • ${featured.neighborhood || featured.city || "Greater Toronto Area"}`;
+        document.getElementById("featured-score").textContent = featured
+          .community?.ratingAverage
+          ? Number(featured.community.ratingAverage).toFixed(1)
+          : "New";
+        document.getElementById("featured-destination-card").onclick = () =>
+          openDetail(0);
       }
 
       function renderItems() {
@@ -1938,7 +3281,9 @@
         items = diversifyPlaces(items);
         if (items.length) {
           renderPopularNearby(items.slice(0, 5));
-          renderRecommendations(items.slice(5, 11).length ? items.slice(5, 11) : items.slice(0, 6));
+          renderRecommendations(
+            items.slice(5, 11).length ? items.slice(5, 11) : items.slice(0, 6),
+          );
           rememberShown(items.slice(0, 12));
         } else {
           items = defaultPlaces.map((place) => ({ ...place }));
@@ -1949,35 +3294,70 @@
       }
 
       function surpriseProfileAffinity(item) {
-        const terms = onboardingSignals().map((value) => String(value).toLowerCase()).filter((value) => value.length > 2);
+        const terms = onboardingSignals()
+          .map((value) => String(value).toLowerCase())
+          .filter((value) => value.length > 2);
         if (!terms.length) return 0.35;
-        const text = `${item?.title || ""} ${item?.category || ""} ${item?.description || ""} ${(item?.features || []).join(" ")}`.toLowerCase();
-        return Math.min(1, terms.filter((term) => text.includes(term)).length / Math.min(terms.length, 3));
+        const text =
+          `${item?.title || ""} ${item?.category || ""} ${item?.description || ""} ${(item?.features || []).join(" ")}`.toLowerCase();
+        return Math.min(
+          1,
+          terms.filter((term) => text.includes(term)).length /
+            Math.min(terms.length, 3),
+        );
       }
 
       function surpriseScore(item) {
         const distance = Number(item?.distanceMeters);
-        const nearby = Number.isFinite(distance) ? Math.max(0, 1 - distance / 35_000) : 0.48;
+        const nearby = Number.isFinite(distance)
+          ? Math.max(0, 1 - distance / 35_000)
+          : 0.48;
         const profileMatch = surpriseProfileAffinity(item);
         const time = timeContext().query;
-        const text = `${item?.title || ""} ${item?.category || ""} ${item?.description || ""}`.toLowerCase();
-        const timeMatch = time.split(" ").filter((word) => word.length > 3 && text.includes(word)).length * .08;
-        return nearby * .45 + profileMatch * .32 + Math.min(timeMatch, .16) + hotScoreFor(item) * .07;
+        const text =
+          `${item?.title || ""} ${item?.category || ""} ${item?.description || ""}`.toLowerCase();
+        const timeMatch =
+          time
+            .split(" ")
+            .filter((word) => word.length > 3 && text.includes(word)).length *
+          0.08;
+        return (
+          nearby * 0.45 +
+          profileMatch * 0.32 +
+          Math.min(timeMatch, 0.16) +
+          hotScoreFor(item) * 0.07
+        );
       }
 
       function surpriseHistory() {
         try {
-          const saved = JSON.parse(localStorage.getItem(SURPRISE_HISTORY_KEY) || "[]");
-          return Array.isArray(saved) ? saved.filter((entry) => entry?.id && entry?.style).slice(0, 24) : [];
+          const saved = JSON.parse(
+            localStorage.getItem(SURPRISE_HISTORY_KEY) || "[]",
+          );
+          return Array.isArray(saved)
+            ? saved.filter((entry) => entry?.id && entry?.style).slice(0, 24)
+            : [];
         } catch (_) {
           return [];
         }
       }
 
       function rememberSurprise(item) {
-        const entry = { id: placeKey(item), style: categoryGroup(item), city, seenAt: Date.now() };
-        const previous = surpriseHistory().filter((saved) => saved.id !== entry.id);
-        try { localStorage.setItem(SURPRISE_HISTORY_KEY, JSON.stringify([entry, ...previous].slice(0, 24))); } catch (_) {}
+        const entry = {
+          id: placeKey(item),
+          style: categoryGroup(item),
+          city,
+          seenAt: Date.now(),
+        };
+        const previous = surpriseHistory().filter(
+          (saved) => saved.id !== entry.id,
+        );
+        try {
+          localStorage.setItem(
+            SURPRISE_HISTORY_KEY,
+            JSON.stringify([entry, ...previous].slice(0, 24)),
+          );
+        } catch (_) {}
       }
 
       function randomIndex(length) {
@@ -1994,7 +3374,8 @@
         const revealId = ++surpriseRevealId;
         // A Surprise result must have a usable hero image: this is the image
         // carried into the place-detail sheet, not a decorative fallback.
-        const candidates = items.filter((item) => Boolean(realImageUrl(item)))
+        const candidates = items
+          .filter((item) => Boolean(realImageUrl(item)))
           .map((item) => ({ item, score: surpriseScore(item) }))
           .sort((left, right) => right.score - left.score)
           .slice(0, Math.min(30, items.length));
@@ -2004,23 +3385,32 @@
         const curated = candidates.length
           ? candidates
           : defaultPlaces
-            .filter((item) => Boolean(realImageUrl(item)))
-            .map((item) => ({ item, score: surpriseScore(item) }));
+              .filter((item) => Boolean(realImageUrl(item)))
+              .map((item) => ({ item, score: surpriseScore(item) }));
         const history = surpriseHistory();
         const cityHistory = history.filter((entry) => entry.city === city);
-        const unseen = curated.filter(({ item }) => !cityHistory.some((entry) => entry.id === placeKey(item)));
+        const unseen = curated.filter(
+          ({ item }) =>
+            !cityHistory.some((entry) => entry.id === placeKey(item)),
+        );
         const unseenPool = unseen.length ? unseen : curated;
         const previousStyle = cityHistory[0]?.style;
-        const varied = unseenPool.filter(({ item }) => categoryGroup(item) !== previousStyle);
+        const varied = unseenPool.filter(
+          ({ item }) => categoryGroup(item) !== previousStyle,
+        );
         const pool = varied.length ? varied : unseenPool;
         if (!pool.length) return;
         const choice = pool[randomIndex(pool.length)].item;
         rememberSurprise(choice);
         const loaderCopy = document.getElementById("surprise-loader-copy");
-        if (loaderCopy) loaderCopy.textContent = `Matching ${city}, your preferences, and ${timeContext().label}.`;
-        const loaderStartedAt = Number(surpriseLoader.dataset.startedAt || Date.now());
+        if (loaderCopy)
+          loaderCopy.textContent = `Matching ${city}, your preferences, and ${timeContext().label}.`;
+        const loaderStartedAt = Number(
+          surpriseLoader.dataset.startedAt || Date.now(),
+        );
         const remaining = Math.max(0, 3000 - (Date.now() - loaderStartedAt));
-        if (remaining) await new Promise((resolve) => setTimeout(resolve, remaining));
+        if (remaining)
+          await new Promise((resolve) => setTimeout(resolve, remaining));
         if (revealId !== surpriseRevealId) return;
         let handedOff = false;
         await openDetailByItem(choice, {
@@ -2030,7 +3420,8 @@
             surpriseLoader.hidden = true;
           },
         });
-        if (!handedOff && revealId === surpriseRevealId) surpriseLoader.hidden = true;
+        if (!handedOff && revealId === surpriseRevealId)
+          surpriseLoader.hidden = true;
       }
 
       function renderFeaturedEmpty() {
@@ -2042,14 +3433,17 @@
         card.classList.remove("has-visual-fallback");
         card.classList.remove("is-loading");
         card.setAttribute("aria-busy", "false");
-        document.getElementById("featured-title").textContent = "Fresh local picks are loading";
-        document.getElementById("featured-sub").textContent = "Try another view, or refresh in a moment";
+        document.getElementById("featured-title").textContent =
+          "Fresh local picks are loading";
+        document.getElementById("featured-sub").textContent =
+          "Try another view, or refresh in a moment";
         document.getElementById("featured-score").textContent = "—";
       }
 
       function resultLabel() {
         const culture = activeCulture();
-        if (activeQuery === "discover") return `${culture ? `${culture.label} ` : ""}All places`;
+        if (activeQuery === "discover")
+          return `${culture ? `${culture.label} ` : ""}All places`;
         return `${culture ? `${culture.label} ` : ""}${activeQuery} places`;
       }
 
@@ -2058,7 +3452,10 @@
         resultsSection.hidden = !shouldShow;
         if (!shouldShow) return;
         if (discoveryUiLoading) {
-          resultsHeading.textContent = activeQuery === "discover" ? "Finding your next place" : `Finding ${activeQuery}`;
+          resultsHeading.textContent =
+            activeQuery === "discover"
+              ? "Finding your next place"
+              : `Finding ${activeQuery}`;
           resultsPageStatus.textContent = "Refreshing nearby picks…";
           resultsEl.innerHTML = `<div class="discover-loading-grid" aria-live="polite"><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div></div>`;
           resultsPagination.hidden = true;
@@ -2074,16 +3471,28 @@
           ? `Page ${resultPage + 1} · ${start + 1}–${Math.min(start + pageSize, items.length)} of ${items.length}${discoveryPaging.hasMore ? "+" : ""}`
           : "";
         resultsEl.innerHTML = pageItems.length
-          ? pageItems.map((item, index) => {
-            const itemIndex = items.indexOf(item);
-            const meta = item.distanceMeters ? `${(item.distanceMeters / 1000).toFixed(1)} km away` : item.neighborhood || item.city || "GTA";
-              return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place")}<span class="discovery-result-copy"><small>${esc(meta)}</small><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.description || item.address || "A local Echoo recommendation")}</span></span><span class="discovery-result-index">${start + index + 1}</span></button>`;
-            }).join("")
+          ? pageItems
+              .map((item, index) => {
+                const itemIndex = items.indexOf(item);
+                const meta = item.distanceMeters
+                  ? `${(item.distanceMeters / 1000).toFixed(1)} km away`
+                  : item.neighborhood || item.city || "GTA";
+                return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place")}<span class="discovery-result-copy"><small>${esc(meta)}</small><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.description || item.address || "A local Echoo recommendation")}</span></span><span class="discovery-result-index">${start + index + 1}</span></button>`;
+              })
+              .join("")
           : `<div class="discovery-fallback-note">A few local favourites are being lined up for you.</div>`;
-        resultsEl.querySelectorAll("[data-result-index]").forEach((button) => button.addEventListener("click", () => openDetail(Number(button.dataset.resultIndex))));
-        resultsPagination.hidden = !items.length || (pageCount === 1 && !discoveryPaging.hasMore);
+        resultsEl
+          .querySelectorAll("[data-result-index]")
+          .forEach((button) =>
+            button.addEventListener("click", () =>
+              openDetail(Number(button.dataset.resultIndex)),
+            ),
+          );
+        resultsPagination.hidden =
+          !items.length || (pageCount === 1 && !discoveryPaging.hasMore);
         resultsPrevious.disabled = resultPage === 0;
-        resultsNext.disabled = !discoveryPaging.hasMore && resultPage >= pageCount - 1;
+        resultsNext.disabled =
+          !discoveryPaging.hasMore && resultPage >= pageCount - 1;
         resultsNext.textContent = discoveryPaging.loading ? "Loading…" : "Next";
       }
 
@@ -2092,12 +3501,14 @@
         if (culture) return `${culture.label.toUpperCase()} EDIT`;
         const hasExactLocation = Number.isFinite(lat) && Number.isFinite(lng);
         if (hasExactLocation) return `${city.toUpperCase()} NEAR YOU`;
-        if (prefs.city && prefs.city !== DEFAULT_DISCOVERY_CITY) return `${city.toUpperCase()} TODAY`;
+        if (prefs.city && prefs.city !== DEFAULT_DISCOVERY_CITY)
+          return `${city.toUpperCase()} TODAY`;
         return "GTA TRENDS";
       }
 
       function updateLocationBadge() {
-        document.getElementById("location-note").innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span><span>${locationLabel()}</span>`;
+        document.getElementById("location-note").innerHTML =
+          `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span><span>${locationLabel()}</span>`;
       }
 
       function rememberLocationChoice(extra = {}) {
@@ -2117,7 +3528,8 @@
         const hasExactLocation = Number.isFinite(lat) && Number.isFinite(lng);
         if (hasExactLocation || params.has("city")) return;
         if (prefs.locationPermissionState === "granted") return;
-        if (prefs.locationPromptedAt && prefs.locationPrecision !== "gps") return;
+        if (prefs.locationPromptedAt && prefs.locationPrecision !== "gps")
+          return;
         locationSheet.hidden = false;
       }
 
@@ -2126,7 +3538,9 @@
         let permissionState = prefs.locationPermissionState || "prompt";
         if (navigator.permissions?.query) {
           try {
-            const permission = await navigator.permissions.query({ name: "geolocation" });
+            const permission = await navigator.permissions.query({
+              name: "geolocation",
+            });
             permissionState = permission.state;
           } catch (_) {}
         }
@@ -2137,7 +3551,8 @@
             rememberLocationChoice({
               lastLat: undefined,
               lastLng: undefined,
-              locationPermissionState: permissionState === "denied" ? "denied" : "prompt",
+              locationPermissionState:
+                permissionState === "denied" ? "denied" : "prompt",
               locationPrecision: "manual_region",
               locationReason: "device_location_no_longer_granted",
             });
@@ -2150,12 +3565,17 @@
       function stableDeviceCoordinates(position) {
         const nextLat = Number(position?.coords?.latitude);
         const nextLng = Number(position?.coords?.longitude);
-        const nextAccuracy = Math.max(0, Number(position?.coords?.accuracy) || 0);
+        const nextAccuracy = Math.max(
+          0,
+          Number(position?.coords?.accuracy) || 0,
+        );
         const previousLat = Number(prefs.lastLat);
         const previousLng = Number(prefs.lastLng);
         const previousAccuracy = Math.max(0, Number(prefs.accuracy) || 0);
         const capturedAt = new Date(prefs.locationCheckedAt || 0).getTime();
-        const recentEnough = Number.isFinite(capturedAt) && Date.now() - capturedAt < 20 * 60 * 1000;
+        const recentEnough =
+          Number.isFinite(capturedAt) &&
+          Date.now() - capturedAt < 20 * 60 * 1000;
         if (
           !recentEnough ||
           !Number.isFinite(previousLat) ||
@@ -2163,14 +3583,20 @@
           !Number.isFinite(nextLat) ||
           !Number.isFinite(nextLng)
         ) {
-          return { lat: nextLat, lng: nextLng, accuracy: nextAccuracy, stabilized: false };
+          return {
+            lat: nextLat,
+            lng: nextLng,
+            accuracy: nextAccuracy,
+            stabilized: false,
+          };
         }
-        const movementMeters = window.EchooLocationPlatform.distanceKm(
-          previousLat,
-          previousLng,
-          nextLat,
-          nextLng,
-        ) * 1000;
+        const movementMeters =
+          window.EchooLocationPlatform.distanceKm(
+            previousLat,
+            previousLng,
+            nextLat,
+            nextLng,
+          ) * 1000;
         // Small changes around a municipal boundary are often GPS drift, not
         // a meaningful change in intent. Keep one trusted anchor until the
         // device reports movement beyond its combined confidence envelope.
@@ -2186,12 +3612,21 @@
             stabilized: true,
           };
         }
-        return { lat: nextLat, lng: nextLng, accuracy: nextAccuracy, stabilized: false };
+        return {
+          lat: nextLat,
+          lng: nextLng,
+          accuracy: nextAccuracy,
+          stabilized: false,
+        };
       }
 
       async function applyCurrentLocation({ silent = false } = {}) {
         if (!navigator.geolocation) {
-          if (!silent) rememberLocationChoice({ locationPermissionState: "unavailable", locationPrecision: "manual_region" });
+          if (!silent)
+            rememberLocationChoice({
+              locationPermissionState: "unavailable",
+              locationPrecision: "manual_region",
+            });
           closeLocationSheet();
           return false;
         }
@@ -2199,85 +3634,102 @@
           useLocationButton.disabled = true;
           useLocationButton.textContent = "Checking…";
         }
-        return new Promise((resolve) => navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const deviceLocation = stableDeviceCoordinates(position);
-            lat = deviceLocation.lat;
-            lng = deviceLocation.lng;
-            let locationContext = null;
-            try {
-              const response = await fetch(CONFIG.locationContextUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  lat,
-                  lng,
-                  accuracyMeters: deviceLocation.accuracy,
-                }),
-              });
-              if (response.ok) locationContext = await response.json();
-            } catch (_) {}
-            const resolved = window.EchooLocationPlatform.resolveCoordinates(lat, lng);
-            // Municipal boundaries, not city-centre proximity, decide the
-            // label and live-search context. If an official boundary is not
-            // available yet, retain precise distance ranking but stay GTA-wide.
-            city = locationContext?.supported
-              ? locationContext.municipality || "Greater Toronto Area"
-              : resolved.supported
-                ? "Greater Toronto Area"
-                : DEFAULT_DISCOVERY_CITY;
-            if (!resolved.supported) {
-              // Do not keep sending out-of-coverage coordinates after the
-              // regional fallback has been chosen.
-              lat = NaN;
-              lng = NaN;
-            }
-            rememberLocationChoice({
-              lastLat: lat,
-              lastLng: lng,
-              accuracy: deviceLocation.accuracy,
-              city,
-              locationPermissionState: "granted",
-              locationPrecision: "gps",
-              locationReason: locationContext?.municipality
-                ? "device_gta_boundary"
+        return new Promise((resolve) =>
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const deviceLocation = stableDeviceCoordinates(position);
+              lat = deviceLocation.lat;
+              lng = deviceLocation.lng;
+              let locationContext = null;
+              try {
+                const response = await fetch(CONFIG.locationContextUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    lat,
+                    lng,
+                    accuracyMeters: deviceLocation.accuracy,
+                  }),
+                });
+                if (response.ok) locationContext = await response.json();
+              } catch (_) {}
+              const resolved = window.EchooLocationPlatform.resolveCoordinates(
+                lat,
+                lng,
+              );
+              // Municipal boundaries, not city-centre proximity, decide the
+              // label and live-search context. If an official boundary is not
+              // available yet, retain precise distance ranking but stay GTA-wide.
+              city = locationContext?.supported
+                ? locationContext.municipality || "Greater Toronto Area"
                 : resolved.supported
-                  ? "device_gta"
-                  : "outside_gta_fallback",
-              locationMunicipality: locationContext?.municipality || null,
-              locationBoundaryResolved: Boolean(locationContext?.boundaryResolved),
-              locationStabilized: deviceLocation.stabilized,
-            });
-            if (locationMunicipality && window.EchooLocationPlatform.cityByName(city)?.coverageLevel === "municipality") {
-              locationMunicipality.value = city;
-            }
-            updateLocationBadge();
-            closeLocationSheet();
-            await search(activeQuery);
-            if (!silent) {
-              useLocationButton.disabled = false;
-              useLocationButton.textContent = "Use my current location";
-            }
-            resolve(Boolean(resolved.supported));
-          },
-          () => {
-            if (!silent) rememberLocationChoice({ locationPermissionState: "denied", locationPrecision: "manual_region" });
-            if (!silent) {
-              useLocationButton.disabled = false;
-              useLocationButton.textContent = "Use my current location";
-            }
-            closeLocationSheet();
-            resolve(false);
-          },
-          { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
-        ));
+                  ? "Greater Toronto Area"
+                  : DEFAULT_DISCOVERY_CITY;
+              if (!resolved.supported) {
+                // Do not keep sending out-of-coverage coordinates after the
+                // regional fallback has been chosen.
+                lat = NaN;
+                lng = NaN;
+              }
+              rememberLocationChoice({
+                lastLat: lat,
+                lastLng: lng,
+                accuracy: deviceLocation.accuracy,
+                city,
+                locationPermissionState: "granted",
+                locationPrecision: "gps",
+                locationReason: locationContext?.municipality
+                  ? "device_gta_boundary"
+                  : resolved.supported
+                    ? "device_gta"
+                    : "outside_gta_fallback",
+                locationMunicipality: locationContext?.municipality || null,
+                locationBoundaryResolved: Boolean(
+                  locationContext?.boundaryResolved,
+                ),
+                locationStabilized: deviceLocation.stabilized,
+              });
+              if (
+                locationMunicipality &&
+                window.EchooLocationPlatform.cityByName(city)?.coverageLevel ===
+                  "municipality"
+              ) {
+                locationMunicipality.value = city;
+              }
+              updateLocationBadge();
+              closeLocationSheet();
+              await search(activeQuery);
+              if (!silent) {
+                useLocationButton.disabled = false;
+                useLocationButton.textContent = "Use my current location";
+              }
+              resolve(Boolean(resolved.supported));
+            },
+            () => {
+              if (!silent)
+                rememberLocationChoice({
+                  locationPermissionState: "denied",
+                  locationPrecision: "manual_region",
+                });
+              if (!silent) {
+                useLocationButton.disabled = false;
+                useLocationButton.textContent = "Use my current location";
+              }
+              closeLocationSheet();
+              resolve(false);
+            },
+            { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+          ),
+        );
       }
 
       function discoveryRequestForActiveView() {
         const culture = activeCulture();
         const base = cultureContext?.queryFor
           ? cultureContext.queryFor(activeQuery, culture)
-          : (activeQuery === "discover" ? "places things to do" : activeQuery);
+          : activeQuery === "discover"
+            ? "places things to do"
+            : activeQuery;
         return {
           // The selected filter stays the search intent. Profile and time are
           // passed separately as ranking signals so "Music" cannot turn into
@@ -2289,9 +3741,15 @@
           // GPS should rank the closest places first without shrinking the
           // catalogue to one small circle. The server caps this to the GTA
           // search envelope and keeps it cursor-paginated.
-          radiusMeters: Number.isFinite(lat) && Number.isFinite(lng) ? 100000 : undefined,
+          radiusMeters:
+            Number.isFinite(lat) && Number.isFinite(lng) ? 100000 : undefined,
           preferenceFeatureSlugs: !culture
-            ? [...new Set([...preferenceFeatureSlugs().slice(0, 8), ...timePreferenceSlugs()])]
+            ? [
+                ...new Set([
+                  ...preferenceFeatureSlugs().slice(0, 8),
+                  ...timePreferenceSlugs(),
+                ]),
+              ]
             : timePreferenceSlugs(),
           includeLiveFallback: true,
           // One visual page at a time; the cursor continues across the full
@@ -2318,8 +3776,12 @@
           const profileState = await window.EchooAuth.loadOnboardingProfile();
           if (!profileState?.preferences) return;
           prefs = window.EchooLocationPlatform.readPreferences();
-          if (!(Number.isFinite(lat) && Number.isFinite(lng)) && !params.has("city")) {
-            city = window.EchooLocationPlatform.cityByName(prefs.city)?.name || city;
+          if (
+            !(Number.isFinite(lat) && Number.isFinite(lng)) &&
+            !params.has("city")
+          ) {
+            city =
+              window.EchooLocationPlatform.cityByName(prefs.city)?.name || city;
           }
           if (refresh && personalizationSignature(prefs) !== before) {
             updateLocationBadge();
@@ -2335,11 +3797,19 @@
         const merged = [...existing, ...incoming];
         return merged.filter((item, index) => {
           const key = placeKey(item);
-          return key && merged.findIndex((candidate) => placeKey(candidate) === key) === index;
+          return (
+            key &&
+            merged.findIndex((candidate) => placeKey(candidate) === key) ===
+              index
+          );
         });
       }
 
-      async function fetchDiscoveryPage({ append = false, requestId = discoveryRequestId, render = true } = {}) {
+      async function fetchDiscoveryPage({
+        append = false,
+        requestId = discoveryRequestId,
+        render = true,
+      } = {}) {
         const request = discoveryPaging.request;
         if (!request || discoveryPaging.loading) return;
         discoveryPaging.loading = true;
@@ -2359,16 +3829,27 @@
           });
           const payload = await response.json().catch(() => ({}));
           if (requestId !== discoveryRequestId) return;
-          if (!response.ok) throw new Error(payload?.error || "Discover is unavailable right now.");
-          const received = Array.isArray(payload.results) ? payload.results : [];
+          if (!response.ok)
+            throw new Error(
+              payload?.error || "Discover is unavailable right now.",
+            );
+          const received = Array.isArray(payload.results)
+            ? payload.results
+            : [];
           if (!append) items = received;
           else items = mergeDiscoveryItems(items, received);
           discoveryPaging.cursor = payload.nextCursor || null;
           discoveryPaging.livePageToken = payload.liveNextPageToken || null;
-          discoveryPaging.hasMore = Boolean(discoveryPaging.cursor || discoveryPaging.livePageToken);
+          discoveryPaging.hasMore = Boolean(
+            discoveryPaging.cursor || discoveryPaging.livePageToken,
+          );
           // A municipality can occasionally be ahead of the live index. Fall
           // back to the GTA feed rather than leaving the page empty.
-          if (!items.length && payload.supported === false && city !== DEFAULT_DISCOVERY_CITY) {
+          if (
+            !items.length &&
+            payload.supported === false &&
+            city !== DEFAULT_DISCOVERY_CITY
+          ) {
             city = DEFAULT_DISCOVERY_CITY;
             discoveryPaging.request = discoveryRequestForActiveView();
             discoveryPaging.loading = false;
@@ -2377,7 +3858,8 @@
           if (render) renderItems();
         } catch (_) {
           if (requestId !== discoveryRequestId) return;
-          if (!items.length) items = defaultPlaces.map((place) => ({ ...place }));
+          if (!items.length)
+            items = defaultPlaces.map((place) => ({ ...place }));
           discoveryPaging.hasMore = false;
           if (render) renderItems();
         } finally {
@@ -2390,35 +3872,56 @@
       }
 
       async function search(query = activeQuery, options = {}) {
-        let cleanQuery = String(query || "").trim().toLowerCase();
+        let cleanQuery = String(query || "")
+          .trim()
+          .toLowerCase();
         if (!cleanQuery) cleanQuery = "discover";
         activeQuery = cleanQuery;
         if (options.refresh) discoveryRefreshNonce += 1;
         resultPage = 0;
         view = "list";
         applyCultureMood();
-        document.querySelectorAll(".chip").forEach((chip) => chip.classList.toggle("active", chip.dataset.query === activeQuery));
+        document
+          .querySelectorAll(".chip")
+          .forEach((chip) =>
+            chip.classList.toggle("active", chip.dataset.query === activeQuery),
+          );
         if (activeQuery === "upcoming drop") {
-          window.location.assign(`happenings.html?category=upcoming${activeCulture() ? `&culture=${encodeURIComponent(activeCulture().slug)}` : ""}`);
+          window.location.assign(
+            `happenings.html?category=upcoming${activeCulture() ? `&culture=${encodeURIComponent(activeCulture().slug)}` : ""}`,
+          );
           return;
         }
-        if (options.fromSearch) queryInput.value = cleanQuery === "discover" ? "" : String(query || "").trim();
+        if (options.fromSearch)
+          queryInput.value =
+            cleanQuery === "discover" ? "" : String(query || "").trim();
         suggestionsEl.hidden = true;
         const requestId = ++discoveryRequestId;
-        if (discoveryFastFallbackTimer) window.clearTimeout(discoveryFastFallbackTimer);
+        if (discoveryFastFallbackTimer)
+          window.clearTimeout(discoveryFastFallbackTimer);
         items = [];
-        discoveryPaging = { cursor: null, livePageToken: null, hasMore: false, request: discoveryRequestForActiveView(), loading: false };
+        discoveryPaging = {
+          cursor: null,
+          livePageToken: null,
+          hasMore: false,
+          request: discoveryRequestForActiveView(),
+          loading: false,
+        };
         renderDiscoverLoading({ allowFallback: options.surprise });
         // Remote inventory can enrich in the background, but Discover itself
         // must always become useful promptly. A slow provider never leaves a
         // person staring at skeletons with no way forward.
         discoveryFastFallbackTimer = window.setTimeout(() => {
           if (requestId !== discoveryRequestId || !discoveryUiLoading) return;
-          if (!items.length) items = defaultPlaces.map((place) => ({ ...place }));
+          if (!items.length)
+            items = defaultPlaces.map((place) => ({ ...place }));
           discoveryPaging.hasMore = false;
           renderItems();
         }, 1400);
-        const discoveryPromise = fetchDiscoveryPage({ requestId, render: true });
+        const discoveryPromise = fetchDiscoveryPage({
+          requestId,
+          render: true,
+        });
         if (options.surprise) {
           // The full-screen loader owns the transition, so Discover can render
           // behind it. Race the provider against the local starter set so the
@@ -2473,7 +3976,11 @@
 
       function quickPlanBudget() {
         const value = prefs.budget || "$";
-        return value === "$" ? "value" : value === "$$$" ? "elevated" : "balanced";
+        return value === "$"
+          ? "value"
+          : value === "$$$"
+            ? "elevated"
+            : "balanced";
       }
 
       function quickPlanHistoryKey(anchor) {
@@ -2482,18 +3989,30 @@
 
       function quickPlanRecent(anchor) {
         try {
-          const saved = JSON.parse(localStorage.getItem(quickPlanHistoryKey(anchor)) || "[]");
-          return Array.isArray(saved) ? saved.filter((id) => typeof id === "string").slice(0, 30) : [];
+          const saved = JSON.parse(
+            localStorage.getItem(quickPlanHistoryKey(anchor)) || "[]",
+          );
+          return Array.isArray(saved)
+            ? saved.filter((id) => typeof id === "string").slice(0, 30)
+            : [];
         } catch (_) {
           return [];
         }
       }
 
       function rememberQuickPlan(anchor, plan) {
-        const next = (plan?.stops || []).filter((stop) => !stop.isAnchor).map((stop) => String(stop.id || "")).filter(Boolean);
+        const next = (plan?.stops || [])
+          .filter((stop) => !stop.isAnchor)
+          .map((stop) => String(stop.id || ""))
+          .filter(Boolean);
         if (!next.length) return;
         try {
-          localStorage.setItem(quickPlanHistoryKey(anchor), JSON.stringify([...new Set([...next, ...quickPlanRecent(anchor)])].slice(0, 30)));
+          localStorage.setItem(
+            quickPlanHistoryKey(anchor),
+            JSON.stringify(
+              [...new Set([...next, ...quickPlanRecent(anchor)])].slice(0, 30),
+            ),
+          );
         } catch (_) {}
       }
 
@@ -2513,7 +4032,8 @@
 
       function renderQuickPlan() {
         if (!quickPlanState || !quickPlanContent) return;
-        const { anchor, stopCount, budgetStyle, loading, error, plan } = quickPlanState;
+        const { anchor, stopCount, budgetStyle, loading, error, plan } =
+          quickPlanState;
         const name = String(anchor?.name || "this place");
         const choice = (kind, value, label, active) =>
           `<button type="button" class="echoo-quick-plan-choice" data-quick-plan-choice="${kind}" data-quick-plan-value="${value}" aria-pressed="${active}">${label}</button>`;
@@ -2523,16 +4043,20 @@
         const result = loading
           ? `<div class="echoo-quick-plan-loading" aria-live="polite"><span class="echoo-quick-plan-loading-label">Reading the area, your pace, and what is open.</span><span class="echoo-quick-plan-skeleton"></span><span class="echoo-quick-plan-skeleton"></span></div>`
           : plan && planHasExactStops
-          ? `<div class="echoo-quick-plan-result">
+            ? `<div class="echoo-quick-plan-result">
                 <div class="echoo-quick-plan-route-meta"><span>${esc(plan.subtitle || `Built around ${name}`)}</span><strong>${plan.totalTravelMinutes ? `~${plan.totalTravelMinutes} min between stops` : "A close-by loop"}</strong></div>
                 <div class="echoo-quick-plan-plan-meta"><span>${esc(plan.budgetStyle || budgetStyle)} plan</span><span>Starts ${esc(stops[0]?.time || "now")}</span></div>
-                <div class="echoo-quick-plan-stops">${stops.map((stop, index) => `
+                <div class="echoo-quick-plan-stops">${stops
+                  .map(
+                    (stop, index) => `
                   <button class="echoo-quick-plan-stop" type="button" data-quick-plan-stop="${esc(stop.id)}">
                     <span class="echoo-quick-plan-stop-number">${index + 1}</span>
                     ${quickPlanStopCover(stop)}
                     <span class="echoo-quick-plan-stop-copy"><strong>${esc(stop.name)}</strong><span>${esc(index === 0 ? `${stop.reason || "Your anchor"} · ${stop.category || "Place"}` : `${stop.travelMinutes || ""} min away · ${stop.reason || "Nearby"}${stop.priceLabel ? ` · ${stop.priceLabel}` : ""}`)}</span></span>
                     <span class="echoo-quick-plan-stop-time">${esc(stop.time || "")}</span>
-                  </button>`).join("")}
+                  </button>`,
+                  )
+                  .join("")}
                 </div>
               </div>`
             : `<p class="echoo-quick-plan-error">${esc(error || `Echoo could not make a reliable ${expectedStopCount}-stop plan around this place yet.`)}</p>`;
@@ -2545,53 +4069,79 @@
           </div>
           ${result}
           ${plan && planHasExactStops ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${esc(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Start directions</button></div>` : ""}`;
-        quickPlanContent.querySelector("[data-quick-plan-close]")?.addEventListener("click", closeQuickPlan);
-        quickPlanContent.querySelectorAll("[data-quick-plan-choice]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const kind = button.getAttribute("data-quick-plan-choice");
-            const value = button.getAttribute("data-quick-plan-value");
-            if (kind === "stops") quickPlanState.stopCount = Number(value) === 2 ? 2 : 3;
-            if (kind === "budget") quickPlanState.budgetStyle = value || "balanced";
-            loadQuickPlan();
-          });
-        });
-        quickPlanContent.querySelectorAll("[data-quick-plan-stop]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const stop = stops.find((item) => item.id === button.getAttribute("data-quick-plan-stop"));
-            if (!stop) return;
-            closeQuickPlan();
-            openDetailByItem({
-              id: stop.id,
-              title: stop.name,
-              category: stop.category,
-              address: stop.address,
-              latitude: stop.latitude,
-              longitude: stop.longitude,
-              imageUrl: stop.imageUrl,
+        quickPlanContent
+          .querySelector("[data-quick-plan-close]")
+          ?.addEventListener("click", closeQuickPlan);
+        quickPlanContent
+          .querySelectorAll("[data-quick-plan-choice]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              const kind = button.getAttribute("data-quick-plan-choice");
+              const value = button.getAttribute("data-quick-plan-value");
+              if (kind === "stops")
+                quickPlanState.stopCount = Number(value) === 2 ? 2 : 3;
+              if (kind === "budget")
+                quickPlanState.budgetStyle = value || "balanced";
+              loadQuickPlan();
             });
           });
-        });
-        quickPlanContent.querySelector("[data-quick-plan-route]")?.addEventListener("click", () => {
-          if (!stops.length) return;
-          if (window.ReactNativeWebView?.postMessage) {
-            window.ReactNativeWebView.postMessage(`echoo:route-plan:${JSON.stringify({ stops })}`);
-            return;
-          }
-          const validStops = stops.filter((stop) => Number.isFinite(Number(stop.latitude)) && Number.isFinite(Number(stop.longitude)));
-          if (!validStops.length) return;
-          const coordinate = `${validStops[0].latitude},${validStops[0].longitude}`;
-          const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
-          const url = isAppleDevice
-            ? `https://maps.apple.com/?daddr=${encodeURIComponent(coordinate)}&dirflg=d`
-            : (() => {
-                const destination = validStops.at(-1);
-                const waypoints = validStops.slice(0, -1).map((stop) => `${stop.latitude},${stop.longitude}`).join("|");
-                const params = new URLSearchParams({ api: "1", destination: `${destination.latitude},${destination.longitude}`, dir_action: "navigate" });
-                if (waypoints) params.set("waypoints", waypoints);
-                return `https://www.google.com/maps/dir/?${params.toString()}`;
-              })();
-          window.open(url.toString(), "_blank", "noopener,noreferrer");
-        });
+        quickPlanContent
+          .querySelectorAll("[data-quick-plan-stop]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              const stop = stops.find(
+                (item) =>
+                  item.id === button.getAttribute("data-quick-plan-stop"),
+              );
+              if (!stop) return;
+              closeQuickPlan();
+              openDetailByItem({
+                id: stop.id,
+                title: stop.name,
+                category: stop.category,
+                address: stop.address,
+                latitude: stop.latitude,
+                longitude: stop.longitude,
+                imageUrl: stop.imageUrl,
+              });
+            });
+          });
+        quickPlanContent
+          .querySelector("[data-quick-plan-route]")
+          ?.addEventListener("click", () => {
+            if (!stops.length) return;
+            if (window.ReactNativeWebView?.postMessage) {
+              window.ReactNativeWebView.postMessage(
+                `echoo:route-plan:${JSON.stringify({ stops })}`,
+              );
+              return;
+            }
+            const validStops = stops.filter(
+              (stop) =>
+                Number.isFinite(Number(stop.latitude)) &&
+                Number.isFinite(Number(stop.longitude)),
+            );
+            if (!validStops.length) return;
+            const coordinate = `${validStops[0].latitude},${validStops[0].longitude}`;
+            const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const url = isAppleDevice
+              ? `https://maps.apple.com/?daddr=${encodeURIComponent(coordinate)}&dirflg=d`
+              : (() => {
+                  const destination = validStops.at(-1);
+                  const waypoints = validStops
+                    .slice(0, -1)
+                    .map((stop) => `${stop.latitude},${stop.longitude}`)
+                    .join("|");
+                  const params = new URLSearchParams({
+                    api: "1",
+                    destination: `${destination.latitude},${destination.longitude}`,
+                    dir_action: "navigate",
+                  });
+                  if (waypoints) params.set("waypoints", waypoints);
+                  return `https://www.google.com/maps/dir/?${params.toString()}`;
+                })();
+            window.open(url.toString(), "_blank", "noopener,noreferrer");
+          });
       }
 
       async function loadQuickPlan() {
@@ -2602,7 +4152,9 @@
         renderQuickPlan();
         try {
           const requestHeaders = window.EchooAuth?.authHeaders
-            ? await window.EchooAuth.authHeaders({ "Content-Type": "application/json" })
+            ? await window.EchooAuth.authHeaders({
+                "Content-Type": "application/json",
+              })
             : headers;
           const response = await fetch(CONFIG.quickPlanUrl, {
             method: "POST",
@@ -2626,21 +4178,37 @@
           });
           const payload = await response.json().catch(() => ({}));
           if (requestId !== quickPlanRequestId) return;
-          const expectedStopCount = Number(quickPlanState.stopCount) === 2 ? 2 : 3;
-          const stops = Array.isArray(payload?.plan?.stops) ? payload.plan.stops : [];
-          if (!response.ok || !payload?.plan) throw new Error(payload?.error || "Quick Plan could not build a reliable route right now.");
+          const expectedStopCount =
+            Number(quickPlanState.stopCount) === 2 ? 2 : 3;
+          const stops = Array.isArray(payload?.plan?.stops)
+            ? payload.plan.stops
+            : [];
+          if (!response.ok || !payload?.plan)
+            throw new Error(
+              payload?.error ||
+                "Quick Plan could not build a reliable route right now.",
+            );
           if (stops.length !== expectedStopCount) {
-            throw new Error(`Echoo received an incomplete plan. Please try the ${expectedStopCount}-stop option again.`);
+            throw new Error(
+              `Echoo received an incomplete plan. Please try the ${expectedStopCount}-stop option again.`,
+            );
           }
           quickPlanState.loading = false;
-          quickPlanState.plan = { ...payload.plan, stops, stopCount: expectedStopCount, requestedStopCount: expectedStopCount };
+          quickPlanState.plan = {
+            ...payload.plan,
+            stops,
+            stopCount: expectedStopCount,
+            requestedStopCount: expectedStopCount,
+          };
           rememberQuickPlan(quickPlanState.anchor, quickPlanState.plan);
           renderQuickPlan();
         } catch (error) {
           if (requestId !== quickPlanRequestId) return;
           quickPlanState.loading = false;
           quickPlanState.plan = null;
-          quickPlanState.error = error?.message || "Quick Plan could not build a reliable route right now.";
+          quickPlanState.error =
+            error?.message ||
+            "Quick Plan could not build a reliable route right now.";
           renderQuickPlan();
         }
       }
@@ -2675,7 +4243,9 @@
       document.querySelector(".view-switch").onclick = (e) => {
         const btn = e.target.closest("button");
         if (!btn) return;
-        document.querySelectorAll(".view-switch button").forEach(b => b.classList.toggle("active", b === btn));
+        document
+          .querySelectorAll(".view-switch button")
+          .forEach((b) => b.classList.toggle("active", b === btn));
         const isMap = btn.dataset.view === "map";
         view = isMap ? "map" : "list";
         popularContainer.hidden = isMap;
@@ -2691,11 +4261,19 @@
       });
       resultsNext.addEventListener("click", showNextResultsPage);
 
-      document.querySelectorAll("[data-close-sheet]").forEach((btn) => btn.onclick = closeDetail);
+      document
+        .querySelectorAll("[data-close-sheet]")
+        .forEach((btn) => (btn.onclick = closeDetail));
 
       cultureToggle.addEventListener("click", openCulturePicker);
-      cultureToggleClear.addEventListener("click", () => cultureContext?.clear());
-      culturePicker.querySelectorAll("[data-close-culture]").forEach((button) => button.addEventListener("click", closeCulturePicker));
+      cultureToggleClear.addEventListener("click", () =>
+        cultureContext?.clear(),
+      );
+      culturePicker
+        .querySelectorAll("[data-close-culture]")
+        .forEach((button) =>
+          button.addEventListener("click", closeCulturePicker),
+        );
       cultureGroupStrip.addEventListener("click", (event) => {
         const group = event.target.closest("[data-culture-group]");
         if (!group) return;
@@ -2712,7 +4290,11 @@
       });
       culturePickerSearch.addEventListener("input", renderCulturePicker);
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && culturePicker.classList.contains("is-open")) closeCulturePicker();
+        if (
+          event.key === "Escape" &&
+          culturePicker.classList.contains("is-open")
+        )
+          closeCulturePicker();
       });
       cultureClear.addEventListener("click", () => {
         cultureContext?.clear();
@@ -2722,24 +4304,38 @@
         applyCultureMood();
         search(activeQuery);
       });
-      document.getElementById("discover-refresh").addEventListener("click", () => search(activeQuery, { refresh: true }));
+      document
+        .getElementById("discover-refresh")
+        .addEventListener("click", () =>
+          search(activeQuery, { refresh: true }),
+        );
 
-      locationMunicipality.innerHTML = window.EchooLocationPlatform.SUPPORTED_CITIES
-        .map((municipality) => `<option value="${esc(municipality.name)}">${esc(municipality.name)}</option>`)
-        .join("");
+      locationMunicipality.innerHTML =
+        window.EchooLocationPlatform.SUPPORTED_CITIES.map(
+          (municipality) =>
+            `<option value="${esc(municipality.name)}">${esc(municipality.name)}</option>`,
+        ).join("");
       locationMunicipality.value = city;
       useLocationButton.addEventListener("click", applyCurrentLocation);
       useMunicipalityButton.addEventListener("click", async () => {
         city = locationMunicipality.value || DEFAULT_DISCOVERY_CITY;
         lat = NaN;
         lng = NaN;
-        rememberLocationChoice({ locationPermissionState: "manual", locationPrecision: "manual_region", locationReason: "municipality_choice" });
+        rememberLocationChoice({
+          locationPermissionState: "manual",
+          locationPrecision: "manual_region",
+          locationReason: "municipality_choice",
+        });
         updateLocationBadge();
         closeLocationSheet();
         await search(activeQuery);
       });
       locationLaterButton.addEventListener("click", () => {
-        rememberLocationChoice({ locationPermissionState: "skipped", locationPrecision: "manual_region", locationReason: "gta_trends" });
+        rememberLocationChoice({
+          locationPermissionState: "skipped",
+          locationPrecision: "manual_region",
+          locationReason: "gta_trends",
+        });
         closeLocationSheet();
       });
 
@@ -2760,9 +4356,14 @@
             : { ok: false };
           if (!authState.ok) {
             window.EchooAuth?.redirectToAuth?.(
-              window.EchooAuth?.currentRelativeUrl?.() || "events.html?mode=surprise",
+              window.EchooAuth?.currentRelativeUrl?.() ||
+                "events.html?mode=surprise",
               "signup",
-              { intent: "surprise", reason: "surprise_required", caption: "Sign in and Echoo will roll a pick made for you." },
+              {
+                intent: "surprise",
+                reason: "surprise_required",
+                caption: "Sign in and Echoo will roll a pick made for you.",
+              },
             );
             return;
           }
@@ -2778,7 +4379,8 @@
         search(activeQuery);
         hydrateOnboardingSignals();
       }
-      if (params.get("culturePicker") === "1") setTimeout(openCulturePicker, 180);
+      if (params.get("culturePicker") === "1")
+        setTimeout(openCulturePicker, 180);
       // Refresh a granted device location when Discover opens. Session GPS is
       // useful as an immediate fallback, but it must not quietly become an
       // all-day location if the person has moved between GTA municipalities.

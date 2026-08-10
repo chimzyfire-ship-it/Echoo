@@ -86,8 +86,16 @@
         isolation: isolate;
         overflow: hidden;
         background:
-          radial-gradient(circle at 50% -4%, rgba(255, 255, 255, 0.14), transparent 18rem),
-          radial-gradient(circle at 16% 46%, rgba(255, 212, 166, 0.08), transparent 14rem),
+          radial-gradient(
+            circle at 50% -4%,
+            rgba(255, 255, 255, 0.14),
+            transparent 18rem
+          ),
+          radial-gradient(
+            circle at 16% 46%,
+            rgba(255, 212, 166, 0.08),
+            transparent 14rem
+          ),
           linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
       }
 
@@ -447,8 +455,11 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="assets/echoo-cinema.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
-    <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
   </head>
   <body>
     <div class="app-shell">
@@ -456,7 +467,11 @@
         <a class="brand" href="index.html" aria-label="Echoo home">
           <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
-        <a class="profile-link" href="auth.html" aria-label="Open your profile"></a>
+        <a
+          class="profile-link"
+          href="auth.html"
+          aria-label="Open your profile"
+        ></a>
       </header>
 
       <main>
@@ -475,10 +490,15 @@
           <div class="film-copy">
             <span id="film-meta">Trailer</span>
             <h2 id="film-title"></h2>
+            <div class="film-meta-row" id="film-meta-row" hidden></div>
             <p id="film-copy"></p>
           </div>
           <div class="actions">
-            <a class="action primary" id="film-search" href="events.html?query=film%20screenings%20ontario">
+            <a
+              class="action primary"
+              id="film-search"
+              href="events.html?query=film%20screenings%20ontario"
+            >
               Find screenings
             </a>
             <button class="action" id="next-film" type="button">Next</button>
@@ -492,30 +512,51 @@
           </div>
           <div id="film-list"></div>
         </section>
+
+        <section
+          class="cinema-rails"
+          id="cinema-rails"
+          aria-label="More trailers"
+        >
+          <!-- Populated by assets/echoo-cinema.js -->
+        </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Main navigation">
         <a class="nav-link" href="index.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+          </svg>
           <span>Home</span>
         </a>
         <a class="nav-link active" href="events.html" aria-current="page">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m16 16 4 4" />
+          </svg>
           <span>Discover</span>
         </a>
         <a class="nav-link" href="tickets.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" /><path d="M13 6v12" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" />
+            <path d="M13 6v12" />
+          </svg>
           <span>Tickets</span>
         </a>
         <a class="nav-link" href="auth.html">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
           <span>Profile</span>
         </a>
       </nav>
     </div>
 
     <script src="assets/hero-copy.js"></script>
+    <script src="assets/echoo-cinema.js"></script>
     <script>
+      // ── Curated fallback films (shown if the TMDB feed is unreachable) ──
       const films = [
         {
           title: "The Wild Robot",
@@ -556,15 +597,26 @@
       const title = document.getElementById("film-title");
       const copy = document.getElementById("film-copy");
       const meta = document.getElementById("film-meta");
+      const metaRow = document.getElementById("film-meta-row");
       const search = document.getElementById("film-search");
       const list = document.getElementById("film-list");
       let activeIndex = 0;
 
+      // Dynamic movies pushed in from the TMDB rails (via selectMovie) or
+      // fetched via deep-link (?movie=<tmdb_id>). These live alongside the
+      // curated `films` array; index 0+ refer to `films`, and any appended
+      // entries are dynamic.
+      let dynamicPool = [];
+
       function trailerMarkup(film) {
+        if (!film.video) {
+          return `<div style="position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;padding:24px;text-align:center">Trailer coming soon.</div>`;
+        }
         return `<iframe src="https://www.youtube-nocookie.com/embed/${film.video}?rel=0&modestbranding=1&playsinline=1" title="${film.title} trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`;
       }
 
       function renderQueue() {
+        // Queue always reflects the curated fallback list (the "Now screening" strip).
         list.innerHTML = films
           .map(
             (film, index) => `
@@ -580,6 +632,27 @@
           .join("");
       }
 
+      function renderMetaRow(film) {
+        const bits = [];
+        if (film.year) bits.push(`<span class="chip">${film.year}</span>`);
+        if (film.rating) {
+          bits.push(
+            `<span class="rating"><svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>${film.rating}</span>`,
+          );
+        }
+        if (film.genres && film.genres.length) {
+          bits.push(
+            `<span class="chip">${film.genres.slice(0, 2).join(" · ")}</span>`,
+          );
+        }
+        if (bits.length) {
+          metaRow.innerHTML = bits.join("");
+          metaRow.hidden = false;
+        } else {
+          metaRow.hidden = true;
+        }
+      }
+
       function setFilm(index) {
         activeIndex = (index + films.length) % films.length;
         const film = films[activeIndex];
@@ -589,10 +662,46 @@
           title.textContent = film.title;
           copy.textContent = film.copy;
           meta.textContent = film.mood;
+          metaRow.hidden = true; // curated films don't have the enriched row
           search.href = `events.html?query=${encodeURIComponent(film.query)}`;
           renderQueue();
           screen.classList.add("active");
         }, 160);
+      }
+
+      // Bridge: called when a poster from a TMDB rail is tapped.
+      // Loads that movie into the featured trailer stage (inline player).
+      function selectMovie(movie) {
+        const film = {
+          title: movie.title,
+          mood: movie.curated_mood || movie.eyebrow || "Now playing",
+          copy: movie.overview || movie.curated_copy || "",
+          video: movie.trailer_youtube_id || "",
+          poster: movie.poster_url || "",
+          query: `${movie.title} screenings Ontario`,
+          year: movie.year || null,
+          rating: movie.vote_average
+            ? Number(movie.vote_average).toFixed(1)
+            : null,
+          genres: movie.genres || [],
+        };
+
+        // Scroll the featured stage into view, then swap content.
+        screen.scrollIntoView({ behavior: "smooth", block: "start" });
+        screen.classList.remove("active");
+        window.setTimeout(() => {
+          frame.innerHTML = trailerMarkup(film);
+          title.textContent = film.title;
+          copy.textContent = film.copy || "Official trailer.";
+          meta.textContent = film.mood;
+          renderMetaRow(film);
+          search.href = `events.html?query=${encodeURIComponent(film.query)}`;
+          // Deactivate the curated queue highlight.
+          list
+            .querySelectorAll(".film-row.active")
+            .forEach((el) => el.classList.remove("active"));
+          screen.classList.add("active");
+        }, 200);
       }
 
       document.getElementById("next-film").addEventListener("click", () => {
@@ -605,8 +714,63 @@
         setFilm(Number(row.dataset.index));
       });
 
+      // ── Deep-link: ?movie=<tmdb_id> loads a specific film first ──
+      async function loadDeepLinkedMovie() {
+        const params = new URLSearchParams(window.location.search);
+        const tmdbId = params.get("movie");
+        if (!tmdbId) return false;
+        try {
+          const res = await fetch(
+            `https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/movies-feed?movie=${encodeURIComponent(tmdbId)}`,
+            { headers: { accept: "application/json" } },
+          );
+          if (!res.ok) return false;
+          const data = await res.json();
+          if (data.movie) {
+            selectMovie(data.movie);
+            return true;
+          }
+        } catch (_err) {
+          // Silently fall back to the default curated film.
+        }
+        return false;
+      }
+
+      // ── Featured trailer: auto-load the top now-playing movie so the
+      //    page opens on something current, not a stale curated pick.
+      //    Skipped if a deep-link ?movie= already loaded a specific film. ──
+      async function loadFeaturedFromFeed() {
+        try {
+          const res = await fetch(
+            "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/movies-feed?rail=now_playing&limit=5",
+            { headers: { accept: "application/json" } },
+          );
+          if (!res.ok) return;
+          const data = await res.json();
+          const movies = (data.movies || []).filter((m) => m.trailer_youtube_id);
+          if (movies.length > 0) selectMovie(movies[0]);
+        } catch (_err) {
+          // Keep the curated fallback film already on screen.
+        }
+      }
+
       renderQueue();
       setFilm(0);
+
+      // ── Boot the cinema rails ──
+      if (window.EchooCinema) {
+        window.EchooCinema.init({
+          container: document.getElementById("cinema-rails"),
+          onSelect: selectMovie,
+          fallbacks: films,
+        });
+      }
+
+      // Deep-link takes priority; otherwise promote a current film to featured.
+      (async () => {
+        const loaded = await loadDeepLinkedMovie();
+        if (!loaded) loadFeaturedFromFeed();
+      })();
     </script>
     <script src="assets/page-loader.js"></script>
   </body>
