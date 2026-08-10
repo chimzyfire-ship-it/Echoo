@@ -1,0 +1,281 @@
+/* ──────────────────────────────────────────────
+   Echoo Cinema — rails & poster cards
+   Loaded by films.html. Stays on design-system tokens.
+   ────────────────────────────────────────────── */
+
+/* ── Rail section ── */
+.cinema-rails {
+  display: grid;
+  gap: 26px;
+  margin-top: 8px;
+}
+
+.cinema-rail {
+  display: grid;
+  gap: 10px;
+}
+
+.rail-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rail-eyebrow .label {
+  color: var(--peach);
+  font-size: 10px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rail-eyebrow .sub {
+  color: rgba(248, 245, 239, 0.4);
+  font-size: 10px;
+  font-weight: 520;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Poster carousel (mirrors .horizontal-carousel from events.html) ── */
+.poster-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  touch-action: pan-x;
+  padding-bottom: 6px;
+  margin: 0 -27px;
+  padding-left: 27px;
+  padding-right: 27px;
+  scrollbar-width: none;
+}
+
+.poster-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Poster card ── */
+.poster-card {
+  flex: 0 0 132px;
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.poster-card:active {
+  transform: scale(0.97);
+}
+
+.poster-thumb {
+  position: relative;
+  width: 132px;
+  height: 198px; /* 2:3 poster ratio */
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(248, 245, 239, 0.05);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+}
+
+.poster-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 320ms ease;
+}
+
+.poster-card:hover .poster-thumb img {
+  transform: scale(1.04);
+}
+
+/* Play glyph overlay */
+.poster-thumb::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(
+    180deg,
+    transparent 48%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.poster-card:hover .poster-thumb::after,
+.poster-card:focus-visible .poster-thumb::after {
+  opacity: 1;
+}
+
+.poster-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--peach);
+  color: #111;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+  pointer-events: none;
+}
+
+.poster-card:hover .poster-play,
+.poster-card:focus-visible .poster-play {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.poster-play svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  margin-left: 2px;
+}
+
+/* No-trailer marker (a quiet dot so users know) */
+.poster-thumb.no-trailer::before {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(248, 245, 239, 0.5);
+  content: "";
+}
+
+/* Meta below poster */
+.poster-title {
+  font-size: 13px;
+  font-weight: 620;
+  line-height: 1.18;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.poster-meta {
+  font-size: 11px;
+  font-weight: 520;
+  color: rgba(248, 245, 239, 0.48);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.poster-meta .dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(248, 245, 239, 0.3);
+}
+
+/* ── Skeleton poster (while loading) ── */
+.poster-card.skeleton .poster-thumb {
+  background: rgba(248, 245, 239, 0.04);
+  animation: cinema-pulse 1.6s ease-in-out infinite;
+}
+
+.poster-card.skeleton .poster-title,
+.poster-card.skeleton .poster-meta {
+  color: transparent;
+  background: rgba(248, 245, 239, 0.05);
+  border-radius: 4px;
+  height: 12px;
+  animation: cinema-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes cinema-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* ── Featured trailer meta enrichment (genres + rating row) ── */
+.film-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.film-meta-row .chip {
+  font-size: 10px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(248, 245, 239, 0.6);
+}
+
+.film-meta-row .rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--peach);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.film-meta-row .star {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+
+/* ── Empty / error state ── */
+.cinema-empty {
+  display: grid;
+  gap: 4px;
+  padding: 18px 0 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 520;
+}
+
+.cinema-empty span {
+  font-size: 11px;
+  color: rgba(248, 245, 239, 0.4);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .poster-card,
+  .poster-thumb img,
+  .poster-play,
+  .poster-card.skeleton .poster-thumb,
+  .poster-card.skeleton .poster-title,
+  .poster-card.skeleton .poster-meta {
+    transition-duration: 0.01ms !important;
+    animation: none !important;
+  }
+}
