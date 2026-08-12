@@ -211,6 +211,12 @@ export type LinkupAction =
   | "block"
   | "end";
 
+// NOTE: every action here is enforced via recordAction/checkRateLimit on its
+// Edge Function path EXCEPT `message` — chat inserts go client-side through
+// RLS (migration 202608070005) for low latency and never touch those helpers.
+// `message` is therefore enforced by the linkup_messages_rate_limit trigger
+// (migration 202608120001). Keep the trigger's 30 / 10-minute figures in sync
+// with the values below — Postgres can't read this constant.
 export const ACTION_LIMITS: Record<LinkupAction, { max: number; windowMinutes: number }> = {
   checkin: { max: 10, windowMinutes: 60 },
   checkout: { max: 20, windowMinutes: 60 },
