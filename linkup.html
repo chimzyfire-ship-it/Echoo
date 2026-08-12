@@ -81,47 +81,50 @@
       }
       .bottom-nav {
         position: fixed;
-        bottom: 0;
         left: 50%;
+        bottom: 12px;
+        z-index: 30;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
+        background: rgba(25, 25, 24, 0.82);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
         transform: translateX(-50%);
-        width: min(100%, 430px);
-        height: 72px;
-        background: rgba(12, 12, 12, 0.92);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(248, 245, 239, 0.08);
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        z-index: 40;
-        padding-bottom: env(safe-area-inset-bottom);
       }
       .nav-link {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 3px;
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 500;
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 5px;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
         text-decoration: none;
-        transition: color 0.15s ease;
-      }
-      .nav-link svg {
-        width: 22px;
-        height: 22px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
       }
       .nav-link.active {
         color: var(--peach);
-        font-weight: 650;
+      }
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .nav-link.active svg {
-        stroke: var(--peach);
+        fill: currentColor;
+        stroke-width: 0;
       }
       .nav-link-dot {
         width: 4px;
@@ -312,11 +315,6 @@
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
           <span>Link Up</span>
-          <span class="nav-link-dot"></span>
-        </a>
-        <a class="nav-link" href="tickets.html">
-          <svg viewBox="0 0 24 24"><path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" /><path d="M13 6v12" /></svg>
-          <span>Tickets</span>
         </a>
         <a class="nav-link" href="auth.html">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
