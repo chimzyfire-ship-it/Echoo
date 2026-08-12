@@ -170,6 +170,36 @@
           </div>
         </section>
 
+        <!-- Presence Rest State Bar -->
+        <div id="echoo-linkup-presence-bar" style="
+          background: rgba(248, 245, 239, 0.04);
+          border: 1px solid rgba(248, 245, 239, 0.08);
+          border-radius: 16px;
+          padding: 12px 16px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        ">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="presence-status-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #E7C98E; box-shadow: 0 0 10px rgba(231, 201, 142, 0.6);"></span>
+            <div style="display: flex; flex-direction: column;">
+              <span id="presence-status-title" style="font-size: 13px; font-weight: 650; color: #f8f5ef;">Presence Active · STACKT</span>
+              <span id="presence-status-sub" style="font-size: 11px; color: #9e978e;">Explicit check-in (expires in 2h 45m)</span>
+            </div>
+          </div>
+          <button id="presence-toggle-btn" type="button" style="
+            background: rgba(231, 201, 142, 0.12);
+            border: 1px solid rgba(231, 201, 142, 0.3);
+            color: #E7C98E;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 650;
+            cursor: pointer;
+          ">Check Out</button>
+        </div>
+
         <!-- Smart Match Card -->
         <section class="echoo-linkup-smart-card" id="echoo-smart-match-card">
           <div class="echoo-linkup-smart-header">
