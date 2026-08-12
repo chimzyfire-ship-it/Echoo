@@ -877,6 +877,45 @@
       });
     });
 
+    // Presence Rest State Toggle
+    const presenceBtn = document.getElementById("presence-toggle-btn");
+    const presenceDot = document.getElementById("presence-status-dot");
+    const presenceTitle = document.getElementById("presence-status-title");
+    const presenceSub = document.getElementById("presence-status-sub");
+
+    let isPresenceActive = true;
+    if (presenceBtn) {
+      presenceBtn.addEventListener("click", () => {
+        isPresenceActive = !isPresenceActive;
+        if (isPresenceActive) {
+          presenceBtn.textContent = "Check Out";
+          presenceBtn.style.background = "rgba(231, 201, 142, 0.12)";
+          presenceBtn.style.color = "#E7C98E";
+          if (presenceDot) {
+            presenceDot.style.background = "#E7C98E";
+            presenceDot.style.boxShadow = "0 0 10px rgba(231, 201, 142, 0.6)";
+          }
+          if (presenceTitle) presenceTitle.textContent = "Presence Active · STACKT";
+          if (presenceSub) presenceSub.textContent = "Explicit check-in (expires in 2h 45m)";
+          card.style.opacity = "1";
+          card.style.pointerEvents = "auto";
+          showToast("📍 Presence active at STACKT. Smart Match scanning...");
+        } else {
+          presenceBtn.textContent = "Check In";
+          presenceBtn.style.background = "rgba(248, 245, 239, 0.08)";
+          presenceBtn.style.color = "#f8f5ef";
+          if (presenceDot) {
+            presenceDot.style.background = "rgba(248, 245, 239, 0.3)";
+            presenceDot.style.boxShadow = "none";
+          }
+          if (presenceTitle) presenceTitle.textContent = "Presence Off · Standby State";
+          if (presenceSub) presenceSub.textContent = "Check in at a venue or discover nearby to match";
+          card.style.opacity = "0.75";
+          showToast("⏸️ Presence set to Rest State. Automatic matching paused.");
+        }
+      });
+    }
+
     // Floating Action Chat Button
     const fab = document.getElementById("echoo-linkup-fab-btn");
     if (fab) {
