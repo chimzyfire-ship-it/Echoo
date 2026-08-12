@@ -51,7 +51,7 @@
         top: 0;
         z-index: 30;
         display: flex;
-        justify-space-between;
+        justify-content: space-between;
         align-items: center;
         padding: calc(24px + env(safe-area-inset-top)) 20px 14px;
         background: rgba(5, 5, 5, 0.85);
@@ -62,6 +62,11 @@
         height: 24px;
         width: auto;
         filter: brightness(1.2);
+      }
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
       .culture-pill {
         display: inline-flex;
@@ -126,31 +131,32 @@
         fill: currentColor;
         stroke-width: 0;
       }
-      .nav-link-dot {
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: var(--peach);
-        margin-top: -1px;
-      }
     </style>
   </head>
   <body data-page="linkup">
     <div class="app-shell">
-      <!-- Top Bar Header -->
+      <!-- Top Bar -->
       <header class="topbar" aria-label="Echoo">
         <a class="brand" href="index.html" aria-label="Echoo home">
           <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
-        <a class="culture-pill" href="culture.html" id="culture-pill-link" aria-label="Culture Lens settings">
-          <span class="culture-pill-icon">🌐</span>
-          <span id="culture-pill-text">Culture <span style="color: var(--muted); font-size: 11px;">Local mode</span></span>
-        </a>
+        <div class="topbar-actions">
+          <a class="culture-pill" href="culture.html" aria-label="Culture Lens settings">
+            <span class="culture-pill-icon">🌐</span>
+            <span>Culture</span>
+          </a>
+          <a class="echoo-linkup-settings-link" href="linkup-settings.html" aria-label="Link Up settings">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </a>
+        </div>
       </header>
 
-      <!-- Main Shell Content: Link Up Module -->
+      <!-- Link Up module -->
       <main class="echoo-linkup-module">
-        <!-- Hero Header with Concentric Ring Icon -->
+        <!-- Hero -->
         <section class="echoo-linkup-module-hero">
           <div class="echoo-linkup-module-title-wrap">
             <h1 class="echoo-linkup-module-title">Link up.</h1>
@@ -159,7 +165,6 @@
               Real connections.
             </p>
           </div>
-          <!-- Concentric Ring Gold Chain Icon Badge -->
           <div class="echoo-linkup-ring-badge" aria-hidden="true">
             <div class="echoo-linkup-ring-badge-inner">
               <svg viewBox="0 0 24 24">
@@ -170,164 +175,47 @@
           </div>
         </section>
 
-        <!-- Presence Rest State Bar -->
-        <div id="echoo-linkup-presence-bar" style="
-          background: rgba(248, 245, 239, 0.04);
-          border: 1px solid rgba(248, 245, 239, 0.08);
-          border-radius: 16px;
-          padding: 12px 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-        ">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span id="presence-status-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #E7C98E; box-shadow: 0 0 10px rgba(231, 201, 142, 0.6);"></span>
-            <div style="display: flex; flex-direction: column;">
-              <span id="presence-status-title" style="font-size: 13px; font-weight: 650; color: #f8f5ef;">Presence Active · STACKT</span>
-              <span id="presence-status-sub" style="font-size: 11px; color: #9e978e;">Explicit check-in (expires in 2h 45m)</span>
-            </div>
-          </div>
-          <button id="presence-toggle-btn" type="button" style="
-            background: rgba(231, 201, 142, 0.12);
-            border: 1px solid rgba(231, 201, 142, 0.3);
-            color: #E7C98E;
-            padding: 6px 12px;
-            border-radius: 9999px;
-            font-size: 11px;
-            font-weight: 650;
-            cursor: pointer;
-          ">Check Out</button>
-        </div>
-
-        <!-- Smart Match Card -->
-        <section class="echoo-linkup-smart-card" id="echoo-smart-match-card">
-          <div class="echoo-linkup-smart-header">
-            <div class="echoo-linkup-smart-icon">
-              <svg viewBox="0 0 24 24">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </div>
-            <div class="echoo-linkup-smart-header-text">
-              <h2 class="echoo-linkup-smart-title">Smart Match</h2>
-              <p class="echoo-linkup-smart-sub">We'll suggest people you'll vibe with, at the same spot or nearby.</p>
-            </div>
-          </div>
-
-          <!-- Dual Circle Avatars Visual -->
-          <div class="echoo-linkup-dual-avatars">
-            <div class="echoo-linkup-avatar-wrap" id="user-avatar-wrap">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Your profile photo" id="user-avatar-img" />
-            </div>
-            <div class="echoo-linkup-connector-track">
-              <div class="echoo-linkup-connector-line"></div>
-              <div class="echoo-linkup-connector-node" title="Matched vibe">
-                <svg viewBox="0 0 24 24">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-              </div>
-              <div class="echoo-linkup-connector-line"></div>
-            </div>
-            <div class="echoo-linkup-avatar-wrap" id="peer-avatar-wrap">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" alt="Alex's photo" id="peer-avatar-img" />
-            </div>
-          </div>
-
-          <!-- Match Cue Details -->
-          <div class="echoo-linkup-match-details">
-            <p class="echoo-linkup-match-cue" id="match-cue-text">
-              <strong id="match-peer-name">Alex</strong> is at <span class="venue-highlight" id="match-venue-name">STACKT</span> and loves Live Music & Food like you do.
-            </p>
-            <div class="echoo-linkup-status-badge" id="match-status-badge">
-              <svg viewBox="0 0 24 24">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span id="match-status-text">At the same spot</span>
-            </div>
-          </div>
-
-          <!-- Action CTA Group -->
-          <div class="echoo-linkup-cta-group">
-            <button type="button" class="echoo-linkup-btn--hero" id="btn-linkup-hangout" data-linkup-primary>
-              <span>Link Up & Hangout</span>
-              <svg viewBox="0 0 24 24">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-            <button type="button" class="echoo-linkup-btn--outline" id="btn-linkup-notnow" data-linkup-secondary>
-              Not now
-            </button>
+        <!-- Live state viewport — rendered by EchooLinkUp.initHub() -->
+        <section id="echoo-linkup-viewport" class="echoo-linkup-viewport" data-linkup-viewport>
+          <div class="echoo-linkup-state">
+            <div class="echoo-linkup-spinner" aria-label="Loading Link Up"></div>
           </div>
         </section>
 
-        <!-- Other Ways to Connect Card -->
+        <!-- How it works — honest static explainer with real routing -->
         <section class="echoo-linkup-connect-card">
-          <h3 class="echoo-linkup-connect-title">Other ways to connect</h3>
+          <h3 class="echoo-linkup-connect-title">How Link Up works</h3>
           <div class="echoo-linkup-ways-list">
-            <!-- Row 1: Find people at the same place -->
-            <div class="echoo-linkup-way-row" role="button" tabindex="0" data-linkup-action="same-place" aria-label="Find people at the same place">
+            <a class="echoo-linkup-way-row echoo-linkup-settings-link-row" href="events.html" aria-label="Find a place and check in">
               <div class="echoo-linkup-way-left">
                 <div class="echoo-linkup-way-icon">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
+                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
                 </div>
-                <span class="echoo-linkup-way-text">Find people at the same place</span>
+                <span class="echoo-linkup-way-text">Find a place &amp; check in</span>
               </div>
-              <div class="echoo-linkup-way-arrow">
-                <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
-              </div>
-            </div>
-
-            <!-- Row 2: Discover people nearby -->
-            <div class="echoo-linkup-way-row" role="button" tabindex="0" data-linkup-action="nearby" aria-label="Discover people nearby">
+              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
+            </a>
+            <a class="echoo-linkup-way-row echoo-linkup-settings-link-row" href="culture.html" aria-label="Tune your Culture Lens">
               <div class="echoo-linkup-way-left">
                 <div class="echoo-linkup-way-icon">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
                 </div>
-                <span class="echoo-linkup-way-text">Discover people nearby</span>
+                <span class="echoo-linkup-way-text">Tune your Culture Lens</span>
               </div>
-              <div class="echoo-linkup-way-arrow">
-                <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
-              </div>
-            </div>
-
-            <!-- Row 3: See who likes similar things -->
-            <div class="echoo-linkup-way-row" role="button" tabindex="0" data-linkup-action="similar-vibes" aria-label="See who likes similar things">
+              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
+            </a>
+            <a class="echoo-linkup-way-row echoo-linkup-settings-link-row" href="linkup-settings.html" aria-label="Pause or manage Link Up">
               <div class="echoo-linkup-way-left">
                 <div class="echoo-linkup-way-icon">
-                  <svg viewBox="0 0 24 24">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
                 </div>
-                <span class="echoo-linkup-way-text">See who likes similar things</span>
+                <span class="echoo-linkup-way-text">Pause or manage Link Up</span>
               </div>
-              <div class="echoo-linkup-way-arrow">
-                <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
-              </div>
-            </div>
+              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
+            </a>
           </div>
         </section>
       </main>
-
-      <!-- Floating Action Chat Button -->
-      <button class="echoo-linkup-fab" id="echoo-linkup-fab-btn" type="button" aria-label="Open Link Up chat">
-        <svg viewBox="0 0 24 24">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-        <span class="echoo-linkup-fab-dot" id="echoo-linkup-fab-dot" hidden></span>
-      </button>
 
       <!-- Floating Bottom Navigation -->
       <nav class="bottom-nav" aria-label="Main navigation">
