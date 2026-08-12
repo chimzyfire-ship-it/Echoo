@@ -1983,26 +1983,48 @@
           <button class="chip" data-query="nature">Nature</button>
         </div>
 
-        <!-- Now Showing — Echoo Cinema trailers rail -->
-        <section aria-label="Now Showing" id="cinema-now-showing" hidden>
-          <div class="section-header">
-            <h2>Now showing</h2>
-            <a
-              class="section-link"
-              href="films.html"
-              style="
-                font-size: 11px;
-                font-weight: 650;
-                color: var(--peach);
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-              "
-              >All trailers</a
-            >
-          </div>
-          <div class="poster-carousel" id="cinema-discover-rail">
-            <!-- Populated by the inline cinema-discover init script below -->
-          </div>
+        <!-- Link Up Feature Module Promo Card -->
+        <section aria-label="Link Up Module" style="margin: 20px 0 8px;">
+          <a href="linkup.html" style="display: block; text-decoration: none; color: inherit;">
+            <div style="
+              background: linear-gradient(135deg, rgba(28, 25, 22, 0.95) 0%, rgba(15, 15, 15, 0.95) 100%);
+              border: 1px solid rgba(231, 201, 142, 0.3);
+              border-radius: 20px;
+              padding: 18px 20px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 16px;
+              box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+              transition: transform 0.18s ease, border-color 0.18s ease;
+            " onmouseover="this.style.borderColor='rgba(231, 201, 142, 0.6)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(231, 201, 142, 0.3)'; this.style.transform='translateY(0)'">
+              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #E7C98E;">FEATURE MODULE</span>
+                  <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #E7C98E;"></span>
+                </div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8f5ef; letter-spacing: -0.02em;">Link Up.</h3>
+                <p style="margin: 0; font-size: 13px; color: rgba(248, 245, 239, 0.65); line-height: 1.3;">Right people. Right place. Real connections.</p>
+              </div>
+              <div style="
+                width: 48px;
+                height: 48px;
+                flex: 0 0 48px;
+                border-radius: 50%;
+                border: 1px solid rgba(231, 201, 142, 0.4);
+                background: rgba(231, 201, 142, 0.12);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #E7C98E;
+              ">
+                <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none;">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              </div>
+            </div>
+          </a>
         </section>
 
         <!-- Popular Nearby Section with inline List/Map View Switch -->
@@ -2123,6 +2145,13 @@
             <path d="m16 16 4 4" />
           </svg>
           <span>Discover</span>
+        </a>
+        <a class="nav-link" href="linkup.html">
+          <svg viewBox="0 0 24 24">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+          <span>Link Up</span>
         </a>
         <a class="nav-link" href="tickets.html">
           <svg viewBox="0 0 24 24">

@@ -798,10 +798,220 @@
   }
 
   // ────────────────────────────────────────────────────────────────────
+  // Link Up Module UI & Interactive Feature Handlers
+  // ────────────────────────────────────────────────────────────────────
+  const CANDIDATES = [
+    {
+      name: "Alex",
+      venue: "STACKT",
+      vibe: "Live Music & Food",
+      status: "At the same spot",
+      userPhoto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      peerPhoto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+      greeting: "Hey! I'm at STACKT near the patio. Loving the live set here!"
+    },
+    {
+      name: "Maya",
+      venue: "Drake Underground",
+      vibe: "R&B & Craft Cocktails",
+      status: "120m away",
+      userPhoto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      peerPhoto: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80",
+      greeting: "Hey! Just grabbed a table inside Drake Underground. Vibe is great tonight!"
+    },
+    {
+      name: "Jordan",
+      venue: "Rebel Toronto",
+      vibe: "Nightlife & Live DJs",
+      status: "At the same spot",
+      userPhoto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      peerPhoto: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80",
+      greeting: "Yo! Up near the main stage at Rebel. Let me know if you want to link up!"
+    },
+    {
+      name: "Sam",
+      venue: "Supermarket Bar",
+      vibe: "Indie Films & Craft Beer",
+      status: "250m away",
+      userPhoto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      peerPhoto: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80",
+      greeting: "Hey! Catching the live set at Supermarket. Down to hang if you're around!"
+    }
+  ];
+
+  let currentCandidateIndex = 0;
+
+  function initModuleUI() {
+    const card = document.getElementById("echoo-smart-match-card");
+    if (!card) return;
+
+    // Primary button: Link Up & Hangout
+    const primaryBtn = document.getElementById("btn-linkup-hangout") || card.querySelector("[data-linkup-primary]");
+    if (primaryBtn) {
+      primaryBtn.addEventListener("click", () => {
+        const candidate = CANDIDATES[currentCandidateIndex];
+        openModuleChat(candidate);
+      });
+    }
+
+    // Secondary button: Not now
+    const secondaryBtn = document.getElementById("btn-linkup-notnow") || card.querySelector("[data-linkup-secondary]");
+    if (secondaryBtn) {
+      secondaryBtn.addEventListener("click", () => {
+        cycleCandidateMatch();
+      });
+    }
+
+    // Other ways to connect rows
+    document.querySelectorAll("[data-linkup-action]").forEach((row) => {
+      row.addEventListener("click", () => {
+        const action = row.getAttribute("data-linkup-action");
+        handleConnectWayAction(action);
+      });
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          const action = row.getAttribute("data-linkup-action");
+          handleConnectWayAction(action);
+        }
+      });
+    });
+
+    // Floating Action Chat Button
+    const fab = document.getElementById("echoo-linkup-fab-btn");
+    if (fab) {
+      fab.addEventListener("click", () => {
+        const candidate = CANDIDATES[currentCandidateIndex];
+        openModuleChat(candidate);
+      });
+    }
+  }
+
+  function cycleCandidateMatch() {
+    currentCandidateIndex = (currentCandidateIndex + 1) % CANDIDATES.length;
+    const candidate = CANDIDATES[currentCandidateIndex];
+
+    const card = document.getElementById("echoo-smart-match-card");
+    if (!card) return;
+
+    card.style.opacity = "0.5";
+    card.style.transform = "scale(0.98)";
+
+    setTimeout(() => {
+      const peerImg = document.getElementById("peer-avatar-img");
+      if (peerImg) peerImg.src = candidate.peerPhoto;
+
+      const nameEl = document.getElementById("match-peer-name");
+      if (nameEl) nameEl.textContent = candidate.name;
+
+      const venueEl = document.getElementById("match-venue-name");
+      if (venueEl) venueEl.textContent = candidate.venue;
+
+      const cueEl = document.getElementById("match-cue-text");
+      if (cueEl) {
+        cueEl.innerHTML = `<strong>${escapeHtml(candidate.name)}</strong> is at <span class="venue-highlight">${escapeHtml(candidate.venue)}</span> and loves ${escapeHtml(candidate.vibe)} like you do.`;
+      }
+
+      const statusText = document.getElementById("match-status-text");
+      if (statusText) statusText.textContent = candidate.status;
+
+      card.style.opacity = "1";
+      card.style.transform = "scale(1)";
+    }, 180);
+  }
+
+  function openModuleChat(candidate) {
+    ensureChatMount();
+    const sheet = document.getElementById("echoo-linkup-chat");
+    if (!sheet) return;
+
+    sheet.querySelector(".echoo-linkup-chat-title").textContent = `${candidate.name} @ ${candidate.venue}`;
+    sheet.querySelector(".echoo-linkup-chat-sub").textContent = "Ephemeral chat · Live match";
+
+    const list = sheet.querySelector(".echoo-linkup-messages");
+    list.innerHTML = "";
+
+    // Welcome system line
+    const sysMsg = document.createElement("div");
+    sysMsg.className = "echoo-linkup-system";
+    sysMsg.textContent = `You linked up with ${candidate.name} at ${candidate.venue}! Messages auto-expire.`;
+    list.appendChild(sysMsg);
+
+    // Initial message from peer candidate
+    const peerMsg = document.createElement("div");
+    peerMsg.className = "echoo-linkup-bubble echoo-linkup-bubble--theirs";
+    peerMsg.textContent = candidate.greeting;
+    list.appendChild(peerMsg);
+
+    state.openChat = {
+      conversationId: `demo-conv-${Date.now()}`,
+      matchId: `demo-match-${currentCandidateIndex}`,
+      peerProfile: { name: candidate.name, photo: candidate.peerPhoto },
+      expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
+    };
+
+    sheet.hidden = false;
+    requestAnimationFrame(() => sheet.querySelector(".echoo-linkup-chat-backdrop").classList.add("is-open"));
+  }
+
+  function showToast(msg) {
+    let toast = document.getElementById("echoo-linkup-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "echoo-linkup-toast";
+      toast.style.cssText = `
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        background: rgba(20, 20, 20, 0.95);
+        color: #f8f5ef;
+        border: 1px solid rgba(231, 201, 142, 0.4);
+        padding: 12px 20px;
+        border-radius: 9999px;
+        font: 550 13px/1.3 "Inter", sans-serif;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        pointer-events: none;
+        text-align: center;
+        max-width: 90vw;
+      `;
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.opacity = "1";
+    toast.style.transform = "translateX(-50%) translateY(0)";
+
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateX(-50%) translateY(-20px)";
+    }, 3200);
+  }
+
+  async function handleConnectWayAction(action) {
+    if (action === "same-place") {
+      showToast("📍 Found 8 people checked in at STACKT, Drake Underground & Rebel!");
+    } else if (action === "nearby") {
+      showToast("🔍 Proximity scan active: 4 members within 500m looking to link up.");
+      const fix = await pingLocation();
+      if (fix) {
+        showToast(`📍 GPS fix confirmed (${Math.round(fix.accuracy)}m precision). Smart Match updated!`);
+      }
+    } else if (action === "similar-vibes") {
+      const culture = window.EchooCultureContext?.getActive?.()?.label || "Live Music & Food";
+      showToast(`⭐ Matched 12 members in GTA matching your '${culture}' culture vibe!`);
+      cycleCandidateMatch();
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────
   // Public API
   // ────────────────────────────────────────────────────────────────────
   window.EchooLinkUp = {
     init,
+    initModuleUI,
     checkIn: onCheckinToggle,
     isEnabled: () => state.enabled === true,
     // For the place-detail integration to call when a place sheet opens.
@@ -814,8 +1024,13 @@
 
   // Auto-init on DOMContentLoaded if a script flag asks for it.
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => init().catch(() => {}));
+    document.addEventListener("DOMContentLoaded", () => {
+      init().catch(() => {});
+      initModuleUI();
+    });
   } else {
     init().catch(() => {});
+    initModuleUI();
   }
 })();
+

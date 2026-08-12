@@ -369,14 +369,453 @@
 .echoo-linkup-composer button[disabled] { opacity: 0.4; }
 
 /* ───────────────────────────────────────────────────────────────────────
-   Reduced motion
+   Link Up Module UI Screen & Feature Cards (1:1 with app design)
    ─────────────────────────────────────────────────────────────────────── */
+.echoo-linkup-module {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 40px;
+  gap: 18px;
+}
+
+.echoo-linkup-module-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.echoo-linkup-module-title-wrap {
+  flex: 1;
+}
+
+.echoo-linkup-module-title {
+  margin: 0 0 6px;
+  font: 800 40px/1.05 "Inter", sans-serif;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.echoo-linkup-module-subtitle {
+  margin: 0;
+  font: 540 16px/1.35 "Inter", sans-serif;
+  color: rgba(248, 245, 239, 0.65);
+}
+
+.echoo-linkup-module-subtitle .gold-accent {
+  color: #E7C98E;
+  font-weight: 650;
+}
+
+/* Concentric ring gold chain icon badge */
+.echoo-linkup-ring-badge {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  border-radius: 50%;
+  border: 1px solid rgba(231, 201, 142, 0.22);
+  background: radial-gradient(circle at 50% 50%, rgba(231, 201, 142, 0.12) 0%, rgba(18, 18, 18, 0.4) 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px rgba(231, 201, 142, 0.12);
+}
+
+.echoo-linkup-ring-badge-inner {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid rgba(231, 201, 142, 0.38);
+  background: rgba(20, 19, 17, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.echoo-linkup-ring-badge svg {
+  width: 26px;
+  height: 26px;
+  stroke: #E7C98E;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Smart Match Card ── */
+.echoo-linkup-smart-card {
+  background: #111111;
+  border: 1px solid rgba(248, 245, 239, 0.08);
+  border-radius: 24px;
+  padding: 22px 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.echoo-linkup-smart-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.echoo-linkup-smart-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(248, 245, 239, 0.06);
+  border: 1px solid rgba(248, 245, 239, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--peach);
+  flex: 0 0 42px;
+}
+
+.echoo-linkup-smart-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.echoo-linkup-smart-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.echoo-linkup-smart-title {
+  margin: 0;
+  font: 700 17px/1.2 "Inter", sans-serif;
+  color: var(--ink);
+}
+
+.echoo-linkup-smart-sub {
+  margin: 0;
+  font: 480 13px/1.35 "Inter", sans-serif;
+  color: var(--muted);
+}
+
+/* Dual Avatars Visual */
+.echoo-linkup-dual-avatars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 12px 0 6px;
+}
+
+.echoo-linkup-avatar-wrap {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(248, 245, 239, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  background: rgba(248, 245, 239, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 24px/1 "Inter", sans-serif;
+  color: var(--peach);
+}
+
+.echoo-linkup-avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Connector Badge */
+.echoo-linkup-connector-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 -12px;
+  z-index: 2;
+}
+
+.echoo-linkup-connector-line {
+  width: 24px;
+  height: 1px;
+  border-top: 1.5px dashed rgba(231, 201, 142, 0.45);
+}
+
+.echoo-linkup-connector-node {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(231, 201, 142, 0.4);
+  background: #181614;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 14px rgba(231, 201, 142, 0.2);
+}
+
+.echoo-linkup-connector-node svg {
+  width: 18px;
+  height: 18px;
+  stroke: #E7C98E;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Match Cue & Badge */
+.echoo-linkup-match-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.echoo-linkup-match-cue {
+  margin: 0;
+  font: 500 15px/1.4 "Inter", sans-serif;
+  color: var(--soft);
+  max-width: 310px;
+}
+
+.echoo-linkup-match-cue strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.echoo-linkup-match-cue .venue-highlight {
+  color: #E7C98E;
+  font-weight: 700;
+}
+
+.echoo-linkup-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(231, 201, 142, 0.08);
+  border: 1px solid rgba(231, 201, 142, 0.28);
+  color: #E7C98E;
+  font: 600 12px/1 "Inter", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.echoo-linkup-status-badge svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Action Buttons */
+.echoo-linkup-cta-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.echoo-linkup-btn--hero {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 9999px;
+  border: 0;
+  background: linear-gradient(135deg, #e4c48d 0%, #f7d5b2 100%);
+  color: #12100c;
+  font: 700 15px/1 "Inter", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(231, 201, 142, 0.22);
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.echoo-linkup-btn--hero:active {
+  transform: scale(0.98);
+  filter: brightness(0.95);
+}
+
+.echoo-linkup-btn--hero svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.echoo-linkup-btn--outline {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 9999px;
+  border: 1px solid rgba(248, 245, 239, 0.14);
+  background: transparent;
+  color: var(--ink);
+  font: 600 14px/1 "Inter", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.echoo-linkup-btn--outline:active {
+  background: rgba(248, 245, 239, 0.06);
+  transform: scale(0.98);
+}
+
+/* ── Other Ways to Connect Card ── */
+.echoo-linkup-connect-card {
+  background: #111111;
+  border: 1px solid rgba(248, 245, 239, 0.08);
+  border-radius: 24px;
+  padding: 20px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.echoo-linkup-connect-title {
+  margin: 0;
+  font: 700 17px/1.2 "Inter", sans-serif;
+  color: var(--ink);
+}
+
+.echoo-linkup-ways-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.echoo-linkup-way-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: rgba(248, 245, 239, 0.035);
+  border: 1px solid rgba(248, 245, 239, 0.07);
+  border-radius: 16px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.14s ease;
+  user-select: none;
+}
+
+.echoo-linkup-way-row:active {
+  background: rgba(248, 245, 239, 0.08);
+  border-color: rgba(231, 201, 142, 0.3);
+  transform: scale(0.99);
+}
+
+.echoo-linkup-way-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.echoo-linkup-way-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(248, 245, 239, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  flex: 0 0 32px;
+}
+
+.echoo-linkup-way-icon svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.echoo-linkup-way-text {
+  font: 520 14px/1.3 "Inter", sans-serif;
+  color: var(--ink);
+}
+
+.echoo-linkup-way-arrow {
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+}
+
+.echoo-linkup-way-arrow svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Floating Action Chat Button */
+.echoo-linkup-fab {
+  position: fixed;
+  bottom: 86px;
+  right: max(20px, calc((100vw - 430px) / 2 + 20px));
+  z-index: 45;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e4c48d 0%, #f7d5b2 100%);
+  color: #12100c;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 14px rgba(231, 201, 142, 0.3);
+  cursor: pointer;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.echoo-linkup-fab:active {
+  transform: scale(0.92);
+}
+
+.echoo-linkup-fab svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.echoo-linkup-fab-dot {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #000;
+  border: 2px solid #f7d5b2;
+}
+
+/* Reduced motion adjustments */
 @media (prefers-reduced-motion: reduce) {
   .echoo-linkup-checkin,
   .echoo-linkup-card,
   .echoo-linkup-chat-sheet,
   .echoo-linkup-backdrop,
-  .echoo-linkup-chat-backdrop {
+  .echoo-linkup-chat-backdrop,
+  .echoo-linkup-btn--hero,
+  .echoo-linkup-way-row,
+  .echoo-linkup-fab {
     transition-duration: 0.01ms !important;
   }
 }
+

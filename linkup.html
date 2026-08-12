@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#050505" />
+    <title>Link up · echoo</title>
+    <link rel="stylesheet" href="assets/echoo-place-detail.css" />
+    <link rel="stylesheet" href="assets/echoo-linkup.css" />
+    <link rel="stylesheet" href="assets/page-loader.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg-black: #050505;
+        --ink: #f8f5ef;
+        --muted: #9e978e;
+        --peach: #f7d5b2;
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        max-width: 100%;
+        background-color: var(--bg-black);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+        overflow-x: hidden;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+      }
+      .app-shell {
+        width: min(100%, 430px);
+        max-width: 100%;
+        min-height: 100svh;
+        isolation: isolate;
+        position: relative;
+        background:
+          radial-gradient(circle at 50% -2%, rgba(247, 213, 178, 0.12), transparent 22rem),
+          radial-gradient(circle at 85% 25%, rgba(231, 201, 142, 0.08), transparent 18rem),
+          linear-gradient(180deg, #0c0c0c 0%, #050505 100%);
+        padding-bottom: 100px;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        justify-space-between;
+        align-items: center;
+        padding: calc(24px + env(safe-area-inset-top)) 20px 14px;
+        background: rgba(5, 5, 5, 0.85);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+      }
+      .brand img {
+        height: 24px;
+        width: auto;
+        filter: brightness(1.2);
+      }
+      .culture-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 9999px;
+        background: rgba(248, 245, 239, 0.06);
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 550;
+        text-decoration: none;
+      }
+      .culture-pill-icon {
+        font-size: 13px;
+      }
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(100%, 430px);
+        height: 72px;
+        background: rgba(12, 12, 12, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(248, 245, 239, 0.08);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 40;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .nav-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.15s ease;
+      }
+      .nav-link svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .nav-link.active {
+        color: var(--peach);
+        font-weight: 650;
+      }
+      .nav-link.active svg {
+        stroke: var(--peach);
+      }
+      .nav-link-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--peach);
+        margin-top: -1px;
+      }
+    </style>
+  </head>
+  <body data-page="linkup">
+    <div class="app-shell">
+      <!-- Top Bar Header -->
+      <header class="topbar" aria-label="Echoo">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
+        </a>
+        <a class="culture-pill" href="culture.html" id="culture-pill-link" aria-label="Culture Lens settings">
+          <span class="culture-pill-icon">🌐</span>
+          <span id="culture-pill-text">Culture <span style="color: var(--muted); font-size: 11px;">Local mode</span></span>
+        </a>
+      </header>
+
+      <!-- Main Shell Content: Link Up Module -->
+      <main class="echoo-linkup-module">
+        <!-- Hero Header with Concentric Ring Icon -->
+        <section class="echoo-linkup-module-hero">
+          <div class="echoo-linkup-module-title-wrap">
+            <h1 class="echoo-linkup-module-title">Link up.</h1>
+            <p class="echoo-linkup-module-subtitle">
+              <span class="gold-accent">Right people. Right place.</span><br />
+              Real connections.
+            </p>
+          </div>
+          <!-- Concentric Ring Gold Chain Icon Badge -->
+          <div class="echoo-linkup-ring-badge" aria-hidden="true">
+            <div class="echoo-linkup-ring-badge-inner">
+              <svg viewBox="0 0 24 24">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </div>
+          </div>
+        </section>
+
+        <!-- Smart Match Card -->
+        <section class="echoo-linkup-smart-card" id="echoo-smart-match-card">
+          <div class="echoo-linkup-smart-header">
+            <div class="echoo-linkup-smart-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+            <div class="echoo-linkup-smart-header-text">
+              <h2 class="echoo-linkup-smart-title">Smart Match</h2>
+              <p class="echoo-linkup-smart-sub">We'll suggest people you'll vibe with, at the same spot or nearby.</p>
+            </div>
+          </div>
+
+          <!-- Dual Circle Avatars Visual -->
+          <div class="echoo-linkup-dual-avatars">
+            <div class="echoo-linkup-avatar-wrap" id="user-avatar-wrap">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Your profile photo" id="user-avatar-img" />
+            </div>
+            <div class="echoo-linkup-connector-track">
+              <div class="echoo-linkup-connector-line"></div>
+              <div class="echoo-linkup-connector-node" title="Matched vibe">
+                <svg viewBox="0 0 24 24">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              </div>
+              <div class="echoo-linkup-connector-line"></div>
+            </div>
+            <div class="echoo-linkup-avatar-wrap" id="peer-avatar-wrap">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" alt="Alex's photo" id="peer-avatar-img" />
+            </div>
+          </div>
+
+          <!-- Match Cue Details -->
+          <div class="echoo-linkup-match-details">
+            <p class="echoo-linkup-match-cue" id="match-cue-text">
+              <strong id="match-peer-name">Alex</strong> is at <span class="venue-highlight" id="match-venue-name">STACKT</span> and loves Live Music & Food like you do.
+            </p>
+            <div class="echoo-linkup-status-badge" id="match-status-badge">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span id="match-status-text">At the same spot</span>
+            </div>
+          </div>
+
+          <!-- Action CTA Group -->
+          <div class="echoo-linkup-cta-group">
+            <button type="button" class="echoo-linkup-btn--hero" id="btn-linkup-hangout" data-linkup-primary>
+              <span>Link Up & Hangout</span>
+              <svg viewBox="0 0 24 24">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+            <button type="button" class="echoo-linkup-btn--outline" id="btn-linkup-notnow" data-linkup-secondary>
+              Not now
+            </button>
+          </div>
+        </section>
+
+        <!-- Other Ways to Connect Card -->
+        <section class="echoo-linkup-connect-card">
+          <h3 class="echoo-linkup-connect-title">Other ways to connect</h3>
+          <div class="echoo-linkup-ways-list">
+            <!-- Row 1: Find people at the same place -->
+            <div class="echoo-linkup-way-row" role="button" tabindex="0" data-linkup-action="same-place" aria-label="Find people at the same place">
+              <div class="echoo-linkup-way-left">
+                <div class="echoo-linkup-way-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+                <span class="echoo-linkup-way-text">Find people at the same place</span>
+              </div>
+              <div class="echoo-linkup-way-arrow">
+                <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
+              </div>
+            </div>
+
+            <!-- Row 2: Discover people nearby -->
+            <div class="echoo-linkup-way-row" role="button" tabindex="0" data-linkup-action="nearby" aria-label="Discover people nearby">
+              <div class="echoo-linkup-way-left">
+                <div class="echoo-linkup-way-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+                <span class="echoo-linkup-way-text">Discover people nearby</span>
+              </div>
+              <div class="echoo-linkup-way-arrow">
+                <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
+              </div>
+            </div>
+
+            <!-- Row 3: See who likes similar things -->
+            <div class="echoo-linkup-way-row" role="button" tabindex="0" data-linkup-action="similar-vibes" aria-label="See who likes similar things">
+              <div class="echoo-linkup-way-left">
+                <div class="echoo-linkup-way-icon">
+                  <svg viewBox="0 0 24 24">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                </div>
+                <span class="echoo-linkup-way-text">See who likes similar things</span>
+              </div>
+              <div class="echoo-linkup-way-arrow">
+                <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Floating Action Chat Button -->
+      <button class="echoo-linkup-fab" id="echoo-linkup-fab-btn" type="button" aria-label="Open Link Up chat">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span class="echoo-linkup-fab-dot" id="echoo-linkup-fab-dot" hidden></span>
+      </button>
+
+      <!-- Floating Bottom Navigation -->
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <a class="nav-link" href="index.html">
+          <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <span>Home</span>
+        </a>
+        <a class="nav-link" href="events.html">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <span>Discover</span>
+        </a>
+        <a class="nav-link active" href="linkup.html" aria-current="page">
+          <svg viewBox="0 0 24 24">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+          <span>Link Up</span>
+          <span class="nav-link-dot"></span>
+        </a>
+        <a class="nav-link" href="tickets.html">
+          <svg viewBox="0 0 24 24"><path d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z" /><path d="M13 6v12" /></svg>
+          <span>Tickets</span>
+        </a>
+        <a class="nav-link" href="auth.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <span>Profile</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
+    <script src="assets/culture-context.js"></script>
+    <script src="assets/echoo-linkup.js"></script>
+    <script src="assets/page-loader.js"></script>
+  </body>
+</html>
