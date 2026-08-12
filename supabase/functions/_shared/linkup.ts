@@ -22,6 +22,12 @@ export const PRESENCE_TTL_MAX_MINUTES = 360; // hard cap
 export const MATCH_FUSE_MINUTES = 10; // pending match acceptance window
 export const CONVERSATION_GRACE_HOURS = 24; // chat stays writable after match ends
 
+// Cap on how many co-present members a single check-in scans for matches.
+// Bounds the per-check-in work at very crowded venues (festivals, stadiums).
+// Candidates are ordered oldest-first, so the person waiting longest is still
+// considered first.
+export const MAX_CANDIDATES_PER_CHECKIN = 50;
+
 export const MIN_AGE = 18;
 
 // Compatible-age band: tighter for younger adults, wider for older adults.
@@ -58,21 +64,43 @@ export function disabledResponse(): Response {
 // Eligibility: completed onboarding + verified identity + 18+.
 // Reads auth.users metadata (service role) and user_onboarding_profiles.
 // ─────────────────────────────────────────────────────────────────────────
+export type OnboardingProfile = {
+  display_name?: string | null;
+  username?: string | null;
+  home_city?: string | null;
+  interests?: string[] | null;
+  event_styles?: string[] | null;
+  motivations?: string[] | null;
+  audiences?: string[] | null;
+  budget?: string | null;
+  energy?: string | null;
+  tone?: string | null;
+  gender?: string | null;
+  date_of_birth?: string | null;
+  profile_photo_url?: string | null;
+  bio?: string | null;
+  completed_at?: string | null;
+  linkup_status?: string | null;
+};
+
 export interface LinkupEligibility {
   eligible: boolean;
-  reason?: "no_onboarding" | "underage" | "unverified";
+  reason?: "no_onboarding" | "underage" | "unverified" | "incomplete_profile" | "paused";
   dateOfBirth?: string;
   age?: number;
+  // Returned alongside eligibility so the matching loop can reuse it for
+  // affinity scoring instead of fetching the same row a second time.
+  profile?: OnboardingProfile;
 }
 
 export async function getOnboardingProfile(
   supabase: SupabaseClient,
   userId: string,
-) {
+): Promise<OnboardingProfile | null> {
   const { data, error } = await supabase
     .from("user_onboarding_profiles")
     .select(
-      "display_name, username, home_city, interests, event_styles, motivations, audiences, budget, energy, tone, gender, date_of_birth, profile_photo_url, bio, completed_at",
+      "display_name, username, home_city, interests, event_styles, motivations, audiences, budget, energy, tone, gender, date_of_birth, profile_photo_url, bio, completed_at, linkup_status",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -105,11 +133,24 @@ export async function isUserEligible(
   if (!profile || !profile.completed_at) {
     return { eligible: false, reason: "no_onboarding" };
   }
+  // Pause / opt-out toggle (migration 202608120003). Anything other than
+  // 'active' gates the member out of matching on both sides — they can't
+  // check in and won't be proposed as a peer. In-flight accepted chats are
+  // untouched (they live out their grace window).
+  if (profile.linkup_status && profile.linkup_status !== "active") {
+    return { eligible: false, reason: "paused" };
+  }
   if (!profile.profile_photo_url || !profile.bio?.trim()) {
     return { eligible: false, reason: "incomplete_profile" };
   }
   const age = ageFromDob(profile.date_of_birth);
-  return { eligible: true, age: age ?? undefined, dateOfBirth: profile.date_of_birth ?? undefined };
+  return {
+    eligible: true,
+    age: age ?? undefined,
+    dateOfBirth: profile.date_of_birth ?? undefined,
+    // Attach the profile so callers reuse it instead of re-fetching.
+    profile,
+  };
 }
 
 export function ageBandCompatible(ageA: number | null | undefined, ageB: number | null | undefined): boolean {
@@ -295,7 +336,8 @@ export async function recentlyMatched(
     .select("match_id")
     .eq("user_id", userA)
     .gte("created_at", since);
-  if (e1 || !aRows || aRows.length === 0) return false;
+  if (e1) throw e1;
+  if (!aRows || aRows.length === 0) return false;
   const ids = aRows.map((r: { match_id: string }) => r.match_id);
   // Are any of those shared matches still pending or accepted?
   const { data: shared, error: e2 } = await supabase
@@ -303,13 +345,15 @@ export async function recentlyMatched(
     .select("match_id")
     .eq("user_id", userB)
     .in("match_id", ids);
-  if (e2 || !shared || shared.length === 0) return false;
+  if (e2) throw e2;
+  if (!shared || shared.length === 0) return false;
   const sharedIds = shared.map((r: { match_id: string }) => r.match_id);
   const { count, error: e3 } = await supabase
     .from("linkup_matches")
     .select("id", { count: "exact", head: true })
     .in("id", sharedIds)
     .in("status", ["pending", "accepted"]);
-  if (e3) return false;
+  // Fail safe: a DB error here must surface, not silently allow a re-match.
+  if (e3) throw e3;
   return (count ?? 0) > 0;
 }

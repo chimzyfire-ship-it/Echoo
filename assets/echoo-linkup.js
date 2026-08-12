@@ -354,6 +354,7 @@
         .maybeSingle();
       if (conv) openChat({ conversationId: conv.id, matchId: match.id, expiresAt: conv.expires_at });
     }
+    Hub.scheduleRefresh();
   }
 
   // ────────────────────────────────────────────────────────────────────
@@ -655,7 +656,7 @@
     state.openChat = ctx;
     ensureChatMount();
     const sheet = document.getElementById("echoo-linkup-chat");
-    sheet.querySelector(".echoo-linkup-chat-title").textContent = state.placeContext?.name || "Link Up";
+    sheet.querySelector(".echoo-linkup-chat-title").textContent = ctx.title || state.placeContext?.name || "Link Up";
     sheet.querySelector(".echoo-linkup-chat-sub").textContent = "Ephemeral chat";
     const list = sheet.querySelector(".echoo-linkup-messages");
     list.innerHTML = "";
@@ -798,259 +799,464 @@
   }
 
   // ────────────────────────────────────────────────────────────────────
-  // Link Up Module UI & Interactive Feature Handlers
+  // Hub renderer — the Link Up module home (linkup.html).
+  //
+  // Renders LIVE state off the backend: active presence with a real TTL
+  // countdown, pending match proposals, and active conversations. Every row
+  // is a real row — no mock data. No-ops when the hub viewport
+  // (#echoo-linkup-viewport) isn't on the page, so the same script still
+  // powers the place-detail check-in affordance on events.html.
   // ────────────────────────────────────────────────────────────────────
-  const CANDIDATES = [
-    {
-      name: "Alex",
-      venue: "STACKT",
-      vibe: "Live Music & Food",
-      status: "At the same spot",
-      userPhoto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-      peerPhoto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
-      greeting: "Hey! I'm at STACKT near the patio. Loving the live set here!"
-    },
-    {
-      name: "Maya",
-      venue: "Drake Underground",
-      vibe: "R&B & Craft Cocktails",
-      status: "120m away",
-      userPhoto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-      peerPhoto: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80",
-      greeting: "Hey! Just grabbed a table inside Drake Underground. Vibe is great tonight!"
-    },
-    {
-      name: "Jordan",
-      venue: "Rebel Toronto",
-      vibe: "Nightlife & Live DJs",
-      status: "At the same spot",
-      userPhoto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-      peerPhoto: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80",
-      greeting: "Yo! Up near the main stage at Rebel. Let me know if you want to link up!"
-    },
-    {
-      name: "Sam",
-      venue: "Supermarket Bar",
-      vibe: "Indie Films & Craft Beer",
-      status: "250m away",
-      userPhoto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-      peerPhoto: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80",
-      greeting: "Hey! Catching the live set at Supermarket. Down to hang if you're around!"
-    }
-  ];
+  const ICON_PERSON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+  const ICON_LINK = '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+  const ICON_CHEVRON = '<svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>';
 
-  let currentCandidateIndex = 0;
+  const Hub = (() => {
+    let active = false;
+    let ttlTimer = null;
+    let refreshTimer = null;
 
-  function initModuleUI() {
-    const card = document.getElementById("echoo-smart-match-card");
-    if (!card) return;
-
-    // Primary button: Link Up & Hangout
-    const primaryBtn = document.getElementById("btn-linkup-hangout") || card.querySelector("[data-linkup-primary]");
-    if (primaryBtn) {
-      primaryBtn.addEventListener("click", () => {
-        const candidate = CANDIDATES[currentCandidateIndex];
-        openModuleChat(candidate);
-      });
+    function viewport() {
+      return document.getElementById("echoo-linkup-viewport");
     }
 
-    // Secondary button: Not now
-    const secondaryBtn = document.getElementById("btn-linkup-notnow") || card.querySelector("[data-linkup-secondary]");
-    if (secondaryBtn) {
-      secondaryBtn.addEventListener("click", () => {
-        cycleCandidateMatch();
-      });
+    function scheduleRefresh() {
+      if (!active) return;
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(run, 250);
     }
 
-    // Other ways to connect rows
-    document.querySelectorAll("[data-linkup-action]").forEach((row) => {
-      row.addEventListener("click", () => {
-        const action = row.getAttribute("data-linkup-action");
-        handleConnectWayAction(action);
-      });
-      row.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          const action = row.getAttribute("data-linkup-action");
-          handleConnectWayAction(action);
-        }
-      });
-    });
+    async function init() {
+      if (active) return;
+      if (!viewport()) return; // not on the hub page
+      active = true;
+      renderLoading();
+      subscribePresence();
+      await run();
+    }
 
-    // Presence Rest State Toggle
-    const presenceBtn = document.getElementById("presence-toggle-btn");
-    const presenceDot = document.getElementById("presence-status-dot");
-    const presenceTitle = document.getElementById("presence-status-title");
-    const presenceSub = document.getElementById("presence-status-sub");
+    function subscribePresence() {
+      if (!state.supabase || !state.userId || state.presenceChannel) return;
+      // A presence row changing (TTL sweep -> 'ended', checkout from another
+      // tab, or a fresh check-in) should refresh the hub.
+      state.presenceChannel = state.supabase
+        .channel(`linkup:presence:${state.userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "linkup_presence",
+            filter: `user_id=eq.${state.userId}`,
+          },
+          () => scheduleRefresh(),
+        )
+        .subscribe();
+    }
 
-    let isPresenceActive = true;
-    if (presenceBtn) {
-      presenceBtn.addEventListener("click", () => {
-        isPresenceActive = !isPresenceActive;
-        if (isPresenceActive) {
-          presenceBtn.textContent = "Check Out";
-          presenceBtn.style.background = "rgba(231, 201, 142, 0.12)";
-          presenceBtn.style.color = "#E7C98E";
-          if (presenceDot) {
-            presenceDot.style.background = "#E7C98E";
-            presenceDot.style.boxShadow = "0 0 10px rgba(231, 201, 142, 0.6)";
+    async function run() {
+      if (!active) return;
+      const vp = viewport();
+      if (!vp) return;
+
+      if (!state.userId) state.userId = await ensureUser();
+      if (!state.userId) return renderSignedOut();
+
+      if (state.enabled === null) await probeEnabled();
+      if (state.enabled === false) return renderDisabled();
+
+      let snap;
+      try {
+        snap = await loadSnapshot(state.userId);
+      } catch (_e) {
+        return renderLoading();
+      }
+      render(snap);
+    }
+
+    async function loadSnapshot(userId) {
+      const client = state.supabase;
+      const nowIso = new Date().toISOString();
+
+      // Owner-read profile to surface the photo+bio gate proactively. The
+      // server enforces it again at check-in; this is just a heads-up.
+      const { data: profile } = await client
+        .from("user_onboarding_profiles")
+        .select("profile_photo_url, bio, completed_at, linkup_status")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const incomplete =
+        !profile?.completed_at ||
+        !profile?.profile_photo_url ||
+        !String(profile?.bio || "").trim();
+      const paused =
+        !!profile?.linkup_status && profile.linkup_status !== "active";
+
+      const { data: presences } = await client
+        .from("linkup_presence")
+        .select("id, place_id, arrived_at, expires_at")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .gt("expires_at", nowIso)
+        .order("arrived_at", { ascending: false })
+        .limit(1);
+      const presence = presences && presences[0] ? presences[0] : null;
+
+      let placeName = null;
+      if (presence) placeName = await placeNameFor(client, presence.place_id);
+
+      // My match memberships → pending proposals + active conversations.
+      const { data: myMembers } = await client
+        .from("linkup_match_members")
+        .select("match_id, response")
+        .eq("user_id", userId);
+      const matchIds = (myMembers || []).map((m) => m.match_id);
+
+      const pending = [];
+      const conversations = [];
+      if (matchIds.length) {
+        const { data: matches } = await client
+          .from("linkup_matches")
+          .select("id, status, expires_at, reason_tags, place_id, created_at")
+          .in("id", matchIds)
+          .in("status", ["pending", "accepted"])
+          .order("created_at", { ascending: false });
+        for (const m of matches || []) {
+          if (m.status === "pending" && new Date(m.expires_at).getTime() > Date.now()) {
+            const row = await loadMatchPeer(client, m, userId);
+            if (row) pending.push(row);
+          } else if (m.status === "accepted") {
+            const row = await loadAcceptedConvo(client, m, userId);
+            if (row) conversations.push(row);
           }
-          if (presenceTitle) presenceTitle.textContent = "Presence Active · STACKT";
-          if (presenceSub) presenceSub.textContent = "Explicit check-in (expires in 2h 45m)";
-          card.style.opacity = "1";
-          card.style.pointerEvents = "auto";
-          showToast("📍 Presence active at STACKT. Smart Match scanning...");
-        } else {
-          presenceBtn.textContent = "Check In";
-          presenceBtn.style.background = "rgba(248, 245, 239, 0.08)";
-          presenceBtn.style.color = "#f8f5ef";
-          if (presenceDot) {
-            presenceDot.style.background = "rgba(248, 245, 239, 0.3)";
-            presenceDot.style.boxShadow = "none";
-          }
-          if (presenceTitle) presenceTitle.textContent = "Presence Off · Standby State";
-          if (presenceSub) presenceSub.textContent = "Check in at a venue or discover nearby to match";
-          card.style.opacity = "0.75";
-          showToast("⏸️ Presence set to Rest State. Automatic matching paused.");
         }
-      });
-    }
-
-    // Floating Action Chat Button
-    const fab = document.getElementById("echoo-linkup-fab-btn");
-    if (fab) {
-      fab.addEventListener("click", () => {
-        const candidate = CANDIDATES[currentCandidateIndex];
-        openModuleChat(candidate);
-      });
-    }
-  }
-
-  function cycleCandidateMatch() {
-    currentCandidateIndex = (currentCandidateIndex + 1) % CANDIDATES.length;
-    const candidate = CANDIDATES[currentCandidateIndex];
-
-    const card = document.getElementById("echoo-smart-match-card");
-    if (!card) return;
-
-    card.style.opacity = "0.5";
-    card.style.transform = "scale(0.98)";
-
-    setTimeout(() => {
-      const peerImg = document.getElementById("peer-avatar-img");
-      if (peerImg) peerImg.src = candidate.peerPhoto;
-
-      const nameEl = document.getElementById("match-peer-name");
-      if (nameEl) nameEl.textContent = candidate.name;
-
-      const venueEl = document.getElementById("match-venue-name");
-      if (venueEl) venueEl.textContent = candidate.venue;
-
-      const cueEl = document.getElementById("match-cue-text");
-      if (cueEl) {
-        cueEl.innerHTML = `<strong>${escapeHtml(candidate.name)}</strong> is at <span class="venue-highlight">${escapeHtml(candidate.venue)}</span> and loves ${escapeHtml(candidate.vibe)} like you do.`;
       }
 
-      const statusText = document.getElementById("match-status-text");
-      if (statusText) statusText.textContent = candidate.status;
-
-      card.style.opacity = "1";
-      card.style.transform = "scale(1)";
-    }, 180);
-  }
-
-  function openModuleChat(candidate) {
-    ensureChatMount();
-    const sheet = document.getElementById("echoo-linkup-chat");
-    if (!sheet) return;
-
-    sheet.querySelector(".echoo-linkup-chat-title").textContent = `${candidate.name} @ ${candidate.venue}`;
-    sheet.querySelector(".echoo-linkup-chat-sub").textContent = "Ephemeral chat · Live match";
-
-    const list = sheet.querySelector(".echoo-linkup-messages");
-    list.innerHTML = "";
-
-    // Welcome system line
-    const sysMsg = document.createElement("div");
-    sysMsg.className = "echoo-linkup-system";
-    sysMsg.textContent = `You linked up with ${candidate.name} at ${candidate.venue}! Messages auto-expire.`;
-    list.appendChild(sysMsg);
-
-    // Initial message from peer candidate
-    const peerMsg = document.createElement("div");
-    peerMsg.className = "echoo-linkup-bubble echoo-linkup-bubble--theirs";
-    peerMsg.textContent = candidate.greeting;
-    list.appendChild(peerMsg);
-
-    state.openChat = {
-      conversationId: `demo-conv-${Date.now()}`,
-      matchId: `demo-match-${currentCandidateIndex}`,
-      peerProfile: { name: candidate.name, photo: candidate.peerPhoto },
-      expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
-    };
-
-    sheet.hidden = false;
-    requestAnimationFrame(() => sheet.querySelector(".echoo-linkup-chat-backdrop").classList.add("is-open"));
-  }
-
-  function showToast(msg) {
-    let toast = document.getElementById("echoo-linkup-toast");
-    if (!toast) {
-      toast = document.createElement("div");
-      toast.id = "echoo-linkup-toast";
-      toast.style.cssText = `
-        position: fixed;
-        top: 24px;
-        left: 50%;
-        transform: translateX(-50%) translateY(-20px);
-        background: rgba(20, 20, 20, 0.95);
-        color: #f8f5ef;
-        border: 1px solid rgba(231, 201, 142, 0.4);
-        padding: 12px 20px;
-        border-radius: 9999px;
-        font: 550 13px/1.3 "Inter", sans-serif;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        z-index: 999;
-        opacity: 0;
-        transition: opacity 0.2s ease, transform 0.2s ease;
-        pointer-events: none;
-        text-align: center;
-        max-width: 90vw;
-      `;
-      document.body.appendChild(toast);
+      return { incomplete, paused, presence, placeName, pending, conversations };
     }
-    toast.textContent = msg;
-    toast.style.opacity = "1";
-    toast.style.transform = "translateX(-50%) translateY(0)";
 
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      toast.style.transform = "translateX(-50%) translateY(-20px)";
-    }, 3200);
-  }
+    async function placeNameFor(client, placeId) {
+      if (!placeId) return null;
+      const { data: place } = await client
+        .from("canonical_places")
+        .select("name, formatted_address")
+        .eq("id", placeId)
+        .maybeSingle();
+      return place?.name || place?.formatted_address || null;
+    }
 
-  async function handleConnectWayAction(action) {
-    if (action === "same-place") {
-      showToast("📍 Found 8 people checked in at STACKT, Drake Underground & Rebel!");
-    } else if (action === "nearby") {
-      showToast("🔍 Proximity scan active: 4 members within 500m looking to link up.");
-      const fix = await pingLocation();
-      if (fix) {
-        showToast(`📍 GPS fix confirmed (${Math.round(fix.accuracy)}m precision). Smart Match updated!`);
+    async function loadMatchPeer(client, match, userId) {
+      const { data: members } = await client
+        .from("linkup_match_members")
+        .select("user_id")
+        .eq("match_id", match.id);
+      const peerId = (members || []).find((m) => m.user_id !== userId)?.user_id;
+      if (!peerId) return null;
+      const { data: profile } = await client
+        .rpc("linkup_peer_profile", { target_user: peerId })
+        .maybeSingle();
+      return {
+        matchId: match.id,
+        reasonTags: match.reason_tags || [],
+        placeName: await placeNameFor(client, match.place_id),
+        peer: {
+          userId: peerId,
+          displayName: profile?.display_name || profile?.username || "Someone",
+          photoUrl: profile?.profile_photo_url || null,
+          bio: profile?.bio || "",
+        },
+      };
+    }
+
+    async function loadAcceptedConvo(client, match, userId) {
+      const { data: conv } = await client
+        .from("linkup_conversations")
+        .select("id, expires_at")
+        .eq("match_id", match.id)
+        .maybeSingle();
+      if (!conv) return null;
+      const { data: members } = await client
+        .from("linkup_match_members")
+        .select("user_id")
+        .eq("match_id", match.id);
+      const peerId = (members || []).find((m) => m.user_id !== userId)?.user_id;
+      let peer = null;
+      if (peerId) {
+        const { data: profile } = await client
+          .rpc("linkup_peer_profile", { target_user: peerId })
+          .maybeSingle();
+        peer = {
+          userId: peerId,
+          displayName: profile?.display_name || profile?.username || "Someone",
+          photoUrl: profile?.profile_photo_url || null,
+        };
       }
-    } else if (action === "similar-vibes") {
-      const culture = window.EchooCultureContext?.getActive?.()?.label || "Live Music & Food";
-      showToast(`⭐ Matched 12 members in GTA matching your '${culture}' culture vibe!`);
-      cycleCandidateMatch();
+      return {
+        matchId: match.id,
+        conversationId: conv.id,
+        expiresAt: conv.expires_at,
+        peer,
+      };
     }
-  }
+
+    // ── Rendering ──────────────────────────────────────────────────────
+    function setHtml(html) {
+      const vp = viewport();
+      if (!vp) return;
+      vp.innerHTML = html;
+      wireActions();
+    }
+
+    function renderLoading() {
+      setHtml(
+        '<div class="echoo-linkup-state"><div class="echoo-linkup-spinner" aria-label="Loading Link Up"></div><p class="echoo-linkup-state-copy">Finding your Link Up status…</p></div>',
+      );
+    }
+
+    function renderSignedOut() {
+      const next = encodeURIComponent("linkup.html");
+      setHtml(`
+        <div class="echoo-linkup-state">
+          <div class="echoo-linkup-state-icon">${ICON_PERSON}</div>
+          <h2 class="echoo-linkup-state-title">Sign in to Link Up</h2>
+          <p class="echoo-linkup-state-copy">Create an account to connect with the right people, at the right place.</p>
+          <a class="echoo-linkup-btn--hero" href="auth.html?next=${next}&mode=signup&intent=linkup">Create account</a>
+          <a class="echoo-linkup-btn--outline" href="auth.html?next=${next}&mode=signin">Sign in</a>
+        </div>`);
+    }
+
+    function renderDisabled() {
+      setHtml(`
+        <div class="echoo-linkup-state">
+          <div class="echoo-linkup-state-icon">${ICON_LINK}</div>
+          <h2 class="echoo-linkup-state-title">Link Up is rolling out</h2>
+          <p class="echoo-linkup-state-copy">We're opening Link Up city by city. Hang tight — it's almost here.</p>
+        </div>`);
+    }
+
+    function renderIncomplete() {
+      setHtml(`
+        <div class="echoo-linkup-state">
+          <div class="echoo-linkup-state-icon">${ICON_PERSON}</div>
+          <h2 class="echoo-linkup-state-title">Add a photo and a bio</h2>
+          <p class="echoo-linkup-state-copy">Every Link Up match has a face and a one-liner. Finish your profile to start matching.</p>
+          <a class="echoo-linkup-btn--hero" href="auth.html#profile">Complete profile</a>
+        </div>`);
+    }
+
+    function renderPaused() {
+      setHtml(`
+        <div class="echoo-linkup-state">
+          <div class="echoo-linkup-state-icon">${ICON_LINK}</div>
+          <h2 class="echoo-linkup-state-title">Link Up is paused</h2>
+          <p class="echoo-linkup-state-copy">You won't be matched while paused. Your active conversations are unaffected.</p>
+          <button type="button" class="echoo-linkup-btn--hero" data-linkup-resume>Resume Link Up</button>
+          <a class="echoo-linkup-btn--outline" href="linkup-settings.html">Settings</a>
+        </div>`);
+    }
+
+    function render(snap) {
+      stopTtl();
+      // Paused / opted out via settings — show a resume card.
+      if (snap.paused) return renderPaused();
+      // Incomplete profile + not yet checked in → prompt to finish profile.
+      if (snap.incomplete && !snap.presence) return renderIncomplete();
+
+      const parts = [renderPresence(snap)];
+      if (snap.pending.length) parts.push(renderPending(snap.pending));
+      if (snap.conversations.length) parts.push(renderConversations(snap.conversations));
+      if (!snap.pending.length && !snap.conversations.length) {
+        parts.push(snap.presence ? renderScanning() : renderEmptyStandby());
+      }
+      setHtml(parts.join(""));
+      if (snap.presence) startTtl(snap.presence.expires_at);
+    }
+
+    function renderPresence(snap) {
+      if (!snap.presence) {
+        return `<div class="echoo-linkup-presence-card echoo-linkup-presence-card--standby">
+          <span class="echoo-linkup-presence-dot"></span>
+          <div class="echoo-linkup-presence-text">
+            <span class="echoo-linkup-presence-title">Presence off · Standby</span>
+            <span class="echoo-linkup-presence-sub">Check in at a venue to start matching.</span>
+          </div>
+          <a class="echoo-linkup-presence-cta" href="events.html">Find a place</a>
+        </div>`;
+      }
+      const where = escapeHtml(snap.placeName || "your spot");
+      return `<div class="echoo-linkup-presence-card echoo-linkup-presence-card--active">
+        <span class="echoo-linkup-presence-dot echoo-linkup-presence-dot--live"></span>
+        <div class="echoo-linkup-presence-text">
+          <span class="echoo-linkup-presence-title">Presence active · ${where}</span>
+          <span class="echoo-linkup-presence-sub" data-linkup-ttl>Expires soon</span>
+        </div>
+        <button type="button" class="echoo-linkup-presence-cta echoo-linkup-presence-cta--ghost" data-linkup-leave>Leave</button>
+      </div>`;
+    }
+
+    function renderPending(list) {
+      const cards = list
+        .map((m) => {
+          const name = escapeHtml(m.peer.displayName);
+          const photo = m.peer.photoUrl
+            ? `style="background-image:url('${escapeHtml(m.peer.photoUrl)}')"`
+            : "";
+          const fallback = m.peer.photoUrl ? "" : initials(m.peer.displayName);
+          const bio = escapeHtml(m.peer.bio || "");
+          const where = escapeHtml(m.placeName || "this place");
+          return `<article class="echoo-linkup-peer-card">
+            <div class="echoo-linkup-peer-avatar ${m.peer.photoUrl ? "has-photo" : ""}" ${photo}>${fallback}</div>
+            <div class="echoo-linkup-peer-body">
+              <div class="echoo-linkup-peer-row">
+                <span class="echoo-linkup-peer-name">${name}</span>
+                <span class="echoo-linkup-peer-reason">${escapeHtml(reasonLabel(m.reasonTags))}</span>
+              </div>
+              ${bio ? `<p class="echoo-linkup-peer-bio">${bio}</p>` : ""}
+              <span class="echoo-linkup-peer-meta">at ${where}</span>
+            </div>
+            <div class="echoo-linkup-peer-actions">
+              <button type="button" class="echoo-linkup-btn--hero echoo-linkup-btn--sm" data-linkup-accept="${escapeHtml(m.matchId)}">Link up</button>
+              <button type="button" class="echoo-linkup-btn--outline echoo-linkup-btn--sm" data-linkup-decline="${escapeHtml(m.matchId)}">Not now</button>
+            </div>
+          </article>`;
+        })
+        .join("");
+      return `<section class="echoo-linkup-section">
+        <h3 class="echoo-linkup-section-title">People to link up with</h3>
+        <div class="echoo-linkup-match-list">${cards}</div>
+      </section>`;
+    }
+
+    function renderConversations(list) {
+      const rows = list
+        .map((c) => {
+          const name = escapeHtml(c.peer?.displayName || "Someone");
+          const photo = c.peer?.photoUrl
+            ? `style="background-image:url('${escapeHtml(c.peer.photoUrl)}')"`
+            : "";
+          const fallback = c.peer?.photoUrl ? "" : initials(name);
+          return `<article class="echoo-linkup-peer-card echoo-linkup-peer-card--chat" role="button" tabindex="0"
+                   data-linkup-conv="${escapeHtml(c.conversationId)}"
+                   data-linkup-match="${escapeHtml(c.matchId)}"
+                   data-linkup-title="${name}"
+                   data-linkup-expires="${escapeHtml(c.expiresAt || "")}">
+            <div class="echoo-linkup-peer-avatar ${c.peer?.photoUrl ? "has-photo" : ""}" ${photo}>${fallback}</div>
+            <div class="echoo-linkup-peer-body">
+              <div class="echoo-linkup-peer-row"><span class="echoo-linkup-peer-name">${name}</span></div>
+              <span class="echoo-linkup-peer-meta">Ephemeral chat · tap to open</span>
+            </div>
+            <div class="echoo-linkup-way-arrow">${ICON_CHEVRON}</div>
+          </article>`;
+        })
+        .join("");
+      return `<section class="echoo-linkup-section">
+        <h3 class="echoo-linkup-section-title">Your conversations</h3>
+        <div class="echoo-linkup-match-list">${rows}</div>
+      </section>`;
+    }
+
+    function renderEmptyStandby() {
+      return `<div class="echoo-linkup-empty"><p class="echoo-linkup-empty-copy">No matches yet. Check in somewhere to meet the right people.</p></div>`;
+    }
+
+    function renderScanning() {
+      return `<div class="echoo-linkup-empty"><p class="echoo-linkup-empty-copy">Scanning for the right people here — we'll ping you the moment there's a match.</p></div>`;
+    }
+
+    // ── Actions ────────────────────────────────────────────────────────
+    function wireActions() {
+      const vp = viewport();
+      if (!vp) return;
+      vp.querySelectorAll("[data-linkup-leave]").forEach((b) =>
+        b.addEventListener("click", onLeave),
+      );
+      vp.querySelectorAll("[data-linkup-resume]").forEach((b) =>
+        b.addEventListener("click", onResume),
+      );
+      vp.querySelectorAll("[data-linkup-accept]").forEach((b) =>
+        b.addEventListener("click", () => onRespond(b.getAttribute("data-linkup-accept"), "accepted", b)),
+      );
+      vp.querySelectorAll("[data-linkup-decline]").forEach((b) =>
+        b.addEventListener("click", () => onRespond(b.getAttribute("data-linkup-decline"), "declined", b)),
+      );
+      vp.querySelectorAll("[data-linkup-conv]").forEach((row) => {
+        const open = () => onOpenConvo(row);
+        row.addEventListener("click", open);
+        row.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open();
+          }
+        });
+      });
+    }
+
+    async function onLeave() {
+      await callFunction("linkup-presence", { action: "checkout" }).catch(() => {});
+      state.activePresence = null;
+      await run();
+    }
+
+    async function onResume() {
+      if (!state.supabase || !state.userId) return;
+      const { error } = await state.supabase
+        .from("user_onboarding_profiles")
+        .update({ linkup_status: "active" })
+        .eq("user_id", state.userId);
+      if (error) return;
+      await run();
+    }
+
+    async function onRespond(matchId, response, btn) {
+      if (btn) btn.disabled = true;
+      await callFunction("linkup-match", { action: "respond", matchId, response });
+      await run();
+    }
+
+    async function onOpenConvo(row) {
+      const conversationId = row.getAttribute("data-linkup-conv");
+      const matchId = row.getAttribute("data-linkup-match");
+      const title = row.getAttribute("data-linkup-title") || "Link Up";
+      const expiresAt = row.getAttribute("data-linkup-expires") || undefined;
+      if (!conversationId) return;
+      await openChat({ conversationId, matchId, title, expiresAt });
+    }
+
+    // ── TTL countdown ──────────────────────────────────────────────────
+    function startTtl(expiresAt) {
+      stopTtl();
+      const tick = () => {
+        const node = viewport()?.querySelector("[data-linkup-ttl]");
+        if (!node) return stopTtl();
+        node.textContent = `Expires in ${ttlWords(expiresAt)}`;
+      };
+      tick();
+      ttlTimer = setInterval(tick, 30_000);
+    }
+    function stopTtl() {
+      if (ttlTimer) clearInterval(ttlTimer);
+      ttlTimer = null;
+    }
+    function ttlWords(expiresAt) {
+      const ms = new Date(expiresAt).getTime() - Date.now();
+      if (!Number.isFinite(ms) || ms <= 0) return "soon";
+      const mins = Math.max(0, Math.round(ms / 60000));
+      if (mins < 60) return `${mins}m`;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return `${h}h ${m}m`;
+    }
+
+    return { init, scheduleRefresh, run };
+  })();
 
   // ────────────────────────────────────────────────────────────────────
   // Public API
   // ────────────────────────────────────────────────────────────────────
   window.EchooLinkUp = {
     init,
-    initModuleUI,
+    initHub: Hub.init,
+    refreshHub: Hub.scheduleRefresh,
     checkIn: onCheckinToggle,
     isEnabled: () => state.enabled === true,
     // For the place-detail integration to call when a place sheet opens.
@@ -1061,15 +1267,16 @@
     rememberDirections(place) { rememberDirectionsForReturnTrip(place); },
   };
 
-  // Auto-init on DOMContentLoaded if a script flag asks for it.
+  // Auto-init: engine first (auth + flag + match realtime), then the hub
+  // renderer (no-ops off-linkup.html). The hub needs state.userId/enabled,
+  // so it runs after init() resolves.
+  function boot() {
+    init().then(() => Hub.init()).catch(() => {});
+  }
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      init().catch(() => {});
-      initModuleUI();
-    });
+    document.addEventListener("DOMContentLoaded", boot);
   } else {
-    init().catch(() => {});
-    initModuleUI();
+    boot();
   }
 })();
 

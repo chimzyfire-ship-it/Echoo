@@ -72,7 +72,7 @@ const MOBILE_CHROME_SCRIPT = `
   })();
 `;
 
-type TabKey = 'home' | 'discover' | 'tickets' | 'profile';
+type TabKey = 'home' | 'discover' | 'linkup' | 'profile';
 
 const NAVIGATION_ITEMS: ReadonlyArray<{
   key: TabKey;
@@ -81,7 +81,7 @@ const NAVIGATION_ITEMS: ReadonlyArray<{
 }> = [
   { key: 'home', label: 'Home', target: 'index.html' },
   { key: 'discover', label: 'Discover', target: 'events.html' },
-  { key: 'tickets', label: 'Tickets', target: 'tickets.html' },
+  { key: 'linkup', label: 'Link Up', target: 'linkup.html' },
   { key: 'profile', label: 'Profile', target: 'auth.html' },
 ];
 
@@ -110,7 +110,8 @@ function activeTabFor(url: string): TabKey | null {
   ) {
     return 'discover';
   }
-  if (path === '/tickets' || path === '/tickets.html') return 'tickets';
+  if (path === '/tickets' || path === '/tickets.html') return null;
+  if (path === '/linkup' || path.startsWith('/linkup')) return 'linkup';
   if (['/auth', '/auth.html'].includes(path)) {
     return 'profile';
   }
@@ -151,17 +152,23 @@ function NavigationIcon({ active, tab }: { active: boolean; tab: TabKey }) {
     );
   }
 
-  if (tab === 'tickets') {
+  if (tab === 'linkup') {
     return (
       <Svg width={27} height={27} viewBox="0 0 24 24" fill={fill}>
         <Path
-          d="M3 9a3 3 0 0 0 0 6v3h18v-3a3 3 0 0 0 0-6V6H3Z"
+          d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
           stroke={color}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <Path d="M13 6v12" stroke={color} strokeWidth={strokeWidth} />
+        <Path
+          d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </Svg>
     );
   }
@@ -429,7 +436,7 @@ function EchooShell() {
         <BlurView intensity={30} tint="dark" style={styles.nativeBottomNav}>
           {NAVIGATION_ITEMS.map((item) => {
             const active = item.key === activeTab;
-            const showBadge = item.key === 'discover' && linkupBadge > 0;
+            const showBadge = item.key === 'linkup' && linkupBadge > 0;
             return (
               <Pressable
                 key={item.key}

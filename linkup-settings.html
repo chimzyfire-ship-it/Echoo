@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#050505" />
+    <title>Link Up settings · echoo</title>
+    <link rel="stylesheet" href="assets/echoo-place-detail.css" />
+    <link rel="stylesheet" href="assets/echoo-linkup.css" />
+    <link rel="stylesheet" href="assets/page-loader.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg-black: #050505;
+        --ink: #f8f5ef;
+        --muted: #9e978e;
+        --peach: #f7d5b2;
+        --line: rgba(248, 245, 239, 0.08);
+      }
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body {
+        margin: 0; padding: 0; min-height: 100%; max-width: 100%;
+        background: var(--bg-black); color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+        overflow-x: hidden;
+      }
+      body { display: flex; justify-content: center; }
+      .app-shell {
+        width: min(100%, 430px); max-width: 100%; min-height: 100svh;
+        position: relative;
+        background:
+          radial-gradient(circle at 50% -2%, rgba(247, 213, 178, 0.10), transparent 22rem),
+          linear-gradient(180deg, #0c0c0c 0%, #050505 100%);
+        padding-bottom: 100px;
+      }
+      .topbar {
+        position: sticky; top: 0; z-index: 30;
+        display: flex; align-items: center; gap: 12px;
+        padding: calc(24px + env(safe-area-inset-top)) 20px 14px;
+        background: rgba(5, 5, 5, 0.85);
+        backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      }
+      .topbar-back {
+        display: inline-flex; align-items: center; gap: 4px;
+        color: var(--ink); text-decoration: none;
+        font: 600 15px/1 "Inter", sans-serif;
+      }
+      .topbar-back svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .topbar-title { font: 700 17px/1 "Inter", sans-serif; color: var(--ink); }
+      .settings-main { display: flex; flex-direction: column; gap: 22px; padding: 8px 20px 30px; }
+      .settings-section-title {
+        margin: 0 0 -8px 2px;
+        font: 700 11px/1 "Inter", sans-serif;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        color: rgba(248, 245, 239, 0.45);
+      }
+      .settings-state {
+        padding: 26px 22px; text-align: center;
+        background: #111; border: 1px solid var(--line); border-radius: 20px;
+      }
+      .settings-state-copy { margin: 0; font: 520 14px/1.45 "Inter", sans-serif; color: var(--muted); }
+      .bottom-nav {
+        position: fixed; left: 50%; bottom: 12px; z-index: 30;
+        width: min(376px, calc(100% - 52px)); min-height: 72px;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+        padding: 10px 15px 8px;
+        border: 1px solid rgba(248, 245, 239, 0.06); border-radius: 28px;
+        background: rgba(25, 25, 24, 0.82);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 44px rgba(0,0,0,0.42);
+        backdrop-filter: blur(26px); transform: translateX(-50%);
+      }
+      .nav-link {
+        min-width: 0; display: grid; justify-items: center; align-content: center; gap: 5px;
+        color: rgba(248, 245, 239, 0.62); font-size: 12px; font-weight: 560; text-decoration: none;
+      }
+      .nav-link.active { color: var(--peach); }
+      .nav-link svg { width: 27px; height: 27px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .nav-link.active svg { fill: currentColor; stroke-width: 0; }
+    </style>
+  </head>
+  <body data-page="linkup-settings">
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="topbar-back" href="linkup.html" aria-label="Back to Link Up">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" /></svg>
+        </a>
+        <span class="topbar-title">Link Up settings</span>
+      </header>
+
+      <main class="settings-main">
+        <div class="settings-state" id="linkup-settings-state">
+          <div class="echoo-linkup-spinner" aria-hidden="true" style="margin:0 auto;"></div>
+        </div>
+
+        <section>
+          <h3 class="settings-section-title">Participation</h3>
+          <div class="echoo-linkup-settings-card">
+            <div class="echoo-linkup-settings-row">
+              <div class="echoo-linkup-settings-text">
+                <div class="echoo-linkup-settings-label">Link Up</div>
+                <div class="echoo-linkup-settings-hint">Pause to stop being matched. Active chats keep their grace window.</div>
+              </div>
+              <button type="button" id="linkup-pause-toggle" class="echoo-linkup-toggle" aria-label="Toggle Link Up" disabled></button>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="settings-section-title">Safety</h3>
+          <div class="echoo-linkup-settings-card">
+            <div class="echoo-linkup-settings-row">
+              <div class="echoo-linkup-settings-text">
+                <div class="echoo-linkup-settings-label">Blocked members</div>
+                <div class="echoo-linkup-settings-hint" id="linkup-blocked-hint">People you've blocked can't match you again.</div>
+              </div>
+              <span class="echoo-linkup-peer-reason" id="linkup-blocked-count">—</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="settings-section-title">More</h3>
+          <div class="echoo-linkup-settings-card">
+            <a class="echoo-linkup-settings-row echoo-linkup-settings-link-row" href="culture.html">
+              <div class="echoo-linkup-settings-text">
+                <div class="echoo-linkup-settings-label">Culture Lens</div>
+                <div class="echoo-linkup-settings-hint">Shape who you match with.</div>
+              </div>
+              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
+            </a>
+            <a class="echoo-linkup-settings-row echoo-linkup-settings-link-row" href="auth.html#profile">
+              <div class="echoo-linkup-settings-text">
+                <div class="echoo-linkup-settings-label">Profile &amp; photo</div>
+                <div class="echoo-linkup-settings-hint">Your face and one-liner, required to match.</div>
+              </div>
+              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <a class="nav-link" href="index.html">
+          <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <span>Home</span>
+        </a>
+        <a class="nav-link" href="events.html">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <span>Discover</span>
+        </a>
+        <a class="nav-link active" href="linkup.html" aria-current="page">
+          <svg viewBox="0 0 24 24">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+          <span>Link Up</span>
+        </a>
+        <a class="nav-link" href="auth.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <span>Profile</span>
+        </a>
+      </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
+    <script>
+      (async function () {
+        const stateEl = document.getElementById("linkup-settings-state");
+        const toggle = document.getElementById("linkup-pause-toggle");
+        const blockedCount = document.getElementById("linkup-blocked-count");
+        const blockedHint = document.getElementById("linkup-blocked-hint");
+
+        function showState(msg) {
+          stateEl.innerHTML = `<p class="settings-state-copy">${msg}</p>`;
+        }
+
+        function signInCta() {
+          stateEl.innerHTML =
+            '<p class="settings-state-copy">Sign in to manage Link Up.</p>' +
+            '<a class="echoo-linkup-btn--hero" style="margin-top:14px;display:inline-flex;" href="auth.html?next=linkup-settings.html&mode=signin">Sign in</a>';
+        }
+
+        // Auth gate — the toggle writes the owner's own profile row, so a
+        // valid session is required.
+        const auth = await window.EchooAuth.loadOnboardingProfile();
+        if (!auth?.ok && auth?.reason === "no_session") {
+          toggle.disabled = true;
+          return signInCta();
+        }
+        const client = window.EchooAuth.client;
+        const userId = auth.user?.id;
+        if (!client || !userId) {
+          toggle.disabled = true;
+          return signInCta();
+        }
+
+        let current = "active"; // linkup_status
+
+        async function load() {
+          const { data: profile } = await client
+            .from("user_onboarding_profiles")
+            .select("linkup_status, profile_photo_url, bio, completed_at")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (!profile?.completed_at) {
+            stateEl.innerHTML =
+              '<p class="settings-state-copy">Finish your profile to use Link Up.</p>' +
+              '<a class="echoo-linkup-btn--hero" style="margin-top:14px;display:inline-flex;" href="auth.html#profile">Complete profile</a>';
+            toggle.disabled = true;
+            return;
+          }
+
+          current = profile.linkup_status || "active";
+          stateEl.innerHTML = ""; // healthy — no banner needed
+          toggle.disabled = false;
+          toggle.classList.toggle("is-on", current === "active");
+          toggle.setAttribute("aria-pressed", String(current === "active"));
+
+          // Blocked count (owner read; symmetric rows where I'm a or b).
+          const { count } = await client
+            .from("linkup_blocks")
+            .select("user_a", { count: "exact", head: true })
+            .or(`user_a.eq.${userId},user_b.eq.${userId}`);
+          const n = count || 0;
+          blockedCount.textContent = String(n);
+          blockedHint.textContent =
+            n === 0
+              ? "People you've blocked can't match you again."
+              : `${n} member${n === 1 ? "" : "s"} blocked — they can't match you again.`;
+        }
+
+        async function onToggle() {
+          if (toggle.disabled) return;
+          toggle.disabled = true;
+          const next = current === "active" ? "paused" : "active";
+          const { error } = await client
+            .from("user_onboarding_profiles")
+            .update({ linkup_status: next })
+            .eq("user_id", userId);
+          if (error) {
+            toggle.disabled = false;
+            showState("Couldn't update — try again.");
+            return;
+          }
+          current = next;
+          toggle.classList.toggle("is-on", current === "active");
+          toggle.setAttribute("aria-pressed", String(current === "active"));
+          toggle.disabled = false;
+        }
+
+        toggle.addEventListener("click", onToggle);
+        await load().catch(() => showState("Couldn't load settings. Pull to retry."));
+      })();
+    </script>
+    <script src="assets/page-loader.js"></script>
+  </body>
+</html>

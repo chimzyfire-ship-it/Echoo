@@ -805,6 +805,354 @@
   border: 2px solid #f7d5b2;
 }
 
+/* ───────────────────────────────────────────────────────────────────────
+   Hub (linkup.html) — live, state-driven module home. Reuses the gold
+   accent (#E7C98E), glass cards (#111), and Inter type already in the file.
+   ─────────────────────────────────────────────────────────────────────── */
+.echoo-linkup-viewport {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.echoo-linkup-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 34px 22px 28px;
+  background: #111111;
+  border: 1px solid rgba(248, 245, 239, 0.08);
+  border-radius: 24px;
+}
+
+.echoo-linkup-state-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, rgba(231, 201, 142, 0.14) 0%, rgba(18, 18, 18, 0.5) 72%);
+  border: 1px solid rgba(231, 201, 142, 0.22);
+  color: #E7C98E;
+}
+.echoo-linkup-state-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.echoo-linkup-state-title {
+  margin: 2px 0 0;
+  font: 700 19px/1.2 "Inter", sans-serif;
+  color: var(--ink);
+}
+.echoo-linkup-state-copy {
+  margin: 0 0 6px;
+  max-width: 320px;
+  font: 520 14px/1.45 "Inter", sans-serif;
+  color: var(--muted);
+}
+.echoo-linkup-state .echoo-linkup-btn--hero,
+.echoo-linkup-state .echoo-linkup-btn--outline {
+  width: 100%;
+  max-width: 280px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.echoo-linkup-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(231, 201, 142, 0.25);
+  border-top-color: #E7C98E;
+  animation: echoo-linkup-spin 0.8s linear infinite;
+}
+@keyframes echoo-linkup-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Presence card — standby vs active share one shell. */
+.echoo-linkup-presence-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #111111;
+  border: 1px solid rgba(248, 245, 239, 0.08);
+}
+.echoo-linkup-presence-dot {
+  flex: 0 0 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(248, 245, 239, 0.28);
+}
+.echoo-linkup-presence-dot--live {
+  background: #E7C98E;
+  box-shadow: 0 0 0 4px rgba(231, 201, 142, 0.18);
+  animation: echoo-linkup-pulse 2.4s ease-in-out infinite;
+}
+@keyframes echoo-linkup-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(231, 201, 142, 0.16); }
+  50% { box-shadow: 0 0 0 7px rgba(231, 201, 142, 0.06); }
+}
+.echoo-linkup-presence-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.echoo-linkup-presence-title {
+  font: 650 14px/1.25 "Inter", sans-serif;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.echoo-linkup-presence-sub {
+  font: 520 12px/1.2 "Inter", sans-serif;
+  color: var(--muted);
+}
+.echoo-linkup-presence-cta {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font: 680 12px/1 "Inter", sans-serif;
+  text-decoration: none;
+  background: rgba(231, 201, 142, 0.12);
+  border: 1px solid rgba(231, 201, 142, 0.3);
+  color: #E7C98E;
+  cursor: pointer;
+}
+.echoo-linkup-presence-cta--ghost {
+  background: transparent;
+  border-color: rgba(248, 245, 239, 0.16);
+  color: var(--ink);
+}
+
+.echoo-linkup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.echoo-linkup-section-title {
+  margin: 4px 2px 0;
+  font: 700 12px/1 "Inter", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(248, 245, 239, 0.55);
+}
+.echoo-linkup-match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.echoo-linkup-peer-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: #111111;
+  border: 1px solid rgba(248, 245, 239, 0.08);
+  border-radius: 18px;
+}
+.echoo-linkup-peer-card--chat {
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.14s ease;
+}
+.echoo-linkup-peer-card--chat:active {
+  transform: scale(0.99);
+  border-color: rgba(231, 201, 142, 0.3);
+}
+.echoo-linkup-peer-avatar {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(248, 245, 239, 0.06);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(248, 245, 239, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 680 17px/1 "Inter", sans-serif;
+  color: #E7C98E;
+}
+.echoo-linkup-peer-avatar.has-photo {
+  color: transparent;
+  border-color: transparent;
+}
+.echoo-linkup-peer-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.echoo-linkup-peer-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.echoo-linkup-peer-name {
+  font: 680 15px/1.2 "Inter", sans-serif;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.echoo-linkup-peer-reason {
+  font: 600 10px/1 "Inter", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #E7C98E;
+}
+.echoo-linkup-peer-bio {
+  margin: 0;
+  font: 520 13px/1.35 "Inter", sans-serif;
+  color: var(--soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.echoo-linkup-peer-meta {
+  font: 520 11px/1.2 "Inter", sans-serif;
+  color: var(--muted);
+}
+.echoo-linkup-peer-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 104px;
+}
+.echoo-linkup-btn--sm {
+  min-height: 38px;
+  font-size: 13px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.echoo-linkup-empty {
+  padding: 18px 16px;
+  border-radius: 16px;
+  border: 1px dashed rgba(248, 245, 239, 0.12);
+  text-align: center;
+}
+.echoo-linkup-empty-copy {
+  margin: 0;
+  font: 520 13px/1.45 "Inter", sans-serif;
+  color: var(--muted);
+}
+
+/* Settings gear in the topbar */
+.echoo-linkup-settings-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(248, 245, 239, 0.1);
+  background: rgba(248, 245, 239, 0.04);
+  color: var(--ink);
+  text-decoration: none;
+}
+.echoo-linkup-settings-link svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Toggle switch (settings page) */
+.echoo-linkup-toggle {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  border-radius: 9999px;
+  background: rgba(248, 245, 239, 0.12);
+  border: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+.echoo-linkup-toggle.is-on {
+  background: linear-gradient(135deg, #e4c48d 0%, #f7d5b2 100%);
+}
+.echoo-linkup-toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.echoo-linkup-toggle.is-on::after {
+  transform: translateX(20px);
+}
+.echoo-linkup-toggle[disabled] { opacity: 0.5; cursor: default; }
+
+/* Settings rows */
+.echoo-linkup-settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #111111;
+  border: 1px solid rgba(248, 245, 239, 0.08);
+  border-radius: 18px;
+  padding: 6px 16px;
+}
+.echoo-linkup-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(248, 245, 239, 0.06);
+}
+.echoo-linkup-settings-row:last-child { border-bottom: 0; }
+.echoo-linkup-settings-text {
+  flex: 1;
+  min-width: 0;
+}
+.echoo-linkup-settings-label {
+  font: 650 15px/1.2 "Inter", sans-serif;
+  color: var(--ink);
+}
+.echoo-linkup-settings-hint {
+  margin-top: 3px;
+  font: 520 12px/1.35 "Inter", sans-serif;
+  color: var(--muted);
+}
+.echoo-linkup-settings-link-row {
+  text-decoration: none;
+  color: var(--ink);
+}
+
 /* Reduced motion adjustments */
 @media (prefers-reduced-motion: reduce) {
   .echoo-linkup-checkin,
@@ -814,8 +1162,12 @@
   .echoo-linkup-chat-backdrop,
   .echoo-linkup-btn--hero,
   .echoo-linkup-way-row,
-  .echoo-linkup-fab {
+  .echoo-linkup-fab,
+  .echoo-linkup-presence-dot--live,
+  .echoo-linkup-spinner {
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 
