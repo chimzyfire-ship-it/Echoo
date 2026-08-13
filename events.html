@@ -2048,7 +2048,7 @@
           </svg>
           <span>Link Up</span>
         </a>
-        <a class="nav-link" href="account.html">
+        <a class="nav-link" href="auth.html">
           <svg viewBox="0 0 24 24">
             <circle cx="12" cy="8" r="4" />
             <path d="M4 21a8 8 0 0 1 16 0" />
@@ -2505,7 +2505,7 @@
         renderCulturePicker();
         culturePicker.classList.add("is-open");
         culturePicker.setAttribute("aria-hidden", "false");
-        cultureToggle?.setAttribute("aria-expanded", "true");
+        cultureToggle.setAttribute("aria-expanded", "true");
         document.body.classList.add("culture-picker-open");
         setTimeout(
           () => culturePickerSearch.focus({ preventScroll: true }),
@@ -2516,7 +2516,7 @@
       function closeCulturePicker() {
         culturePicker.classList.remove("is-open");
         culturePicker.setAttribute("aria-hidden", "true");
-        cultureToggle?.setAttribute("aria-expanded", "false");
+        cultureToggle.setAttribute("aria-expanded", "false");
         document.body.classList.remove("culture-picker-open");
       }
 
@@ -2570,40 +2570,28 @@
           recommendations: "Recommended for you",
           noun: "places and local plans",
         };
-        // The hero title/copy, top-right culture toggle, and location badge
-        // were intentionally removed from the Discover shell. Degrade
-        // gracefully — only update what still exists (section headings,
-        // search placeholder, clear button).
-        cultureToggle?.classList.toggle("is-active", Boolean(culture));
-        cultureToggleClear?.classList.toggle("is-visible", Boolean(culture));
-        if (cultureClear) cultureClear.hidden = !culture;
-        cultureToggle?.setAttribute(
+        cultureToggle.classList.toggle("is-active", Boolean(culture));
+        cultureToggleClear.classList.toggle("is-visible", Boolean(culture));
+        cultureClear.hidden = !culture;
+        cultureToggle.setAttribute(
           "aria-label",
           culture
             ? `${culture.label} is selected. Change culture`
             : "Choose a culture",
         );
-        if (cultureToggleState)
-          cultureToggleState.textContent = culture ? culture.label : "Local mode";
+        cultureToggleState.textContent = culture ? culture.label : "Local mode";
         if (culture) {
-          if (title)
-            title.innerHTML = `Discover ${esc(culture.label)} locally<span class="accent-dot">.</span>`;
-          if (copy)
-            copy.textContent = `${category.noun.charAt(0).toUpperCase()}${category.noun.slice(1)} with a ${culture.label} point of view — especially good ${time.label}.`;
-          if (nearbyHeading)
-            nearbyHeading.textContent = `${culture.label} · ${category.nearby}`;
-          if (recommendationsHeading)
-            recommendationsHeading.textContent = `${culture.label} · ${category.recommendations}`;
-          if (queryInput) queryInput.placeholder = `Search ${culture.label} places`;
+          title.innerHTML = `Discover ${esc(culture.label)} locally<span class="accent-dot">.</span>`;
+          copy.textContent = `${category.noun.charAt(0).toUpperCase()}${category.noun.slice(1)} with a ${culture.label} point of view — especially good ${time.label}.`;
+          nearbyHeading.textContent = `${culture.label} · ${category.nearby}`;
+          recommendationsHeading.textContent = `${culture.label} · ${category.recommendations}`;
+          queryInput.placeholder = `Search ${culture.label} places`;
         } else {
-          if (title)
-            title.innerHTML = `Discover the GTA<span class="accent-dot">.</span>`;
-          if (copy)
-            copy.textContent = `Thoughtful places, plans, and experiences shaped by what you like, where you are, and what fits ${time.label}.`;
-          if (nearbyHeading) nearbyHeading.textContent = category.nearby;
-          if (recommendationsHeading)
-            recommendationsHeading.textContent = category.recommendations;
-          if (queryInput) queryInput.placeholder = "Search and discover places";
+          title.innerHTML = `Discover the GTA<span class="accent-dot">.</span>`;
+          copy.textContent = `Thoughtful places, plans, and experiences shaped by what you like, where you are, and what fits ${time.label}.`;
+          nearbyHeading.textContent = category.nearby;
+          recommendationsHeading.textContent = category.recommendations;
+          queryInput.placeholder = "Search and discover places";
         }
         updateLocationBadge();
       }
@@ -3436,10 +3424,7 @@
       }
 
       function updateLocationBadge() {
-        // The location badge was removed from the Discover shell; no-op now.
-        const el = document.getElementById("location-note");
-        if (!el) return;
-        el.innerHTML =
+        document.getElementById("location-note").innerHTML =
           `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span><span>${locationLabel()}</span>`;
       }
 
@@ -4200,10 +4185,9 @@
       const cultureFab = document.getElementById("culture-lens-fab");
       if (cultureFab) cultureFab.addEventListener("click", openCulturePicker);
       if (cultureToggle) cultureToggle.addEventListener("click", openCulturePicker);
-      if (cultureToggleClear)
-        cultureToggleClear.addEventListener("click", () =>
-          cultureContext?.clear(),
-        );
+      cultureToggleClear.addEventListener("click", () =>
+        cultureContext?.clear(),
+      );
       culturePicker
         .querySelectorAll("[data-close-culture]")
         .forEach((button) =>
