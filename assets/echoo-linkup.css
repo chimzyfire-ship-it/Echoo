@@ -1156,21 +1156,100 @@
 /* ───────────────────────────────────────────────────────────────────────
    Minimalist 4-Slide Intro Onboarding Shell & Vector Illustrations
    ─────────────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────────────────────────────
+   Minimalist Hero Landing Shell & Floating Slide Overlay
+   ─────────────────────────────────────────────────────────────────────── */
 .echoo-linkup-intro-shell {
   position: relative;
   min-height: calc(100vh - 140px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 18px 20px 24px;
+  padding: 24px 22px 32px;
   background:
-    radial-gradient(ellipse at 50% 20%, rgba(231, 201, 142, 0.14) 0%, transparent 65%),
-    linear-gradient(180deg, rgba(12, 12, 12, 0.55) 0%, rgba(10, 10, 10, 0.88) 55%, rgba(0, 0, 0, 0.98) 100%),
+    radial-gradient(ellipse at 50% 15%, rgba(231, 201, 142, 0.16) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(12, 12, 12, 0.4) 0%, rgba(10, 10, 10, 0.75) 50%, rgba(0, 0, 0, 0.95) 100%),
     url('../assets/echoo-linkup-bg.png') center/cover no-repeat;
-  border-radius: 28px;
-  border: 1px solid rgba(248, 245, 239, 0.1);
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
   overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Reference Hero Layout (Title + Top-Right Badge) */
+.linkup-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-top: 12px;
+}
+
+.linkup-hero-title {
+  margin: 0 0 10px;
+  font: 800 48px/1.05 "Inter", sans-serif;
+  letter-spacing: -0.04em;
+  color: #f8f5ef;
+}
+
+.linkup-hero-tagline {
+  margin: 0;
+  font: 550 17px/1.38 "Inter", sans-serif;
+  color: rgba(248, 245, 239, 0.85);
+  letter-spacing: -0.01em;
+}
+
+.linkup-hero-tagline .gold-text {
+  color: #E7C98E;
+  font-weight: 650;
+}
+
+.linkup-badge-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(20, 20, 20, 0.45);
+  border: 1px solid rgba(248, 245, 239, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.linkup-badge-icon svg {
+  width: 26px;
+  height: 26px;
+  stroke: #f8f5ef;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Floating Slide Overlay (First Time User Intro View) */
+.intro-slide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: rgba(5, 5, 5, 0.82);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 20px;
+  transition: opacity 0.3s ease;
+}
+
+.intro-overlay-content {
+  width: min(430px, 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: calc(16px + env(safe-area-inset-top)) 0 32px;
 }
 
 .intro-top-bar {
@@ -1200,21 +1279,26 @@
   box-shadow: 0 0 10px rgba(231, 201, 142, 0.6);
 }
 
+/* Plain Text Skip Button Label (No Pill, No Heavy Card Edge) */
 .intro-skip-btn {
-  background: rgba(248, 245, 239, 0.08);
-  border: 1px solid rgba(248, 245, 239, 0.12);
-  color: rgba(248, 245, 239, 0.8);
-  padding: 5px 14px;
-  border-radius: 9999px;
-  font: 600 12px/1 "Inter", sans-serif;
+  background: transparent;
+  border: none;
+  color: rgba(248, 245, 239, 0.7);
+  padding: 6px 4px;
+  font: 600 14px/1 "Inter", sans-serif;
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .intro-skip-btn:hover {
-  background: rgba(248, 245, 239, 0.16);
-  color: #fff;
+  color: #E7C98E;
+}
+
+.intro-overlay-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
 
 /* Slide Stage & Vector Cards */

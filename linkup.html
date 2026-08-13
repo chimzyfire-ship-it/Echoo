@@ -141,10 +141,6 @@
           <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
         <div class="topbar-actions">
-          <a class="culture-pill" href="culture.html" aria-label="Culture Lens settings">
-            <span class="culture-pill-icon">🌐</span>
-            <span>Culture</span>
-          </a>
           <a class="echoo-linkup-settings-link" href="linkup-settings.html" aria-label="Link Up settings">
             <svg viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="3" />
@@ -157,58 +153,77 @@
       <!-- Link Up Module Main Shell -->
       <main class="echoo-linkup-module">
 
-        <!-- 4-Slide Minimalist Aesthetic Onboarding Intro Shell (No-User / Standby Intro View) -->
+        <!-- Standby / No-User Hero Landing Screen (Matches Reference Design Exactly) -->
         <section class="echoo-linkup-intro-shell" id="echoo-linkup-intro-shell">
-          <!-- Top Progress Track & Skip Action -->
-          <div class="intro-top-bar">
-            <div class="intro-progress-track">
-              <div class="intro-progress-dot active" data-slide-indicator="0"></div>
-              <div class="intro-progress-dot" data-slide-indicator="1"></div>
-              <div class="intro-progress-dot" data-slide-indicator="2"></div>
-              <div class="intro-progress-dot" data-slide-indicator="3"></div>
+          <!-- Hero Title & Top Action Badge -->
+          <div class="linkup-hero-header">
+            <div class="linkup-hero-text">
+              <h1 class="linkup-hero-title">Link up.</h1>
+              <p class="linkup-hero-tagline">
+                <span class="gold-text">Right people. Right place.</span><br />
+                Real connections.
+              </p>
             </div>
-            <button class="intro-skip-btn" id="intro-skip-btn" type="button">Skip</button>
+            <div class="linkup-badge-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </div>
           </div>
 
-          <!-- Slides Viewport with Generated Echoo AI Vector Illustrations -->
-          <div class="intro-slides-viewport" id="intro-slides-viewport">
-
-            <!-- Slide 1: Location & Proximity -->
-            <div class="intro-slide active" data-slide-index="0">
-              <img src="assets/linkup-illus-1.jpg" alt="Right place, right time illustration" class="intro-illus-img" />
-              <h2 class="intro-slide-title">Right place. Right time.</h2>
-              <p class="intro-slide-copy">See who's at the same spot or nearby in real time.</p>
-            </div>
-
-            <!-- Slide 2: Vibe Check -->
-            <div class="intro-slide" data-slide-index="1">
-              <img src="assets/linkup-illus-2.jpg" alt="Vibe check illustration" class="intro-illus-img" />
-              <h2 class="intro-slide-title">Vibe check.</h2>
-              <p class="intro-slide-copy">Instant matches based on what you actually like.</p>
-            </div>
-
-            <!-- Slide 3: Chat On The Spot -->
-            <div class="intro-slide" data-slide-index="2">
-              <img src="assets/linkup-illus-3.jpg" alt="Chat on the spot illustration" class="intro-illus-img" />
-              <h2 class="intro-slide-title">Chat on the spot.</h2>
-              <p class="intro-slide-copy">Messages unlock when you're close and clear out after.</p>
-            </div>
-
-            <!-- Slide 4: Real-World Link Up -->
-            <div class="intro-slide" data-slide-index="3">
-              <img src="assets/linkup-illus-4.jpg" alt="No endless DMs illustration" class="intro-illus-img" />
-              <h2 class="intro-slide-title">No endless DMs.</h2>
-              <p class="intro-slide-copy">Skip the small talk and link up for real.</p>
-            </div>
-
-          </div>
-
-          <!-- Bottom Actions Bar -->
+          <!-- Bottom Action Buttons (No Profile Icon, No Description Paragraph) -->
           <div class="intro-action-group">
-            <button class="echoo-linkup-btn--hero" id="btn-create-account" type="button" style="width: 100%;">Create Account →</button>
-            <button class="echoo-linkup-btn--outline" id="btn-sign-in" type="button" style="width: 100%;">Sign In</button>
+            <button class="echoo-linkup-btn--hero" id="btn-create-account" type="button" style="width: 100%;">Create account &rarr;</button>
+            <button class="echoo-linkup-btn--outline" id="btn-sign-in" type="button" style="width: 100%;">Sign in</button>
           </div>
         </section>
+
+        <!-- First-Time User 4-Slide Intro Overlay (Floating Overlay, No Heavy Card Edges) -->
+        <div class="intro-slide-overlay" id="intro-slide-overlay" style="display: none;">
+          <div class="intro-overlay-content">
+            <!-- Top Progress Track & Plain Text Skip Action -->
+            <div class="intro-top-bar">
+              <div class="intro-progress-track">
+                <div class="intro-progress-dot active" data-slide-indicator="0"></div>
+                <div class="intro-progress-dot" data-slide-indicator="1"></div>
+                <div class="intro-progress-dot" data-slide-indicator="2"></div>
+                <div class="intro-progress-dot" data-slide-indicator="3"></div>
+              </div>
+              <button class="intro-skip-btn" id="intro-skip-btn" type="button">Skip</button>
+            </div>
+
+            <!-- Slides Viewport with AI Vector Illustrations -->
+            <div class="intro-slides-viewport" id="intro-slides-viewport">
+              <div class="intro-slide active" data-slide-index="0">
+                <img src="assets/linkup-illus-1.jpg" alt="Right place illustration" class="intro-illus-img" />
+                <h2 class="intro-slide-title">Right place. Right time.</h2>
+                <p class="intro-slide-copy">See who's at the same spot or nearby in real time.</p>
+              </div>
+              <div class="intro-slide" data-slide-index="1">
+                <img src="assets/linkup-illus-2.jpg" alt="Vibe check illustration" class="intro-illus-img" />
+                <h2 class="intro-slide-title">Vibe check.</h2>
+                <p class="intro-slide-copy">Instant matches based on what you actually like.</p>
+              </div>
+              <div class="intro-slide" data-slide-index="2">
+                <img src="assets/linkup-illus-3.jpg" alt="Chat on the spot illustration" class="intro-illus-img" />
+                <h2 class="intro-slide-title">Chat on the spot.</h2>
+                <p class="intro-slide-copy">Messages unlock when you're close and clear out after.</p>
+              </div>
+              <div class="intro-slide" data-slide-index="3">
+                <img src="assets/linkup-illus-4.jpg" alt="No endless DMs illustration" class="intro-illus-img" />
+                <h2 class="intro-slide-title">No endless DMs.</h2>
+                <p class="intro-slide-copy">Skip the small talk and link up for real.</p>
+              </div>
+            </div>
+
+            <!-- Overlay CTAs -->
+            <div class="intro-overlay-actions">
+              <button class="echoo-linkup-btn--hero" id="overlay-btn-create" type="button" style="width: 100%;">Create account &rarr;</button>
+              <button class="echoo-linkup-btn--outline" id="overlay-btn-signin" type="button" style="width: 100%;">Sign in</button>
+            </div>
+          </div>
+        </div>
 
         <!-- Live Presence Viewport (When User is Signed In & Active) -->
         <section id="echoo-linkup-viewport" class="echoo-linkup-viewport" data-linkup-viewport style="display: none;">
