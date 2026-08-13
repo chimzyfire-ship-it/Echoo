@@ -867,7 +867,9 @@
         display: grid;
         place-items: center;
         box-shadow: 0 0 0 3px rgba(247, 213, 178, 0.08);
-        transition: box-shadow 200ms ease, border-color 200ms ease;
+        transition:
+          box-shadow 200ms ease,
+          border-color 200ms ease;
       }
       .profile-photo-preview.has-photo {
         border-color: transparent;
@@ -1001,7 +1003,9 @@
         font-size: 14px;
         width: 100%;
         outline: none;
-        transition: border-color 0.2s, background 0.2s;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
       }
       .settings-input:focus {
         border-color: var(--peach);
@@ -1134,37 +1138,11 @@
           animation-duration: 0.01ms !important;
         }
       }
-      /* ── Floating Action Button (FAB) ── */
-      .fab-chat {
-        position: fixed;
-        bottom: calc(96px + env(safe-area-inset-bottom));
-        right: max(16px, calc((100vw - 430px) / 2 + 16px));
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: var(--peach);
-        color: #050505;
-        display: grid;
-        place-items: center;
-        z-index: 45;
-        box-shadow: 0 8px 24px rgba(247, 213, 178, 0.35);
-        transition: transform 0.2s ease;
-      }
-      .fab-chat:active {
-        transform: scale(0.93);
-      }
-      .fab-chat svg {
-        width: 22px;
-        height: 22px;
-        fill: currentColor;
-      }
-      @keyframes fab-pulse {
-        0%, 100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
-        50% { box-shadow: 0 8px 28px rgba(247, 213, 178, 0.25); }
-      }
     </style>
     <link rel="stylesheet" href="assets/page-loader.css" />
-    <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
   </head>
   <body>
     <div class="app-shell">
@@ -1223,25 +1201,36 @@
               </div>
               <div class="field signup-only">
                 <label for="email">Email</label>
-                <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="display: flex; gap: 8px; align-items: center">
                   <input
                     id="email"
                     type="email"
                     autocomplete="email"
                     placeholder="name@example.com"
-                    style="flex: 1;"
+                    style="flex: 1"
                   />
                   <button
                     class="provider-btn"
                     type="button"
                     id="send-code-btn"
-                    style="width: auto; min-width: 105px; padding: 0 16px; min-height: 54px; white-space: nowrap; font-size: 13px;"
+                    style="
+                      width: auto;
+                      min-width: 105px;
+                      padding: 0 16px;
+                      min-height: 54px;
+                      white-space: nowrap;
+                      font-size: 13px;
+                    "
                   >
                     Send code
                   </button>
                 </div>
               </div>
-              <div class="field signup-only" id="otp-field-group" style="display: none;">
+              <div
+                class="field signup-only"
+                id="otp-field-group"
+                style="display: none"
+              >
                 <label for="otp-code">Verification code</label>
                 <input
                   id="otp-code"
@@ -1319,17 +1308,42 @@
               </button>
               <div class="divider">or</div>
               <button class="provider-btn" type="button" data-provider="Google">
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.2.0 10.05.0 12s.47 3.8 1.29 5.42l3.99-3.15z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.2.0 10.05.0 12s.47 3.8 1.29 5.42l3.99-3.15z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                  />
                 </svg>
                 <span>Continue with Google</span>
               </button>
               <button class="provider-btn" type="button" data-provider="Apple">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.32c.67-.82 1.12-1.96.99-3.1-.97.04-2.14.65-2.84 1.47-.61.71-1.15 1.87-.99 2.98 1.08.08 2.17-.53 2.84-1.35z"/>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.32c.67-.82 1.12-1.96.99-3.1-.97.04-2.14.65-2.84 1.47-.61.71-1.15 1.87-.99 2.98 1.08.08 2.17-.53 2.84-1.35z"
+                  />
                 </svg>
                 <span>Continue with Apple</span>
               </button>
@@ -1349,7 +1363,12 @@
             </div>
             <div class="ob-body">
               <div id="ob-steps"></div>
-              <div class="ob-status" id="ob-status" role="status" aria-live="polite"></div>
+              <div
+                class="ob-status"
+                id="ob-status"
+                role="status"
+                aria-live="polite"
+              ></div>
               <button type="button" class="ob-continue" id="ob-next">
                 Next
               </button>
@@ -1374,13 +1393,6 @@
       </main>
     </div>
 
-    <!-- Floating Action Button for AI Chat -->
-    <a class="fab-chat" href="app.html" aria-label="Open AI chat">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z" />
-      </svg>
-    </a>
-
     <nav class="bottom-nav" aria-label="Main navigation">
       <a class="nav-link" href="index.html">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1397,8 +1409,12 @@
       </a>
       <a class="nav-link" href="linkup.html">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          <path
+            d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+          />
+          <path
+            d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+          />
         </svg>
         <span>Link Up</span>
       </a>
@@ -1454,7 +1470,9 @@
         if (stored) {
           initialStoredPrefs = JSON.parse(stored);
           preDetectedCity =
-            redirectParams.get("city") || initialStoredPrefs.city || "Greater Toronto Area";
+            redirectParams.get("city") ||
+            initialStoredPrefs.city ||
+            "Greater Toronto Area";
         }
       } catch (e) {}
       preDetectedCity =
@@ -1575,8 +1593,10 @@
         url.searchParams.set("next", redirectTarget);
         url.searchParams.set("mode", isPlaceDetailReturn ? "signin" : "signup");
         if (authIntent) url.searchParams.set("intent", authIntent);
-        if (authParams.get("reason")) url.searchParams.set("reason", authParams.get("reason"));
-        if (authParams.get("caption")) url.searchParams.set("caption", authParams.get("caption"));
+        if (authParams.get("reason"))
+          url.searchParams.set("reason", authParams.get("reason"));
+        if (authParams.get("caption"))
+          url.searchParams.set("caption", authParams.get("caption"));
         return url.toString();
       }
 
@@ -1924,7 +1944,10 @@
 
       function chip(label, key) {
         const bucket = state[key];
-        const isSelected = bucket && typeof bucket.has === "function" ? bucket.has(label) : false;
+        const isSelected =
+          bucket && typeof bucket.has === "function"
+            ? bucket.has(label)
+            : false;
         return `<button type="button" class="chip${isSelected ? " selected" : ""}" data-multi="${escapeHtml(key)}" data-value="${escapeHtml(label)}" aria-pressed="${isSelected ? "true" : "false"}">${escapeHtml(label)}</button>`;
       }
 
@@ -2001,11 +2024,31 @@
               </div>
               <div class="city-pills" role="radiogroup" aria-label="Supported cities">
                 ${[
-                  "Toronto", "Ajax", "Brock", "Clarington", "Oshawa",
-                  "Pickering", "Scugog", "Uxbridge", "Whitby", "Aurora",
-                  "East Gwillimbury", "Georgina", "King", "Markham", "Newmarket",
-                  "Richmond Hill", "Vaughan", "Whitchurch-Stouffville", "Brampton",
-                  "Caledon", "Mississauga", "Burlington", "Halton Hills", "Milton", "Oakville",
+                  "Toronto",
+                  "Ajax",
+                  "Brock",
+                  "Clarington",
+                  "Oshawa",
+                  "Pickering",
+                  "Scugog",
+                  "Uxbridge",
+                  "Whitby",
+                  "Aurora",
+                  "East Gwillimbury",
+                  "Georgina",
+                  "King",
+                  "Markham",
+                  "Newmarket",
+                  "Richmond Hill",
+                  "Vaughan",
+                  "Whitchurch-Stouffville",
+                  "Brampton",
+                  "Caledon",
+                  "Mississauga",
+                  "Burlington",
+                  "Halton Hills",
+                  "Milton",
+                  "Oakville",
                 ]
                   .map(
                     (cityName) => `
@@ -2021,7 +2064,12 @@
             const photoBg = state.profilePhotoUrl
               ? `style="background-image:url('${escapeHtml(state.profilePhotoUrl)}')"`
               : "";
-            const photoInitials = (state.name || "U").split(/\s+/).map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+            const photoInitials = (state.name || "U")
+              .split(/\s+/)
+              .map((w) => w[0])
+              .join("")
+              .toUpperCase()
+              .slice(0, 2);
             body = `
               <div class="profile-step">
                 <label class="profile-photo-picker" for="ob-photo">
@@ -2142,10 +2190,13 @@
         if (otpFieldGroup) {
           otpFieldGroup.style.display = joining && codeSent ? "grid" : "none";
         }
-        
-        resetPasswordBtn.style.display = resetting || recovering ? "none" : "block";
+
+        resetPasswordBtn.style.display =
+          resetting || recovering ? "none" : "block";
         usernameInput.autocomplete = "username";
-        passwordInput.autocomplete = joining ? "new-password" : "current-password";
+        passwordInput.autocomplete = joining
+          ? "new-password"
+          : "current-password";
         setStatus("");
       }
 
@@ -2222,14 +2273,6 @@
             redirectAfterAuth(profileState.preferences);
             return;
           }
-          if (isPlaceDetailReturn) {
-            redirectAfterAuth({
-              name: state.userName,
-              email: state.userEmail,
-              city: state.city,
-            });
-            return;
-          }
           setStatus("You’re in. Let’s finish onboarding.");
           startOnboarding("");
         } catch (error) {
@@ -2256,7 +2299,9 @@
             password,
           });
           if (error) throw error;
-          setStatus("Password updated. You can now sign in with your username.");
+          setStatus(
+            "Password updated. You can now sign in with your username.",
+          );
           setMode("signin");
         } catch (error) {
           setStatus(error.message || "Could not update your password.", true);
@@ -2284,12 +2329,18 @@
           const email = username.includes("@")
             ? username
             : await window.EchooAuth.lookupEmailByUsername(username);
-          if (!email) throw new Error("We could not find an account with that username or email.");
-          const { error } = await window.EchooAuth.client.auth.resetPasswordForEmail(email, {
-            redirectTo: authResetRedirect(),
-          });
+          if (!email)
+            throw new Error(
+              "We could not find an account with that username or email.",
+            );
+          const { error } =
+            await window.EchooAuth.client.auth.resetPasswordForEmail(email, {
+              redirectTo: authResetRedirect(),
+            });
           if (error) throw error;
-          setStatus("Recovery email sent. Open the link to set a new password.");
+          setStatus(
+            "Recovery email sent. Open the link to set a new password.",
+          );
         } catch (error) {
           setStatus(error.message || "Could not send reset link.", true);
         } finally {
@@ -2319,8 +2370,14 @@
         const token = otpInput.value.trim();
         const displayName =
           nameInput.value.trim() || email.split("@")[0] || "Echoo User";
-        if (!window.EchooAuth.isValidUsername(rawUsername) || rawUsername !== username) {
-          setStatus("Use 3–24 lowercase letters, numbers, or underscores for your username.", true);
+        if (
+          !window.EchooAuth.isValidUsername(rawUsername) ||
+          rawUsername !== username
+        ) {
+          setStatus(
+            "Use 3–24 lowercase letters, numbers, or underscores for your username.",
+            true,
+          );
           return;
         }
         if (!email) {
@@ -2346,7 +2403,10 @@
         );
 
         if (!codeSent || !token) {
-          setStatus("Send a verification code, then enter the verification code from your email.", true);
+          setStatus(
+            "Send a verification code, then enter the verification code from your email.",
+            true,
+          );
           if (!codeSent) sendCodeBtn.focus();
           else otpInput.focus();
           return;
@@ -2361,12 +2421,19 @@
             type: "signup",
           });
           if (error) throw error;
-          state.userName = data.user?.user_metadata?.display_name || displayName;
+          state.userName =
+            data.user?.user_metadata?.display_name || displayName;
           state.userEmail = data.user?.email || email;
           setStatus("Account verified. Let’s personalize Echoo for you.");
           startOnboarding("");
         } catch (error) {
-          setStatus(authErrorMessage(error, "That code is invalid or expired. Request a new one and try again."), true);
+          setStatus(
+            authErrorMessage(
+              error,
+              "That code is invalid or expired. Request a new one and try again.",
+            ),
+            true,
+          );
         } finally {
           setBusy(false);
         }
@@ -2399,11 +2466,18 @@
           const username = window.EchooAuth.normalizeUsername(rawUsername);
           const email = emailInput.value.trim();
           const password = passwordInput.value;
-          const displayName = nameInput.value.trim() || email.split("@")[0] || "Echoo User";
+          const displayName =
+            nameInput.value.trim() || email.split("@")[0] || "Echoo User";
           const consentCheckbox = document.getElementById("pipeda-consent");
 
-          if (!window.EchooAuth.isValidUsername(rawUsername) || rawUsername !== username) {
-            setStatus("Use 3–24 lowercase letters, numbers, or underscores for your username.", true);
+          if (
+            !window.EchooAuth.isValidUsername(rawUsername) ||
+            rawUsername !== username
+          ) {
+            setStatus(
+              "Use 3–24 lowercase letters, numbers, or underscores for your username.",
+              true,
+            );
             usernameInput.focus();
             return;
           }
@@ -2413,16 +2487,25 @@
             return;
           }
           if (!password || password.length < 8) {
-            setStatus("Choose a password with at least 8 characters before sending your code.", true);
+            setStatus(
+              "Choose a password with at least 8 characters before sending your code.",
+              true,
+            );
             passwordInput.focus();
             return;
           }
           if (consentCheckbox && !consentCheckbox.checked) {
-            setStatus("You must agree to the Privacy Policy and Terms of Service to sign up.", true);
+            setStatus(
+              "You must agree to the Privacy Policy and Terms of Service to sign up.",
+              true,
+            );
             return;
           }
 
-          localStorage.setItem("echoo_pipeda_consent_at", new Date().toISOString());
+          localStorage.setItem(
+            "echoo_pipeda_consent_at",
+            new Date().toISOString(),
+          );
           setBusy(true, "Sending…");
           setStatus("Sending your verification code…");
           try {
@@ -2440,11 +2523,19 @@
             if (error) throw error;
             codeSent = true;
             otpFieldGroup.style.display = "grid";
-            setStatus("Check your inbox for a verification code or confirmation link.");
+            setStatus(
+              "Check your inbox for a verification code or confirmation link.",
+            );
             otpInput.focus();
             startCooldownTimer(30);
           } catch (error) {
-            setStatus(authErrorMessage(error, "We couldn’t send the code. Please try again."), true);
+            setStatus(
+              authErrorMessage(
+                error,
+                "We couldn’t send the code. Please try again.",
+              ),
+              true,
+            );
           } finally {
             setBusy(false);
           }
@@ -2688,7 +2779,10 @@
               return;
             }
             setObStatus("Uploading your photo…");
-            const url = await window.EchooAuth.uploadProfilePhoto(state.pendingPhotoFile, uid);
+            const url = await window.EchooAuth.uploadProfilePhoto(
+              state.pendingPhotoFile,
+              uid,
+            );
             if (url) state.profilePhotoUrl = url;
             state.pendingPhotoFile = null;
           }
@@ -2713,10 +2807,30 @@
         const customMotivation = state.customMotivation
           ? [state.customMotivation]
           : [];
-        const vibesArr = state.vibes instanceof Set ? [...state.vibes] : (Array.isArray(state.vibes) ? state.vibes : []);
-        const esArr = state.eventStyles instanceof Set ? [...state.eventStyles] : (Array.isArray(state.eventStyles) ? state.eventStyles : []);
-        const auArr = state.audiences instanceof Set ? [...state.audiences] : (Array.isArray(state.audiences) ? state.audiences : []);
-        const moArr = state.motivations instanceof Set ? [...state.motivations] : (Array.isArray(state.motivations) ? state.motivations : []);
+        const vibesArr =
+          state.vibes instanceof Set
+            ? [...state.vibes]
+            : Array.isArray(state.vibes)
+              ? state.vibes
+              : [];
+        const esArr =
+          state.eventStyles instanceof Set
+            ? [...state.eventStyles]
+            : Array.isArray(state.eventStyles)
+              ? state.eventStyles
+              : [];
+        const auArr =
+          state.audiences instanceof Set
+            ? [...state.audiences]
+            : Array.isArray(state.audiences)
+              ? state.audiences
+              : [];
+        const moArr =
+          state.motivations instanceof Set
+            ? [...state.motivations]
+            : Array.isArray(state.motivations)
+              ? state.motivations
+              : [];
         const interests = [...vibesArr, ...customInterest];
         const eventStyles = [...esArr, ...customEventStyle];
         const audiences = [...auArr, ...customAudience];
@@ -2724,11 +2838,17 @@
         const vibes = interests.join(",");
         const budget = state.budget || "$";
         const energy = state.energy || "chill";
-        let city = (state.city || cityInput?.value || "Greater Toronto Area").trim();
+        let city = (
+          state.city ||
+          cityInput?.value ||
+          "Greater Toronto Area"
+        ).trim();
         try {
           const selectedCity = window.EchooLocationPlatform?.cityByName(city);
           if (selectedCity) city = selectedCity.name;
-        } catch (_) { /* location platform may not be loaded */ }
+        } catch (_) {
+          /* location platform may not be loaded */
+        }
         const tone = state.tone || "direct";
         const gender = state.gender || "Prefer not to say";
         const nationalities = Array.isArray(state.nationalities)
@@ -2814,7 +2934,8 @@
         /* Attempt 2: Refresh the session and retry once */
         try {
           if (window.EchooAuth?.client) {
-            const refreshed = await window.EchooAuth.client.auth.refreshSession();
+            const refreshed =
+              await window.EchooAuth.client.auth.refreshSession();
             if (refreshed.data?.session) {
               const saved = await window.EchooAuth.saveOnboardingProfile({
                 ...prefs,
@@ -2828,12 +2949,14 @@
           console.warn("Echoo: session refresh + retry failed.", retryError);
         }
 
-        /* Fallback: Preferences are already in localStorage.
-           Redirect to the app so the user isn't stuck.
-           The profile will sync on the next authenticated page load. */
+        /* Keep the member in onboarding until server-backed completion is
+           confirmed. Protected pages deliberately fail closed. */
         localStorage.setItem("echoo_profile_pending_sync", "true");
-        setObStatus("Your preferences were saved locally. Redirecting…");
-        setTimeout(() => redirectAfterAuth(prefs), 600);
+        setObStatus(
+          "We couldn’t finish saving your profile. Check your connection and try again.",
+        );
+        obNext.disabled = false;
+        obNext.textContent = "Try again";
       }
 
       /* ═══════════════════════════════════════════════
@@ -2845,15 +2968,15 @@
         try {
           prefs = JSON.parse(localStorage.getItem("echoo_preferences") || "{}");
         } catch (_) {}
-        
-        if (key === 'interests') {
+
+        if (key === "interests") {
           prefs.interests = value;
         } else {
           prefs[key] = value;
         }
-        
+
         localStorage.setItem("echoo_preferences", JSON.stringify(prefs));
-        
+
         if (window.EchooAuth?.saveOnboardingProfile) {
           try {
             await window.EchooAuth.saveOnboardingProfile(prefs);
@@ -2879,7 +3002,8 @@
           .slice(0, 2);
 
         const avatarEl = document.getElementById("profile-avatar");
-        const photoUrl = prefs?.profilePhotoUrl || state.profilePhotoUrl || null;
+        const photoUrl =
+          prefs?.profilePhotoUrl || state.profilePhotoUrl || null;
         if (avatarEl) {
           avatarEl.innerHTML = "";
           if (photoUrl) {
@@ -2915,9 +3039,9 @@
               <span class="settings-label">Budget Range</span>
             </div>
             <div class="settings-segmented">
-              <button class="settings-segment-btn ${currentBudget === '$' ? 'active' : ''}" data-value="$">$</button>
-              <button class="settings-segment-btn ${currentBudget === '$$' ? 'active' : ''}" data-value="$$">$$</button>
-              <button class="settings-segment-btn ${currentBudget === '$$$' ? 'active' : ''}" data-value="$$$">$$$</button>
+              <button class="settings-segment-btn ${currentBudget === "$" ? "active" : ""}" data-value="$">$</button>
+              <button class="settings-segment-btn ${currentBudget === "$$" ? "active" : ""}" data-value="$$">$$</button>
+              <button class="settings-segment-btn ${currentBudget === "$$$" ? "active" : ""}" data-value="$$$">$$$</button>
             </div>
           </div>
 
@@ -2926,9 +3050,9 @@
               <span class="settings-label">Energy Level</span>
             </div>
             <div class="settings-segmented">
-              <button class="settings-segment-btn ${currentEnergy === 'chill' ? 'active' : ''}" data-value="chill">Chill</button>
-              <button class="settings-segment-btn ${currentEnergy === 'hype' ? 'active' : ''}" data-value="hype">Hype</button>
-              <button class="settings-segment-btn ${currentEnergy === 'curious' ? 'active' : ''}" data-value="curious">Curious</button>
+              <button class="settings-segment-btn ${currentEnergy === "chill" ? "active" : ""}" data-value="chill">Chill</button>
+              <button class="settings-segment-btn ${currentEnergy === "hype" ? "active" : ""}" data-value="hype">Hype</button>
+              <button class="settings-segment-btn ${currentEnergy === "curious" ? "active" : ""}" data-value="curious">Curious</button>
             </div>
           </div>
 
@@ -2937,15 +3061,15 @@
               <span class="settings-label">AI Planning Tone</span>
             </div>
             <div class="settings-segmented">
-              <button class="settings-segment-btn ${currentTone === 'direct' ? 'active' : ''}" data-value="direct">Direct</button>
-              <button class="settings-segment-btn ${currentTone === 'detailed' ? 'active' : ''}" data-value="detailed">Detailed</button>
+              <button class="settings-segment-btn ${currentTone === "direct" ? "active" : ""}" data-value="direct">Direct</button>
+              <button class="settings-segment-btn ${currentTone === "detailed" ? "active" : ""}" data-value="detailed">Detailed</button>
             </div>
           </div>
 
           <div class="settings-section-title">My Vibe Signals</div>
           <div style="background: rgba(25, 25, 24, 0.45); border: 1px solid rgba(248, 245, 239, 0.06); border-radius: 14px; padding: 16px; margin-bottom: 12px;">
             <div class="settings-tags">
-              ${interests.length ? interests.map(i => `<span class="settings-tag">${escapeHtml(i)}</span>`).join('') : '<span style="color:var(--muted); font-size:13px;">No vibes configured.</span>'}
+              ${interests.length ? interests.map((i) => `<span class="settings-tag">${escapeHtml(i)}</span>`).join("") : '<span style="color:var(--muted); font-size:13px;">No vibes configured.</span>'}
             </div>
             <button class="signout-btn" id="refine-vibes-btn" type="button" style="margin-top: 16px; border-color: var(--peach); color: var(--peach); background: rgba(247, 213, 178, 0.04);">
               Refine Vibe Profile
@@ -3025,21 +3149,30 @@
         }
 
         // Segmented controls
-        container.querySelectorAll(".settings-segmented").forEach((segmented) => {
-          segmented.addEventListener("click", (e) => {
-            const btn = e.target.closest(".settings-segment-btn");
-            if (!btn) return;
-            
-            const labelEl = segmented.closest(".settings-row").querySelector(".settings-label");
-            const key = labelEl.textContent.toLowerCase().includes("budget") ? "budget" :
-                        labelEl.textContent.toLowerCase().includes("energy") ? "energy" : "tone";
-            
-            segmented.querySelectorAll(".settings-segment-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            
-            updateSetting(key, btn.dataset.value);
+        container
+          .querySelectorAll(".settings-segmented")
+          .forEach((segmented) => {
+            segmented.addEventListener("click", (e) => {
+              const btn = e.target.closest(".settings-segment-btn");
+              if (!btn) return;
+
+              const labelEl = segmented
+                .closest(".settings-row")
+                .querySelector(".settings-label");
+              const key = labelEl.textContent.toLowerCase().includes("budget")
+                ? "budget"
+                : labelEl.textContent.toLowerCase().includes("energy")
+                  ? "energy"
+                  : "tone";
+
+              segmented
+                .querySelectorAll(".settings-segment-btn")
+                .forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+
+              updateSetting(key, btn.dataset.value);
+            });
           });
-        });
 
         // Refine vibes button
         const refineBtn = document.getElementById("refine-vibes-btn");
@@ -3052,9 +3185,15 @@
         }
 
         // Change Password header toggle
-        const changePasswordHeader = document.getElementById("change-password-header");
-        const changePasswordToggle = document.getElementById("change-password-toggle");
-        const changePasswordForm = document.getElementById("change-password-form-container");
+        const changePasswordHeader = document.getElementById(
+          "change-password-header",
+        );
+        const changePasswordToggle = document.getElementById(
+          "change-password-toggle",
+        );
+        const changePasswordForm = document.getElementById(
+          "change-password-form-container",
+        );
         if (changePasswordHeader && changePasswordForm) {
           changePasswordHeader.addEventListener("click", () => {
             const isHidden = changePasswordForm.style.display === "none";
@@ -3066,26 +3205,32 @@
         // Update Password Action
         const savePasswordBtn = document.getElementById("save-password-btn");
         const newPasswordInput = document.getElementById("new-password-input");
-        const passwordStatusMsg = document.getElementById("password-status-msg");
+        const passwordStatusMsg = document.getElementById(
+          "password-status-msg",
+        );
         if (savePasswordBtn && newPasswordInput) {
           savePasswordBtn.addEventListener("click", async () => {
             const newPassword = newPasswordInput.value.trim();
             if (newPassword.length < 6) {
               passwordStatusMsg.style.color = "rgba(255, 100, 100, 0.8)";
-              passwordStatusMsg.textContent = "Password must be at least 6 characters.";
+              passwordStatusMsg.textContent =
+                "Password must be at least 6 characters.";
               return;
             }
-            
+
             savePasswordBtn.disabled = true;
             savePasswordBtn.textContent = "Updating...";
             passwordStatusMsg.textContent = "";
 
             if (window.EchooAuth?.client) {
               try {
-                const { error } = await window.EchooAuth.client.auth.updateUser({ password: newPassword });
+                const { error } = await window.EchooAuth.client.auth.updateUser(
+                  { password: newPassword },
+                );
                 if (error) throw error;
                 passwordStatusMsg.style.color = "rgba(100, 255, 100, 0.8)";
-                passwordStatusMsg.textContent = "Password updated successfully!";
+                passwordStatusMsg.textContent =
+                  "Password updated successfully!";
                 newPasswordInput.value = "";
                 setTimeout(() => {
                   changePasswordForm.style.display = "none";
@@ -3094,7 +3239,8 @@
                 }, 2000);
               } catch (err) {
                 passwordStatusMsg.style.color = "rgba(255, 100, 100, 0.8)";
-                passwordStatusMsg.textContent = err.message || "Failed to update password.";
+                passwordStatusMsg.textContent =
+                  err.message || "Failed to update password.";
               } finally {
                 savePasswordBtn.disabled = false;
                 savePasswordBtn.textContent = "Update Password";
@@ -3112,18 +3258,22 @@
         const deleteAccountBtn = document.getElementById("delete-account-btn");
         if (deleteAccountBtn) {
           deleteAccountBtn.addEventListener("click", async () => {
-            const confirmed = confirm("Are you sure you want to permanently delete your Echoo account? This action is irreversible.");
+            const confirmed = confirm(
+              "Are you sure you want to permanently delete your Echoo account? This action is irreversible.",
+            );
             if (!confirmed) return;
-            
+
             deleteAccountBtn.disabled = true;
             deleteAccountBtn.textContent = "Deleting...";
-            
+
             try {
               if (window.EchooAuth?.client) {
                 await window.EchooAuth.client.auth.signOut();
               }
               localStorage.removeItem("echoo_preferences");
-              alert("Your account and vibe data have been successfully deleted from our system.");
+              alert(
+                "Your account and vibe data have been successfully deleted from our system.",
+              );
               window.location.reload();
             } catch (e) {
               console.error(e);
@@ -3138,11 +3288,13 @@
       document
         .getElementById("signout-btn")
         .addEventListener("click", async () => {
-          if (window.EchooAuth?.client) {
-            await window.EchooAuth.client.auth.signOut();
+          window.EchooAuth?.reportAccess?.("blocked");
+          try {
+            await window.EchooAuth?.signOut?.();
+          } finally {
+            localStorage.removeItem("echoo_preferences");
+            window.location.reload();
           }
-          localStorage.removeItem("echoo_preferences");
-          window.location.reload();
         });
 
       /* ── Boot ── */
@@ -3158,13 +3310,13 @@
           }
           return;
         }
-        
+
         const profileState = await window.EchooAuth.loadOnboardingProfile();
         if (profileState.preferences?.username) {
           state.username = profileState.preferences.username;
           usernameInput.value = profileState.preferences.username;
         }
-        
+
         if (!profileState.session?.user) {
           if (authParams.get("type") === "recovery") {
             setMode("recovery");
@@ -3231,20 +3383,13 @@
         }
 
         if (profileState.ok) {
+          window.EchooAuth.reportAccess("ready");
+          window.EchooAuth.installCultureLensFab({ allowOnProfile: true });
           if (authParams.has("next")) {
             redirectAfterAuth(profileState.preferences);
           } else {
             showProfileDashboard(profileState.preferences);
           }
-          return;
-        }
-
-        if (isPlaceDetailReturn) {
-          redirectAfterAuth({
-            name: state.userName,
-            email: state.userEmail,
-            city: state.city,
-          });
           return;
         }
 

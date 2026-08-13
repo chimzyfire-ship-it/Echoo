@@ -1,6 +1,6 @@
-import { StatusBar } from 'expo-status-bar';
-import { BlurView } from 'expo-blur';
-import * as Linking from 'expo-linking';
+import { StatusBar } from "expo-status-bar";
+import { BlurView } from "expo-blur";
+import * as Linking from "expo-linking";
 import {
   ActivityIndicator,
   BackHandler,
@@ -9,10 +9,10 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { WebView } from 'react-native-webview';
-import Svg, { Circle, Path } from 'react-native-svg';
+} from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { WebView } from "react-native-webview";
+import Svg, { Circle, Path } from "react-native-svg";
 type RouteDestination = {
   id?: string;
   googlePlaceId?: string;
@@ -33,7 +33,8 @@ type RoutePlan = {
 // Expo Go needs a usable app destination even before a developer adds a local
 // LAN override. The environment value still wins for local device testing.
 const ECHOO_WEB_URL =
-  process.env.EXPO_PUBLIC_ECHOO_WEB_URL?.trim() || 'https://echoocity.com/events.html';
+  process.env.EXPO_PUBLIC_ECHOO_WEB_URL?.trim() ||
+  "https://echoocity.com/events.html";
 
 const MOBILE_CHROME_SCRIPT = `
   (function () {
@@ -58,73 +59,83 @@ const MOBILE_CHROME_SCRIPT = `
         window.ReactNativeWebView.postMessage('echoo:detail-sheet:' + isOpen);
       }
     };
+    var reportAccessState = function () {
+      var state = document.documentElement.getAttribute('data-echoo-access');
+      if (state && window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage('echoo:access:' + JSON.stringify({ state: state, url: window.location.href }));
+      }
+    };
     if (!window.__echooDetailSheetObserver) {
-      window.__echooDetailSheetObserver = new MutationObserver(reportDetailSheetState);
+      window.__echooDetailSheetObserver = new MutationObserver(function () {
+        reportDetailSheetState();
+        reportAccessState();
+      });
       window.__echooDetailSheetObserver.observe(document.documentElement, {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ['class', 'aria-hidden'],
+        attributeFilter: ['class', 'aria-hidden', 'data-echoo-access'],
       });
     }
     reportDetailSheetState();
+    reportAccessState();
     true;
   })();
 `;
 
-type TabKey = 'home' | 'discover' | 'linkup' | 'profile';
+type TabKey = "home" | "discover" | "linkup" | "profile";
 
 const NAVIGATION_ITEMS: ReadonlyArray<{
   key: TabKey;
   label: string;
   target: string;
 }> = [
-  { key: 'home', label: 'Home', target: 'index.html' },
-  { key: 'discover', label: 'Discover', target: 'events.html' },
-  { key: 'linkup', label: 'Link Up', target: 'linkup.html' },
-  { key: 'profile', label: 'Profile', target: 'auth.html' },
+  { key: "home", label: "Home", target: "index.html" },
+  { key: "discover", label: "Discover", target: "events.html" },
+  { key: "linkup", label: "Link Up", target: "linkup.html" },
+  { key: "profile", label: "Profile", target: "auth.html" },
 ];
 
 function pathnameFor(url: string) {
   try {
-    return new URL(url).pathname.replace(/\/$/, '');
+    return new URL(url).pathname.replace(/\/$/, "");
   } catch {
-    return '';
+    return "";
   }
 }
 
 function activeTabFor(url: string): TabKey | null {
   const path = pathnameFor(url);
 
-  if (path === '' || path === '/index' || path === '/index.html') return 'home';
+  if (path === "" || path === "/index" || path === "/index.html") return "home";
   if (
     [
-      '/events',
-      '/events.html',
-      '/music.html',
-      '/food.html',
-      '/culture.html',
-      '/films.html',
-      '/dates.html',
+      "/events",
+      "/events.html",
+      "/music.html",
+      "/food.html",
+      "/culture.html",
+      "/films.html",
+      "/dates.html",
     ].includes(path)
   ) {
-    return 'discover';
+    return "discover";
   }
-  if (path === '/tickets' || path === '/tickets.html') return null;
-  if (path === '/linkup' || path.startsWith('/linkup')) return 'linkup';
-  if (['/auth', '/auth.html'].includes(path)) {
-    return 'profile';
+  if (path === "/tickets" || path === "/tickets.html") return null;
+  if (path === "/linkup" || path.startsWith("/linkup")) return "linkup";
+  if (["/auth", "/auth.html"].includes(path)) {
+    return "profile";
   }
 
   return null;
 }
 
 function NavigationIcon({ active, tab }: { active: boolean; tab: TabKey }) {
-  const color = active ? '#f7d5b2' : 'rgba(248, 245, 239, 0.62)';
-  const fill = active ? color : 'none';
+  const color = active ? "#f7d5b2" : "rgba(248, 245, 239, 0.62)";
+  const fill = active ? color : "none";
   const strokeWidth = active ? 0 : 1.8;
 
-  if (tab === 'home') {
+  if (tab === "home") {
     return (
       <Svg width={27} height={27} viewBox="0 0 24 24" fill={fill}>
         <Path
@@ -138,10 +149,16 @@ function NavigationIcon({ active, tab }: { active: boolean; tab: TabKey }) {
     );
   }
 
-  if (tab === 'discover') {
+  if (tab === "discover") {
     return (
       <Svg width={27} height={27} viewBox="0 0 24 24" fill={fill}>
-        <Circle cx="11" cy="11" r="7" stroke={color} strokeWidth={strokeWidth} />
+        <Circle
+          cx="11"
+          cy="11"
+          r="7"
+          stroke={color}
+          strokeWidth={strokeWidth}
+        />
         <Path
           d="m16 16 4 4"
           stroke={color}
@@ -152,7 +169,7 @@ function NavigationIcon({ active, tab }: { active: boolean; tab: TabKey }) {
     );
   }
 
-  if (tab === 'linkup') {
+  if (tab === "linkup") {
     return (
       <Svg width={27} height={27} viewBox="0 0 24 24" fill={fill}>
         <Path
@@ -200,8 +217,14 @@ function isEchooHome(url: string) {
   if (!ECHOO_WEB_URL) return true;
 
   try {
-    const path = new URL(url).pathname.replace(/\/$/, '');
-    return path === '' || path === '/index' || path === '/index.html' || path === '/events' || path === '/events.html';
+    const path = new URL(url).pathname.replace(/\/$/, "");
+    return (
+      path === "" ||
+      path === "/index" ||
+      path === "/index.html" ||
+      path === "/events" ||
+      path === "/events.html"
+    );
   } catch {
     return true;
   }
@@ -220,10 +243,13 @@ function appleRouteUrlFor(destination: RouteDestination) {
 function startNavigation(destination: RouteDestination) {
   // iOS gets the installed Apple Maps app directly; Android gets Google Maps
   // navigation. The HTTPS Google URL is retained as a safe fallback.
-  const primary = Platform.OS === 'ios'
-    ? appleRouteUrlFor(destination)
-    : googleRouteUrlFor(destination);
-  return Linking.openURL(primary).catch(() => Linking.openURL(googleRouteUrlFor(destination)));
+  const primary =
+    Platform.OS === "ios"
+      ? appleRouteUrlFor(destination)
+      : googleRouteUrlFor(destination);
+  return Linking.openURL(primary).catch(() =>
+    Linking.openURL(googleRouteUrlFor(destination)),
+  );
 }
 
 function parseRouteDestination(value: string): RouteDestination | null {
@@ -231,12 +257,23 @@ function parseRouteDestination(value: string): RouteDestination | null {
     const payload = JSON.parse(value) as Partial<RouteDestination>;
     const latitude = Number(payload.latitude);
     const longitude = Number(payload.longitude);
-    if (!payload.name || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    if (
+      !payload.name ||
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    )
+      return null;
     return {
-      id: typeof payload.id === 'string' ? payload.id : undefined,
-      googlePlaceId: typeof payload.googlePlaceId === 'string' ? payload.googlePlaceId : undefined,
+      id: typeof payload.id === "string" ? payload.id : undefined,
+      googlePlaceId:
+        typeof payload.googlePlaceId === "string"
+          ? payload.googlePlaceId
+          : undefined,
       name: String(payload.name).slice(0, 160),
-      address: typeof payload.address === 'string' ? payload.address.slice(0, 300) : undefined,
+      address:
+        typeof payload.address === "string"
+          ? payload.address.slice(0, 300)
+          : undefined,
       latitude,
       longitude,
     };
@@ -259,17 +296,18 @@ function parseRoutePlan(value: string): RoutePlan | null {
   }
 }
 
-type LinkupMessage =
-  | { type: 'badge'; count: number }
-  | { type: 'open-chat' };
+type LinkupMessage = { type: "badge"; count: number } | { type: "open-chat" };
 
 function parseLinkupMessage(value: string): LinkupMessage | null {
   try {
     const payload = JSON.parse(value) as { type?: unknown };
-    if (payload.type === 'badge') {
-      return { type: 'badge', count: Number((payload as { count?: unknown }).count) || 0 };
+    if (payload.type === "badge") {
+      return {
+        type: "badge",
+        count: Number((payload as { count?: unknown }).count) || 0,
+      };
     }
-    if (payload.type === 'open-chat') return { type: 'open-chat' };
+    if (payload.type === "open-chat") return { type: "open-chat" };
     return null;
   } catch {
     return null;
@@ -279,9 +317,10 @@ function parseLinkupMessage(value: string): LinkupMessage | null {
 function EchooShell() {
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
-  const [currentUrl, setCurrentUrl] = useState(ECHOO_WEB_URL ?? '');
+  const [currentUrl, setCurrentUrl] = useState(ECHOO_WEB_URL ?? "");
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [linkupBadge, setLinkupBadge] = useState(0);
+  const [isAppAccessReady, setIsAppAccessReady] = useState(false);
 
   const returnToHome = useCallback(() => {
     if (!ECHOO_WEB_URL) return;
@@ -318,17 +357,20 @@ function EchooShell() {
 
   // Discover is the root of the app. A redirect or a prior browser session
   // must never make a Back control appear over its header.
-  const showBackButton = !isEchooHome(currentUrl);
+  const showBackButton = isAppAccessReady && !isEchooHome(currentUrl);
   const activeTab = activeTabFor(currentUrl);
 
   useEffect(() => {
-    if (Platform.OS !== 'android') return undefined;
+    if (Platform.OS !== "android") return undefined;
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (!showBackButton) return false;
-      goBack();
-      return true;
-    });
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (!showBackButton) return false;
+        goBack();
+        return true;
+      },
+    );
 
     return () => subscription.remove();
   }, [goBack, showBackButton]);
@@ -352,7 +394,7 @@ function EchooShell() {
         ref={webViewRef}
         source={{ uri: ECHOO_WEB_URL }}
         style={styles.webView}
-        originWhitelist={['http://*', 'https://*']}
+        originWhitelist={["http://*", "https://*"]}
         javaScriptEnabled
         domStorageEnabled
         // The shell intentionally has no durable browser storage. Echoo's
@@ -381,13 +423,28 @@ function EchooShell() {
         }}
         onNavigationStateChange={(navigation) => {
           setCanGoBack(navigation.canGoBack);
+          if (pathnameFor(navigation.url) !== pathnameFor(currentUrl)) {
+            setIsAppAccessReady(false);
+          }
           setCurrentUrl(navigation.url);
           setIsDetailSheetOpen(false);
         }}
         onMessage={(event) => {
           const message = event.nativeEvent.data;
-          if (message.startsWith('echoo:route-plan:')) {
-            const plan = parseRoutePlan(message.slice('echoo:route-plan:'.length));
+          if (message.startsWith("echoo:access:")) {
+            try {
+              const access = JSON.parse(message.slice("echoo:access:".length));
+              if (pathnameFor(access.url) !== pathnameFor(currentUrl)) return;
+              setIsAppAccessReady(access.state === "ready");
+            } catch {
+              setIsAppAccessReady(false);
+            }
+            return;
+          }
+          if (message.startsWith("echoo:route-plan:")) {
+            const plan = parseRoutePlan(
+              message.slice("echoo:route-plan:".length),
+            );
             if (!plan) return;
             // A route should begin immediately at the first planned stop.
             // Apple Maps does not support reliable multi-stop deep links, so
@@ -395,24 +452,28 @@ function EchooShell() {
             startNavigation(plan.stops[0]).catch(() => undefined);
             return;
           }
-          if (message.startsWith('echoo:route:')) {
-            const destination = parseRouteDestination(message.slice('echoo:route:'.length));
+          if (message.startsWith("echoo:route:")) {
+            const destination = parseRouteDestination(
+              message.slice("echoo:route:".length),
+            );
             if (!destination) return;
             startNavigation(destination).catch(() => undefined);
             return;
           }
-          if (message.startsWith('echoo:linkup:')) {
-            const payload = parseLinkupMessage(message.slice('echoo:linkup:'.length));
+          if (message.startsWith("echoo:linkup:")) {
+            const payload = parseLinkupMessage(
+              message.slice("echoo:linkup:".length),
+            );
             if (!payload) return;
-            if (payload.type === 'badge') {
+            if (payload.type === "badge") {
               setLinkupBadge(Math.max(0, Number(payload.count) || 0));
             }
             return;
           }
-          if (message === 'echoo:detail-sheet:true') {
+          if (message === "echoo:detail-sheet:true") {
             setIsDetailSheetOpen(true);
           }
-          if (message === 'echoo:detail-sheet:false') {
+          if (message === "echoo:detail-sheet:false") {
             setIsDetailSheetOpen(false);
           }
         }}
@@ -428,15 +489,17 @@ function EchooShell() {
             pressed && styles.backButtonPressed,
           ]}
         >
-          <Text aria-hidden style={styles.backChevron}>‹</Text>
+          <Text aria-hidden style={styles.backChevron}>
+            ‹
+          </Text>
           <Text style={styles.backLabel}>Back</Text>
         </Pressable>
       ) : null}
-      {activeTab && !isDetailSheetOpen ? (
+      {isAppAccessReady && activeTab && !isDetailSheetOpen ? (
         <BlurView intensity={30} tint="dark" style={styles.nativeBottomNav}>
           {NAVIGATION_ITEMS.map((item) => {
             const active = item.key === activeTab;
-            const showBadge = item.key === 'linkup' && linkupBadge > 0;
+            const showBadge = item.key === "linkup" && linkupBadge > 0;
             return (
               <Pressable
                 key={item.key}
@@ -450,7 +513,12 @@ function EchooShell() {
                   <NavigationIcon active={active} tab={item.key} />
                   {showBadge ? <View style={styles.linkupBadgeDot} /> : null}
                 </View>
-                <Text style={[styles.nativeNavLabel, active && styles.nativeNavLabelActive]}>
+                <Text
+                  style={[
+                    styles.nativeNavLabel,
+                    active && styles.nativeNavLabelActive,
+                  ]}
+                >
                   {item.label}
                 </Text>
               </Pressable>
@@ -469,29 +537,29 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   webView: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   loading: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     right: 0,
     bottom: 0,
     left: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#000',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#000",
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 92,
     left: 22,
     zIndex: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     minHeight: 36,
     paddingVertical: 4,
     paddingRight: 8,
@@ -502,31 +570,31 @@ const styles = StyleSheet.create({
   backChevron: {
     marginTop: -3,
     marginRight: 4,
-    color: '#f8f5ef',
+    color: "#f8f5ef",
     fontSize: 32,
-    fontWeight: '300',
+    fontWeight: "300",
     lineHeight: 32,
   },
   backLabel: {
-    color: '#f8f5ef',
+    color: "#f8f5ef",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   nativeBottomNav: {
-    position: 'absolute',
+    position: "absolute",
     right: 26,
     bottom: 12,
     left: 26,
     zIndex: 20,
     minHeight: 72,
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    overflow: 'hidden',
+    flexDirection: "row",
+    alignItems: "stretch",
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.06)',
+    borderColor: "rgba(248, 245, 239, 0.06)",
     borderRadius: 28,
-    backgroundColor: 'rgba(25, 25, 24, 0.82)',
-    shadowColor: '#000',
+    backgroundColor: "rgba(25, 25, 24, 0.82)",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 18 },
     shadowOpacity: 0.42,
     shadowRadius: 22,
@@ -535,50 +603,50 @@ const styles = StyleSheet.create({
   nativeNavItem: {
     flex: 1,
     minWidth: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 5,
     paddingTop: 10,
     paddingBottom: 8,
   },
   nativeNavLabel: {
-    color: 'rgba(248, 245, 239, 0.62)',
+    color: "rgba(248, 245, 239, 0.62)",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   nativeNavLabelActive: {
-    color: '#f7d5b2',
+    color: "#f7d5b2",
   },
   nativeNavIconWrap: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
   },
   linkupBadgeDot: {
-    position: 'absolute',
+    position: "absolute",
     top: -1,
     right: -6,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#f7d5b2',
+    backgroundColor: "#f7d5b2",
     borderWidth: 1.5,
-    borderColor: 'rgba(25, 25, 24, 0.92)',
+    borderColor: "rgba(25, 25, 24, 0.92)",
   },
   configurationScreen: {
     flex: 1,
     padding: 32,
-    justifyContent: 'center',
-    backgroundColor: '#000',
+    justifyContent: "center",
+    backgroundColor: "#000",
   },
   title: {
-    color: '#f8f5ef',
+    color: "#f8f5ef",
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 12,
   },
   copy: {
-    color: '#aaa29a',
+    color: "#aaa29a",
     fontSize: 16,
     lineHeight: 23,
   },

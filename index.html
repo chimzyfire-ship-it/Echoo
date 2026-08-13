@@ -1288,30 +1288,6 @@
           font-size: 12px;
         }
       }
-      /* ── Echo A.I. floating companion ── */
-      .fab-chat {
-        position: fixed;
-        bottom: calc(96px + env(safe-area-inset-bottom));
-        right: max(16px, calc((100vw - 430px) / 2 + 16px));
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: var(--peach);
-        color: #050505;
-        display: grid;
-        place-items: center;
-        z-index: 45;
-        box-shadow: 0 8px 24px rgba(247, 213, 178, 0.35);
-        transition: transform 0.2s ease;
-      }
-      .fab-chat:active {
-        transform: scale(0.93);
-      }
-      .fab-chat svg {
-        width: 22px;
-        height: 22px;
-        fill: currentColor;
-      }
     </style>
     <link rel="stylesheet" href="assets/page-loader.css" />
     <script>
@@ -1447,14 +1423,6 @@
         </main>
       </div>
 
-      <a class="fab-chat" href="app.html" aria-label="Open Echo A.I.">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z"
-          />
-        </svg>
-      </a>
-
       <nav class="bottom-nav" aria-label="Main navigation">
         <a class="nav-link active" href="index.html" aria-current="page">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1471,8 +1439,12 @@
         </a>
         <a class="nav-link" href="linkup.html">
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            />
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            />
           </svg>
           <span>Link Up</span>
         </a>
@@ -1601,27 +1573,11 @@
       let pendingBudgetHref = "";
       let lastFeedKey = "";
 
-      async function hasOnboardedProfile() {
-        if (!window.EchooAuth) return true;
-        const state = await window.EchooAuth.requireOnboarding({
-          redirect: false,
-        });
-        return Boolean(state.ok);
-      }
-
       async function openProtectedRoute(href) {
-        if (await hasOnboardedProfile()) {
-          window.location.href = href;
-          return;
-        }
-        window.EchooAuth.redirectToAuth(href, "signup");
+        window.location.href = href;
       }
 
       async function showProtectedPlanSheet(title, copy, href) {
-        if (!(await hasOnboardedProfile())) {
-          window.EchooAuth.redirectToAuth(href, "signup");
-          return;
-        }
         openSheet(title, copy, href);
       }
 
@@ -2086,76 +2042,6 @@
           : null,
       );
       setDayPlanCopy(initialCity);
-    </script>
-    <script>
-      (() => {
-        const fab = document.querySelector(".fab-chat");
-        if (!fab) return;
-        let dragging = false;
-        let moved = false;
-        let startX = 0;
-        let startY = 0;
-        let originLeft = 0;
-        let originTop = 0;
-
-        const restorePosition = () => {
-          try {
-            const saved = JSON.parse(
-              localStorage.getItem("echoo-ai-fab-position"),
-            );
-            if (!saved) return;
-            fab.style.left = `${Math.max(12, Math.min(saved.left, window.innerWidth - fab.offsetWidth - 12))}px`;
-            fab.style.top = `${Math.max(12, Math.min(saved.top, window.innerHeight - fab.offsetHeight - 96))}px`;
-            fab.style.right = "auto";
-            fab.style.bottom = "auto";
-          } catch (_) {}
-        };
-
-        fab.addEventListener("pointerdown", (event) => {
-          dragging = true;
-          moved = false;
-          startX = event.clientX;
-          startY = event.clientY;
-          const rect = fab.getBoundingClientRect();
-          originLeft = rect.left;
-          originTop = rect.top;
-          fab.setPointerCapture(event.pointerId);
-        });
-        fab.addEventListener("pointermove", (event) => {
-          if (!dragging) return;
-          const deltaX = event.clientX - startX;
-          const deltaY = event.clientY - startY;
-          moved ||= Math.abs(deltaX) + Math.abs(deltaY) > 8;
-          if (!moved) return;
-          fab.style.left = `${Math.max(12, Math.min(originLeft + deltaX, window.innerWidth - fab.offsetWidth - 12))}px`;
-          fab.style.top = `${Math.max(12, Math.min(originTop + deltaY, window.innerHeight - fab.offsetHeight - 96))}px`;
-          fab.style.right = "auto";
-          fab.style.bottom = "auto";
-        });
-        fab.addEventListener("pointerup", (event) => {
-          if (!dragging) return;
-          dragging = false;
-          fab.releasePointerCapture?.(event.pointerId);
-          if (!moved) return;
-          const rect = fab.getBoundingClientRect();
-          const left =
-            rect.left < window.innerWidth / 2
-              ? 12
-              : window.innerWidth - rect.width - 12;
-          fab.style.left = `${left}px`;
-          fab.style.top = `${Math.max(12, Math.min(rect.top, window.innerHeight - rect.height - 96))}px`;
-          try {
-            localStorage.setItem(
-              "echoo-ai-fab-position",
-              JSON.stringify({ left, top: parseFloat(fab.style.top) }),
-            );
-          } catch (_) {}
-        });
-        fab.addEventListener("click", (event) => {
-          if (moved) event.preventDefault();
-        });
-        restorePosition();
-      })();
     </script>
   </body>
 </html>

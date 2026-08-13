@@ -8,6 +8,17 @@
   const VALID_ENERGIES = new Set(["chill", "hype", "curious"]);
   const VALID_TONES = new Set(["direct", "detailed"]);
   const AUTH_STORAGE_KEY = "echoo.auth.session";
+  const PUBLIC_PAGES = new Set([
+    "auth.html",
+    "privacy.html",
+    "terms.html",
+    "waitlist.html",
+    "checkin.html",
+    "admin-locations.html",
+    "event-ops.html",
+    "owner-events.html",
+  ]);
+  let appAccessPromise = null;
 
   // Echoo deliberately keeps authentication scoped to the open browser or
   // WebView session. Preferences may persist locally, but an access token
@@ -108,6 +119,19 @@
     return `${file}${window.location.search}${window.location.hash}`;
   }
 
+  function currentPage() {
+    return window.location.pathname.split("/").pop() || "index.html";
+  }
+
+  function reportAccess(state) {
+    document.documentElement.dataset.echooAccess = state;
+    if (window.ReactNativeWebView?.postMessage) {
+      window.ReactNativeWebView.postMessage(
+        `echoo:access:${JSON.stringify({ state, url: window.location.href })}`,
+      );
+    }
+  }
+
   function normalizeNext(next, fallback = "index.html") {
     if (!next) return fallback;
     try {
@@ -120,7 +144,11 @@
     }
   }
 
-  function redirectToAuth(next = currentRelativeUrl(), mode = "signup", meta = {}) {
+  function redirectToAuth(
+    next = currentRelativeUrl(),
+    mode = "signup",
+    meta = {},
+  ) {
     const params = new URLSearchParams({
       next: normalizeNext(next),
       mode,
@@ -253,7 +281,8 @@
           : null,
       date_of_birth: safeDate(profile.dob || profile.date_of_birth),
       tone,
-      profile_photo_url: clean(profile.profilePhotoUrl || profile.profile_photo_url) || null,
+      profile_photo_url:
+        clean(profile.profilePhotoUrl || profile.profile_photo_url) || null,
       bio: clean(profile.bio, ""),
       profile_version: 1,
       completed_at: new Date().toISOString(),
@@ -306,7 +335,12 @@
     let refreshAttempted = false;
 
     // Renew a near-expiry session before interrupting a detail view with auth.
-    if (session?.user && options.requireFresh && freshness.expiresSoon && client) {
+    if (
+      session?.user &&
+      options.requireFresh &&
+      freshness.expiresSoon &&
+      client
+    ) {
       refreshAttempted = true;
       const refreshed = await client.auth.refreshSession();
       session = refreshed.data?.session || session;
@@ -386,43 +420,82 @@
     return clean(data) || null;
   }
 
-  async function requireOnboarding(options = {}) {
-    const state = await loadOnboardingProfile();
-    if (!state.ok && options.redirect !== false) {
-      redirectToAuth(
-        options.next || currentRelativeUrl(),
-        options.mode || "signup",
-        {
-          intent: options.intent || "onboarding",
-          reason: options.reason || "onboarding_required",
-          caption: options.caption || "",
-        },
-      );
+  function installCultureLensFab(options = {}) {
+    if (
+      (currentPage() === "auth.html" && !options.allowOnProfile) ||
+      document.getElementById("culture-lens-fab") ||
+      document.getElementById("echoo-culture-lens-fab")
+    )
+      return;
+    if (!document.getElementById("echoo-culture-lens-fab-style")) {
+      const style = document.createElement("style");
+      style.id = "echoo-culture-lens-fab-style";
+      style.textContent = `
+        .echoo-culture-lens-fab{position:fixed;right:max(16px,calc((100vw - 430px)/2 + 16px));bottom:calc(96px + env(safe-area-inset-bottom));z-index:45;display:grid;width:48px;height:48px;place-items:center;color:#050505;background:#f7d5b2;border:1px solid rgba(255,255,255,.18);border-radius:50%;box-shadow:0 8px 24px rgba(247,213,178,.28);transition:transform .18s ease,box-shadow .18s ease}.echoo-culture-lens-fab:active{transform:scale(.94)}.echoo-culture-lens-fab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}@media(prefers-reduced-motion:reduce){.echoo-culture-lens-fab{transition:none}}body.sheet-open .echoo-culture-lens-fab,body.chat-open .echoo-culture-lens-fab{display:none}`;
+      document.head.appendChild(style);
     }
-    return state;
+    const fab = document.createElement("a");
+    fab.id = "echoo-culture-lens-fab";
+    fab.className = "echoo-culture-lens-fab";
+    fab.href = "events.html?culturePicker=1";
+    fab.setAttribute("aria-label", "Open Culture Lens");
+    fab.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.1" cy="12" r="4.15"/><circle cx="15.9" cy="12" r="4.15"/><path d="M12.25 12h-.5M3.95 10.9 2.6 9.8M20.05 10.9l1.35-1.1"/><path d="M6.35 12a1.75 1.75 0 0 0 3.5 0M14.15 12a1.75 1.75 0 0 0 3.5 0"/></svg>`;
+    document.body.appendChild(fab);
   }
 
-  async function requireAuthenticatedAction(options = {}) {
-    const state = await requireOnboarding({
-      ...options,
-      redirect: false,
-    });
-    if (state.ok) return state;
-
-    if (options.redirect !== false) {
-      redirectToAuth(
-        options.next || currentRelativeUrl(),
-        options.mode || "signup",
-        {
-          intent: options.intent || "member_action",
-          reason: options.reason || "member_action_required",
-          caption:
-            options.caption ||
-            "Create an account to save this moment and keep your plan personal.",
-        },
-      );
+  async function requireAppAccess() {
+    if (PUBLIC_PAGES.has(currentPage())) {
+      return { ok: true, reason: "public_page" };
     }
-    return state;
+    if (appAccessPromise) return appAccessPromise;
+    reportAccess("checking");
+    appAccessPromise = loadOnboardingProfile().then(
+      (state) => {
+        if (state.ok) {
+          reportAccess("ready");
+          if (document.readyState === "loading") {
+            document.addEventListener(
+              "DOMContentLoaded",
+              installCultureLensFab,
+              {
+                once: true,
+              },
+            );
+          } else {
+            installCultureLensFab();
+          }
+          return state;
+        }
+        reportAccess(state.reason === "profile_error" ? "error" : "blocked");
+        redirectToAuth(currentRelativeUrl(), state.user ? "signup" : "signin", {
+          intent: "app_access",
+          reason:
+            state.reason === "profile_error"
+              ? "profile_check_failed"
+              : "onboarding_required",
+          caption: state.user
+            ? "Finish setting up your profile to enter Echoo."
+            : "Sign in or create an account to enter Echoo.",
+        });
+        return state;
+      },
+      (error) => {
+        const state = {
+          ok: false,
+          reason: "profile_error",
+          error,
+          user: null,
+        };
+        reportAccess("error");
+        redirectToAuth(currentRelativeUrl(), "signin", {
+          intent: "app_access",
+          reason: "profile_check_failed",
+          caption: "Sign in again so Echoo can verify your profile.",
+        });
+        return state;
+      },
+    );
+    return appAccessPromise;
   }
 
   async function signOut() {
@@ -446,7 +519,10 @@
     const path = `${userId}/avatar.${ext}`;
     const { error: upError } = await client.storage
       .from("profile-photos")
-      .upload(path, file, { upsert: true, contentType: file.type || `image/${ext}` });
+      .upload(path, file, {
+        upsert: true,
+        contentType: file.type || `image/${ext}`,
+      });
     if (upError) throw upError;
     const { data } = client.storage.from("profile-photos").getPublicUrl(path);
     // Cache-bust so the freshly-uploaded image replaces any cached version.
@@ -477,7 +553,8 @@
     if (patch.budget) update.budget = safeBudget(patch.budget);
     if (patch.energy) update.energy = safeEnergy(patch.energy);
     if (patch.tone) update.tone = safeTone(patch.tone);
-    if (patch.city) update.home_city = clean(patch.city, "Greater Toronto Area");
+    if (patch.city)
+      update.home_city = clean(patch.city, "Greater Toronto Area");
     if (!Object.keys(update).length) return null;
     const { error: updateError } = await client
       .from(PROFILE_TABLE)
@@ -529,14 +606,15 @@
     authHeaders,
     currentRelativeUrl,
     getAuthState,
+    installCultureLensFab,
     isValidUsername,
     loadOnboardingProfile,
     lookupEmailByUsername,
     normalizeNext,
     readLocalPreferences,
     redirectToAuth,
-    requireOnboarding,
-    requireAuthenticatedAction,
+    reportAccess,
+    requireAppAccess,
     saveOnboardingProfile,
     signOut,
     uploadProfilePhoto,
@@ -545,4 +623,13 @@
     normalizeUsername,
     writeLocalPreferences,
   };
+
+  if (!PUBLIC_PAGES.has(currentPage())) {
+    window.echooAccessReady = requireAppAccess();
+  } else {
+    window.echooAccessReady = Promise.resolve({
+      ok: true,
+      reason: "public_page",
+    });
+  }
 })();

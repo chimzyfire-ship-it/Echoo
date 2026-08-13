@@ -63,7 +63,13 @@
   function initials(name) {
     const n = String(name || "").trim();
     if (!n) return "?";
-    return n.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || "").join("") || "?";
+    return (
+      n
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase() || "")
+        .join("") || "?"
+    );
   }
 
   async function callFunction(name, payload) {
@@ -79,7 +85,9 @@
 
   function postNative(payload) {
     try {
-      window.ReactNativeWebView?.postMessage("echoo:linkup:" + JSON.stringify(payload));
+      window.ReactNativeWebView?.postMessage(
+        "echoo:linkup:" + JSON.stringify(payload),
+      );
     } catch (_e) {
       /* web-only context */
     }
@@ -158,7 +166,10 @@
   // affordance state. Returns the resolved state.
   async function refreshProximity() {
     if (!state.placeContext || !state.enabled) return state.presenceState;
-    if (state.activePresence && state.activePresence.placeId === state.placeContext.id) {
+    if (
+      state.activePresence &&
+      state.activePresence.placeId === state.placeContext.id
+    ) {
       setPresenceState("here");
       return "here";
     }
@@ -219,8 +230,11 @@
     // maps app. Also catch the window regaining focus as a second signal.
     window.addEventListener("pageshow", () => {
       const pd = state.pendingDirections;
-      if (pd && Date.now() - pd.leftAt >= RETURN_TRIP_DELAY_MS &&
-          state.placeContext?.id === pd.placeId) {
+      if (
+        pd &&
+        Date.now() - pd.leftAt >= RETURN_TRIP_DELAY_MS &&
+        state.placeContext?.id === pd.placeId
+      ) {
         attemptReturnTripCheckin(pd);
       }
     });
@@ -230,7 +244,8 @@
     state.pendingDirections = null; // one-shot
     const fix = await pingLocation();
     if (!fix) return; // GPS unavailable → user can tap the (locked) affordance manually
-    const within = distanceMeters(fix, { lat: pd.lat, lng: pd.lng }) <= PROXIMITY_RADIUS_M;
+    const within =
+      distanceMeters(fix, { lat: pd.lat, lng: pd.lng }) <= PROXIMITY_RADIUS_M;
     if (!within) return;
     // Silently check in. No banner. The text flip is the whole confirmation.
     await performCheckin(pd.placeId, pd.name);
@@ -251,7 +266,9 @@
     // { ok: true, probe: true } when on. Anything else (auth error, network
     // failure, unexpected shape) → treat as off so we never render UI without
     // a working backend.
-    const res = await callFunction("linkup-presence", { action: "probe" }).catch(() => null);
+    const res = await callFunction("linkup-presence", {
+      action: "probe",
+    }).catch(() => null);
     if (res && res.disabled) {
       state.enabled = false;
       return false;
@@ -288,7 +305,10 @@
       state.presenceState = "locked";
       renderCheckinAffordance();
       // No await — let the ping resolve async; it updates the state when done.
-      if (state.activePresence && state.activePresence.placeId === state.placeContext?.id) {
+      if (
+        state.activePresence &&
+        state.activePresence.placeId === state.placeContext?.id
+      ) {
         setPresenceState("here");
       } else {
         refreshProximity();
@@ -352,7 +372,12 @@
         .select("id, expires_at")
         .eq("match_id", match.id)
         .maybeSingle();
-      if (conv) openChat({ conversationId: conv.id, matchId: match.id, expiresAt: conv.expires_at });
+      if (conv)
+        openChat({
+          conversationId: conv.id,
+          matchId: match.id,
+          expiresAt: conv.expires_at,
+        });
     }
     Hub.scheduleRefresh();
   }
@@ -371,7 +396,9 @@
     if (!host) return;
     host.innerHTML = "";
 
-    const here = state.activePresence && state.activePresence.placeId === state.placeContext.id;
+    const here =
+      state.activePresence &&
+      state.activePresence.placeId === state.placeContext.id;
     const s = here ? "here" : state.presenceState; // "here" overrides everything
 
     const btn = document.createElement("button");
@@ -380,7 +407,12 @@
     btn.textContent = here ? "You're here" : "I'm here";
 
     if (s === "ready" || s === "here") {
-      btn.setAttribute("aria-label", here ? "You're checked in here — tap to leave" : "Mark yourself as here for Link Up");
+      btn.setAttribute(
+        "aria-label",
+        here
+          ? "You're checked in here — tap to leave"
+          : "Mark yourself as here for Link Up",
+      );
       btn.addEventListener("click", () => onCheckinToggle());
     } else {
       // Locked: blurred, not focusable, not clickable.
@@ -395,8 +427,13 @@
   async function onCheckinToggle() {
     if (state.enabled === false) return;
     // Checkout path: already here → leave.
-    if (state.activePresence && state.placeContext?.id === state.activePresence.placeId) {
-      await callFunction("linkup-presence", { action: "checkout" }).catch(() => {});
+    if (
+      state.activePresence &&
+      state.placeContext?.id === state.activePresence.placeId
+    ) {
+      await callFunction("linkup-presence", { action: "checkout" }).catch(
+        () => {},
+      );
       state.activePresence = null;
       // Re-proximity to drop back to ready/locked rather than re-check-in.
       await refreshProximity();
@@ -405,17 +442,6 @@
     // Require the "ready" state — the blur already gates this, but double-check.
     if (state.presenceState !== "ready") return;
 
-    // Auth gate — reuse the place-detail gate so the flow is consistent.
-    if (window.EchooAuth?.requireAuthenticatedAction) {
-      const gate = await window.EchooAuth.requireAuthenticatedAction({
-        next: window.location.pathname.split("/").pop() || "events.html",
-        mode: "signup",
-        intent: "linkup_checkin",
-        reason: "linkup_required",
-        caption: "Create an account to Link Up with people around you.",
-      });
-      if (!gate?.ok) return;
-    }
     state.userId = await ensureUser();
     if (!state.userId) return;
 
@@ -468,7 +494,9 @@
   }
 
   async function autoCheckout() {
-    await callFunction("linkup-presence", { action: "checkout" }).catch(() => {});
+    await callFunction("linkup-presence", { action: "checkout" }).catch(
+      () => {},
+    );
     state.activePresence = null;
     await refreshProximity();
   }
@@ -478,7 +506,11 @@
   // ────────────────────────────────────────────────────────────────────
   async function enqueuePopup(match) {
     // Avoid duplicate popups for the same match.
-    if (state.popupQueue.some((m) => m.id === match.id) || state.activePopup?.id === match.id) return;
+    if (
+      state.popupQueue.some((m) => m.id === match.id) ||
+      state.activePopup?.id === match.id
+    )
+      return;
     // Load the other member's profile for the popup.
     const { data: members } = await state.supabase
       .from("linkup_match_members")
@@ -508,7 +540,8 @@
         bio: profile?.bio || "",
         cue: cueFrom(profile),
       },
-      placeName: place?.formatted_address || state.placeContext?.name || "this place",
+      placeName:
+        place?.formatted_address || state.placeContext?.name || "this place",
     });
     notifyBadge(state.popupQueue.length + (state.activePopup ? 1 : 0));
     pumpPopupQueue();
@@ -523,7 +556,9 @@
     if (profile.home_city) bits.push(profile.home_city);
     return bits.slice(0, 2).join(" · ");
   }
-  function lower(s) { return String(s || "").toLowerCase(); }
+  function lower(s) {
+    return String(s || "").toLowerCase();
+  }
 
   async function pumpPopupQueue() {
     if (state.activePopup) return;
@@ -562,16 +597,22 @@
     bioNode.textContent = item.peer.bio || item.peer.cue || "";
     bioNode.style.display = bioNode.textContent ? "" : "none";
 
-    modal.querySelector(".echoo-linkup-place").textContent = `at ${truncate(item.placeName, 42)}`;
+    modal.querySelector(".echoo-linkup-place").textContent =
+      `at ${truncate(item.placeName, 42)}`;
     modal.querySelector("[data-linkup-accept]").disabled = false;
     modal.querySelector("[data-linkup-decline]").disabled = false;
 
     modal.hidden = false;
-    requestAnimationFrame(() => modal.querySelector(".echoo-linkup-backdrop").classList.add("is-open"));
+    requestAnimationFrame(() =>
+      modal.querySelector(".echoo-linkup-backdrop").classList.add("is-open"),
+    );
 
     // Auto-dismiss on fuse expiry.
     const fuse = new Date(item.expiresAt).getTime() - Date.now();
-    item.timer = setTimeout(() => dismissPopup("expired"), Math.max(2000, fuse));
+    item.timer = setTimeout(
+      () => dismissPopup("expired"),
+      Math.max(2000, fuse),
+    );
     modal._current = item;
   }
 
@@ -590,7 +631,10 @@
     for (const [tag, label] of ordered) if (set.has(tag)) return label;
     return "Link up?";
   }
-  function truncate(s, n) { s = String(s || ""); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+  function truncate(s, n) {
+    s = String(s || "");
+    return s.length > n ? s.slice(0, n - 1) + "…" : s;
+  }
 
   function ensureModalMount() {
     if (document.getElementById("echoo-linkup-modal")) return;
@@ -613,19 +657,31 @@
         </div>
       </div>`;
     document.body.appendChild(wrap);
-    wrap.querySelector(".echoo-linkup-backdrop").addEventListener("click", (e) => {
-      if (e.target === e.currentTarget) dismissPopup("declined");
-    });
-    wrap.querySelector("[data-linkup-accept]").addEventListener("click", () => respondPopup("accepted"));
-    wrap.querySelector("[data-linkup-decline]").addEventListener("click", () => dismissPopup("declined"));
+    wrap
+      .querySelector(".echoo-linkup-backdrop")
+      .addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) dismissPopup("declined");
+      });
+    wrap
+      .querySelector("[data-linkup-accept]")
+      .addEventListener("click", () => respondPopup("accepted"));
+    wrap
+      .querySelector("[data-linkup-decline]")
+      .addEventListener("click", () => dismissPopup("declined"));
   }
 
   async function respondPopup(choice) {
     const item = document.getElementById("echoo-linkup-modal")?._current;
     if (!item) return;
     const modal = document.getElementById("echoo-linkup-modal");
-    modal.querySelector(choice === "accepted" ? "[data-linkup-accept]" : "[data-linkup-decline]").disabled = true;
-    await callFunction("linkup-match", { action: "respond", matchId: item.id, response: choice });
+    modal.querySelector(
+      choice === "accepted" ? "[data-linkup-accept]" : "[data-linkup-decline]",
+    ).disabled = true;
+    await callFunction("linkup-match", {
+      action: "respond",
+      matchId: item.id,
+      response: choice,
+    });
     clearTimeout(item.timer);
     closePopup();
     state.activePopup = null;
@@ -646,7 +702,9 @@
     if (!modal) return;
     const backdrop = modal.querySelector(".echoo-linkup-backdrop");
     backdrop.classList.remove("is-open");
-    setTimeout(() => { modal.hidden = true; }, 200);
+    setTimeout(() => {
+      modal.hidden = true;
+    }, 200);
   }
 
   // ────────────────────────────────────────────────────────────────────
@@ -656,24 +714,34 @@
     state.openChat = ctx;
     ensureChatMount();
     const sheet = document.getElementById("echoo-linkup-chat");
-    sheet.querySelector(".echoo-linkup-chat-title").textContent = ctx.title || state.placeContext?.name || "Link Up";
-    sheet.querySelector(".echoo-linkup-chat-sub").textContent = "Ephemeral chat";
+    sheet.querySelector(".echoo-linkup-chat-title").textContent =
+      ctx.title || state.placeContext?.name || "Link Up";
+    sheet.querySelector(".echoo-linkup-chat-sub").textContent =
+      "Ephemeral chat";
     const list = sheet.querySelector(".echoo-linkup-messages");
     list.innerHTML = "";
 
     // Load history via direct fetch (functions.invoke doesn't pass query params well).
     const hist = await fetchChat(ctx.conversationId);
-    (hist.messages || []).forEach((m) => appendMessage(m, m.sender_id === state.userId));
+    (hist.messages || []).forEach((m) =>
+      appendMessage(m, m.sender_id === state.userId),
+    );
 
     sheet.hidden = false;
-    requestAnimationFrame(() => sheet.querySelector(".echoo-linkup-chat-backdrop").classList.add("is-open"));
+    requestAnimationFrame(() =>
+      sheet
+        .querySelector(".echoo-linkup-chat-backdrop")
+        .classList.add("is-open"),
+    );
     subscribeToChat(ctx.conversationId);
   }
 
   async function fetchChat(conversationId) {
     const client = state.supabase;
     const url = `${client.supabaseUrl}/functions/v1/linkup-chat?conversationId=${encodeURIComponent(conversationId)}`;
-    const res = await fetch(url, { headers: { ...authHeaders(), apikey: client.supabaseKey } });
+    const res = await fetch(url, {
+      headers: { ...authHeaders(), apikey: client.supabaseKey },
+    });
     if (!res.ok) return { messages: [] };
     return res.json();
   }
@@ -703,7 +771,9 @@
   }
 
   function appendMessage(m, mine) {
-    const list = document.querySelector("#echoo-linkup-chat .echoo-linkup-messages");
+    const list = document.querySelector(
+      "#echoo-linkup-chat .echoo-linkup-messages",
+    );
     if (!list) return;
     const el = document.createElement("div");
     el.className = `echoo-linkup-bubble ${mine ? "echoo-linkup-bubble--mine" : "echoo-linkup-bubble--theirs"}`;
@@ -713,9 +783,13 @@
   }
 
   async function sendMessage() {
-    const input = document.querySelector("#echoo-linkup-chat .echoo-linkup-composer input");
+    const input = document.querySelector(
+      "#echoo-linkup-chat .echoo-linkup-composer input",
+    );
     if (!input || !state.openChat) return;
-    const body = String(input.value || "").trim().slice(0, 1000);
+    const body = String(input.value || "")
+      .trim()
+      .slice(0, 1000);
     if (!body) return;
     input.value = "";
     const { error } = await state.supabase.from("linkup_messages").insert({
@@ -755,22 +829,34 @@
         </div>
       </div>`;
     document.body.appendChild(wrap);
-    wrap.querySelector(".echoo-linkup-chat-backdrop").addEventListener("click", (e) => {
-      if (e.target === e.currentTarget) closeChat();
-    });
-    wrap.querySelector("[data-linkup-composer]").addEventListener("submit", (e) => {
-      e.preventDefault();
-      sendMessage();
-    });
-    wrap.querySelector("[data-linkup-end]").addEventListener("click", () => endCurrentMatch());
-    wrap.querySelector("[data-linkup-report]").addEventListener("click", () => reportCurrentChat());
+    wrap
+      .querySelector(".echoo-linkup-chat-backdrop")
+      .addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeChat();
+      });
+    wrap
+      .querySelector("[data-linkup-composer]")
+      .addEventListener("submit", (e) => {
+        e.preventDefault();
+        sendMessage();
+      });
+    wrap
+      .querySelector("[data-linkup-end]")
+      .addEventListener("click", () => endCurrentMatch());
+    wrap
+      .querySelector("[data-linkup-report]")
+      .addEventListener("click", () => reportCurrentChat());
   }
 
   function closeChat() {
     const sheet = document.getElementById("echoo-linkup-chat");
     if (!sheet) return;
-    sheet.querySelector(".echoo-linkup-chat-backdrop").classList.remove("is-open");
-    setTimeout(() => { sheet.hidden = true; }, 220);
+    sheet
+      .querySelector(".echoo-linkup-chat-backdrop")
+      .classList.remove("is-open");
+    setTimeout(() => {
+      sheet.hidden = true;
+    }, 220);
     if (state.chatChannel) {
       state.supabase?.removeChannel(state.chatChannel);
       state.chatChannel = null;
@@ -779,15 +865,24 @@
 
   async function endCurrentMatch() {
     if (!state.openChat) return;
-    if (!confirm("End this Link Up? You won't be matched again with this person.")) return;
-    await callFunction("linkup-match", { action: "end", matchId: state.openChat.matchId });
+    if (
+      !confirm("End this Link Up? You won't be matched again with this person.")
+    )
+      return;
+    await callFunction("linkup-match", {
+      action: "end",
+      matchId: state.openChat.matchId,
+    });
     closeChat();
     state.openChat = null;
   }
 
   async function reportCurrentChat() {
     if (!state.openChat) return;
-    const reason = prompt("Report reason: spam, harassment, hate, misinformation, rights, other", "other");
+    const reason = prompt(
+      "Report reason: spam, harassment, hate, misinformation, rights, other",
+      "other",
+    );
     if (!reason) return;
     await callFunction("linkup-report", {
       targetType: "match",
@@ -807,9 +902,12 @@
   // (#echoo-linkup-viewport) isn't on the page, so the same script still
   // powers the place-detail check-in affordance on events.html.
   // ────────────────────────────────────────────────────────────────────
-  const ICON_PERSON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
-  const ICON_LINK = '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
-  const ICON_CHEVRON = '<svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>';
+  const ICON_PERSON =
+    '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+  const ICON_LINK =
+    '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+  const ICON_CHEVRON =
+    '<svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>';
 
   const Hub = (() => {
     let active = false;
@@ -919,7 +1017,10 @@
           .in("status", ["pending", "accepted"])
           .order("created_at", { ascending: false });
         for (const m of matches || []) {
-          if (m.status === "pending" && new Date(m.expires_at).getTime() > Date.now()) {
+          if (
+            m.status === "pending" &&
+            new Date(m.expires_at).getTime() > Date.now()
+          ) {
             const row = await loadMatchPeer(client, m, userId);
             if (row) pending.push(row);
           } else if (m.status === "accepted") {
@@ -929,7 +1030,14 @@
         }
       }
 
-      return { incomplete, paused, presence, placeName, pending, conversations };
+      return {
+        incomplete,
+        paused,
+        presence,
+        placeName,
+        pending,
+        conversations,
+      };
     }
 
     async function placeNameFor(client, placeId) {
@@ -1059,7 +1167,8 @@
 
       const parts = [renderPresence(snap)];
       if (snap.pending.length) parts.push(renderPending(snap.pending));
-      if (snap.conversations.length) parts.push(renderConversations(snap.conversations));
+      if (snap.conversations.length)
+        parts.push(renderConversations(snap.conversations));
       if (!snap.pending.length && !snap.conversations.length) {
         parts.push(snap.presence ? renderScanning() : renderEmptyStandby());
       }
@@ -1169,10 +1278,14 @@
         b.addEventListener("click", onResume),
       );
       vp.querySelectorAll("[data-linkup-accept]").forEach((b) =>
-        b.addEventListener("click", () => onRespond(b.getAttribute("data-linkup-accept"), "accepted", b)),
+        b.addEventListener("click", () =>
+          onRespond(b.getAttribute("data-linkup-accept"), "accepted", b),
+        ),
       );
       vp.querySelectorAll("[data-linkup-decline]").forEach((b) =>
-        b.addEventListener("click", () => onRespond(b.getAttribute("data-linkup-decline"), "declined", b)),
+        b.addEventListener("click", () =>
+          onRespond(b.getAttribute("data-linkup-decline"), "declined", b),
+        ),
       );
       vp.querySelectorAll("[data-linkup-conv]").forEach((row) => {
         const open = () => onOpenConvo(row);
@@ -1187,7 +1300,9 @@
     }
 
     async function onLeave() {
-      await callFunction("linkup-presence", { action: "checkout" }).catch(() => {});
+      await callFunction("linkup-presence", { action: "checkout" }).catch(
+        () => {},
+      );
       state.activePresence = null;
       await run();
     }
@@ -1204,7 +1319,11 @@
 
     async function onRespond(matchId, response, btn) {
       if (btn) btn.disabled = true;
-      await callFunction("linkup-match", { action: "respond", matchId, response });
+      await callFunction("linkup-match", {
+        action: "respond",
+        matchId,
+        response,
+      });
       await run();
     }
 
@@ -1255,11 +1374,18 @@
     checkIn: onCheckinToggle,
     isEnabled: () => state.enabled === true,
     // For the place-detail integration to call when a place sheet opens.
-    setPlaceContext(ctx) { state.placeContext = ctx; renderCheckinAffordance(); },
-    clearPlaceContext() { state.placeContext = null; },
+    setPlaceContext(ctx) {
+      state.placeContext = ctx;
+      renderCheckinAffordance();
+    },
+    clearPlaceContext() {
+      state.placeContext = null;
+    },
     // Call this when the user taps Directions so the return-trip check can
     // silently check them in when they come back to Echoo.
-    rememberDirections(place) { rememberDirectionsForReturnTrip(place); },
+    rememberDirections(place) {
+      rememberDirectionsForReturnTrip(place);
+    },
   };
 
   // ────────────────────────────────────────────────────────────────────
@@ -1282,7 +1408,9 @@
     function goToSlide(index) {
       if (!slides.length) return;
       currentSlide = (index + slides.length) % slides.length;
-      slides.forEach((s, i) => s.classList.toggle("active", i === currentSlide));
+      slides.forEach((s, i) =>
+        s.classList.toggle("active", i === currentSlide),
+      );
       dots.forEach((d, i) => d.classList.toggle("active", i === currentSlide));
     }
 
@@ -1319,7 +1447,9 @@
         dismissOverlay();
         // If user is already signed in, reveal viewport cleanly
         if (state.userId) {
-          const introShell = document.getElementById("echoo-linkup-intro-shell");
+          const introShell = document.getElementById(
+            "echoo-linkup-intro-shell",
+          );
           const viewport = document.getElementById("echoo-linkup-viewport");
           if (introShell) introShell.style.display = "none";
           if (viewport) viewport.style.display = "flex";
@@ -1337,11 +1467,14 @@
       openMinimalAuth("signin");
     };
 
-    if (btnCreateAccount) btnCreateAccount.addEventListener("click", openCreate);
-    if (overlayBtnCreate) overlayBtnCreate.addEventListener("click", openCreate);
+    if (btnCreateAccount)
+      btnCreateAccount.addEventListener("click", openCreate);
+    if (overlayBtnCreate)
+      overlayBtnCreate.addEventListener("click", openCreate);
 
     if (btnSignIn) btnSignIn.addEventListener("click", openSignIn);
-    if (overlayBtnSignin) overlayBtnSignin.addEventListener("click", openSignIn);
+    if (overlayBtnSignin)
+      overlayBtnSignin.addEventListener("click", openSignIn);
 
     if (overlay && overlay.style.display !== "none") {
       startAutoPlay();
@@ -1411,35 +1544,45 @@
 
   // Auto-init: engine first, then Hub & smart intro slide overlay
   function boot() {
-    init().then(() => {
-      Hub.init();
-      const introShell = document.getElementById("echoo-linkup-intro-shell");
-      const overlay = document.getElementById("intro-slide-overlay");
-      const viewport = document.getElementById("echoo-linkup-viewport");
+    let accessAllowed = false;
+    Promise.resolve(window.echooAccessReady)
+      .then((access) => {
+        if (!access?.ok) return null;
+        accessAllowed = true;
+        return init();
+      })
+      .then(() => {
+        if (!accessAllowed) return;
+        Hub.init();
+        const introShell = document.getElementById("echoo-linkup-intro-shell");
+        const overlay = document.getElementById("intro-slide-overlay");
+        const viewport = document.getElementById("echoo-linkup-viewport");
 
-      let hasSeenIntro = false;
-      try {
-        hasSeenIntro = localStorage.getItem("echoo_linkup_intro_seen") === "true";
-      } catch (_e) {}
+        let hasSeenIntro = false;
+        try {
+          hasSeenIntro =
+            localStorage.getItem("echoo_linkup_intro_seen") === "true";
+        } catch (_e) {}
 
-      if (state.userId) {
-        // User is logged into Echoo -> IMMEDIATELY show Link Up normal logged-in feature page!
-        if (introShell) introShell.style.display = "none";
-        if (overlay) overlay.style.display = "none";
-        if (viewport) viewport.style.display = "flex";
-      } else {
-        // Signed-out user → show hero landing screen
-        if (introShell) introShell.style.display = "";
-        if (viewport) viewport.style.display = "none";
+        if (state.userId) {
+          // User is logged into Echoo -> IMMEDIATELY show Link Up normal logged-in feature page!
+          if (introShell) introShell.style.display = "none";
+          if (overlay) overlay.style.display = "none";
+          if (viewport) viewport.style.display = "flex";
+        } else {
+          // Signed-out user → show hero landing screen
+          if (introShell) introShell.style.display = "";
+          if (viewport) viewport.style.display = "none";
 
-        if (!hasSeenIntro && overlay) {
-          overlay.style.display = "flex";
-          initIntroCarousel();
-        } else if (overlay) {
-          overlay.style.display = "none";
+          if (!hasSeenIntro && overlay) {
+            overlay.style.display = "flex";
+            initIntroCarousel();
+          } else if (overlay) {
+            overlay.style.display = "none";
+          }
         }
-      }
-    }).catch(() => {});
+      })
+      .catch(() => {});
   }
 
   if (document.readyState === "loading") {
@@ -1448,4 +1591,3 @@
     boot();
   }
 })();
-
