@@ -1939,15 +1939,15 @@
           <button class="chip" data-query="tourism">Tourism</button>
         </div>
 
-        <!-- Image-led place collections -->
-        <section aria-label="Popular Nearby">
+        <section id="search-results-section" aria-label="All places">
           <div class="section-header">
-            <h2 id="nearby-heading">Popular nearby</h2>
+            <h2 id="results-heading">All places</h2>
+            <span class="results-page-status" id="results-page-status"></span>
           </div>
-          <div class="horizontal-carousel" id="popular-nearby-container">
-            <div class="location-card skeleton-card"></div>
-            <div class="location-card skeleton-card"></div>
-            <div class="location-card skeleton-card"></div>
+          <div class="discovery-results" id="results" aria-live="polite"></div>
+          <div class="results-pagination" id="results-pagination" hidden>
+            <button id="results-previous" type="button">Previous</button
+            ><button id="results-next" type="button">Next</button>
           </div>
         </section>
 
@@ -1972,17 +1972,6 @@
           </div>
         </section>
 
-        <section id="search-results-section" aria-label="All places">
-          <div class="section-header">
-            <h2 id="results-heading">All places</h2>
-            <span class="results-page-status" id="results-page-status"></span>
-          </div>
-          <div class="discovery-results" id="results"></div>
-          <div class="results-pagination" id="results-pagination" hidden>
-            <button id="results-previous" type="button">Previous</button
-            ><button id="results-next" type="button">Next</button>
-          </div>
-        </section>
       </main>
 
       <div
@@ -2299,7 +2288,6 @@
         resultsPagination = document.getElementById("results-pagination"),
         resultsPrevious = document.getElementById("results-previous"),
         resultsNext = document.getElementById("results-next"),
-        popularContainer = document.getElementById("popular-nearby-container"),
         recommendationContainer = document.getElementById(
           "recommendation-container",
         ),
@@ -2524,7 +2512,6 @@
 
       function applyCultureMood() {
         const culture = activeCulture();
-        const nearbyHeading = document.getElementById("nearby-heading");
         const recommendationsHeading = document.getElementById(
           "recommendations-heading",
         );
@@ -2588,11 +2575,9 @@
             : "Open Culture Lens",
         );
         if (culture) {
-          nearbyHeading.textContent = `${culture.label} · ${category.nearby}`;
           recommendationsHeading.textContent = `${culture.label} · ${category.recommendations}`;
           queryInput.placeholder = `Search ${culture.label} places`;
         } else {
-          nearbyHeading.textContent = category.nearby;
           recommendationsHeading.textContent = category.recommendations;
           queryInput.placeholder = "Search and discover places";
         }
@@ -2966,6 +2951,13 @@
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
       const SURPRISE_HISTORY_KEY = "echoo_surprise_history_v1";
+      const DISCOVERY_CACHE_KEY = "echoo_discovery_surface_cache_v1";
+      const DISCOVERY_CACHE_VERSION = 1;
+      const DISCOVERY_CACHE_MAX_ENTRIES = 12;
+      // Explore photo URLs are short-lived. Keep the on-device surface fresh
+      // enough that a warm cache never resolves to expired imagery.
+      const DISCOVERY_CACHE_GPS_TTL_MS = 1000 * 60 * 3;
+      const DISCOVERY_CACHE_CITY_TTL_MS = 1000 * 60 * 5;
       const PLACE_FALLBACK_IMAGES = {
         food: "assets/optimized/news-date-768.webp",
         music: "assets/optimized/news-music-768.webp",
@@ -3019,13 +3011,20 @@
         return Boolean(item?.community?.isHot) || hotScoreFor(item) >= 0.68;
       }
 
-      function renderDiscoverLoading({ allowFallback = false } = {}) {
+      function renderDiscoverLoading({
+        allowFallback = false,
+        preserveVisibleResults = false,
+      } = {}) {
+        // Normal Discover refreshes happen behind the visible, cached grid.
+        // Only Surprise owns a full loading transition.
+        if (preserveVisibleResults && items.length) {
+          recommendationContainer.setAttribute("aria-busy", "true");
+          return;
+        }
         discoveryUiLoading = true;
         document.body.classList.add("discover-is-loading");
         if (allowFallback && !items.length)
           items = defaultPlaces.map((place) => ({ ...place }));
-        const loadingCards = `<div class="location-card skeleton-card" aria-hidden="true"></div>`;
-        popularContainer.innerHTML = loadingCards.repeat(3);
         recommendationContainer.innerHTML =
           `<div class="recommendation-card skeleton-card" aria-hidden="true"></div>`.repeat(
             3,
@@ -3049,6 +3048,80 @@
             : [];
         } catch (_) {
           return [];
+        }
+      }
+
+      function cacheLocationScope(request = {}) {
+        const requestLat = Number(request.lat);
+        const requestLng = Number(request.lng);
+        if (Number.isFinite(requestLat) && Number.isFinite(requestLng)) {
+          // About a 500 m cell keeps cached cards neighbourhood-relevant
+          // without churning on harmless GPS drift.
+          return `gps:${Math.round(requestLat * 200) / 200},${Math.round(requestLng * 200) / 200}`;
+        }
+        return `city:${String(request.city || city || DEFAULT_DISCOVERY_CITY).trim().toLowerCase()}`;
+      }
+
+      function discoveryCacheIdentity(request = {}) {
+        return JSON.stringify({
+          version: DISCOVERY_CACHE_VERSION,
+          query: String(activeQuery || "discover").trim().toLowerCase(),
+          culture: activeCulture()?.slug || "local",
+          location: cacheLocationScope(request),
+          preferences: [...new Set(request.preferenceFeatureSlugs || [])]
+            .map((value) => String(value).trim().toLowerCase())
+            .filter(Boolean)
+            .sort(),
+        });
+      }
+
+      function readDiscoveryCache(request = {}) {
+        try {
+          const identity = discoveryCacheIdentity(request);
+          const raw = JSON.parse(localStorage.getItem(DISCOVERY_CACHE_KEY) || "[]");
+          const entries = Array.isArray(raw) ? raw : [];
+          const entry = entries.find((candidate) => candidate?.identity === identity);
+          const maximumAge = cacheLocationScope(request).startsWith("gps:")
+            ? DISCOVERY_CACHE_GPS_TTL_MS
+            : DISCOVERY_CACHE_CITY_TTL_MS;
+          if (
+            !entry ||
+            !Array.isArray(entry.results) ||
+            !entry.results.length ||
+            !Number.isFinite(Number(entry.storedAt)) ||
+            Date.now() - Number(entry.storedAt) > maximumAge
+          ) {
+            return null;
+          }
+          return entry;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function writeDiscoveryCache(request = {}, payload = {}) {
+        const results = Array.isArray(payload.results) ? payload.results : [];
+        if (!results.length) return;
+        try {
+          const identity = discoveryCacheIdentity(request);
+          const previous = JSON.parse(localStorage.getItem(DISCOVERY_CACHE_KEY) || "[]");
+          const entries = Array.isArray(previous) ? previous : [];
+          const entry = {
+            identity,
+            storedAt: Date.now(),
+            results: results.slice(0, 24),
+            nextCursor: payload.nextCursor || null,
+            liveNextPageToken: payload.liveNextPageToken || null,
+          };
+          localStorage.setItem(
+            DISCOVERY_CACHE_KEY,
+            JSON.stringify([
+              entry,
+              ...entries.filter((candidate) => candidate?.identity !== identity),
+            ].slice(0, DISCOVERY_CACHE_MAX_ENTRIES)),
+          );
+        } catch (_) {
+          // Private browsing and quota limits should never interrupt Discover.
         }
       }
 
@@ -3134,43 +3207,6 @@
         return [lead, ...rotated];
       }
 
-      function renderPopularNearby(placeList) {
-        const list = Array.isArray(placeList) ? placeList : [];
-        if (!list.length) {
-          popularContainer.innerHTML = "";
-          return;
-        }
-        popularContainer.innerHTML = list
-          .map((item, index) => {
-            const rating = item.community?.ratingAverage
-              ? Number(item.community.ratingAverage).toFixed(1)
-              : "New";
-            const dist = item.distanceMeters
-              ? `${(item.distanceMeters / 1000).toFixed(1)} km`
-              : item.city || "GTA";
-            const placeIndex = items.indexOf(item);
-
-            return `
-            <button class="location-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">
-              ${placeVisual(item, "location-card-img", item.title || "Local place", { eager: index < 3 })}
-              <div class="location-card-overlay">
-                <div class="location-card-title">${esc(item.title)}</div>
-                <div class="location-card-meta">${esc(dist)}</div>
-                <div class="location-card-rating">★ ${esc(rating)}</div>
-              </div>
-            </button>
-          `;
-          })
-          .join("");
-        popularContainer
-          .querySelectorAll("[data-place-index]")
-          .forEach((button) => {
-            button.addEventListener("click", () =>
-              openDetail(Number(button.dataset.placeIndex)),
-            );
-          });
-      }
-
       function renderRecommendations(placeList) {
         const list = Array.isArray(placeList) ? placeList.slice(0, 10) : [];
         if (!list.length) {
@@ -3251,16 +3287,15 @@
         }
         discoveryUiLoading = false;
         document.body.classList.remove("discover-is-loading");
+        recommendationContainer.removeAttribute("aria-busy");
         items = diversifyPlaces(items);
         if (items.length) {
-          renderPopularNearby(items.slice(0, 5));
           renderRecommendations(
             items.length > 10 ? items.slice(5, 15) : items.slice(0, 10),
           );
           rememberShown(items.slice(0, 12));
         } else {
           items = defaultPlaces.map((place) => ({ ...place }));
-          renderPopularNearby(items.slice(0, 5));
           renderRecommendations(items.slice(0, 10));
         }
         renderResultsPage();
@@ -3794,8 +3829,13 @@
           const received = Array.isArray(payload.results)
             ? payload.results
             : [];
-          if (!append) items = received;
-          else items = mergeDiscoveryItems(items, received);
+          if (!append) {
+            // An empty upstream response must never erase a good cached or
+            // local starter surface. Keep it usable and try again next time.
+            if (received.length || !items.length) items = received;
+          } else {
+            items = mergeDiscoveryItems(items, received);
+          }
           discoveryPaging.cursor = payload.nextCursor || null;
           discoveryPaging.livePageToken = payload.liveNextPageToken || null;
           discoveryPaging.hasMore = Boolean(
@@ -3804,7 +3844,7 @@
           // A municipality can occasionally be ahead of the live index. Fall
           // back to the GTA feed rather than leaving the page empty.
           if (
-            !items.length &&
+            !received.length &&
             payload.supported === false &&
             city !== DEFAULT_DISCOVERY_CITY
           ) {
@@ -3812,6 +3852,13 @@
             discoveryPaging.request = discoveryRequestForActiveView();
             discoveryPaging.loading = false;
             return fetchDiscoveryPage({ append: false, requestId, render });
+          }
+          if (!append && received.length) {
+            writeDiscoveryCache(request, {
+              results: received,
+              nextCursor: discoveryPaging.cursor,
+              liveNextPageToken: discoveryPaging.livePageToken,
+            });
           }
           if (render) renderItems();
         } catch (_) {
@@ -3856,7 +3903,6 @@
         const requestId = ++discoveryRequestId;
         if (discoveryFastFallbackTimer)
           window.clearTimeout(discoveryFastFallbackTimer);
-        items = [];
         discoveryPaging = {
           cursor: null,
           livePageToken: null,
@@ -3864,17 +3910,28 @@
           request: discoveryRequestForActiveView(),
           loading: false,
         };
-        renderDiscoverLoading({ allowFallback: options.surprise });
+        const cachedSurface = !options.refresh
+          ? readDiscoveryCache(discoveryPaging.request)
+          : null;
+        if (cachedSurface) {
+          items = cachedSurface.results;
+          discoveryPaging.cursor = cachedSurface.nextCursor;
+          discoveryPaging.livePageToken = cachedSurface.liveNextPageToken;
+          discoveryPaging.hasMore = Boolean(
+            discoveryPaging.cursor || discoveryPaging.livePageToken,
+          );
+          renderItems();
+        } else {
+          items = defaultPlaces.map((place) => ({ ...place }));
+          renderItems();
+        }
+        renderDiscoverLoading({
+          allowFallback: options.surprise,
+          preserveVisibleResults: !options.surprise,
+        });
         // Remote inventory can enrich in the background, but Discover itself
         // must always become useful promptly. A slow provider never leaves a
         // person staring at skeletons with no way forward.
-        discoveryFastFallbackTimer = window.setTimeout(() => {
-          if (requestId !== discoveryRequestId || !discoveryUiLoading) return;
-          if (!items.length)
-            items = defaultPlaces.map((place) => ({ ...place }));
-          discoveryPaging.hasMore = false;
-          renderItems();
-        }, 1400);
         const discoveryPromise = fetchDiscoveryPage({
           requestId,
           render: true,
@@ -4281,7 +4338,8 @@
 
       // Initial setup
       applyCultureMood();
-      renderPopularNearby(defaultPlaces);
+      items = defaultPlaces.map((place) => ({ ...place }));
+      renderItems();
       if (surpriseMode) {
         surpriseLoader.hidden = false;
         surpriseLoader.dataset.startedAt = String(Date.now());
