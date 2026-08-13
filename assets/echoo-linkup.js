@@ -1271,19 +1271,21 @@
   // Intro Onboarding Slide Carousel & Minimal Auth Sheet
   // ────────────────────────────────────────────────────────────────────
   function initIntroCarousel() {
-    const shell = document.getElementById("echoo-linkup-intro-shell");
-    if (!shell) return;
+    const overlay = document.getElementById("intro-slide-overlay");
+    const slides = document.querySelectorAll(".intro-slide");
+    const dots = document.querySelectorAll("[data-slide-indicator]");
 
-    const slides = shell.querySelectorAll(".intro-slide");
-    const dots = shell.querySelectorAll("[data-slide-indicator]");
     const skipBtn = document.getElementById("intro-skip-btn");
     const btnCreateAccount = document.getElementById("btn-create-account");
     const btnSignIn = document.getElementById("btn-sign-in");
+    const overlayBtnCreate = document.getElementById("overlay-btn-create");
+    const overlayBtnSignin = document.getElementById("overlay-btn-signin");
 
     let currentSlide = 0;
     let autoTimer = null;
 
     function goToSlide(index) {
+      if (!slides.length) return;
       currentSlide = (index + slides.length) % slides.length;
       slides.forEach((s, i) => s.classList.toggle("active", i === currentSlide));
       dots.forEach((d, i) => d.classList.toggle("active", i === currentSlide));
@@ -1291,6 +1293,7 @@
 
     function startAutoPlay() {
       stopAutoPlay();
+      if (!slides.length) return;
       autoTimer = setInterval(() => {
         goToSlide(currentSlide + 1);
       }, 4000);
@@ -1308,28 +1311,46 @@
       });
     });
 
+    function dismissOverlay() {
+      stopAutoPlay();
+      try {
+        localStorage.setItem("echoo_linkup_intro_seen", "true");
+      } catch (_e) {}
+      if (overlay) overlay.style.display = "none";
+    }
+
     if (skipBtn) {
       skipBtn.addEventListener("click", () => {
-        stopAutoPlay();
-        openMinimalAuth("signup");
+        dismissOverlay();
+        // If user is already signed in, reveal viewport cleanly
+        if (state.userId) {
+          const introShell = document.getElementById("echoo-linkup-intro-shell");
+          const viewport = document.getElementById("echoo-linkup-viewport");
+          if (introShell) introShell.style.display = "none";
+          if (viewport) viewport.style.display = "flex";
+        }
       });
     }
 
-    if (btnCreateAccount) {
-      btnCreateAccount.addEventListener("click", () => {
-        stopAutoPlay();
-        openMinimalAuth("signup");
-      });
-    }
+    const openCreate = () => {
+      dismissOverlay();
+      openMinimalAuth("signup");
+    };
 
-    if (btnSignIn) {
-      btnSignIn.addEventListener("click", () => {
-        stopAutoPlay();
-        openMinimalAuth("signin");
-      });
-    }
+    const openSignIn = () => {
+      dismissOverlay();
+      openMinimalAuth("signin");
+    };
 
-    startAutoPlay();
+    if (btnCreateAccount) btnCreateAccount.addEventListener("click", openCreate);
+    if (overlayBtnCreate) overlayBtnCreate.addEventListener("click", openCreate);
+
+    if (btnSignIn) btnSignIn.addEventListener("click", openSignIn);
+    if (overlayBtnSignin) overlayBtnSignin.addEventListener("click", openSignIn);
+
+    if (overlay && overlay.style.display !== "none") {
+      startAutoPlay();
+    }
   }
 
   function openMinimalAuth(mode = "signup") {
@@ -1343,11 +1364,11 @@
     if (mode === "signup") {
       tabSignup?.classList.add("active");
       tabSignin?.classList.remove("active");
-      if (submitBtn) submitBtn.textContent = "Create Account →";
+      if (submitBtn) submitBtn.textContent = "Create account →";
     } else {
       tabSignin?.classList.add("active");
       tabSignup?.classList.remove("active");
-      if (submitBtn) submitBtn.textContent = "Sign In →";
+      if (submitBtn) submitBtn.textContent = "Sign in →";
     }
 
     sheet.classList.add("is-open");
@@ -1357,7 +1378,7 @@
       tabSignup.onclick = () => {
         tabSignup.classList.add("active");
         tabSignin.classList.remove("active");
-        if (submitBtn) submitBtn.textContent = "Create Account →";
+        if (submitBtn) submitBtn.textContent = "Create account →";
       };
     }
 
@@ -1365,7 +1386,7 @@
       tabSignin.onclick = () => {
         tabSignin.classList.add("active");
         tabSignup.classList.remove("active");
-        if (submitBtn) submitBtn.textContent = "Sign In →";
+        if (submitBtn) submitBtn.textContent = "Sign in →";
       };
     }
 
@@ -1382,22 +1403,59 @@
       form.onsubmit = (e) => {
         e.preventDefault();
         sheet.classList.remove("is-open");
+        try {
+          localStorage.setItem("echoo_linkup_intro_seen", "true");
+        } catch (_e) {}
         const introShell = document.getElementById("echoo-linkup-intro-shell");
         const viewport = document.getElementById("echoo-linkup-viewport");
         if (introShell) introShell.style.display = "none";
         if (viewport) viewport.style.display = "flex";
-        showToast("✨ Welcome to Link Up! Presence active.");
       };
     }
   }
 
-  // Auto-init: engine first, then hub & intro carousel renderer
+  // Auto-init: engine first, then Hub & smart intro slide overlay
   function boot() {
     init().then(() => {
       Hub.init();
-      initIntroCarousel();
+      const introShell = document.getElementById("echoo-linkup-intro-shell");
+      const overlay = document.getElementById("intro-slide-overlay");
+      const viewport = document.getElementById("echoo-linkup-viewport");
+
+      let hasSeenIntro = false;
+      try {
+        hasSeenIntro = localStorage.getItem("echoo_linkup_intro_seen") === "true";
+      } catch (_e) {}
+
+      if (state.userId) {
+        // User is signed in with an Echoo profile
+        if (hasSeenIntro) {
+          // Returning signed-in user → go directly to live presence viewport
+          if (introShell) introShell.style.display = "none";
+          if (overlay) overlay.style.display = "none";
+          if (viewport) viewport.style.display = "flex";
+        } else {
+          // First-time signed-in user → show smart intro slide overlay once
+          if (introShell) introShell.style.display = "";
+          if (overlay) overlay.style.display = "flex";
+          if (viewport) viewport.style.display = "none";
+          initIntroCarousel();
+        }
+      } else {
+        // Signed-out user → show hero landing screen
+        if (introShell) introShell.style.display = "";
+        if (viewport) viewport.style.display = "none";
+
+        if (!hasSeenIntro && overlay) {
+          overlay.style.display = "flex";
+          initIntroCarousel();
+        } else if (overlay) {
+          overlay.style.display = "none";
+        }
+      }
     }).catch(() => {});
   }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {
