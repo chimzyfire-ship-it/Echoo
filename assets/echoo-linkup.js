@@ -1267,11 +1267,136 @@
     rememberDirections(place) { rememberDirectionsForReturnTrip(place); },
   };
 
-  // Auto-init: engine first (auth + flag + match realtime), then the hub
-  // renderer (no-ops off-linkup.html). The hub needs state.userId/enabled,
-  // so it runs after init() resolves.
+  // ────────────────────────────────────────────────────────────────────
+  // Intro Onboarding Slide Carousel & Minimal Auth Sheet
+  // ────────────────────────────────────────────────────────────────────
+  function initIntroCarousel() {
+    const shell = document.getElementById("echoo-linkup-intro-shell");
+    if (!shell) return;
+
+    const slides = shell.querySelectorAll(".intro-slide");
+    const dots = shell.querySelectorAll("[data-slide-indicator]");
+    const skipBtn = document.getElementById("intro-skip-btn");
+    const btnCreateAccount = document.getElementById("btn-create-account");
+    const btnSignIn = document.getElementById("btn-sign-in");
+
+    let currentSlide = 0;
+    let autoTimer = null;
+
+    function goToSlide(index) {
+      currentSlide = (index + slides.length) % slides.length;
+      slides.forEach((s, i) => s.classList.toggle("active", i === currentSlide));
+      dots.forEach((d, i) => d.classList.toggle("active", i === currentSlide));
+    }
+
+    function startAutoPlay() {
+      stopAutoPlay();
+      autoTimer = setInterval(() => {
+        goToSlide(currentSlide + 1);
+      }, 4000);
+    }
+
+    function stopAutoPlay() {
+      if (autoTimer) clearInterval(autoTimer);
+      autoTimer = null;
+    }
+
+    dots.forEach((dot, index) => {
+      dot.addEventListener("click", () => {
+        stopAutoPlay();
+        goToSlide(index);
+      });
+    });
+
+    if (skipBtn) {
+      skipBtn.addEventListener("click", () => {
+        stopAutoPlay();
+        openMinimalAuth("signup");
+      });
+    }
+
+    if (btnCreateAccount) {
+      btnCreateAccount.addEventListener("click", () => {
+        stopAutoPlay();
+        openMinimalAuth("signup");
+      });
+    }
+
+    if (btnSignIn) {
+      btnSignIn.addEventListener("click", () => {
+        stopAutoPlay();
+        openMinimalAuth("signin");
+      });
+    }
+
+    startAutoPlay();
+  }
+
+  function openMinimalAuth(mode = "signup") {
+    const sheet = document.getElementById("linkup-minimal-auth-sheet");
+    if (!sheet) return;
+
+    const tabSignup = document.getElementById("auth-tab-signup");
+    const tabSignin = document.getElementById("auth-tab-signin");
+    const submitBtn = document.getElementById("auth-submit-btn");
+
+    if (mode === "signup") {
+      tabSignup?.classList.add("active");
+      tabSignin?.classList.remove("active");
+      if (submitBtn) submitBtn.textContent = "Create Account →";
+    } else {
+      tabSignin?.classList.add("active");
+      tabSignup?.classList.remove("active");
+      if (submitBtn) submitBtn.textContent = "Sign In →";
+    }
+
+    sheet.classList.add("is-open");
+    sheet.setAttribute("aria-hidden", "false");
+
+    if (tabSignup) {
+      tabSignup.onclick = () => {
+        tabSignup.classList.add("active");
+        tabSignin.classList.remove("active");
+        if (submitBtn) submitBtn.textContent = "Create Account →";
+      };
+    }
+
+    if (tabSignin) {
+      tabSignin.onclick = () => {
+        tabSignin.classList.add("active");
+        tabSignup.classList.remove("active");
+        if (submitBtn) submitBtn.textContent = "Sign In →";
+      };
+    }
+
+    const closeBtn = document.getElementById("auth-close-btn");
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        sheet.classList.remove("is-open");
+        sheet.setAttribute("aria-hidden", "true");
+      };
+    }
+
+    const form = document.getElementById("linkup-minimal-auth-form");
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        sheet.classList.remove("is-open");
+        const introShell = document.getElementById("echoo-linkup-intro-shell");
+        const viewport = document.getElementById("echoo-linkup-viewport");
+        if (introShell) introShell.style.display = "none";
+        if (viewport) viewport.style.display = "flex";
+        showToast("✨ Welcome to Link Up! Presence active.");
+      };
+    }
+  }
+
+  // Auto-init: engine first, then hub & intro carousel renderer
   function boot() {
-    init().then(() => Hub.init()).catch(() => {});
+    init().then(() => {
+      Hub.init();
+      initIntroCarousel();
+    }).catch(() => {});
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
