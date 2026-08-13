@@ -852,8 +852,38 @@
          a visual of a place we have not verified. */
       .place-visual-fallback[data-cover] {
         background:
-          radial-gradient(circle at 76% 18%, rgba(247, 213, 178, 0.15), transparent 27%),
-          linear-gradient(145deg, #242321, #11110f 72%);
+          radial-gradient(circle at 72% 21%, rgba(247, 213, 178, 0.18), transparent 25%),
+          radial-gradient(circle at 22% 86%, rgba(137, 161, 207, 0.11), transparent 38%),
+          linear-gradient(145deg, #272522, #11110f 72%);
+      }
+      /* A verified place without source photography should still feel like an
+         intentional card, never an image that failed to load. This abstract
+         marker is deliberately not a pretend venue photo or extra copy. */
+      .place-visual-fallback::before,
+      .place-visual-fallback::after {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        display: block;
+        box-sizing: border-box;
+        content: "";
+        transform: translate(-50%, -58%);
+        pointer-events: none;
+      }
+      .place-visual-fallback::before {
+        width: 52px;
+        height: 52px;
+        border: 1px solid rgba(247, 213, 178, 0.34);
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 12px rgba(247, 213, 178, 0.04),
+          0 18px 32px rgba(0, 0, 0, 0.18);
+      }
+      .place-visual-fallback::after {
+        width: 16px;
+        height: 16px;
+        border: 1px solid rgba(247, 213, 178, 0.68);
+        border-radius: 50%;
       }
       .place-visual-fallback[hidden] {
         display: none;
