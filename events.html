@@ -239,10 +239,10 @@
 
       /* Main Shell Content */
       .shell {
-        padding: 12px 24px 24px;
+        padding: 8px 24px 28px;
         display: flex;
         flex-direction: column;
-        gap: 28px;
+        gap: 30px;
       }
 
       /* Location Badge */
@@ -315,8 +315,8 @@
       .hero {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        margin-top: 4px;
+        gap: 0;
+        margin-top: 0;
       }
 
       .hero h1 {
@@ -584,16 +584,16 @@
       .search-wrap {
         position: relative;
         width: 100%;
-        margin-top: 6px;
+        margin-top: 0;
       }
 
       .search-form {
         display: flex;
         align-items: center;
-        height: 56px;
+        height: 64px;
         padding: 0 8px 0 18px;
-        border-radius: var(--pill-radius);
-        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.055);
         border: 1px solid var(--line-strong);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -701,12 +701,12 @@
       /* Category Pills Bar */
       .category-pills {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         overflow-x: auto;
-        padding: 4px 0 6px;
+        padding: 0 0 2px;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        margin: -4px -24px 0;
+        margin: -12px -24px 0;
         padding-left: 24px;
         padding-right: 24px;
       }
@@ -717,13 +717,14 @@
 
       .chip {
         white-space: nowrap;
-        padding: 10px 18px;
+        min-height: 34px;
+        padding: 0 12px;
         border-radius: var(--pill-radius);
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 12px;
+        font-weight: 650;
         color: var(--muted);
-        background: transparent;
-        border: 1px solid transparent;
+        background: rgba(248, 245, 239, 0.035);
+        border: 1px solid var(--line);
         transition: all 0.2s ease;
         flex-shrink: 0;
       }
@@ -846,6 +847,13 @@
             transparent 34%
           ),
           linear-gradient(145deg, #35231b, #16110e 68%);
+      }
+      /* Missing source photography stays neutral rather than pretending to be
+         a visual of a place we have not verified. */
+      .place-visual-fallback[data-cover] {
+        background:
+          radial-gradient(circle at 76% 18%, rgba(247, 213, 178, 0.15), transparent 27%),
+          linear-gradient(145deg, #242321, #11110f 72%);
       }
       .place-visual-fallback[hidden] {
         display: none;
@@ -1007,15 +1015,15 @@
 
       /* Location Card */
       .location-card {
-        flex: 0 0 178px;
-        height: 244px;
+        flex: 0 0 226px;
+        height: 300px;
         position: relative;
         appearance: none;
         padding: 0;
         color: inherit;
         font: inherit;
         text-align: left;
-        border-radius: 20px;
+        border-radius: 24px;
         overflow: hidden;
         background: #151515;
         border: 1px solid var(--line);
@@ -1048,7 +1056,7 @@
           rgba(5, 5, 5, 0.35) 55%,
           transparent 100%
         );
-        padding: 14px 14px 16px;
+        padding: 16px;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -1056,8 +1064,8 @@
       }
 
       .location-card-title {
-        font-size: 15px;
-        font-weight: 700;
+        font-size: 17px;
+        font-weight: 760;
         color: var(--ink);
         line-height: 1.25;
         white-space: nowrap;
@@ -1067,8 +1075,8 @@
 
       .location-card-meta {
         font-size: 12px;
-        font-weight: 450;
-        color: var(--muted);
+        font-weight: 600;
+        color: rgba(248, 245, 239, 0.7);
       }
 
       .location-card-rating {
@@ -1083,7 +1091,7 @@
 
       .recommendation-grid {
         display: flex;
-        gap: 14px;
+        gap: 16px;
         overflow-x: auto;
         margin: 0 -24px;
         padding: 0 24px 8px;
@@ -1096,12 +1104,12 @@
 
       .recommendation-card {
         position: relative;
-        flex: 0 0 178px;
-        aspect-ratio: 0.78;
+        flex: 0 0 218px;
+        aspect-ratio: 0.74;
         overflow: hidden;
         padding: 0;
         border: 1px solid var(--line);
-        border-radius: 20px;
+        border-radius: 24px;
         background: #151515;
         color: var(--ink);
         cursor: pointer;
@@ -1128,7 +1136,7 @@
         flex-direction: column;
         justify-content: flex-end;
         gap: 3px;
-        padding: 13px;
+        padding: 16px;
         background: linear-gradient(
           to top,
           rgba(5, 5, 5, 0.94),
@@ -1138,7 +1146,7 @@
       }
       .recommendation-card-copy strong {
         overflow: hidden;
-        font-size: 14px;
+        font-size: 16px;
         line-height: 1.2;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -1146,7 +1154,7 @@
       .recommendation-card-copy span {
         overflow: hidden;
         color: rgba(248, 245, 239, 0.72);
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 600;
         text-overflow: ellipsis;
         text-transform: uppercase;
@@ -1165,77 +1173,66 @@
 
       .discovery-results {
         display: grid;
-        gap: 9px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
       }
       .discovery-result {
-        display: grid;
-        grid-template-columns: 78px minmax(0, 1fr) auto;
-        gap: 12px;
-        align-items: center;
+        position: relative;
+        display: block;
         width: 100%;
-        min-height: 94px;
-        padding: 7px;
+        min-height: 0;
+        aspect-ratio: 0.76;
+        padding: 0;
         color: var(--ink);
         border: 1px solid var(--line);
-        border-radius: 17px;
-        background: rgba(248, 245, 239, 0.035);
+        border-radius: 22px;
+        overflow: hidden;
+        background: #151515;
         text-align: left;
       }
       .discovery-result:active {
         transform: scale(0.985);
       }
       .discovery-result img {
-        width: 78px;
-        height: 78px;
-        border-radius: 11px;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
         object-fit: cover;
         background: #171717;
       }
       .discovery-result .place-visual-fallback {
-        width: 78px;
-        height: 78px;
-        border-radius: 11px;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
       }
       .discovery-result-copy {
-        display: grid;
+        position: absolute;
+        inset: 0;
+        display: flex;
         min-width: 0;
-        gap: 4px;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 14px;
+        background: linear-gradient(to top, rgba(5, 5, 5, 0.9), rgba(5, 5, 5, 0.08) 58%, transparent);
       }
       .discovery-result-copy small {
-        overflow: hidden;
-        color: var(--peach);
-        font-size: 9px;
-        font-weight: 760;
-        letter-spacing: 0.07em;
-        text-overflow: ellipsis;
-        text-transform: uppercase;
-        white-space: nowrap;
+        display: none;
       }
       .discovery-result-copy strong {
         overflow: hidden;
-        font-size: 15px;
+        font-size: 16px;
+        font-weight: 760;
         letter-spacing: -0.02em;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .discovery-result-copy span {
-        overflow: hidden;
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 1.25;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        display: none;
       }
       .discovery-result-index {
-        width: 25px;
-        height: 25px;
-        display: grid;
-        place-items: center;
-        color: var(--muted);
-        border: 1px solid var(--line);
-        border-radius: 50%;
-        font-size: 10px;
-        font-weight: 720;
+        display: none;
       }
       .results-pagination {
         display: flex;
@@ -1296,17 +1293,17 @@
       }
       .discover-loading-grid {
         display: grid;
-        gap: 9px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
       }
       .discover-loading-row {
-        display: grid;
-        grid-template-columns: 78px minmax(0, 1fr) 24px;
-        gap: 12px;
-        align-items: center;
-        min-height: 94px;
-        padding: 7px;
+        display: block;
+        min-height: 0;
+        aspect-ratio: 0.76;
+        padding: 0;
+        overflow: hidden;
         border: 1px solid var(--line);
-        border-radius: 17px;
+        border-radius: 22px;
         background: rgba(248, 245, 239, 0.035);
       }
       .discover-loading-thumb,
@@ -1324,12 +1321,12 @@
         animation: skeleton-shimmer 1.35s ease-in-out infinite;
       }
       .discover-loading-thumb {
-        width: 78px;
-        height: 78px;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
       }
       .discover-loading-copy {
-        display: grid;
-        gap: 8px;
+        display: none;
       }
       .discover-loading-line {
         height: 10px;
@@ -1345,9 +1342,7 @@
         width: 60%;
       }
       .discover-loading-index {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
+        display: none;
       }
 
       .surprise-loader {
@@ -1708,31 +1703,45 @@
         stroke-width: 0;
       }
 
-      /* Floating AI Chat FAB */
-      .fab-chat {
+      /* Floating Culture Lens control */
+      .fab-culture {
         position: fixed;
         bottom: 96px;
         right: max(16px, calc((100vw - 430px) / 2 + 16px));
-        width: 48px;
-        height: 48px;
+        width: 58px;
+        height: 58px;
         border-radius: 50%;
-        background: var(--peach);
-        color: #050505;
+        border: 1px solid rgba(247, 213, 178, 0.62);
+        background:
+          radial-gradient(circle at 36% 32%, rgba(255, 255, 255, 0.26), transparent 19%),
+          radial-gradient(circle at 58% 65%, rgba(247, 213, 178, 0.28), transparent 44%),
+          #211f1a;
+        color: var(--peach);
         display: grid;
         place-items: center;
         z-index: 45;
-        box-shadow: 0 8px 24px rgba(247, 213, 178, 0.35);
-        transition: transform 0.2s ease;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
       }
 
-      .fab-chat:active {
+      .fab-culture:active {
         transform: scale(0.93);
       }
 
-      .fab-chat svg {
-        width: 22px;
-        height: 22px;
-        fill: currentColor;
+      .fab-culture.is-active {
+        color: #1b1711;
+        border-color: var(--peach);
+        background: var(--peach);
+      }
+
+      .fab-culture svg {
+        width: 28px;
+        height: 28px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       /* Modal Sheet (Detail View) */
@@ -1794,7 +1803,7 @@
           opacity 0.2s ease;
       }
 
-      body.sheet-open .fab-chat {
+      body.sheet-open .fab-culture {
         opacity: 0 !important;
         pointer-events: none !important;
         transition: opacity 0.2s ease;
@@ -1876,66 +1885,12 @@
         <a class="brand" href="index.html" aria-label="Echoo home">
           <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
-        <div class="culture-control">
-          <button
-            class="culture-toggle"
-            id="culture-toggle"
-            type="button"
-            aria-label="Choose a culture"
-            aria-haspopup="dialog"
-            aria-expanded="false"
-          >
-            <span class="culture-toggle-icon" aria-hidden="true"
-              ><svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="7.25" />
-                <path
-                  d="M12 4.75c2.1 2.13 3.17 4.55 3.17 7.25S14.1 17.12 12 19.25C9.9 17.12 8.83 14.7 8.83 12S9.9 6.88 12 4.75ZM4.75 12h14.5"
-                /></svg
-            ></span>
-            <span class="culture-toggle-copy"
-              ><span class="culture-toggle-label">Culture</span
-              ><span class="culture-toggle-state" id="culture-toggle-state"
-                >Local mode</span
-              ></span
-            >
-          </button>
-          <button
-            class="culture-toggle-clear"
-            id="culture-toggle-clear"
-            type="button"
-            aria-label="Turn off Culture Lens"
-            title="Turn off Culture Lens"
-          >
-            ×
-          </button>
-        </div>
       </header>
 
       <!-- Main Shell Content -->
       <main class="shell">
         <!-- Hero Section -->
         <section class="hero">
-          <div class="location-badge" id="location-note">
-            <span
-              style="
-                display: inline-block;
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: var(--peach);
-              "
-            ></span>
-            <span>GTA TRENDS</span>
-          </div>
-          <h1 id="discover-title">
-            Discover the GTA<span class="accent-dot">.</span>
-          </h1>
-          <p id="discover-copy">
-            Thoughtful places, plans, and experiences — all grounded in what
-            Echoo knows locally.
-          </p>
-
-          <!-- Search Bar -->
           <div class="search-wrap">
             <form
               class="search-form"
@@ -1977,73 +1932,22 @@
         <!-- Category Pills -->
         <div class="category-pills" id="chips" aria-label="Explore categories">
           <button class="chip" data-query="food">Food</button>
-          <button class="chip" data-query="music">Music</button>
+          <button class="chip" data-query="comedy">Comedy</button>
+          <button class="chip" data-query="music">Live music</button>
           <button class="chip" data-query="nightlife">Nightlife</button>
+          <button class="chip" data-query="events">Events</button>
           <button class="chip" data-query="tourism">Tourism</button>
-          <button class="chip" data-query="nature">Nature</button>
         </div>
 
-        <!-- Link Up Feature Module Promo Card -->
-        <section aria-label="Link Up Module" style="margin: 20px 0 8px;">
-          <a href="linkup.html" style="display: block; text-decoration: none; color: inherit;">
-            <div style="
-              background: linear-gradient(135deg, rgba(28, 25, 22, 0.95) 0%, rgba(15, 15, 15, 0.95) 100%);
-              border: 1px solid rgba(231, 201, 142, 0.3);
-              border-radius: 20px;
-              padding: 18px 20px;
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              gap: 16px;
-              box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-              transition: transform 0.18s ease, border-color 0.18s ease;
-            " onmouseover="this.style.borderColor='rgba(231, 201, 142, 0.6)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(231, 201, 142, 0.3)'; this.style.transform='translateY(0)'">
-              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #E7C98E;">FEATURE MODULE</span>
-                  <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #E7C98E;"></span>
-                </div>
-                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #f8f5ef; letter-spacing: -0.02em;">Link Up.</h3>
-                <p style="margin: 0; font-size: 13px; color: rgba(248, 245, 239, 0.65); line-height: 1.3;">Right people. Right place. Real connections.</p>
-              </div>
-              <div style="
-                width: 48px;
-                height: 48px;
-                flex: 0 0 48px;
-                border-radius: 50%;
-                border: 1px solid rgba(231, 201, 142, 0.4);
-                background: rgba(231, 201, 142, 0.12);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: #E7C98E;
-              ">
-                <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none;">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-              </div>
-            </div>
-          </a>
-        </section>
-
-        <!-- Popular Nearby Section with inline List/Map View Switch -->
+        <!-- Image-led place collections -->
         <section aria-label="Popular Nearby">
           <div class="section-header">
             <h2 id="nearby-heading">Popular nearby</h2>
-            <div class="view-switch" aria-label="Result layout">
-              <button class="active" data-view="list">List</button>
-              <button data-view="map">Map</button>
-            </div>
           </div>
           <div class="horizontal-carousel" id="popular-nearby-container">
             <div class="location-card skeleton-card"></div>
             <div class="location-card skeleton-card"></div>
             <div class="location-card skeleton-card"></div>
-          </div>
-          <div class="map-view" id="map-view" hidden>
-            <span class="map-caption">Explore map</span>
-            <div id="map-pins"></div>
           </div>
         </section>
 
@@ -2122,12 +2026,12 @@
         </div>
       </div>
 
-      <!-- AI Chat Floating Button -->
-      <a class="fab-chat" href="app.html" aria-label="Open AI chat">
+      <a class="fab-culture" id="culture-lens-fab" href="culture.html" aria-label="Open Culture Lens">
         <svg viewBox="0 0 24 24">
-          <path
-            d="M12 3c-4.97 0-9 3.13-9 7 0 2.38 1.42 4.49 3.63 5.74L5 21l4.39-2.17C10.24 18.94 11.11 19 12 19c4.97 0 9-3.13 9-7s-4.03-7-9-7Z"
-          />
+          <circle cx="8.1" cy="12" r="4.15" />
+          <circle cx="15.9" cy="12" r="4.15" />
+          <path d="M12.25 12h-.5M3.95 10.9 2.6 9.8M20.05 10.9l1.35-1.1" />
+          <path d="M6.35 12a1.75 1.75 0 0 0 3.5 0M14.15 12a1.75 1.75 0 0 0 3.5 0" />
         </svg>
       </a>
 
@@ -2395,8 +2299,6 @@
         resultsPagination = document.getElementById("results-pagination"),
         resultsPrevious = document.getElementById("results-previous"),
         resultsNext = document.getElementById("results-next"),
-        mapView = document.getElementById("map-view"),
-        mapPins = document.getElementById("map-pins"),
         popularContainer = document.getElementById("popular-nearby-container"),
         recommendationContainer = document.getElementById(
           "recommendation-container",
@@ -2412,9 +2314,7 @@
           "discover-location-later",
         );
 
-      const cultureToggle = document.getElementById("culture-toggle"),
-        cultureToggleState = document.getElementById("culture-toggle-state"),
-        cultureToggleClear = document.getElementById("culture-toggle-clear"),
+      const cultureLensFab = document.getElementById("culture-lens-fab"),
         culturePicker = document.getElementById("culture-picker"),
         cultureGroupStrip = document.getElementById("culture-group-strip"),
         culturePickerList = document.getElementById("culture-picker-list"),
@@ -2428,7 +2328,6 @@
             ? "discover"
             : params.get("query") || "discover",
         items = [],
-        view = "list",
         suggestionTimer,
         selectedCultureGroup = "",
         discoveryRefreshNonce = 0,
@@ -2610,7 +2509,6 @@
         renderCulturePicker();
         culturePicker.classList.add("is-open");
         culturePicker.setAttribute("aria-hidden", "false");
-        cultureToggle.setAttribute("aria-expanded", "true");
         document.body.classList.add("culture-picker-open");
         setTimeout(
           () => culturePickerSearch.focus({ preventScroll: true }),
@@ -2621,19 +2519,15 @@
       function closeCulturePicker() {
         culturePicker.classList.remove("is-open");
         culturePicker.setAttribute("aria-hidden", "true");
-        cultureToggle.setAttribute("aria-expanded", "false");
         document.body.classList.remove("culture-picker-open");
       }
 
       function applyCultureMood() {
         const culture = activeCulture();
-        const title = document.getElementById("discover-title");
-        const copy = document.getElementById("discover-copy");
         const nearbyHeading = document.getElementById("nearby-heading");
         const recommendationsHeading = document.getElementById(
           "recommendations-heading",
         );
-        const time = timeContext();
         const category = {
           discover: {
             nearby: "Near you",
@@ -2645,6 +2539,11 @@
             recommendations: "More tables to try",
             noun: "restaurants, cafes, bakeries, and markets",
           },
+          comedy: {
+            nearby: "Comedy nearby",
+            recommendations: "More nights out",
+            noun: "clubs, theatres, and good live laughs",
+          },
           music: {
             nearby: "Music nearby",
             recommendations: "More sound to explore",
@@ -2654,6 +2553,11 @@
             nearby: "Tonight nearby",
             recommendations: "More after-dark picks",
             noun: "late rooms, bars, and live energy",
+          },
+          events: {
+            nearby: "Events nearby",
+            recommendations: "More to plan around",
+            noun: "events, gatherings, and local things to do",
           },
           tourism: {
             nearby: "Places to visit",
@@ -2675,30 +2579,23 @@
           recommendations: "Recommended for you",
           noun: "places and local plans",
         };
-        cultureToggle.classList.toggle("is-active", Boolean(culture));
-        cultureToggleClear.classList.toggle("is-visible", Boolean(culture));
         cultureClear.hidden = !culture;
-        cultureToggle.setAttribute(
+        cultureLensFab?.classList.toggle("is-active", Boolean(culture));
+        cultureLensFab?.setAttribute(
           "aria-label",
           culture
-            ? `${culture.label} is selected. Change culture`
-            : "Choose a culture",
+            ? `Open Culture Lens. ${culture.label} is selected`
+            : "Open Culture Lens",
         );
-        cultureToggleState.textContent = culture ? culture.label : "Local mode";
         if (culture) {
-          title.innerHTML = `Discover ${esc(culture.label)} locally<span class="accent-dot">.</span>`;
-          copy.textContent = `${category.noun.charAt(0).toUpperCase()}${category.noun.slice(1)} with a ${culture.label} point of view — especially good ${time.label}.`;
           nearbyHeading.textContent = `${culture.label} · ${category.nearby}`;
           recommendationsHeading.textContent = `${culture.label} · ${category.recommendations}`;
           queryInput.placeholder = `Search ${culture.label} places`;
         } else {
-          title.innerHTML = `Discover the GTA<span class="accent-dot">.</span>`;
-          copy.textContent = `Thoughtful places, plans, and experiences shaped by what you like, where you are, and what fits ${time.label}.`;
           nearbyHeading.textContent = category.nearby;
           recommendationsHeading.textContent = category.recommendations;
           queryInput.placeholder = "Search and discover places";
         }
-        updateLocationBadge();
       }
 
       const headers = {
@@ -2776,7 +2673,7 @@
             latitude: item.latitude || null,
             longitude: item.longitude || null,
             timezone: "America/Toronto",
-            image_url: imageUrlFor(item) || item.image || "",
+            image_url: realImageUrl(item),
             phone: normalize(item.phone || item.contactPhone || ""),
             website: normalize(item.website || ""),
             rating_average: hasRating ? rating : null,
@@ -2867,7 +2764,7 @@
       }
 
       async function openDetailByItem(item, options = {}) {
-        const heroImage = imageUrlFor(item) || FALLBACK_PLACE_IMAGE;
+        const heroImage = realImageUrl(item);
         const authState = window.EchooAuth?.getAuthState
           ? await window.EchooAuth.getAuthState({ requireFresh: true })
           : { ok: false };
@@ -2939,10 +2836,10 @@
         }
       }
 
-      const FALLBACK_PLACE_IMAGE = "assets/optimized/background-1400.jpg";
       const defaultPlaces = [
         {
           id: "fallback-alo",
+          isFallback: true,
           title: "Alo",
           category: "restaurant",
           city: "Toronto",
@@ -2955,6 +2852,7 @@
         },
         {
           id: "fallback-ago",
+          isFallback: true,
           title: "Art Gallery of Ontario",
           category: "gallery",
           city: "Toronto",
@@ -2967,6 +2865,7 @@
         },
         {
           id: "fallback-trinity",
+          isFallback: true,
           title: "Trinity Bellwoods Park",
           category: "park",
           city: "Toronto",
@@ -2979,6 +2878,7 @@
         },
         {
           id: "fallback-danforth",
+          isFallback: true,
           title: "The Danforth Music Hall",
           category: "music venue",
           city: "Toronto",
@@ -2991,6 +2891,7 @@
         },
         {
           id: "fallback-comedy-bar",
+          isFallback: true,
           title: "Comedy Bar",
           category: "comedy theatre",
           city: "Toronto",
@@ -3003,6 +2904,7 @@
         },
         {
           id: "fallback-kensington",
+          isFallback: true,
           title: "Kensington Market",
           category: "market",
           city: "Toronto",
@@ -3012,6 +2914,54 @@
           latitude: 43.6544,
           longitude: -79.4002,
           community: { ratingAverage: 4.5 },
+        },
+        {
+          id: "fallback-rom",
+          isFallback: true,
+          title: "Royal Ontario Museum",
+          category: "museum",
+          city: "Toronto",
+          address: "100 Queens Park, Toronto",
+          description: "A central museum with a deep collection to explore.",
+          latitude: 43.6677,
+          longitude: -79.3948,
+          community: { ratingAverage: 4.6 },
+        },
+        {
+          id: "fallback-stackt",
+          isFallback: true,
+          title: "Stackt Market",
+          category: "market",
+          city: "Toronto",
+          address: "28 Bathurst St, Toronto",
+          description: "A flexible stop for food, shops, and city energy.",
+          latitude: 43.6405,
+          longitude: -79.4025,
+          community: { ratingAverage: 4.5 },
+        },
+        {
+          id: "fallback-harbourfront",
+          isFallback: true,
+          title: "Harbourfront Centre",
+          category: "arts venue",
+          city: "Toronto",
+          address: "235 Queens Quay W, Toronto",
+          description: "Waterfront culture and a good place to wander.",
+          latitude: 43.6389,
+          longitude: -79.3829,
+          community: { ratingAverage: 4.5 },
+        },
+        {
+          id: "fallback-high-park",
+          isFallback: true,
+          title: "High Park",
+          category: "park",
+          city: "Toronto",
+          address: "1873 Bloor St W, Toronto",
+          description: "A large green escape with space to reset.",
+          latitude: 43.6465,
+          longitude: -79.4637,
+          community: { ratingAverage: 4.7 },
         },
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
@@ -3029,7 +2979,7 @@
       let discoveryFastFallbackTimer = 0;
 
       function realImageUrl(item) {
-        return imageUrlFor(item) || "";
+        return item?.isFallback ? "" : imageUrlFor(item) || "";
       }
 
       function categoryGroup(item) {
@@ -3053,10 +3003,11 @@
 
       function placeVisual(item, className, alt = "", { eager = false } = {}) {
         const image = realImageUrl(item);
-        const fallbackImage = fallbackImageFor(item);
-        const source = image || fallbackImage;
-        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}" hidden></div>`;
-        return `<img class="${className}" src="${esc(source)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" data-fallback-src="${esc(image ? fallbackImage : "")}" onerror="if(this.dataset.fallbackSrc){this.src=this.dataset.fallbackSrc;this.dataset.fallbackSrc='';return;}this.hidden=true;this.nextElementSibling.hidden=false" />${fallback}`;
+        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}"${image ? " hidden" : ""}></div>`;
+        const imageMarkup = image
+          ? `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
+          : "";
+        return `${imageMarkup}${fallback}`;
       }
 
       function hotScoreFor(item) {
@@ -3221,7 +3172,7 @@
       }
 
       function renderRecommendations(placeList) {
-        const list = Array.isArray(placeList) ? placeList.slice(0, 6) : [];
+        const list = Array.isArray(placeList) ? placeList.slice(0, 10) : [];
         if (!list.length) {
           recommendationContainer.innerHTML = "";
           return;
@@ -3304,13 +3255,13 @@
         if (items.length) {
           renderPopularNearby(items.slice(0, 5));
           renderRecommendations(
-            items.slice(5, 11).length ? items.slice(5, 11) : items.slice(0, 6),
+            items.length > 10 ? items.slice(5, 15) : items.slice(0, 10),
           );
           rememberShown(items.slice(0, 12));
         } else {
           items = defaultPlaces.map((place) => ({ ...place }));
           renderPopularNearby(items.slice(0, 5));
-          renderRecommendations(items.slice(0, 6));
+          renderRecommendations(items.slice(0, 10));
         }
         renderResultsPage();
       }
@@ -3470,9 +3421,7 @@
       }
 
       function renderResultsPage() {
-        const shouldShow = view !== "map";
-        resultsSection.hidden = !shouldShow;
-        if (!shouldShow) return;
+        resultsSection.hidden = false;
         if (discoveryUiLoading) {
           resultsHeading.textContent =
             activeQuery === "discover"
@@ -3494,12 +3443,9 @@
           : "";
         resultsEl.innerHTML = pageItems.length
           ? pageItems
-              .map((item, index) => {
+              .map((item) => {
                 const itemIndex = items.indexOf(item);
-                const meta = item.distanceMeters
-                  ? `${(item.distanceMeters / 1000).toFixed(1)} km away`
-                  : item.neighborhood || item.city || "GTA";
-                return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place")}<span class="discovery-result-copy"><small>${esc(meta)}</small><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.description || item.address || "A local Echoo recommendation")}</span></span><span class="discovery-result-index">${start + index + 1}</span></button>`;
+                return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place")}<span class="discovery-result-copy"><strong>${esc(item.title || "Local pick")}</strong></span></button>`;
               })
               .join("")
           : `<div class="discovery-fallback-note">A few local favourites are being lined up for you.</div>`;
@@ -3518,19 +3464,9 @@
         resultsNext.textContent = discoveryPaging.loading ? "Loading…" : "Next";
       }
 
-      function locationLabel() {
-        const culture = activeCulture();
-        if (culture) return `${culture.label.toUpperCase()} EDIT`;
-        const hasExactLocation = Number.isFinite(lat) && Number.isFinite(lng);
-        if (hasExactLocation) return `${city.toUpperCase()} NEAR YOU`;
-        if (prefs.city && prefs.city !== DEFAULT_DISCOVERY_CITY)
-          return `${city.toUpperCase()} TODAY`;
-        return "GTA TRENDS";
-      }
-
       function updateLocationBadge() {
-        document.getElementById("location-note").innerHTML =
-          `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--peach);"></span><span>${locationLabel()}</span>`;
+        // Location still informs ranking, but Discover no longer uses a live
+        // location/status label in its visual hierarchy.
       }
 
       function rememberLocationChoice(extra = {}) {
@@ -3901,7 +3837,6 @@
         activeQuery = cleanQuery;
         if (options.refresh) discoveryRefreshNonce += 1;
         resultPage = 0;
-        view = "list";
         applyCultureMood();
         document
           .querySelectorAll(".chip")
@@ -4262,19 +4197,6 @@
         if (chip) search(chip.dataset.query, { fromCategory: true });
       };
 
-      document.querySelector(".view-switch").onclick = (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        document
-          .querySelectorAll(".view-switch button")
-          .forEach((b) => b.classList.toggle("active", b === btn));
-        const isMap = btn.dataset.view === "map";
-        view = isMap ? "map" : "list";
-        popularContainer.hidden = isMap;
-        mapView.hidden = !isMap;
-        renderResultsPage();
-      };
-
       resultsPrevious.addEventListener("click", () => {
         if (resultPage > 0) {
           resultPage -= 1;
@@ -4287,10 +4209,6 @@
         .querySelectorAll("[data-close-sheet]")
         .forEach((btn) => (btn.onclick = closeDetail));
 
-      cultureToggle.addEventListener("click", openCulturePicker);
-      cultureToggleClear.addEventListener("click", () =>
-        cultureContext?.clear(),
-      );
       culturePicker
         .querySelectorAll("[data-close-culture]")
         .forEach((button) =>

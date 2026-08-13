@@ -152,10 +152,33 @@
     return "";
   }
 
+  function trustedHours(detail) {
+    const now = Date.now();
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: detail?.place?.timezone || "America/Toronto",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(new Date()).map((part) => [part.type, part.value]),
+    );
+    const dateKey = `${parts.year}-${parts.month}-${parts.day}`;
+    return (Array.isArray(detail?.hours) ? detail.hours : []).filter((row) => {
+      const updated = Date.parse(cleanText(row?.updated_at));
+      const confidence = Number(row?.confidence_score);
+      return Boolean(cleanText(row?.source)) &&
+        Number.isFinite(confidence) && confidence >= 0.85 &&
+        Number.isFinite(updated) && updated <= now &&
+        now - updated <= 1000 * 60 * 60 * 24 * 21 &&
+        (!cleanText(row?.valid_from) || cleanText(row.valid_from) <= dateKey) &&
+        (!cleanText(row?.valid_to) || cleanText(row.valid_to) >= dateKey);
+    });
+  }
+
   function compactHours(detail) {
     const place = detail.place || {};
     const dayIndex = currentDayIndex(place.timezone);
-    const validRows = (Array.isArray(detail.hours) ? detail.hours : [])
+    const validRows = trustedHours(detail)
       .map((row) => {
         const day = Number(row.day_of_week);
         if (!Number.isInteger(day) || day < 0 || day > 6) return null;
@@ -172,8 +195,9 @@
       .filter(Boolean)
       .sort((a, b) => a.day - b.day);
 
-    const weekdayRows = validRows.filter((row) => row.day >= 1 && row.day <= 5);
-    const rowsToGroup = weekdayRows.length ? weekdayRows : validRows;
+    // Keep the complete week. The previous weekday-only grouping silently
+    // dropped Saturday and Sunday whenever weekday hours were available.
+    const rowsToGroup = validRows;
     const groups = [];
     for (const row of rowsToGroup) {
       const previous = groups.at(-1);
@@ -198,7 +222,7 @@
   function openStatus(detail) {
     const place = detail.place || {};
     const today = currentDayIndex(place.timezone);
-    const row = (Array.isArray(detail.hours) ? detail.hours : []).find(
+    const row = trustedHours(detail).find(
       (item) => Number(item.day_of_week) === today,
     );
     if (!row) return "";
@@ -219,6 +243,24 @@
       ? minutes >= opens && minutes < closes
       : minutes >= opens || minutes < closes;
     return isOpen ? `Open now · until ${formatTime(row.closes_at)}` : `Today · ${formatTime(row.opens_at)} - ${formatTime(row.closes_at)}`;
+  }
+
+  function todayHours(detail) {
+    const place = detail.place || {};
+    const today = currentDayIndex(place.timezone);
+    const row = trustedHours(detail).find(
+      (item) => Number(item.day_of_week) === today,
+    );
+    if (!row) return null;
+    if (row.is_closed) return { status: "Closed today", value: "" };
+    const opens = formatTime(row.opens_at);
+    const closes = formatTime(row.closes_at);
+    if (!opens || !closes) return null;
+    const status = openStatus(detail);
+    return {
+      status: status.startsWith("Open now") ? "Open now" : "Today",
+      value: `${opens} — ${closes}`,
+    };
   }
 
   function mapsLinkFor(place) {
@@ -283,6 +325,7 @@
     const title = cleanText(place.name);
     const summary = summaryFor(detail);
     const hours = compactHours(detail);
+    const today = todayHours(detail);
     const sourceCount = sourceCountFor(detail);
     const sourceNames = [...new Set((detail.sources || []).map((source) => cleanText(source.source_name)).filter(Boolean))].slice(0, 2);
     const tags = profile.human_review_status === "approved"
@@ -326,6 +369,12 @@
         </div>
 
         <div class="echoo-place-body">
+          ${today ? `
+            <section class="echoo-place-hours-summary" aria-label="Today's opening hours">
+              <span class="echoo-place-hours-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"></circle><path d="M12 7.8v4.7l3.1 1.9"></path></svg></span>
+              <span class="echoo-place-hours-summary-copy"><small>${escapeHtml(today.status)}</small><strong>${escapeHtml(today.value || "Closed")}</strong></span>
+            </section>
+          ` : ""}
           ${pulseItems.length ? `
             <section class="echoo-place-section echoo-place-setting-section">
               <div class="echoo-place-setting-values">
