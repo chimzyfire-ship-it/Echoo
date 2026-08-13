@@ -3129,6 +3129,11 @@
 
       function directInventoryCategories(query) {
         const key = String(query || "").toLowerCase();
+        // The untoggled Discover state has a deliberate, dependable base:
+        // nightlife inventory. It is broad enough to feel like discovery and
+        // consistently populated, while the UI still truthfully reads as the
+        // unfiltered "All places" view.
+        if (key === "discover") return ["bar", "pub", "nightclub", "biergarten"];
         if (key === "food")
           return ["restaurant", "cafe", "fast_food", "food_court", "ice_cream"];
         if (key === "live music" || key === "music")
@@ -3798,11 +3803,12 @@
 
       function discoveryRequestForActiveView() {
         const culture = activeCulture();
-        const base = cultureContext?.queryFor
-          ? cultureContext.queryFor(activeQuery, culture)
-          : activeQuery === "discover"
-            ? "places things to do"
-            : activeQuery;
+        const base =
+          activeQuery === "discover" && !culture
+            ? "nightlife"
+            : cultureContext?.queryFor
+              ? cultureContext.queryFor(activeQuery, culture)
+              : activeQuery;
         return {
           // The selected filter stays the search intent. Profile and time are
           // passed separately as ranking signals so "Music" cannot turn into
@@ -4026,6 +4032,23 @@
         } else {
           items = defaultPlaces.map((place) => ({ ...place }));
           renderItems();
+        }
+        // The default route is a product surface, not an empty search state.
+        // Load the proven nightlife inventory immediately with no selected
+        // chip, then allow the richer search to improve it in the background.
+        if (activeQuery === "discover" && !activeCulture()) {
+          fetchDirectInventoryFallback(discoveryPaging.request).then(
+            (instantInventory) => {
+              if (requestId !== discoveryRequestId || !instantInventory.length)
+                return;
+              items = instantInventory;
+              discoveryPaging.hasMore = false;
+              writeDiscoveryCache(discoveryPaging.request, {
+                results: items,
+              });
+              renderItems();
+            },
+          );
         }
         renderDiscoverLoading({
           allowFallback: options.surprise,
@@ -4486,8 +4509,10 @@
       // all-day location if the person has moved between GTA municipalities.
       if (!surpriseMode) {
         setTimeout(async () => {
-          const refreshed = await refreshGrantedDeviceLocation();
-          if (!refreshed) showLocationSheetIfNeeded();
+          // Discover must always open directly into results. Refresh an
+          // already-granted location silently, but never place a permission
+          // or municipality sheet over the default feed.
+          await refreshGrantedDeviceLocation();
         }, 150);
         resumePendingDetail();
       }
