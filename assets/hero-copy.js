@@ -112,6 +112,42 @@
         ["The credits are not the plan’s ending.", "Find a film, then find the after."],
       ],
     },
+    comedy: {
+      morning: [
+        ["Laughter, curated live.", "Intimate standup and headliners for tonight."],
+        ["Your mood could use a good set.", "Find comedy rooms worth leaving early for."],
+      ],
+      afternoon: [
+        ["Intimate rooms, big laughs.", "Standup comedy and live sets nearby."],
+        ["A good laugh fixes the day.", "Curated comedy rooms across Ontario."],
+      ],
+      evening: [
+        ["Dark rooms, bright sets.", "Standup headliners and open mic gems."],
+        ["Laughter before bedtime.", "Find a comedy club with great energy."],
+      ],
+      late: [
+        ["Late show laughs.", "Night owl standup sets and drinks."],
+        ["End the night on a high note.", "Late comedy picks around town."],
+      ],
+    },
+    nightlife: {
+      morning: [
+        ["Late hours, high energy.", "Cocktail bars and dance floors for later-you."],
+        ["Plan the night out early.", "Bars, lounges, and late spots."],
+      ],
+      afternoon: [
+        ["Where is the move tonight?", "Cocktail lounges and vibrant energy."],
+        ["Nightlife that understands the assignment.", "Find rooms with good music and drinks."],
+      ],
+      evening: [
+        ["The night starts now.", "Polished bars, dance venues, and late lounges."],
+        ["Go where the energy is real.", "Nightlife picks for an unforgettable night."],
+      ],
+      late: [
+        ["Still moving after midnight.", "Late-night spots, dance floors, and last call."],
+        ["Keep the night going.", "High energy rooms open until late."],
+      ],
+    },
   };
 
   function ontarioPart() {
