@@ -1161,14 +1161,51 @@
         white-space: nowrap;
       }
       .discover-refresh {
-        min-height: 30px;
+        display: grid;
+        width: 32px;
+        height: 32px;
         padding: 0;
-        color: var(--peach);
-        border: 0;
-        background: transparent;
-        font: inherit;
-        font-size: 11px;
-        font-weight: 720;
+        place-items: center;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: rgba(248, 245, 239, 0.035);
+        transition:
+          color 0.18s ease,
+          border-color 0.18s ease,
+          background 0.18s ease;
+      }
+      .discover-refresh:hover,
+      .discover-refresh:focus-visible {
+        color: var(--ink);
+        border-color: rgba(247, 213, 178, 0.5);
+        background: rgba(247, 213, 178, 0.08);
+      }
+      .discover-refresh:disabled {
+        cursor: wait;
+        opacity: 0.58;
+      }
+      .discover-refresh svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.8;
+      }
+      .discover-refresh.is-refreshing svg {
+        animation: discover-refresh-spin 0.8s linear infinite;
+      }
+      .results-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      @keyframes discover-refresh-spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .discovery-results {
@@ -1577,7 +1614,8 @@
       @media (prefers-reduced-motion: reduce) {
         .surprise-die,
         .surprise-loader::before,
-        .surprise-loader::after {
+        .surprise-loader::after,
+        .discover-refresh.is-refreshing svg {
           animation: none;
         }
       }
@@ -1942,7 +1980,21 @@
         <section id="search-results-section" aria-label="All places">
           <div class="section-header">
             <h2 id="results-heading">All places</h2>
-            <span class="results-page-status" id="results-page-status"></span>
+            <div class="results-header-actions">
+              <span class="results-page-status" id="results-page-status"></span>
+              <button
+                class="discover-refresh"
+                id="discover-refresh"
+                type="button"
+                aria-label="Refresh places"
+                title="Refresh places"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 7v5h-5" />
+                  <path d="M18.2 16.6A8 8 0 1 1 19.5 9" />
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="discovery-results" id="results" aria-live="polite"></div>
           <div class="results-pagination" id="results-pagination" hidden>
@@ -1954,13 +2006,6 @@
         <section aria-label="Recommendations">
           <div class="section-header">
             <h2 id="recommendations-heading">Recommended for you</h2>
-            <button
-              class="discover-refresh"
-              id="discover-refresh"
-              type="button"
-            >
-              Refresh
-            </button>
           </div>
           <div
             class="recommendation-grid"
@@ -2265,6 +2310,8 @@
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/place-detail",
         quickPlanUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/quick-plan",
+        discoveryCoversUrl:
+          "https://dlezregdjpdqmooubwvl.supabase.co/storage/v1/object/public/discovery-covers",
       };
 
       const params = new URLSearchParams(location.search);
@@ -2311,11 +2358,18 @@
         cultureClear = document.getElementById("culture-clear");
 
       const surpriseMode = params.get("mode") === "surprise";
+      const rememberedDiscoveryQuery = (() => {
+        try {
+          return sessionStorage.getItem("echoo_discovery_active_query_v1") || "";
+        } catch (_) {
+          return "";
+        }
+      })();
       let activeQuery = surpriseMode
           ? "discover"
           : params.get("query") === "trending"
             ? "discover"
-            : params.get("query") || "discover",
+            : params.get("query") || rememberedDiscoveryQuery || "discover",
         items = [],
         suggestionTimer,
         selectedCultureGroup = "",
@@ -2327,7 +2381,10 @@
           hasMore: false,
           request: null,
         },
-        discoveryRequestId = 0;
+        discoveryRequestId = 0,
+        discoveryAbortController = null,
+        activeRequestIdentity = "",
+        currentSurfaceIdentity = "";
 
       const esc = (value) =>
         String(value || "").replace(
@@ -2594,10 +2651,13 @@
 
       function imageUrlFor(item) {
         const image = item?.image || {};
+        const storagePath = String(image?.storagePath || "").trim();
         const rawUrl =
           image?.url ||
-          (image?.storagePath
-            ? `https://chimzyfire-ship-it.supabase.co/storage/v1/object/public/discovery-covers/${image.storagePath}`
+          (storagePath
+            ? /^(https?:\/\/|assets\/)/i.test(storagePath)
+              ? storagePath
+              : `${CONFIG.discoveryCoversUrl}/${storagePath.replace(/^\/+/, "")}`
             : item?.imageUrl || item?.image_url || "");
         return /^(https?:\/\/|assets\/)/i.test(rawUrl) ? rawUrl : "";
       }
@@ -2952,9 +3012,11 @@
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
       const SURPRISE_HISTORY_KEY = "echoo_surprise_history_v1";
-      const DISCOVERY_CACHE_KEY = "echoo_discovery_surface_cache_v1";
-      const DISCOVERY_CACHE_VERSION = 1;
-      const DISCOVERY_CACHE_MAX_ENTRIES = 12;
+      const DISCOVERY_CACHE_KEY = "echoo_discovery_surface_cache_v2";
+      const DISCOVERY_SESSION_CACHE_KEY = "echoo_discovery_session_cache_v1";
+      const DISCOVERY_ACTIVE_QUERY_KEY = "echoo_discovery_active_query_v1";
+      const DISCOVERY_CACHE_VERSION = 2;
+      const DISCOVERY_CACHE_MAX_ENTRIES = 24;
       // Explore photo URLs are short-lived. Keep the on-device surface fresh
       // enough that a warm cache never resolves to expired imagery.
       const DISCOVERY_CACHE_GPS_TTL_MS = 1000 * 60 * 3;
@@ -2973,7 +3035,7 @@
       let discoveryFastFallbackTimer = 0;
 
       function realImageUrl(item) {
-        return item?.isFallback ? "" : imageUrlFor(item) || "";
+        return imageUrlFor(item) || "";
       }
 
       function categoryGroup(item) {
@@ -2997,9 +3059,9 @@
 
       function placeVisual(item, className, alt = "", { eager = false } = {}) {
         const image = realImageUrl(item);
-        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}"${image ? " hidden" : ""}></div>`;
+        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}"></div>`;
         const imageMarkup = image
-          ? `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
+          ? `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" hidden onload="this.hidden=false;this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
           : "";
         return `${imageMarkup}${fallback}`;
       }
@@ -3077,54 +3139,107 @@
         });
       }
 
-      function readDiscoveryCache(request = {}) {
+      function readCacheEntries(storage, key) {
         try {
-          const identity = discoveryCacheIdentity(request);
-          const raw = JSON.parse(localStorage.getItem(DISCOVERY_CACHE_KEY) || "[]");
-          const entries = Array.isArray(raw) ? raw : [];
-          const entry = entries.find((candidate) => candidate?.identity === identity);
-          const maximumAge = cacheLocationScope(request).startsWith("gps:")
-            ? DISCOVERY_CACHE_GPS_TTL_MS
-            : DISCOVERY_CACHE_CITY_TTL_MS;
-          if (
-            !entry ||
-            !Array.isArray(entry.results) ||
-            !entry.results.length ||
-            !Number.isFinite(Number(entry.storedAt)) ||
-            Date.now() - Number(entry.storedAt) > maximumAge
-          ) {
-            return null;
-          }
-          return entry;
+          const value = JSON.parse(storage.getItem(key) || "[]");
+          return Array.isArray(value) ? value : [];
         } catch (_) {
+          return [];
+        }
+      }
+
+      function readDiscoveryCache(request = {}) {
+        const identity = discoveryCacheIdentity(request);
+        const sessionEntry = readCacheEntries(
+          sessionStorage,
+          DISCOVERY_SESSION_CACHE_KEY,
+        ).find((candidate) => candidate?.identity === identity);
+        if (Array.isArray(sessionEntry?.results) && sessionEntry.results.length)
+          return sessionEntry;
+
+        const entry = readCacheEntries(localStorage, DISCOVERY_CACHE_KEY).find(
+          (candidate) => candidate?.identity === identity,
+        );
+        const maximumAge = cacheLocationScope(request).startsWith("gps:")
+          ? DISCOVERY_CACHE_GPS_TTL_MS
+          : DISCOVERY_CACHE_CITY_TTL_MS;
+        if (
+          !Array.isArray(entry?.results) ||
+          !entry.results.length ||
+          !Number.isFinite(Number(entry.storedAt)) ||
+          Date.now() - Number(entry.storedAt) > maximumAge
+        ) {
           return null;
         }
+        return entry;
       }
 
       function writeDiscoveryCache(request = {}, payload = {}) {
         const results = Array.isArray(payload.results) ? payload.results : [];
         if (!results.length) return;
+        const identity = payload.identity || discoveryCacheIdentity(request);
+        const entry = {
+          identity,
+          storedAt: Date.now(),
+          results,
+          nextCursor: payload.nextCursor || null,
+          liveNextPageToken: payload.liveNextPageToken || null,
+          resultPage: Math.max(0, Number(payload.resultPage) || 0),
+        };
+        [
+          [sessionStorage, DISCOVERY_SESSION_CACHE_KEY],
+          [localStorage, DISCOVERY_CACHE_KEY],
+        ].forEach(([storage, key]) => {
+          try {
+            const entries = readCacheEntries(storage, key);
+            storage.setItem(
+              key,
+              JSON.stringify([
+                entry,
+                ...entries.filter(
+                  (candidate) => candidate?.identity !== identity,
+                ),
+              ].slice(0, DISCOVERY_CACHE_MAX_ENTRIES)),
+            );
+          } catch (_) {
+            // Restricted storage must never interrupt Discover.
+          }
+        });
+      }
+
+      function persistCurrentSurface() {
+        if (
+          !currentSurfaceIdentity ||
+          !discoveryPaging.request ||
+          discoveryPaging.loading ||
+          !items.length
+        )
+          return;
+        writeDiscoveryCache(discoveryPaging.request, {
+          identity: currentSurfaceIdentity,
+          results: items,
+          nextCursor: discoveryPaging.cursor,
+          liveNextPageToken: discoveryPaging.livePageToken,
+          resultPage,
+        });
+      }
+
+      function rememberActiveDiscoveryQuery() {
+        if (surpriseMode) return;
         try {
-          const identity = discoveryCacheIdentity(request);
-          const previous = JSON.parse(localStorage.getItem(DISCOVERY_CACHE_KEY) || "[]");
-          const entries = Array.isArray(previous) ? previous : [];
-          const entry = {
-            identity,
-            storedAt: Date.now(),
-            results: results.slice(0, 24),
-            nextCursor: payload.nextCursor || null,
-            liveNextPageToken: payload.liveNextPageToken || null,
-          };
-          localStorage.setItem(
-            DISCOVERY_CACHE_KEY,
-            JSON.stringify([
-              entry,
-              ...entries.filter((candidate) => candidate?.identity !== identity),
-            ].slice(0, DISCOVERY_CACHE_MAX_ENTRIES)),
-          );
-        } catch (_) {
-          // Private browsing and quota limits should never interrupt Discover.
-        }
+          sessionStorage.setItem(DISCOVERY_ACTIVE_QUERY_KEY, activeQuery);
+        } catch (_) {}
+        const nextUrl = new URL(window.location.href);
+        if (activeQuery === "discover") nextUrl.searchParams.delete("query");
+        else nextUrl.searchParams.set("query", activeQuery);
+        history.replaceState(null, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+      }
+
+      function resetRefreshControl() {
+        const refreshButton = document.getElementById("discover-refresh");
+        refreshButton.disabled = false;
+        refreshButton.classList.remove("is-refreshing");
+        refreshButton.setAttribute("aria-label", "Refresh places");
       }
 
       function directInventoryCategories(query) {
@@ -3715,6 +3830,11 @@
         return new Promise((resolve) =>
           navigator.geolocation.getCurrentPosition(
             async (position) => {
+              const previousScope = cacheLocationScope({
+                city,
+                lat: Number.isFinite(lat) ? lat : undefined,
+                lng: Number.isFinite(lng) ? lng : undefined,
+              });
               const deviceLocation = stableDeviceCoordinates(position);
               lat = deviceLocation.lat;
               lng = deviceLocation.lng;
@@ -3776,7 +3896,9 @@
               }
               updateLocationBadge();
               closeLocationSheet();
-              await search(activeQuery);
+              const nextScope = cacheLocationScope({ city, lat, lng });
+              if (nextScope !== previousScope)
+                await search(activeQuery, { contextChanged: true });
               if (!silent) {
                 useLocationButton.disabled = false;
                 useLocationButton.textContent = "Use my current location";
@@ -3864,7 +3986,7 @@
           }
           if (refresh && personalizationSignature(prefs) !== before) {
             updateLocationBadge();
-            await search(activeQuery, { refresh: true });
+            await search(activeQuery, { contextChanged: true });
           }
         } catch (_) {
           // Discover still works with the local preference cache for guests
@@ -3892,8 +4014,13 @@
         const request = discoveryPaging.request;
         if (!request || discoveryPaging.loading) return;
         discoveryPaging.loading = true;
+        const refreshButton = document.getElementById("discover-refresh");
+        refreshButton.disabled = true;
+        refreshButton.classList.add("is-refreshing");
+        refreshButton.setAttribute("aria-label", "Refreshing places");
         if (render) renderResultsPage();
         const controller = new AbortController();
+        discoveryAbortController = controller;
         // Keep a reliable inventory lane warm while the ranked Edge query is
         // in flight. The fallback is only displayed when the primary lane
         // fails or returns no cards, so it never competes with fresh ranking.
@@ -3950,14 +4077,19 @@
           ) {
             city = DEFAULT_DISCOVERY_CITY;
             discoveryPaging.request = discoveryRequestForActiveView();
+            currentSurfaceIdentity = discoveryCacheIdentity(
+              discoveryPaging.request,
+            );
+            activeRequestIdentity = currentSurfaceIdentity;
             discoveryPaging.loading = false;
             return fetchDiscoveryPage({ append: false, requestId, render });
           }
           if (!append && received.length) {
             writeDiscoveryCache(request, {
-              results: received,
+              results: items,
               nextCursor: discoveryPaging.cursor,
               liveNextPageToken: discoveryPaging.livePageToken,
+              resultPage,
             });
           }
           if (render) renderItems();
@@ -3979,6 +4111,10 @@
           clearTimeout(timeout);
           if (requestId === discoveryRequestId) {
             discoveryPaging.loading = false;
+            activeRequestIdentity = "";
+            if (discoveryAbortController === controller)
+              discoveryAbortController = null;
+            resetRefreshControl();
             if (render) renderResultsPage();
           }
         }
@@ -3989,9 +4125,10 @@
           .trim()
           .toLowerCase();
         if (!cleanQuery) cleanQuery = "discover";
+        const previousQuery = activeQuery;
+        persistCurrentSurface();
         activeQuery = cleanQuery;
         if (options.refresh) discoveryRefreshNonce += 1;
-        resultPage = 0;
         applyCultureMood();
         document
           .querySelectorAll(".chip")
@@ -4008,16 +4145,42 @@
           queryInput.value =
             cleanQuery === "discover" ? "" : String(query || "").trim();
         suggestionsEl.hidden = true;
-        const requestId = ++discoveryRequestId;
-        if (discoveryFastFallbackTimer)
-          window.clearTimeout(discoveryFastFallbackTimer);
-        discoveryPaging = {
+        const nextPaging = {
           cursor: null,
           livePageToken: null,
           hasMore: false,
           request: discoveryRequestForActiveView(),
           loading: false,
         };
+        const nextIdentity = discoveryCacheIdentity(nextPaging.request);
+        if (
+          !options.refresh &&
+          !options.surprise &&
+          !options.contextChanged &&
+          currentSurfaceIdentity === nextIdentity &&
+          items.length
+        ) {
+          rememberActiveDiscoveryQuery();
+          return;
+        }
+        if (
+          !options.refresh &&
+          activeRequestIdentity === nextIdentity &&
+          discoveryPaging.loading
+        )
+          return;
+
+        const requestId = ++discoveryRequestId;
+        discoveryAbortController?.abort();
+        discoveryAbortController = null;
+        resetRefreshControl();
+        activeRequestIdentity = nextIdentity;
+        currentSurfaceIdentity = nextIdentity;
+        resultPage = previousQuery === activeQuery ? resultPage : 0;
+        if (discoveryFastFallbackTimer)
+          window.clearTimeout(discoveryFastFallbackTimer);
+        discoveryPaging = nextPaging;
+        rememberActiveDiscoveryQuery();
         const cachedSurface = !options.refresh
           ? readDiscoveryCache(discoveryPaging.request)
           : null;
@@ -4028,27 +4191,14 @@
           discoveryPaging.hasMore = Boolean(
             discoveryPaging.cursor || discoveryPaging.livePageToken,
           );
+          resultPage = Math.max(0, Number(cachedSurface.resultPage) || 0);
           renderItems();
-        } else {
+          activeRequestIdentity = "";
+          return;
+        }
+        if (!options.refresh || !items.length) {
           items = defaultPlaces.map((place) => ({ ...place }));
           renderItems();
-        }
-        // The default route is a product surface, not an empty search state.
-        // Load the proven nightlife inventory immediately with no selected
-        // chip, then allow the richer search to improve it in the background.
-        if (activeQuery === "discover" && !activeCulture()) {
-          fetchDirectInventoryFallback(discoveryPaging.request).then(
-            (instantInventory) => {
-              if (requestId !== discoveryRequestId || !instantInventory.length)
-                return;
-              items = instantInventory;
-              discoveryPaging.hasMore = false;
-              writeDiscoveryCache(discoveryPaging.request, {
-                results: items,
-              });
-              renderItems();
-            },
-          );
         }
         renderDiscoverLoading({
           allowFallback: options.surprise,
@@ -4084,6 +4234,7 @@
         const pageSize = 10;
         if ((resultPage + 1) * pageSize < items.length) {
           resultPage += 1;
+          persistCurrentSurface();
           renderResultsPage();
           return;
         }
@@ -4091,6 +4242,7 @@
           const before = items.length;
           await fetchDiscoveryPage({ append: true });
           if (items.length > before) resultPage += 1;
+          persistCurrentSurface();
           renderResultsPage();
         }
       }
@@ -4382,6 +4534,7 @@
       resultsPrevious.addEventListener("click", () => {
         if (resultPage > 0) {
           resultPage -= 1;
+          persistCurrentSurface();
           renderResultsPage();
         }
       });
@@ -4424,7 +4577,7 @@
       });
       window.addEventListener("echoo:culture-changed", () => {
         applyCultureMood();
-        search(activeQuery);
+        search(activeQuery, { contextChanged: true });
       });
       document
         .getElementById("discover-refresh")
@@ -4450,7 +4603,7 @@
         });
         updateLocationBadge();
         closeLocationSheet();
-        await search(activeQuery);
+        await search(activeQuery, { contextChanged: true });
       });
       locationLaterButton.addEventListener("click", () => {
         rememberLocationChoice({
@@ -4516,6 +4669,10 @@
         }, 150);
         resumePendingDetail();
       }
+      window.addEventListener("pagehide", persistCurrentSurface);
+      document
+        .querySelector('.bottom-nav a[aria-current="page"]')
+        ?.addEventListener("click", (event) => event.preventDefault());
     </script>
     <script src="assets/page-loader.js"></script>
   </body>
