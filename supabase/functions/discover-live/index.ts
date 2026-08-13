@@ -3,6 +3,7 @@ import {
   clampLimit,
   GTA_MUNICIPALITIES,
   getSupabaseAdmin,
+  haversineMeters,
   jsonResponse,
   logLocationEvent,
   normalizeCityName,
@@ -15,6 +16,11 @@ import {
   isModelMetaQuery,
   MODEL_META_RESPONSE,
 } from "../_shared/companion-core.ts";
+import {
+  YELP_ENABLED,
+  namesMatch,
+  searchYelpBusinesses,
+} from "../_shared/yelp.ts";
 
 type DiscoverPayload = {
   query?: string;
@@ -31,7 +37,7 @@ type DiscoverPayload = {
 
 type Candidate = {
   id: string;
-  source: "echoo" | "ticketmaster" | "google_places";
+  source: "echoo" | "ticketmaster" | "google_places" | "yelp";
   type: "event" | "place" | "activity";
   title: string;
   category: string;
@@ -142,10 +148,39 @@ function safeArray(value: unknown) {
 
 function uniqueById(items: Candidate[]) {
   const seen = new Set<string>();
+  // Track accepted place candidates by normalized name + proximity so a venue
+  // returned by both Google and Yelp only appears once. Keeps the first source
+  // seen (Echoo > Ticketmaster > Google > Yelp by call order).
+  const accepted: Candidate[] = [];
   return items.filter((item) => {
     const key = `${item.source}:${item.id}`;
     if (seen.has(key)) return false;
     seen.add(key);
+
+    // Only place-type candidates with coords are eligible for cross-source
+    // name/proximity dedupe. Events keep strict id dedupe.
+    if (
+      item.type === "place" &&
+      item.title &&
+      Number.isFinite(item.latitude) &&
+      Number.isFinite(item.longitude)
+    ) {
+      const dupe = accepted.some(
+        (prev) =>
+          prev.type === "place" &&
+          Number.isFinite(prev.latitude) &&
+          Number.isFinite(prev.longitude) &&
+          namesMatch(prev.title, item.title) &&
+          haversineMeters(
+            prev.latitude!,
+            prev.longitude!,
+            item.latitude!,
+            item.longitude!,
+          ) <= 80,
+      );
+      if (dupe) return false;
+      accepted.push(item);
+    }
     return true;
   });
 }
@@ -477,7 +512,7 @@ async function loadGooglePlaceCandidates(input: {
 
   const body: Record<string, unknown> = {
     textQuery: input.query || `things to do in ${input.city}`,
-    maxResultCount: Math.min(input.limit, 12),
+    maxResultCount: Math.min(input.limit, 20),
     languageCode: "en",
   };
   if (Number.isFinite(input.lat) && Number.isFinite(input.lng)) {
@@ -499,7 +534,7 @@ async function loadGooglePlaceCandidates(input: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri",
+          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri,places.photos",
       },
       body: JSON.stringify(body),
     },
@@ -522,11 +557,57 @@ async function loadGooglePlaceCandidates(input: {
     latitude: optionalNumber(place.location?.latitude),
     longitude: optionalNumber(place.location?.longitude),
     actionUrl: place.googleMapsUri,
+    // Real cover photo via the Place Photo media endpoint. Adds imagery
+    // without changing ranking/relevance (search quality unaffected).
+    imageUrl: place.photos?.[0]?.name
+      ? `https://places.googleapis.com/v1/${place.photos[0].name}/media?maxWidthPx=400&key=${key}`
+      : undefined,
     // Google results are a live coverage fallback. Echoo ratings and Hot Picks
     // are computed only from Echoo-owned community activity.
     popularityScore: 0.45,
     sourceAttribution: "Google Maps",
     actionLabel: "Directions",
+  }));
+}
+
+// Yelp Fusion live candidates. Runs as a depth complement to Google Places —
+// Yelp's restaurant/bar/cafe photo and review depth is typically richer in
+// North America. No-ops to [] when YELP_ENABLED is false.
+async function loadYelpCandidates(input: {
+  query: string;
+  lat?: number;
+  lng?: number;
+  city: string;
+  limit: number;
+}): Promise<Candidate[]> {
+  if (!YELP_ENABLED) return [];
+  if (!Number.isFinite(input.lat) || !Number.isFinite(input.lng)) return [];
+
+  const businesses = await searchYelpBusinesses({
+    latitude: input.lat,
+    longitude: input.lng,
+    radiusMeters: 8000,
+    term: input.query || undefined,
+    limit: Math.min(input.limit, 20),
+  });
+
+  return businesses.map((business) => ({
+    id: business.id,
+    source: "yelp",
+    type: "place",
+    title: business.name,
+    category: business.category,
+    description: business.address || business.city || input.city,
+    imageUrl: business.imageUrl || undefined,
+    address: business.address || undefined,
+    city: business.city || input.city,
+    latitude: business.latitude,
+    longitude: business.longitude,
+    actionUrl: business.url || undefined,
+    // Slightly below Google (0.45) since Yelp is the secondary live source.
+    popularityScore: 0.42,
+    sourceAttribution: "Yelp",
+    actionLabel: "View on Yelp",
   }));
 }
 
@@ -731,7 +812,7 @@ Deno.serve(async (req) => {
     }
     const lat = optionalNumber(body.lat);
     const lng = optionalNumber(body.lng);
-    const limit = Math.min(clampLimit(body.limit || 8), 12);
+    const limit = Math.min(clampLimit(body.limit || 12), 30);
     const intent = inferSearchIntent(query);
     const cacheKey = await sha256Hex(
       JSON.stringify({
@@ -748,7 +829,7 @@ Deno.serve(async (req) => {
       : await readLocationCache(supabase, cacheKey);
     if (cached) return jsonResponse({ ...cached, cacheHit: true });
 
-    const [echoo, ticketmaster, places] = await Promise.all([
+    const [echoo, ticketmaster, places, yelp] = await Promise.all([
       loadEchooCandidates({ supabase, lat, lng, city, query, limit: 16 }),
       intent.wantsEvents
         ? loadTicketmasterCandidates({ query, lat, lng, city, limit: 12 })
@@ -763,10 +844,13 @@ Deno.serve(async (req) => {
             limit: 12,
           })
         : Promise.resolve([]),
+      intent.wantsPlaces
+        ? loadYelpCandidates({ query: intent.placeQuery, lat, lng, city, limit: 12 })
+        : Promise.resolve([]),
     ]);
 
     const ranked = balancedShortlist({
-      candidates: uniqueById([...echoo, ...ticketmaster, ...places]),
+      candidates: uniqueById([...echoo, ...ticketmaster, ...places, ...yelp]),
       query,
       intent,
       limit,
@@ -789,7 +873,7 @@ Deno.serve(async (req) => {
           count: recommendations.length,
           intent,
           ticketmasterCount: ticketmaster.length,
-          placesCount: places.length,
+          placesCount: places.length + yelp.length,
           city,
         }),
         suggestedPills: ["Food nearby", "Events tonight", "Free things to do"],
@@ -801,6 +885,7 @@ Deno.serve(async (req) => {
                 echoo: echoo.length,
                 ticketmaster: ticketmaster.length,
                 googlePlaces: places.length,
+                yelp: yelp.length,
                 ticketmasterConfigured: Boolean(
                   Deno.env.get("TICKETMASTER_API_KEY"),
                 ),
@@ -808,6 +893,7 @@ Deno.serve(async (req) => {
                   Deno.env.get("GOOGLE_PLACES_API_KEY") ||
                   Deno.env.get("GOOGLE_MAPS_API_KEY"),
                 ),
+                yelpConfigured: YELP_ENABLED,
               },
               intent,
               rankedCount: ranked.length,
@@ -833,6 +919,7 @@ Deno.serve(async (req) => {
         echoo: echoo.length,
         ticketmaster: ticketmaster.length,
         googlePlaces: places.length,
+        yelp: yelp.length,
       },
     });
     return jsonResponse(response);
