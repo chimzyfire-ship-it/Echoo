@@ -1341,12 +1341,34 @@
       }
 
       .discovery-fallback-note {
-        min-height: 40px;
-        display: flex;
+        grid-column: 1 / -1;
+        min-height: 190px;
+        display: grid;
         align-items: center;
+        justify-items: start;
+        gap: 10px;
+        padding: 22px;
         color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(248, 245, 239, 0.035);
         font-size: 12px;
         line-height: 1.4;
+      }
+      .discovery-fallback-note strong {
+        color: var(--ink);
+        font-size: 18px;
+        letter-spacing: -0.025em;
+      }
+      .discovery-fallback-note button {
+        min-height: 38px;
+        padding: 0 15px;
+        color: #17120e;
+        border: 0;
+        border-radius: 999px;
+        background: var(--peach);
+        font-size: 11px;
+        font-weight: 760;
       }
       .discover-loading-grid {
         display: grid;
@@ -2039,7 +2061,7 @@
           </div>
         </section>
 
-        <section aria-label="Recommendations">
+        <section id="recommendations-section" aria-label="Recommendations">
           <div class="section-header">
             <h2 id="recommendations-heading">Recommended for you</h2>
           </div>
@@ -2343,7 +2365,6 @@
     <script>
       const CONFIG = {
         anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
-        restUrl: "https://dlezregdjpdqmooubwvl.supabase.co/rest/v1",
         exploreUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
         locationContextUrl:
@@ -2384,6 +2405,9 @@
         resultsNext = document.getElementById("results-next"),
         recommendationContainer = document.getElementById(
           "recommendation-container",
+        ),
+        recommendationsSection = document.getElementById(
+          "recommendations-section",
         ),
         surpriseLoader = document.getElementById("surprise-loader"),
         locationSheet = document.getElementById("discover-location-sheet"),
@@ -2998,17 +3022,17 @@
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
       const SURPRISE_HISTORY_KEY = "echoo_surprise_history_v1";
-      const DISCOVERY_CACHE_KEY = "echoo_discovery_surface_cache_v2";
-      const DISCOVERY_SESSION_CACHE_KEY = "echoo_discovery_session_cache_v1";
+      const DISCOVERY_CACHE_KEY = "echoo_discovery_surface_cache_v3";
+      const DISCOVERY_SESSION_CACHE_KEY = "echoo_discovery_session_cache_v2";
       const DISCOVERY_ACTIVE_QUERY_KEY = "echoo_discovery_active_query_v1";
-      const DISCOVERY_CACHE_VERSION = 2;
+      const DISCOVERY_CACHE_VERSION = 3;
       const DISCOVERY_CACHE_MAX_ENTRIES = 24;
       // Explore photo URLs are short-lived. Keep the on-device surface fresh
       // enough that a warm cache never resolves to expired imagery.
       const DISCOVERY_CACHE_GPS_TTL_MS = 1000 * 60 * 3;
       const DISCOVERY_CACHE_CITY_TTL_MS = 1000 * 60 * 5;
-      const DISCOVERY_NETWORK_TIMEOUT_MS = 4500;
-      const DISCOVERY_IMAGE_READY_TIMEOUT_MS = 1200;
+      const DISCOVERY_NETWORK_TIMEOUT_MS = 7000;
+      const DISCOVERY_IMAGE_READY_TIMEOUT_MS = 2200;
       const DISCOVERY_PHOTO_RENEWAL_TIMEOUT_MS = 2600;
       const PLACE_FALLBACK_IMAGES = {
         food: "assets/optimized/news-date-768.webp",
@@ -3019,6 +3043,8 @@
         local: "assets/optimized/background-1400.jpg",
       };
       let discoveryUiLoading = false;
+      let discoveryLoadFailed = false;
+      const readyDiscoveryImageUrls = new Set();
       let surpriseRevealId = 0;
       let discoveryFastFallbackTimer = 0;
 
@@ -3047,29 +3073,32 @@
 
       function placeVisual(item, className, alt = "", { eager = false } = {}) {
         const image = realImageUrl(item);
+        const imageReady = readyDiscoveryImageUrls.has(image);
         const fallbackImage = fallbackImageFor(item);
-        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}" style="background-image:linear-gradient(to top,rgba(5,5,5,.18),rgba(5,5,5,.02)),url('${esc(fallbackImage)}')"></div>`;
+        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}" style="background-image:linear-gradient(to top,rgba(5,5,5,.18),rgba(5,5,5,.02)),url('${esc(fallbackImage)}')"${imageReady ? " hidden" : ""}></div>`;
         const imageMarkup = image
-          ? `<img class="${className} place-photo" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" onload="this.classList.add('is-loaded');this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
+          ? `<img class="${className} place-photo${imageReady ? " is-loaded" : ""}" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" onload="this.classList.add('is-loaded');this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
           : "";
         return `${imageMarkup}${fallback}`;
       }
 
-      async function warmDiscoveryImages(placeList = []) {
-        const urls = [
-          ...new Set(placeList.map(realImageUrl).filter(Boolean).slice(0, 8)),
-        ];
-        if (!urls.length) return;
+      async function readyDiscoveryImages(placeList = []) {
+        const candidates = imageReadyResults(placeList).slice(0, 16);
+        const loaded = new Set();
+        if (!candidates.length) return [];
         const warm = Promise.allSettled(
-          urls.map(
-            (url) =>
+          candidates.map(
+            (item) =>
               new Promise((resolve) => {
+                const url = realImageUrl(item);
                 const image = new Image();
                 image.decoding = "async";
                 image.onload = async () => {
                   try {
                     await image.decode?.();
                   } catch (_) {}
+                  loaded.add(url);
+                  readyDiscoveryImageUrls.add(url);
                   resolve();
                 };
                 image.onerror = resolve;
@@ -3083,6 +3112,7 @@
             window.setTimeout(resolve, DISCOVERY_IMAGE_READY_TIMEOUT_MS),
           ),
         ]);
+        return candidates.filter((item) => loaded.has(realImageUrl(item)));
       }
 
       function photoRenewalCards(placeList = []) {
@@ -3179,6 +3209,7 @@
           return;
         }
         discoveryUiLoading = true;
+        discoveryLoadFailed = false;
         document.body.classList.add("discover-is-loading");
         if (allowFallback && !items.length)
           items = defaultPlaces.map((place) => ({ ...place }));
@@ -3251,7 +3282,10 @@
           sessionStorage,
           DISCOVERY_SESSION_CACHE_KEY,
         ).find((candidate) => candidate?.identity === identity);
-        if (Array.isArray(sessionEntry?.results) && sessionEntry.results.length)
+        if (
+          Array.isArray(sessionEntry?.results) &&
+          imageReadyResults(sessionEntry.results).length
+        )
           return sessionEntry;
 
         const entry = readCacheEntries(localStorage, DISCOVERY_CACHE_KEY).find(
@@ -3262,7 +3296,7 @@
           : DISCOVERY_CACHE_CITY_TTL_MS;
         if (
           !Array.isArray(entry?.results) ||
-          !entry.results.length ||
+          !imageReadyResults(entry.results).length ||
           !Number.isFinite(Number(entry.storedAt)) ||
           Date.now() - Number(entry.storedAt) > maximumAge
         ) {
@@ -3343,108 +3377,6 @@
         refreshButton.disabled = false;
         refreshButton.classList.remove("is-refreshing");
         refreshButton.setAttribute("aria-label", "Refresh places");
-      }
-
-      function directInventoryCategories(query) {
-        const key = String(query || "").toLowerCase();
-        // The untoggled Discover state has a deliberate, dependable base:
-        // nightlife inventory. It is broad enough to feel like discovery and
-        // consistently populated, while the UI still truthfully reads as the
-        // unfiltered "All places" view.
-        if (key === "discover")
-          return ["bar", "pub", "nightclub", "biergarten"];
-        if (key === "food")
-          return ["restaurant", "cafe", "fast_food", "food_court", "ice_cream"];
-        if (key === "live music" || key === "music")
-          return [
-            "music",
-            "event_venue",
-            "nightclub",
-            "theatre",
-            "arts_centre",
-          ];
-        if (key === "comedy")
-          return ["theatre", "event_venue", "nightclub", "arts_centre"];
-        if (key === "nightlife")
-          return ["bar", "pub", "nightclub", "biergarten"];
-        if (key === "tourism")
-          return ["museum", "gallery", "attraction", "historic"];
-        if (key === "events") return ["event_venue", "arts_centre", "theatre"];
-        return [];
-      }
-
-      function directInventoryDistance(place) {
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
-        const placeLat = Number(place?.latitude);
-        const placeLng = Number(place?.longitude);
-        if (!Number.isFinite(placeLat) || !Number.isFinite(placeLng))
-          return undefined;
-        const radians = Math.PI / 180;
-        const latDelta = (placeLat - lat) * radians;
-        const lngDelta = (placeLng - lng) * radians;
-        const a =
-          Math.sin(latDelta / 2) ** 2 +
-          Math.cos(lat * radians) *
-            Math.cos(placeLat * radians) *
-            Math.sin(lngDelta / 2) ** 2;
-        return Math.round(
-          6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
-        );
-      }
-
-      async function fetchDirectInventoryFallback(request = {}) {
-        try {
-          const endpoint = new URL(`${CONFIG.restUrl}/location_entities`);
-          endpoint.searchParams.set(
-            "select",
-            "id,place_id,title,category,city,latitude,longitude,description,entity_type,image_url",
-          );
-          endpoint.searchParams.set("status", "eq.published");
-          endpoint.searchParams.set("country_code", "eq.CA");
-          endpoint.searchParams.set("admin_area_1", "eq.ON");
-          endpoint.searchParams.set("limit", "24");
-          endpoint.searchParams.set("order", "title.asc");
-          const categories = directInventoryCategories(activeQuery);
-          if (categories.length)
-            endpoint.searchParams.set(
-              "category",
-              `in.(${categories.join(",")})`,
-            );
-          if (
-            !Number.isFinite(request.lat) &&
-            request.city &&
-            request.city !== DEFAULT_DISCOVERY_CITY
-          ) {
-            endpoint.searchParams.set("city", `eq.${request.city}`);
-          }
-          const response = await fetch(endpoint, {
-            headers: {
-              apikey: CONFIG.anonKey,
-              Authorization: `Bearer ${CONFIG.anonKey}`,
-            },
-          });
-          if (!response.ok) return [];
-          const rows = await response.json();
-          return (Array.isArray(rows) ? rows : []).map((place) => ({
-            ...place,
-            canonicalId: place.place_id || null,
-            source: "echoo_inventory_fallback",
-            type: place.entity_type === "event" ? "event" : "place",
-            city: place.city || request.city || DEFAULT_DISCOVERY_CITY,
-            distanceMeters: directInventoryDistance(place),
-            image: place.image_url
-              ? {
-                  url: place.image_url,
-                  alt: place.title || "Local place",
-                  source: "echoo_inventory",
-                }
-              : null,
-            features: [],
-            community: null,
-          }));
-        } catch (_) {
-          return [];
-        }
       }
 
       function rememberShown(list) {
@@ -3531,6 +3463,7 @@
 
       function renderRecommendations(placeList) {
         const list = Array.isArray(placeList) ? placeList.slice(0, 10) : [];
+        recommendationsSection.hidden = !list.length;
         if (!list.length) {
           recommendationContainer.innerHTML = "";
           return;
@@ -3612,13 +3545,10 @@
         recommendationContainer.removeAttribute("aria-busy");
         if (!preserveOrder) items = diversifyPlaces(items);
         if (items.length) {
-          renderRecommendations(
-            items.length > 10 ? items.slice(5, 15) : items.slice(0, 10),
-          );
+          renderRecommendations(items.length > 10 ? items.slice(10, 20) : []);
           rememberShown(items.slice(0, 12));
         } else {
-          items = defaultPlaces.map((place) => ({ ...place }));
-          renderRecommendations(items.slice(0, 10));
+          renderRecommendations([]);
         }
         renderResultsPage();
       }
@@ -3805,13 +3735,18 @@
                 return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place", { eager: pageIndex < 4 })}<span class="discovery-result-copy"><strong>${esc(item.title || "Local pick")}</strong></span></button>`;
               })
               .join("")
-          : `<div class="discovery-fallback-note">A few local favourites are being lined up for you.</div>`;
+          : `<div class="discovery-fallback-note"><strong>${discoveryLoadFailed ? "Fresh photos took too long." : "Fresh local picks are on the way."}</strong><span>${discoveryLoadFailed ? "Nothing low-quality was substituted. Try once more for a new visual list." : "Echoo is lining up image-ready places for this view."}</span>${discoveryLoadFailed ? '<button type="button" data-discover-retry>Try again</button>' : ""}</div>`;
         resultsEl
           .querySelectorAll("[data-result-index]")
           .forEach((button) =>
             button.addEventListener("click", () =>
               openDetail(Number(button.dataset.resultIndex)),
             ),
+          );
+        resultsEl
+          .querySelector("[data-discover-retry]")
+          ?.addEventListener("click", () =>
+            search(activeQuery, { refresh: true }),
           );
         resultsPagination.hidden =
           !items.length || (pageCount === 1 && !discoveryPaging.hasMore);
@@ -4047,12 +3982,11 @@
 
       function discoveryRequestForActiveView() {
         const culture = activeCulture();
-        const base =
-          activeQuery === "discover" && !culture
-            ? "nightlife"
-            : cultureContext?.queryFor
-              ? cultureContext.queryFor(activeQuery, culture)
-              : activeQuery;
+        const base = cultureContext?.queryFor
+          ? cultureContext.queryFor(activeQuery, culture)
+          : activeQuery === "discover"
+            ? "popular places things to do"
+            : activeQuery;
         return {
           // The selected filter stays the search intent. Profile and time are
           // passed separately as ranking signals so "Music" cannot turn into
@@ -4075,6 +4009,7 @@
               ]
             : timePreferenceSlugs(),
           includeLiveFallback: true,
+          requireImages: true,
           // One visual page at a time; the cursor continues across the full
           // GTA inventory instead of treating ten as the total.
           limit: 20,
@@ -4129,9 +4064,7 @@
       }
 
       function imageReadyResults(placeList = []) {
-        const withImages = placeList.filter((item) => realImageUrl(item));
-        const withoutImages = placeList.filter((item) => !realImageUrl(item));
-        return [...withImages, ...withoutImages];
+        return placeList.filter((item) => realImageUrl(item));
       }
 
       async function fetchDiscoveryPage({
@@ -4149,12 +4082,6 @@
         if (render) renderResultsPage();
         const controller = new AbortController();
         discoveryAbortController = controller;
-        // Keep a reliable inventory lane warm while the ranked Edge query is
-        // in flight. The fallback is only displayed when the primary lane
-        // fails or returns no cards, so it never competes with fresh ranking.
-        const directInventoryPromise = append
-          ? Promise.resolve([])
-          : fetchDirectInventoryFallback(request);
         const timeout = setTimeout(
           () => controller.abort(),
           DISCOVERY_NETWORK_TIMEOUT_MS,
@@ -4176,18 +4103,16 @@
             throw new Error(
               payload?.error || "Discover is unavailable right now.",
             );
-          const received = Array.isArray(payload.results)
+          let received = Array.isArray(payload.results)
             ? imageReadyResults(payload.results)
             : [];
+          if (received.length) {
+            received = await readyDiscoveryImages(received);
+            if (requestId !== discoveryRequestId) return;
+          }
           if (!append) {
-            // An empty upstream response must never erase a good cached or
-            // local starter surface. Keep it usable and try again next time.
-            if (received.length || !items.length) items = received;
-            if (!received.length) {
-              const directInventory = await directInventoryPromise;
-              if (requestId !== discoveryRequestId) return;
-              if (directInventory.length) items = directInventory;
-            }
+            if (received.length) items = received;
+            discoveryLoadFailed = !items.length;
           } else {
             items = mergeDiscoveryItems(items, received);
           }
@@ -4212,7 +4137,7 @@
             discoveryPaging.loading = false;
             return fetchDiscoveryPage({ append: false, requestId, render });
           }
-          if (!append && received.length) {
+          if (!append && items.length) {
             writeDiscoveryCache(request, {
               results: items,
               nextCursor: discoveryPaging.cursor,
@@ -4221,21 +4146,13 @@
             });
           }
           if (render) {
-            if (!append && !items.some((item) => item.isFallback))
-              await warmDiscoveryImages(items);
             if (requestId !== discoveryRequestId) return;
             renderItems();
           }
         } catch (_) {
           if (requestId !== discoveryRequestId) return;
-          const directInventory = append ? [] : await directInventoryPromise;
-          if (requestId !== discoveryRequestId) return;
-          if (directInventory.length) {
-            items = directInventory;
-            writeDiscoveryCache(request, { results: items });
-          } else if (!items.length) {
-            items = defaultPlaces.map((place) => ({ ...place }));
-          }
+          if (!append && !items.some((item) => !item.isFallback)) items = [];
+          discoveryLoadFailed = !items.length;
           discoveryPaging.hasMore = false;
           if (render) renderItems();
         } finally {
@@ -4324,17 +4241,19 @@
           );
           resultPage = Math.max(0, Number(cachedSurface.resultPage) || 0);
           items = await renewDiscoveryImages(items, requestId);
-          await warmDiscoveryImages(items);
+          items = await readyDiscoveryImages(items);
           if (requestId !== discoveryRequestId) return;
-          persistCurrentSurface();
-          renderItems({ preserveOrder: true });
-          activeRequestIdentity = "";
-          return;
+          if (items.length) {
+            persistCurrentSurface();
+            renderItems({ preserveOrder: true });
+            activeRequestIdentity = "";
+            return;
+          }
         }
         if (options.refresh && items.length) {
           renderDiscoverLoading({ preserveVisibleResults: true });
         } else {
-          items = defaultPlaces.map((place) => ({ ...place }));
+          items = [];
           renderDiscoverLoading({ allowFallback: options.surprise });
         }
         // Remote inventory can enrich in the background, but Discover itself
