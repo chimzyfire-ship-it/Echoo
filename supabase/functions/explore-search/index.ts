@@ -33,6 +33,7 @@ type ExplorePayload = {
   cursor?: unknown;
   livePageToken?: unknown;
   includeLiveFallback?: unknown;
+  requireImages?: unknown;
   photoCards?: unknown;
 };
 
@@ -391,7 +392,7 @@ async function hydrateOwnedCardPhotos(
 ) {
   const needsPhoto = cards
     .filter((card) => !card.image && card.canonicalId)
-    .slice(0, 20);
+    .slice(0, 8);
   if (!needsPhoto.length) return cards;
   const canonicalIds = needsPhoto.map((card) => card.canonicalId);
   const [{ data: canonicalPlaces }, { data: approvedPhotos }] =
@@ -954,6 +955,7 @@ Deno.serve(async (req) => {
     const page = owned.slice(0, limit);
     const ownedCards = page.map(ownedCard);
     const includeLiveFallback = asBoolean(get("includeLiveFallback"), true);
+    const requireImages = asBoolean(get("requireImages"), false);
     // The two potentially slow provider lanes are independent. Run them in
     // parallel so owned cards with newly resolved covers never wait behind the
     // live catalogue request.
@@ -993,10 +995,10 @@ Deno.serve(async (req) => {
     );
     // Discovery is a visual surface. Keep relevance ordering within each lane,
     // but never lead with image-less inventory when verified photos are ready.
-    const visualResults = [
-      ...ranked.filter((item: any) => item.image),
-      ...ranked.filter((item: any) => !item.image),
-    ];
+    const imageResults = ranked.filter((item: any) => item.image);
+    const visualResults = requireImages
+      ? imageResults
+      : [...imageResults, ...ranked.filter((item: any) => !item.image)];
     return jsonResponse({
       supported: true,
       query,
