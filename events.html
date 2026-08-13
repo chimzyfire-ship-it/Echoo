@@ -2252,6 +2252,7 @@
     <script>
       const CONFIG = {
         anonKey: "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH",
+        restUrl: "https://dlezregdjpdqmooubwvl.supabase.co/rest/v1",
         exploreUrl:
           "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search",
         locationContextUrl:
@@ -2958,6 +2959,7 @@
       // enough that a warm cache never resolves to expired imagery.
       const DISCOVERY_CACHE_GPS_TTL_MS = 1000 * 60 * 3;
       const DISCOVERY_CACHE_CITY_TTL_MS = 1000 * 60 * 5;
+      const DISCOVERY_NETWORK_TIMEOUT_MS = 4500;
       const PLACE_FALLBACK_IMAGES = {
         food: "assets/optimized/news-date-768.webp",
         music: "assets/optimized/news-music-768.webp",
@@ -3122,6 +3124,84 @@
           );
         } catch (_) {
           // Private browsing and quota limits should never interrupt Discover.
+        }
+      }
+
+      function directInventoryCategories(query) {
+        const key = String(query || "").toLowerCase();
+        if (key === "food")
+          return ["restaurant", "cafe", "fast_food", "food_court", "ice_cream"];
+        if (key === "live music" || key === "music")
+          return ["music", "event_venue", "nightclub", "theatre", "arts_centre"];
+        if (key === "comedy")
+          return ["theatre", "event_venue", "nightclub", "arts_centre"];
+        if (key === "nightlife") return ["bar", "pub", "nightclub", "biergarten"];
+        if (key === "tourism") return ["museum", "gallery", "attraction", "historic"];
+        if (key === "events") return ["event_venue", "arts_centre", "theatre"];
+        return [];
+      }
+
+      function directInventoryDistance(place) {
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
+        const placeLat = Number(place?.latitude);
+        const placeLng = Number(place?.longitude);
+        if (!Number.isFinite(placeLat) || !Number.isFinite(placeLng))
+          return undefined;
+        const radians = Math.PI / 180;
+        const latDelta = (placeLat - lat) * radians;
+        const lngDelta = (placeLng - lng) * radians;
+        const a =
+          Math.sin(latDelta / 2) ** 2 +
+          Math.cos(lat * radians) *
+            Math.cos(placeLat * radians) *
+            Math.sin(lngDelta / 2) ** 2;
+        return Math.round(
+          6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+        );
+      }
+
+      async function fetchDirectInventoryFallback(request = {}) {
+        try {
+          const endpoint = new URL(`${CONFIG.restUrl}/location_entities`);
+          endpoint.searchParams.set(
+            "select",
+            "id,title,category,city,latitude,longitude,description,entity_type",
+          );
+          endpoint.searchParams.set("status", "eq.published");
+          endpoint.searchParams.set("country_code", "eq.CA");
+          endpoint.searchParams.set("admin_area_1", "eq.ON");
+          endpoint.searchParams.set("limit", "24");
+          endpoint.searchParams.set("order", "title.asc");
+          const categories = directInventoryCategories(activeQuery);
+          if (categories.length)
+            endpoint.searchParams.set("category", `in.(${categories.join(",")})`);
+          if (
+            !Number.isFinite(request.lat) &&
+            request.city &&
+            request.city !== DEFAULT_DISCOVERY_CITY
+          ) {
+            endpoint.searchParams.set("city", `eq.${request.city}`);
+          }
+          const response = await fetch(endpoint, {
+            headers: {
+              apikey: CONFIG.anonKey,
+              Authorization: `Bearer ${CONFIG.anonKey}`,
+            },
+          });
+          if (!response.ok) return [];
+          const rows = await response.json();
+          return (Array.isArray(rows) ? rows : []).map((place) => ({
+            ...place,
+            source: "echoo_inventory_fallback",
+            type: place.entity_type === "event" ? "event" : "place",
+            city: place.city || request.city || DEFAULT_DISCOVERY_CITY,
+            distanceMeters: directInventoryDistance(place),
+            image: null,
+            features: [],
+            community: null,
+          }));
+        } catch (_) {
+          return [];
         }
       }
 
@@ -3808,7 +3888,16 @@
         discoveryPaging.loading = true;
         if (render) renderResultsPage();
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 9000);
+        // Keep a reliable inventory lane warm while the ranked Edge query is
+        // in flight. The fallback is only displayed when the primary lane
+        // fails or returns no cards, so it never competes with fresh ranking.
+        const directInventoryPromise = append
+          ? Promise.resolve([])
+          : fetchDirectInventoryFallback(request);
+        const timeout = setTimeout(
+          () => controller.abort(),
+          DISCOVERY_NETWORK_TIMEOUT_MS,
+        );
         try {
           const response = await fetch(CONFIG.exploreUrl, {
             method: "POST",
@@ -3833,6 +3922,11 @@
             // An empty upstream response must never erase a good cached or
             // local starter surface. Keep it usable and try again next time.
             if (received.length || !items.length) items = received;
+            if (!received.length) {
+              const directInventory = await directInventoryPromise;
+              if (requestId !== discoveryRequestId) return;
+              if (directInventory.length) items = directInventory;
+            }
           } else {
             items = mergeDiscoveryItems(items, received);
           }
@@ -3863,8 +3957,16 @@
           if (render) renderItems();
         } catch (_) {
           if (requestId !== discoveryRequestId) return;
-          if (!items.length)
+          const directInventory = append
+            ? []
+            : await directInventoryPromise;
+          if (requestId !== discoveryRequestId) return;
+          if (directInventory.length) {
+            items = directInventory;
+            writeDiscoveryCache(request, { results: items });
+          } else if (!items.length) {
             items = defaultPlaces.map((place) => ({ ...place }));
+          }
           discoveryPaging.hasMore = false;
           if (render) renderItems();
         } finally {
