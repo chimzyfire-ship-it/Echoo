@@ -1153,6 +1153,268 @@
   color: var(--ink);
 }
 
+/* ───────────────────────────────────────────────────────────────────────
+   Minimalist 4-Slide Intro Onboarding Shell & Vector Illustrations
+   ─────────────────────────────────────────────────────────────────────── */
+.echoo-linkup-intro-shell {
+  position: relative;
+  min-height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 20px 24px;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(231, 201, 142, 0.14) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(12, 12, 12, 0.55) 0%, rgba(10, 10, 10, 0.88) 55%, rgba(0, 0, 0, 0.98) 100%),
+    url('../assets/echoo-linkup-bg.png') center/cover no-repeat;
+  border-radius: 28px;
+  border: 1px solid rgba(248, 245, 239, 0.1);
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.intro-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 10;
+}
+
+.intro-progress-track {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+.intro-progress-dot {
+  height: 3.5px;
+  flex: 1;
+  border-radius: 999px;
+  background: rgba(248, 245, 239, 0.2);
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.intro-progress-dot.active {
+  background: #E7C98E;
+  box-shadow: 0 0 10px rgba(231, 201, 142, 0.6);
+}
+
+.intro-skip-btn {
+  background: rgba(248, 245, 239, 0.08);
+  border: 1px solid rgba(248, 245, 239, 0.12);
+  color: rgba(248, 245, 239, 0.8);
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font: 600 12px/1 "Inter", sans-serif;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.intro-skip-btn:hover {
+  background: rgba(248, 245, 239, 0.16);
+  color: #fff;
+}
+
+/* Slide Stage & Vector Cards */
+.intro-slides-viewport {
+  position: relative;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.intro-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0;
+  transform: translateX(20px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.intro-slide.active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+/* AI Generated Illustration Graphics */
+.intro-illus-img {
+  width: 124px;
+  height: 124px;
+  border-radius: 28px;
+  object-fit: cover;
+  border: 1px solid rgba(231, 201, 142, 0.4);
+  box-shadow: 0 0 32px rgba(231, 201, 142, 0.22);
+  margin-bottom: 24px;
+}
+
+/* Vector Illustration Graphics (Echoo Coherent Design System) */
+.vector-illus-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vector-illus-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 1px solid rgba(231, 201, 142, 0.3);
+  background: radial-gradient(circle at 50% 50%, rgba(231, 201, 142, 0.16) 0%, rgba(18, 18, 18, 0.6) 75%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 32px rgba(231, 201, 142, 0.15);
+}
+
+.vector-illus-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed rgba(231, 201, 142, 0.25);
+  animation: illus-pulse 4s linear infinite;
+}
+
+@keyframes illus-pulse {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.vector-illus-svg {
+  width: 52px;
+  height: 52px;
+  stroke: #E7C98E;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.intro-slide-title {
+  margin: 0 0 8px;
+  font: 800 32px/1.1 "Inter", sans-serif;
+  letter-spacing: -0.03em;
+  color: #f8f5ef;
+}
+
+.intro-slide-copy {
+  margin: 0;
+  max-width: 290px;
+  font: 520 15px/1.4 "Inter", sans-serif;
+  color: rgba(248, 245, 239, 0.72);
+}
+
+/* Bottom Action Group */
+.intro-action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  z-index: 10;
+}
+
+/* Super Minimal Auth Modal Sheet */
+.linkup-minimal-auth-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.linkup-minimal-auth-sheet.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.linkup-minimal-auth-card {
+  width: min(430px, 100%);
+  background: #141414;
+  border: 1px solid rgba(248, 245, 239, 0.12);
+  border-radius: 28px 28px 0 0;
+  padding: 24px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.7);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.linkup-minimal-auth-sheet.is-open .linkup-minimal-auth-card {
+  transform: translateY(0);
+}
+
+.linkup-auth-nav-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: rgba(248, 245, 239, 0.06);
+  padding: 4px;
+  border-radius: 9999px;
+  border: 1px solid rgba(248, 245, 239, 0.08);
+}
+
+.linkup-auth-tab {
+  background: transparent;
+  border: 0;
+  color: rgba(248, 245, 239, 0.6);
+  padding: 8px 12px;
+  border-radius: 9999px;
+  font: 650 13px/1 "Inter", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.linkup-auth-tab.active {
+  background: #1e1e1e;
+  color: #f8f5ef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.linkup-auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.linkup-auth-field {
+  width: 100%;
+  background: rgba(248, 245, 239, 0.04);
+  border: 1px solid rgba(248, 245, 239, 0.1);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #f8f5ef;
+  font: 500 14px/1 "Inter", sans-serif;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.linkup-auth-field:focus {
+  border-color: #E7C98E;
+  background: rgba(248, 245, 239, 0.06);
+}
+
 /* Reduced motion adjustments */
 @media (prefers-reduced-motion: reduce) {
   .echoo-linkup-checkin,
@@ -1164,10 +1426,11 @@
   .echoo-linkup-way-row,
   .echoo-linkup-fab,
   .echoo-linkup-presence-dot--live,
-  .echoo-linkup-spinner {
+  .echoo-linkup-spinner,
+  .fab-culture-lens,
+  .intro-slide {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
 }
-

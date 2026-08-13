@@ -154,68 +154,88 @@
         </div>
       </header>
 
-      <!-- Link Up module -->
+      <!-- Link Up Module Main Shell -->
       <main class="echoo-linkup-module">
-        <!-- Hero -->
-        <section class="echoo-linkup-module-hero">
-          <div class="echoo-linkup-module-title-wrap">
-            <h1 class="echoo-linkup-module-title">Link up.</h1>
-            <p class="echoo-linkup-module-subtitle">
-              <span class="gold-accent">Right people. Right place.</span><br />
-              Real connections.
-            </p>
-          </div>
-          <div class="echoo-linkup-ring-badge" aria-hidden="true">
-            <div class="echoo-linkup-ring-badge-inner">
-              <svg viewBox="0 0 24 24">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
+
+        <!-- 4-Slide Minimalist Aesthetic Onboarding Intro Shell (No-User / Standby Intro View) -->
+        <section class="echoo-linkup-intro-shell" id="echoo-linkup-intro-shell">
+          <!-- Top Progress Track & Skip Action -->
+          <div class="intro-top-bar">
+            <div class="intro-progress-track">
+              <div class="intro-progress-dot active" data-slide-indicator="0"></div>
+              <div class="intro-progress-dot" data-slide-indicator="1"></div>
+              <div class="intro-progress-dot" data-slide-indicator="2"></div>
+              <div class="intro-progress-dot" data-slide-indicator="3"></div>
             </div>
+            <button class="intro-skip-btn" id="intro-skip-btn" type="button">Skip</button>
+          </div>
+
+          <!-- Slides Viewport with Generated Echoo AI Vector Illustrations -->
+          <div class="intro-slides-viewport" id="intro-slides-viewport">
+
+            <!-- Slide 1: Location & Proximity -->
+            <div class="intro-slide active" data-slide-index="0">
+              <img src="assets/linkup-illus-1.jpg" alt="Right place, right time illustration" class="intro-illus-img" />
+              <h2 class="intro-slide-title">Right place. Right time.</h2>
+              <p class="intro-slide-copy">See who's at the same spot or nearby in real time.</p>
+            </div>
+
+            <!-- Slide 2: Vibe Check -->
+            <div class="intro-slide" data-slide-index="1">
+              <img src="assets/linkup-illus-2.jpg" alt="Vibe check illustration" class="intro-illus-img" />
+              <h2 class="intro-slide-title">Vibe check.</h2>
+              <p class="intro-slide-copy">Instant matches based on what you actually like.</p>
+            </div>
+
+            <!-- Slide 3: Chat On The Spot -->
+            <div class="intro-slide" data-slide-index="2">
+              <img src="assets/linkup-illus-3.jpg" alt="Chat on the spot illustration" class="intro-illus-img" />
+              <h2 class="intro-slide-title">Chat on the spot.</h2>
+              <p class="intro-slide-copy">Messages unlock when you're close and clear out after.</p>
+            </div>
+
+            <!-- Slide 4: Real-World Link Up -->
+            <div class="intro-slide" data-slide-index="3">
+              <img src="assets/linkup-illus-4.jpg" alt="No endless DMs illustration" class="intro-illus-img" />
+              <h2 class="intro-slide-title">No endless DMs.</h2>
+              <p class="intro-slide-copy">Skip the small talk and link up for real.</p>
+            </div>
+
+          </div>
+
+          <!-- Bottom Actions Bar -->
+          <div class="intro-action-group">
+            <button class="echoo-linkup-btn--hero" id="btn-create-account" type="button" style="width: 100%;">Create Account →</button>
+            <button class="echoo-linkup-btn--outline" id="btn-sign-in" type="button" style="width: 100%;">Sign In</button>
           </div>
         </section>
 
-        <!-- Live state viewport — rendered by EchooLinkUp.initHub() -->
-        <section id="echoo-linkup-viewport" class="echoo-linkup-viewport" data-linkup-viewport>
+        <!-- Live Presence Viewport (When User is Signed In & Active) -->
+        <section id="echoo-linkup-viewport" class="echoo-linkup-viewport" data-linkup-viewport style="display: none;">
           <div class="echoo-linkup-state">
             <div class="echoo-linkup-spinner" aria-label="Loading Link Up"></div>
           </div>
         </section>
 
-        <!-- How it works — honest static explainer with real routing -->
-        <section class="echoo-linkup-connect-card">
-          <h3 class="echoo-linkup-connect-title">How Link Up works</h3>
-          <div class="echoo-linkup-ways-list">
-            <a class="echoo-linkup-way-row echoo-linkup-settings-link-row" href="events.html" aria-label="Find a place and check in">
-              <div class="echoo-linkup-way-left">
-                <div class="echoo-linkup-way-icon">
-                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                </div>
-                <span class="echoo-linkup-way-text">Find a place &amp; check in</span>
-              </div>
-              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
-            </a>
-            <a class="echoo-linkup-way-row echoo-linkup-settings-link-row" href="culture.html" aria-label="Tune your Culture Lens">
-              <div class="echoo-linkup-way-left">
-                <div class="echoo-linkup-way-icon">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
-                </div>
-                <span class="echoo-linkup-way-text">Tune your Culture Lens</span>
-              </div>
-              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
-            </a>
-            <a class="echoo-linkup-way-row echoo-linkup-settings-link-row" href="linkup-settings.html" aria-label="Pause or manage Link Up">
-              <div class="echoo-linkup-way-left">
-                <div class="echoo-linkup-way-icon">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
-                </div>
-                <span class="echoo-linkup-way-text">Pause or manage Link Up</span>
-              </div>
-              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
-            </a>
-          </div>
-        </section>
       </main>
+
+      <!-- Super Minimal Auth Sheet Modal Overlay -->
+      <div class="linkup-minimal-auth-sheet" id="linkup-minimal-auth-sheet" aria-hidden="true">
+        <div class="linkup-minimal-auth-card">
+          <div class="linkup-auth-nav-tabs">
+            <button class="linkup-auth-tab active" id="auth-tab-signup" type="button">Create Account</button>
+            <button class="linkup-auth-tab" id="auth-tab-signin" type="button">Sign In</button>
+          </div>
+
+          <form id="linkup-minimal-auth-form" class="linkup-auth-input-group" onsubmit="event.preventDefault();">
+            <input class="linkup-auth-field" type="email" id="auth-email-input" placeholder="Email address or phone number" required />
+            <input class="linkup-auth-field" type="password" id="auth-pass-input" placeholder="Password" required />
+            <button class="echoo-linkup-btn--hero" type="submit" id="auth-submit-btn" style="width: 100%; margin-top: 6px;">Continue →</button>
+          </form>
+
+          <button type="button" id="auth-close-btn" style="background: none; border: 0; color: rgba(248, 245, 239, 0.5); font-size: 12px; font-weight: 500; cursor: pointer; text-align: center;">Cancel</button>
+        </div>
+      </div>
 
       <!-- Floating Bottom Navigation -->
       <nav class="bottom-nav" aria-label="Main navigation">
