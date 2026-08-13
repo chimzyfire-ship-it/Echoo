@@ -885,10 +885,7 @@
         .select("profile_photo_url, bio, completed_at, linkup_status")
         .eq("user_id", userId)
         .maybeSingle();
-      const incomplete =
-        !profile?.completed_at ||
-        !profile?.profile_photo_url ||
-        !String(profile?.bio || "").trim();
+      const incomplete = false;
       const paused =
         !!profile?.linkup_status && profile.linkup_status !== "active";
 
@@ -1059,8 +1056,6 @@
       stopTtl();
       // Paused / opted out via settings — show a resume card.
       if (snap.paused) return renderPaused();
-      // Incomplete profile + not yet checked in → prompt to finish profile.
-      if (snap.incomplete && !snap.presence) return renderIncomplete();
 
       const parts = [renderPresence(snap)];
       if (snap.pending.length) parts.push(renderPending(snap.pending));
@@ -1428,19 +1423,10 @@
       } catch (_e) {}
 
       if (state.userId) {
-        // User is signed in with an Echoo profile
-        if (hasSeenIntro) {
-          // Returning signed-in user → go directly to live presence viewport
-          if (introShell) introShell.style.display = "none";
-          if (overlay) overlay.style.display = "none";
-          if (viewport) viewport.style.display = "flex";
-        } else {
-          // First-time signed-in user → show smart intro slide overlay once
-          if (introShell) introShell.style.display = "";
-          if (overlay) overlay.style.display = "flex";
-          if (viewport) viewport.style.display = "none";
-          initIntroCarousel();
-        }
+        // User is logged into Echoo -> IMMEDIATELY show Link Up normal logged-in feature page!
+        if (introShell) introShell.style.display = "none";
+        if (overlay) overlay.style.display = "none";
+        if (viewport) viewport.style.display = "flex";
       } else {
         // Signed-out user → show hero landing screen
         if (introShell) introShell.style.display = "";
