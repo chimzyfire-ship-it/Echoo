@@ -405,7 +405,10 @@
         background: rgba(248, 245, 239, 0.045);
         color: var(--ink);
         box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease;
       }
 
       .sale-card:hover,
@@ -433,7 +436,11 @@
       .sale-art::after {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, transparent 34%, rgba(5, 5, 5, 0.58));
+        background: linear-gradient(
+          180deg,
+          transparent 34%,
+          rgba(5, 5, 5, 0.58)
+        );
         content: "";
       }
 
@@ -488,7 +495,12 @@
       .sale-loading {
         min-height: 206px;
         border-radius: 17px;
-        background: linear-gradient(100deg, rgba(248, 245, 239, 0.04) 20%, rgba(248, 245, 239, 0.13) 43%, rgba(248, 245, 239, 0.04) 66%);
+        background: linear-gradient(
+          100deg,
+          rgba(248, 245, 239, 0.04) 20%,
+          rgba(248, 245, 239, 0.13) 43%,
+          rgba(248, 245, 239, 0.04) 66%
+        );
         background-size: 220% 100%;
         animation: ticket-shimmer 1.35s ease-in-out infinite;
       }
@@ -504,8 +516,13 @@
       }
 
       @keyframes ticket-shimmer {
-        0%, 100% { background-position: 100% 0; }
-        50% { background-position: 0 0; }
+        0%,
+        100% {
+          background-position: 100% 0;
+        }
+        50% {
+          background-position: 0 0;
+        }
       }
 
       .ticket {
@@ -548,7 +565,11 @@
         position: absolute;
         inset: 0;
         content: "";
-        background: linear-gradient(135deg, rgba(5, 5, 5, 0.05), rgba(5, 5, 5, 0.58));
+        background: linear-gradient(
+          135deg,
+          rgba(5, 5, 5, 0.05),
+          rgba(5, 5, 5, 0.58)
+        );
       }
 
       .ticket-status {
@@ -566,7 +587,11 @@
         text-transform: uppercase;
       }
 
-      .ticket-body { display: grid; gap: 13px; padding: 16px; }
+      .ticket-body {
+        display: grid;
+        gap: 13px;
+        padding: 16px;
+      }
 
       .ticket-tag {
         color: var(--peach);
@@ -621,11 +646,7 @@
         border: 1px solid var(--line);
         border-radius: 10px;
         background:
-          linear-gradient(
-              90deg,
-              rgba(248, 245, 239, 0.04) 1px,
-              transparent 1px
-            )
+          linear-gradient(90deg, rgba(248, 245, 239, 0.04) 1px, transparent 1px)
             0 0 / 14px 14px,
           rgba(8, 8, 8, 0.6);
         color: var(--peach);
@@ -634,7 +655,11 @@
         letter-spacing: 0.08em;
       }
 
-      .ticket-code span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ticket-code span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       .ticket-copy {
         min-height: 38px;
         padding: 0 11px;
@@ -647,10 +672,33 @@
         font-weight: 720;
       }
 
-      .ticket-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .ticket-action { min-height: 42px; display: grid; place-items: center; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 12px; color: var(--ink); background: transparent; font-size: 11px; font-weight: 720; text-align: center; }
-      .ticket-action.primary { border-color: var(--peach); color: #17130e; background: var(--peach); }
-      .ticket-action:active,.ticket-copy:active { transform: scale(.98); }
+      .ticket-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .ticket-action {
+        min-height: 42px;
+        display: grid;
+        place-items: center;
+        padding: 0 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        color: var(--ink);
+        background: transparent;
+        font-size: 11px;
+        font-weight: 720;
+        text-align: center;
+      }
+      .ticket-action.primary {
+        border-color: var(--peach);
+        color: #17130e;
+        background: var(--peach);
+      }
+      .ticket-action:active,
+      .ticket-copy:active {
+        transform: scale(0.98);
+      }
 
       /* ── Empty state ── */
       .empty {
@@ -741,7 +789,9 @@
       }
     </style>
     <link rel="stylesheet" href="assets/page-loader.css" />
-    <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
   </head>
   <body>
     <div class="app-shell">
@@ -761,7 +811,8 @@
           <div class="hero-copy">
             <h1>Tickets</h1>
             <p>
-              Find something worth going out for, then keep every Echoo ticket in one place.
+              Find something worth going out for, then keep every Echoo ticket
+              in one place.
             </p>
           </div>
         </section>
@@ -824,8 +875,12 @@
       </a>
       <a class="nav-link" href="linkup.html">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          <path
+            d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+          />
+          <path
+            d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+          />
         </svg>
         <span>Link Up</span>
       </a>
@@ -838,6 +893,8 @@
       </a>
     </nav>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
     <script>
       const ENDPOINT =
         "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/my-tickets";
@@ -863,9 +920,17 @@
       }
 
       function escapeHtml(value) {
-        return String(value || "").replace(/[&<>"']/g, (character) => ({
-          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-        })[character]);
+        return String(value || "").replace(
+          /[&<>"']/g,
+          (character) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[character],
+        );
       }
 
       function eventDate(value) {
@@ -884,9 +949,13 @@
 
       function preferredCity() {
         try {
-          const platformPrefs = window.EchooLocationPlatform?.readPreferences?.();
+          const platformPrefs =
+            window.EchooLocationPlatform?.readPreferences?.();
           if (platformPrefs?.city) return platformPrefs.city;
-          return JSON.parse(localStorage.getItem("echoo_preferences") || "{}").city || "Toronto";
+          return (
+            JSON.parse(localStorage.getItem("echoo_preferences") || "{}")
+              .city || "Toronto"
+          );
         } catch (_) {
           return "Toronto";
         }
@@ -900,20 +969,27 @@
       function renderTicketsForSale(cards) {
         const events = Array.isArray(cards) ? cards.slice(0, 4) : [];
         if (!events.length) {
-          ticketsForSaleEl.innerHTML = '<div class="sale-empty">Live ticket drops will appear here. <a href="happenings.html">Browse all events</a>.</div>';
+          ticketsForSaleEl.innerHTML =
+            '<div class="sale-empty">Live ticket drops will appear here. <a href="happenings.html">Browse all events</a>.</div>';
           return;
         }
-        ticketsForSaleEl.innerHTML = events.map((card) => {
-          const href = saleDestination(card);
-          const external = /^https?:\/\//i.test(href);
-          const image = String(card.imageUrl || "assets/optimized/news-music-768.jpg");
-          const status = card.statusLabel || "Selling now";
-          const detail = [card.subtitle, readableEventDate(card.startsAt)].filter(Boolean).join(" · ");
-          return `<a class="sale-card" href="${escapeHtml(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>
+        ticketsForSaleEl.innerHTML = events
+          .map((card) => {
+            const href = saleDestination(card);
+            const external = /^https?:\/\//i.test(href);
+            const image = String(
+              card.imageUrl || "assets/optimized/news-music-768.jpg",
+            );
+            const status = card.statusLabel || "Selling now";
+            const detail = [card.subtitle, readableEventDate(card.startsAt)]
+              .filter(Boolean)
+              .join(" · ");
+            return `<a class="sale-card" href="${escapeHtml(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>
             <span class="sale-art"><img src="${escapeHtml(image)}" alt="" loading="lazy" /><span class="sale-status">${escapeHtml(status)}</span></span>
             <span class="sale-copy"><strong>${escapeHtml(card.title || "Live event")}</strong><span>${escapeHtml(detail || "Greater Toronto Area")}</span><span class="sale-price">${escapeHtml(card.priceLabel || "See tickets")}</span></span>
           </a>`;
-        }).join("");
+          })
+          .join("");
       }
 
       async function loadTicketsForSale() {
@@ -926,7 +1002,9 @@
           });
           if (!response.ok) throw new Error("Live tickets unavailable");
           const payload = await response.json();
-          const cards = payload?.data?.lanes?.find((lane) => lane.id === "shows-tickets")?.cards || [];
+          const cards =
+            payload?.data?.lanes?.find((lane) => lane.id === "shows-tickets")
+              ?.cards || [];
           renderTicketsForSale(cards);
         } catch (_) {
           renderTicketsForSale([]);
@@ -944,8 +1022,15 @@
           .map((ticket, index) => {
             const event = ticket.ticketed_events || {};
             const tier = ticket.ticket_tiers || {};
-            const location = [event.venue_name || "Venue TBA", event.city || "Canada", event.province].filter(Boolean).join(" · ");
-            const image = event.image_url || "assets/optimized/news-music-768.jpg";
+            const location = [
+              event.venue_name || "Venue TBA",
+              event.city || "Canada",
+              event.province,
+            ]
+              .filter(Boolean)
+              .join(" · ");
+            const image =
+              event.image_url || "assets/optimized/news-music-768.jpg";
             return `
             <article class="ticket">
               <div class="ticket-art"><img src="${escapeHtml(image)}" alt="" loading="lazy" /><span class="ticket-status">Confirmed</span></div>
@@ -972,43 +1057,74 @@
             try {
               await navigator.clipboard.writeText(code);
               button.textContent = "Copied";
-              setTimeout(() => { button.textContent = "Copy code"; }, 1300);
+              setTimeout(() => {
+                button.textContent = "Copy code";
+              }, 1300);
             } catch (_) {
               button.textContent = "Copy unavailable";
             }
           });
         });
-        ticketsEl.querySelectorAll("[data-calendar-ticket]").forEach((button) => {
-          button.addEventListener("click", () => downloadCalendar(loadedTickets[Number(button.dataset.calendarTicket)]));
-        });
+        ticketsEl
+          .querySelectorAll("[data-calendar-ticket]")
+          .forEach((button) => {
+            button.addEventListener("click", () =>
+              downloadCalendar(
+                loadedTickets[Number(button.dataset.calendarTicket)],
+              ),
+            );
+          });
       }
 
       function calendarDate(value) {
         const date = new Date(value || "");
         if (!Number.isFinite(date.getTime())) return "";
-        return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+        return date
+          .toISOString()
+          .replace(/[-:]/g, "")
+          .replace(/\.\d{3}Z$/, "Z");
       }
 
       function calendarText(value) {
-        return String(value || "").replace(/[\\,;\n]/g, (character) => ({ "\\": "\\\\", ",": "\\,", ";": "\\;", "\n": "\\n" })[character]);
+        return String(value || "").replace(
+          /[\\,;\n]/g,
+          (character) =>
+            ({ "\\": "\\\\", ",": "\\,", ";": "\\;", "\n": "\\n" })[character],
+        );
       }
 
       function downloadCalendar(ticket) {
         const event = ticket?.ticketed_events || {};
         const starts = calendarDate(event.starts_at);
         if (!starts) return;
-        const end = calendarDate(new Date(new Date(event.starts_at).getTime() + 2 * 60 * 60 * 1000));
+        const end = calendarDate(
+          new Date(new Date(event.starts_at).getTime() + 2 * 60 * 60 * 1000),
+        );
         const content = [
-          "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Echoo//Tickets//EN", "BEGIN:VEVENT",
-          `UID:${calendarText(ticket.id || ticket.display_code)}@echoo`, `DTSTAMP:${calendarDate(new Date())}`,
-          `DTSTART:${starts}`, `DTEND:${end || starts}`, `SUMMARY:${calendarText(event.title || "Echoo event")}`,
+          "BEGIN:VCALENDAR",
+          "VERSION:2.0",
+          "PRODID:-//Echoo//Tickets//EN",
+          "BEGIN:VEVENT",
+          `UID:${calendarText(ticket.id || ticket.display_code)}@echoo`,
+          `DTSTAMP:${calendarDate(new Date())}`,
+          `DTSTART:${starts}`,
+          `DTEND:${end || starts}`,
+          `SUMMARY:${calendarText(event.title || "Echoo event")}`,
           `LOCATION:${calendarText([event.venue_name, event.city, event.province].filter(Boolean).join(", "))}`,
-          `DESCRIPTION:${calendarText(`Ticket ${ticket.display_code || ""}`)}`, "END:VEVENT", "END:VCALENDAR",
+          `DESCRIPTION:${calendarText(`Ticket ${ticket.display_code || ""}`)}`,
+          "END:VEVENT",
+          "END:VCALENDAR",
         ].join("\r\n");
-        const url = URL.createObjectURL(new Blob([content], { type: "text/calendar;charset=utf-8" }));
+        const url = URL.createObjectURL(
+          new Blob([content], { type: "text/calendar;charset=utf-8" }),
+        );
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${String(event.title || "echoo-event").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "echoo-event"}.ics`;
+        link.download = `${
+          String(event.title || "echoo-event")
+            .replace(/[^a-z0-9]+/gi, "-")
+            .replace(/^-|-$/g, "") || "echoo-event"
+        }.ics`;
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -1039,8 +1155,11 @@
       emailEl.addEventListener("keydown", (event) => {
         if (event.key === "Enter") loadTickets();
       });
-      loadTicketsForSale();
-      loadTickets();
+      window.echooAccessReady.then((access) => {
+        if (!access?.ok) return;
+        loadTicketsForSale();
+        loadTickets();
+      });
     </script>
     <script src="assets/page-loader.js"></script>
   </body>

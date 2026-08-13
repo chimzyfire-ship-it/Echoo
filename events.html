@@ -2695,8 +2695,6 @@
         Authorization: `Bearer ${CONFIG.anonKey}`,
       };
 
-      const DETAIL_PENDING_KEY = "echoo_pending_place_detail";
-
       function imageUrlFor(item) {
         const image = item?.image || {};
         const storagePath = String(image?.storagePath || "").trim();
@@ -2824,66 +2822,8 @@
         return payload?.data || buildFallbackDetail(item);
       }
 
-      function savePendingDetail(item) {
-        sessionStorage.setItem(
-          DETAIL_PENDING_KEY,
-          JSON.stringify({
-            item,
-            city,
-            createdAt: Date.now(),
-          }),
-        );
-      }
-
-      function clearPendingDetail() {
-        sessionStorage.removeItem(DETAIL_PENDING_KEY);
-      }
-
-      async function resumePendingDetail() {
-        const raw = sessionStorage.getItem(DETAIL_PENDING_KEY);
-        if (!raw || !window.EchooAuth?.getAuthState) return;
-        let pending;
-        try {
-          pending = JSON.parse(raw);
-        } catch (_) {
-          clearPendingDetail();
-          return;
-        }
-        const authState = await window.EchooAuth.getAuthState({
-          requireFresh: true,
-        });
-        if (!authState.ok) return;
-        clearPendingDetail();
-        await openDetailByItem(pending.item, { resume: true });
-      }
-
       async function openDetailByItem(item, options = {}) {
         const heroImage = realImageUrl(item);
-        const authState = window.EchooAuth?.getAuthState
-          ? await window.EchooAuth.getAuthState({ requireFresh: true })
-          : { ok: false };
-
-        // Discovery stays open to everyone; the detailed, actionable place
-        // view is the natural moment to ask a guest to create an account.
-        if (!authState.ok) {
-          savePendingDetail(item);
-          setDetailContent(
-            window.EchooPlaceDetail.renderAuthPrompt({
-              title: "Sign in to see this place",
-              note: "Create an account and Echoo will bring you straight back here.",
-              nextUrl:
-                window.EchooAuth?.currentRelativeUrl?.() || "events.html",
-              seed: item?.title || item?.name || "place",
-              mode: "signup",
-              intent: "place_detail",
-              reason: "detail_access",
-              primaryLabel: "Continue",
-              secondaryLabel: "Keep browsing",
-            }),
-          );
-          openDetailSheet();
-          return;
-        }
 
         openDetailSheet();
         setDetailContent(
@@ -2915,7 +2855,6 @@
                   : undefined,
             }),
           );
-          clearPendingDetail();
         } catch (error) {
           console.warn("Echoo: place detail load failed.", error);
           setDetailContent(
@@ -2926,7 +2865,6 @@
               },
             ),
           );
-          clearPendingDetail();
         }
       }
 
@@ -4445,12 +4383,10 @@
       function openDetail(index) {
         const item = items[index];
         if (!item) return;
-        savePendingDetail(item);
         openDetailByItem(item);
       }
 
       function closeDetail() {
-        clearPendingDetail();
         closeDetailSheet();
       }
 
@@ -4809,61 +4745,27 @@
         closeLocationSheet();
       });
 
-      // Initial setup
-      applyCultureMood();
-      items = [];
-      renderDiscoverLoading();
-      if (surpriseMode) {
-        surpriseLoader.hidden = false;
-        surpriseLoader.dataset.startedAt = String(Date.now());
-      }
-      if (surpriseMode) {
-        // Guard direct links too. The landing CTA performs this check before
-        // navigation, while this keeps a pasted Surprise URL from exposing a
-        // partial Discover view to a guest.
-        (async () => {
-          const authState = window.EchooAuth?.getAuthState
-            ? await window.EchooAuth.getAuthState({ requireFresh: true })
-            : { ok: false };
-          if (!authState.ok) {
-            window.EchooAuth?.redirectToAuth?.(
-              window.EchooAuth?.currentRelativeUrl?.() ||
-                "events.html?mode=surprise",
-              "signup",
-              {
-                intent: "surprise",
-                reason: "surprise_required",
-                caption: "Sign in and Echoo will roll a pick made for you.",
-              },
-            );
-            return;
-          }
-          // Cached preferences are instant; give a signed-in profile a short
-          // head start before the random local pick is scored.
+      window.echooAccessReady.then(async (access) => {
+        if (!access?.ok) return;
+        applyCultureMood();
+        items = [];
+        renderDiscoverLoading();
+        if (surpriseMode) {
+          surpriseLoader.hidden = false;
+          surpriseLoader.dataset.startedAt = String(Date.now());
           await Promise.race([
             hydrateOnboardingSignals({ refresh: false }),
             new Promise((resolve) => setTimeout(resolve, 850)),
           ]);
           search(activeQuery, { surprise: true });
-        })();
-      } else {
-        search(activeQuery);
-        hydrateOnboardingSignals();
-      }
-      if (params.get("culturePicker") === "1")
-        setTimeout(openCulturePicker, 180);
-      // Refresh a granted device location when Discover opens. Session GPS is
-      // useful as an immediate fallback, but it must not quietly become an
-      // all-day location if the person has moved between GTA municipalities.
-      if (!surpriseMode) {
-        setTimeout(async () => {
-          // Discover must always open directly into results. Refresh an
-          // already-granted location silently, but never place a permission
-          // or municipality sheet over the default feed.
-          await refreshGrantedDeviceLocation();
-        }, 150);
-        resumePendingDetail();
-      }
+        } else {
+          search(activeQuery);
+          hydrateOnboardingSignals();
+          setTimeout(refreshGrantedDeviceLocation, 150);
+        }
+        if (params.get("culturePicker") === "1")
+          setTimeout(openCulturePicker, 180);
+      });
       window.addEventListener("pagehide", persistCurrentSurface);
       document
         .querySelector('.bottom-nav a[aria-current="page"]')

@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="assets/echoo-place-detail.css" />
     <link rel="stylesheet" href="assets/echoo-linkup.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
     <style>
       :root {
         color-scheme: dark;
@@ -20,14 +23,20 @@
         box-sizing: border-box;
         -webkit-tap-highlight-color: transparent;
       }
-      html, body {
+      html,
+      body {
         margin: 0;
         padding: 0;
         min-height: 100%;
         max-width: 100%;
         background-color: var(--bg-black);
         color: var(--ink);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          sans-serif;
         overflow-x: hidden;
       }
       body {
@@ -41,8 +50,16 @@
         isolation: isolate;
         position: relative;
         background:
-          radial-gradient(circle at 50% -2%, rgba(247, 213, 178, 0.12), transparent 22rem),
-          radial-gradient(circle at 85% 25%, rgba(231, 201, 142, 0.08), transparent 18rem),
+          radial-gradient(
+            circle at 50% -2%,
+            rgba(247, 213, 178, 0.12),
+            transparent 22rem
+          ),
+          radial-gradient(
+            circle at 85% 25%,
+            rgba(231, 201, 142, 0.08),
+            transparent 18rem
+          ),
           linear-gradient(180deg, #0c0c0c 0%, #050505 100%);
         padding-bottom: 100px;
       }
@@ -141,10 +158,16 @@
           <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
         <div class="topbar-actions">
-          <a class="echoo-linkup-settings-link" href="linkup-settings.html" aria-label="Link Up settings">
+          <a
+            class="echoo-linkup-settings-link"
+            href="linkup-settings.html"
+            aria-label="Link Up settings"
+          >
             <svg viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
             </svg>
           </a>
         </div>
@@ -152,7 +175,6 @@
 
       <!-- Link Up Module Main Shell -->
       <main class="echoo-linkup-module">
-
         <!-- Standby / No-User Hero Landing Screen (Matches Reference Design Exactly) -->
         <section class="echoo-linkup-intro-shell" id="echoo-linkup-intro-shell">
           <!-- Hero Title & Tagline -->
@@ -168,23 +190,46 @@
 
           <!-- Bottom Action Buttons (No Profile Icon, No Description Paragraph) -->
           <div class="intro-action-group">
-            <button class="echoo-linkup-btn--hero" id="btn-create-account" type="button" style="width: 100%;">Create account &rarr;</button>
-            <button class="echoo-linkup-btn--outline" id="btn-sign-in" type="button" style="width: 100%;">Sign in</button>
+            <button
+              class="echoo-linkup-btn--hero"
+              id="btn-create-account"
+              type="button"
+              style="width: 100%"
+            >
+              Create account &rarr;
+            </button>
+            <button
+              class="echoo-linkup-btn--outline"
+              id="btn-sign-in"
+              type="button"
+              style="width: 100%"
+            >
+              Sign in
+            </button>
           </div>
         </section>
 
         <!-- First-Time User 4-Slide Intro Overlay (Floating Overlay, No Heavy Card Edges) -->
-        <div class="intro-slide-overlay" id="intro-slide-overlay" style="display: none;">
+        <div
+          class="intro-slide-overlay"
+          id="intro-slide-overlay"
+          style="display: none"
+        >
           <div class="intro-overlay-content">
             <!-- Top Progress Track & Plain Text Skip Action -->
             <div class="intro-top-bar">
               <div class="intro-progress-track">
-                <div class="intro-progress-dot active" data-slide-indicator="0"></div>
+                <div
+                  class="intro-progress-dot active"
+                  data-slide-indicator="0"
+                ></div>
                 <div class="intro-progress-dot" data-slide-indicator="1"></div>
                 <div class="intro-progress-dot" data-slide-indicator="2"></div>
                 <div class="intro-progress-dot" data-slide-indicator="3"></div>
               </div>
-              <button class="intro-skip-btn" id="intro-skip-btn" type="button">Skip</button>
+              <button class="intro-skip-btn" id="intro-skip-btn" type="button">
+                Skip
+              </button>
             </div>
 
             <!-- Slides Viewport with Full-Screen Background Illustrations -->
@@ -192,83 +237,173 @@
               <div class="intro-slide active" data-slide-index="0">
                 <div class="intro-slide-text">
                   <h2 class="intro-slide-title">Right place. Right time.</h2>
-                  <p class="intro-slide-copy">See who's at the same spot or nearby in real time.</p>
+                  <p class="intro-slide-copy">
+                    See who's at the same spot or nearby in real time.
+                  </p>
                 </div>
               </div>
               <div class="intro-slide" data-slide-index="1">
                 <div class="intro-slide-text">
                   <h2 class="intro-slide-title">Vibe check.</h2>
-                  <p class="intro-slide-copy">Instant matches based on what you actually like.</p>
+                  <p class="intro-slide-copy">
+                    Instant matches based on what you actually like.
+                  </p>
                 </div>
               </div>
               <div class="intro-slide" data-slide-index="2">
                 <div class="intro-slide-text">
                   <h2 class="intro-slide-title">Chat on the spot.</h2>
-                  <p class="intro-slide-copy">Messages unlock when you're close and clear out after.</p>
+                  <p class="intro-slide-copy">
+                    Messages unlock when you're close and clear out after.
+                  </p>
                 </div>
               </div>
               <div class="intro-slide" data-slide-index="3">
                 <div class="intro-slide-text">
                   <h2 class="intro-slide-title">No endless DMs.</h2>
-                  <p class="intro-slide-copy">Skip the small talk and link up for real.</p>
+                  <p class="intro-slide-copy">
+                    Skip the small talk and link up for real.
+                  </p>
                 </div>
               </div>
             </div>
 
             <!-- Overlay CTAs -->
             <div class="intro-overlay-actions">
-              <button class="echoo-linkup-btn--hero" id="overlay-btn-create" type="button" style="width: 100%;">Create account &rarr;</button>
-              <button class="echoo-linkup-btn--outline" id="overlay-btn-signin" type="button" style="width: 100%;">Sign in</button>
+              <button
+                class="echoo-linkup-btn--hero"
+                id="overlay-btn-create"
+                type="button"
+                style="width: 100%"
+              >
+                Create account &rarr;
+              </button>
+              <button
+                class="echoo-linkup-btn--outline"
+                id="overlay-btn-signin"
+                type="button"
+                style="width: 100%"
+              >
+                Sign in
+              </button>
             </div>
           </div>
         </div>
 
         <!-- Live Presence Viewport (When User is Signed In & Active) -->
-        <section id="echoo-linkup-viewport" class="echoo-linkup-viewport" data-linkup-viewport style="display: none;">
+        <section
+          id="echoo-linkup-viewport"
+          class="echoo-linkup-viewport"
+          data-linkup-viewport
+          style="display: none"
+        >
           <div class="echoo-linkup-state">
-            <div class="echoo-linkup-spinner" aria-label="Loading Link Up"></div>
+            <div
+              class="echoo-linkup-spinner"
+              aria-label="Loading Link Up"
+            ></div>
           </div>
         </section>
-
       </main>
 
       <!-- Super Minimal Auth Sheet Modal Overlay -->
-      <div class="linkup-minimal-auth-sheet" id="linkup-minimal-auth-sheet" aria-hidden="true">
+      <div
+        class="linkup-minimal-auth-sheet"
+        id="linkup-minimal-auth-sheet"
+        aria-hidden="true"
+      >
         <div class="linkup-minimal-auth-card">
           <div class="linkup-auth-nav-tabs">
-            <button class="linkup-auth-tab active" id="auth-tab-signup" type="button">Create Account</button>
-            <button class="linkup-auth-tab" id="auth-tab-signin" type="button">Sign In</button>
+            <button
+              class="linkup-auth-tab active"
+              id="auth-tab-signup"
+              type="button"
+            >
+              Create Account
+            </button>
+            <button class="linkup-auth-tab" id="auth-tab-signin" type="button">
+              Sign In
+            </button>
           </div>
 
-          <form id="linkup-minimal-auth-form" class="linkup-auth-input-group" onsubmit="event.preventDefault();">
-            <input class="linkup-auth-field" type="email" id="auth-email-input" placeholder="Email address or phone number" required />
-            <input class="linkup-auth-field" type="password" id="auth-pass-input" placeholder="Password" required />
-            <button class="echoo-linkup-btn--hero" type="submit" id="auth-submit-btn" style="width: 100%; margin-top: 6px;">Continue →</button>
+          <form
+            id="linkup-minimal-auth-form"
+            class="linkup-auth-input-group"
+            onsubmit="event.preventDefault()"
+          >
+            <input
+              class="linkup-auth-field"
+              type="email"
+              id="auth-email-input"
+              placeholder="Email address or phone number"
+              required
+            />
+            <input
+              class="linkup-auth-field"
+              type="password"
+              id="auth-pass-input"
+              placeholder="Password"
+              required
+            />
+            <button
+              class="echoo-linkup-btn--hero"
+              type="submit"
+              id="auth-submit-btn"
+              style="width: 100%; margin-top: 6px"
+            >
+              Continue →
+            </button>
           </form>
 
-          <button type="button" id="auth-close-btn" style="background: none; border: 0; color: rgba(248, 245, 239, 0.5); font-size: 12px; font-weight: 500; cursor: pointer; text-align: center;">Cancel</button>
+          <button
+            type="button"
+            id="auth-close-btn"
+            style="
+              background: none;
+              border: 0;
+              color: rgba(248, 245, 239, 0.5);
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+              text-align: center;
+            "
+          >
+            Cancel
+          </button>
         </div>
       </div>
 
       <!-- Floating Bottom Navigation -->
       <nav class="bottom-nav" aria-label="Main navigation">
         <a class="nav-link" href="index.html">
-          <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+          </svg>
           <span>Home</span>
         </a>
         <a class="nav-link" href="events.html">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m16 16 4 4" />
+          </svg>
           <span>Discover</span>
         </a>
         <a class="nav-link active" href="linkup.html" aria-current="page">
           <svg viewBox="0 0 24 24">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            />
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            />
           </svg>
           <span>Link Up</span>
         </a>
         <a class="nav-link" href="auth.html">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
           <span>Profile</span>
         </a>
       </nav>

@@ -1725,35 +1725,241 @@
       }
 
       /* ── Echo A.I. arrival state ── */
-      body { background: #050505; }
-      .topbar { position: absolute; inset: 0 0 auto; z-index: 2; background: transparent; border: 0; opacity: 0; pointer-events: none; }
-      .bottom-nav { display: none; }
-      .shell.companion-landing { width: 100%; min-height: 100svh; display: flex; padding: max(24px, env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom)); overflow: hidden; background: linear-gradient(180deg, rgba(15, 15, 15, 0.72), rgba(5, 5, 5, 0.9)), radial-gradient(ellipse 90% 42% at 50% 105%, rgba(247, 213, 178, 0.12), transparent 75%), url("assets/echoo-mobile-bg.png") center / cover no-repeat, #050505; opacity: 1; transform: scale(1); transition: opacity 280ms ease, transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1); }
-      body.chat-open .companion-landing { opacity: 0; transform: scale(0.985); pointer-events: none; }
-      .companion-landing::before { position: absolute; inset: 0; content: ""; pointer-events: none; background: linear-gradient(180deg, rgba(5, 5, 5, 0.32), transparent 38%, rgba(5, 5, 5, 0.24)); }
-      .companion-welcome { position: relative; z-index: 1; display: flex; flex: 1; flex-direction: column; justify-content: center; align-items: center; gap: 18px; width: 100%; margin: 0; text-align: center; }
-      .companion-welcome > div:first-child { display: flex; flex-direction: column; align-items: center; gap: 18px; }
-      .companion-landing > footer { display: none !important; }
-      .echo-mark { display: grid; width: 82px; height: 82px; place-items: center; overflow: hidden; border: 1px solid rgba(247, 213, 178, 0.24); border-radius: 50%; background: radial-gradient(circle at 32% 26%, #3b352f, #050505 70%); box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34); animation: mark-breathe 4s ease-in-out infinite; }
-      .echo-mark img { width: 128px; height: auto; max-width: none; object-fit: contain; transform: translateX(-13px); }
-      @keyframes mark-breathe { 50% { transform: translateY(-5px); } }
-      .companion-welcome h1 { width: max-content; max-width: 100%; margin: 0; color: #f8f5ef; font-size: clamp(32px, 9vw, 42px); font-weight: 690; letter-spacing: -0.045em; line-height: 1; }
-      .companion-composer { position: relative; z-index: 1; width: 100%; }
-      .ask-card.companion-composer { margin-top: auto; padding: 0; border: 0; background: transparent; box-shadow: none; }
-      .companion-composer form { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 62px; padding: 6px 7px 6px 14px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 999px; background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055); backdrop-filter: blur(16px); transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease; }
-      .companion-composer form:focus-within { border-color: rgba(247, 213, 178, 0.45); background: rgba(255, 255, 255, 0.085); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 3px rgba(247, 213, 178, 0.08); }
-      .companion-add, .companion-submit { display: grid; flex: 0 0 auto; place-items: center; border: 0; color: #f8f5ef; background: transparent; }
-      .companion-add { position: relative; width: 34px; height: 34px; opacity: 0.9; }
-      .companion-add::before, .companion-add::after { position: absolute; width: 20px; height: 2px; border-radius: 2px; content: ""; background: currentColor; }
-      .companion-add::after { transform: rotate(90deg); }
-      .companion-composer input { flex: 1; min-width: 0; border: 0; outline: 0; color: #ffffff; background: transparent; font-size: 16px; font-weight: 480; }
-      .companion-composer input::placeholder { color: #6a7585; }
-      .companion-submit { width: 48px; height: 48px; border-radius: 50%; color: #1a1a1a; background: linear-gradient(135deg, #f7d5b2, #e0b88c); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22); transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 180ms ease; }
-      .companion-submit:hover { transform: scale(1.06); filter: brightness(1.04); }
-      .companion-submit svg { width: 22px; height: 22px; }
-      .landing-accessibility-copy, .landing-surprise { display: none; }
-      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-      @media (max-width: 360px) { .shell.companion-landing { padding-inline: 16px; } .companion-welcome h1 { font-size: 32px; } .companion-composer form { min-height: 58px; } .companion-submit { width: 44px; height: 44px; } }
+      body {
+        background: #050505;
+      }
+      .topbar {
+        position: absolute;
+        inset: 0 0 auto;
+        z-index: 2;
+        background: transparent;
+        border: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .bottom-nav {
+        display: none;
+      }
+      .shell.companion-landing {
+        width: 100%;
+        min-height: 100svh;
+        display: flex;
+        padding: max(24px, env(safe-area-inset-top)) 24px
+          calc(24px + env(safe-area-inset-bottom));
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(15, 15, 15, 0.72), rgba(5, 5, 5, 0.9)),
+          radial-gradient(
+            ellipse 90% 42% at 50% 105%,
+            rgba(247, 213, 178, 0.12),
+            transparent 75%
+          ),
+          url("assets/echoo-mobile-bg.png") center / cover no-repeat,
+          #050505;
+        opacity: 1;
+        transform: scale(1);
+        transition:
+          opacity 280ms ease,
+          transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      body.chat-open .companion-landing {
+        opacity: 0;
+        transform: scale(0.985);
+        pointer-events: none;
+      }
+      .companion-landing::before {
+        position: absolute;
+        inset: 0;
+        content: "";
+        pointer-events: none;
+        background: linear-gradient(
+          180deg,
+          rgba(5, 5, 5, 0.32),
+          transparent 38%,
+          rgba(5, 5, 5, 0.24)
+        );
+      }
+      .companion-welcome {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 18px;
+        width: 100%;
+        margin: 0;
+        text-align: center;
+      }
+      .companion-welcome > div:first-child {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
+      .companion-landing > footer {
+        display: none !important;
+      }
+      .echo-mark {
+        display: grid;
+        width: 82px;
+        height: 82px;
+        place-items: center;
+        overflow: hidden;
+        border: 1px solid rgba(247, 213, 178, 0.24);
+        border-radius: 50%;
+        background: radial-gradient(circle at 32% 26%, #3b352f, #050505 70%);
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+        animation: mark-breathe 4s ease-in-out infinite;
+      }
+      .echo-mark img {
+        width: 128px;
+        height: auto;
+        max-width: none;
+        object-fit: contain;
+        transform: translateX(-13px);
+      }
+      @keyframes mark-breathe {
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+      .companion-welcome h1 {
+        width: max-content;
+        max-width: 100%;
+        margin: 0;
+        color: #f8f5ef;
+        font-size: clamp(32px, 9vw, 42px);
+        font-weight: 690;
+        letter-spacing: -0.045em;
+        line-height: 1;
+      }
+      .companion-composer {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+      }
+      .ask-card.companion-composer {
+        margin-top: auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+      .companion-composer form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        min-height: 62px;
+        padding: 6px 7px 6px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+        backdrop-filter: blur(16px);
+        transition:
+          border-color 180ms ease,
+          box-shadow 180ms ease,
+          background 180ms ease;
+      }
+      .companion-composer form:focus-within {
+        border-color: rgba(247, 213, 178, 0.45);
+        background: rgba(255, 255, 255, 0.085);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 0 0 3px rgba(247, 213, 178, 0.08);
+      }
+      .companion-add,
+      .companion-submit {
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        border: 0;
+        color: #f8f5ef;
+        background: transparent;
+      }
+      .companion-add {
+        position: relative;
+        width: 34px;
+        height: 34px;
+        opacity: 0.9;
+      }
+      .companion-add::before,
+      .companion-add::after {
+        position: absolute;
+        width: 20px;
+        height: 2px;
+        border-radius: 2px;
+        content: "";
+        background: currentColor;
+      }
+      .companion-add::after {
+        transform: rotate(90deg);
+      }
+      .companion-composer input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        color: #ffffff;
+        background: transparent;
+        font-size: 16px;
+        font-weight: 480;
+      }
+      .companion-composer input::placeholder {
+        color: #6a7585;
+      }
+      .companion-submit {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        color: #1a1a1a;
+        background: linear-gradient(135deg, #f7d5b2, #e0b88c);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+        transition:
+          transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+          filter 180ms ease;
+      }
+      .companion-submit:hover {
+        transform: scale(1.06);
+        filter: brightness(1.04);
+      }
+      .companion-submit svg {
+        width: 22px;
+        height: 22px;
+      }
+      .landing-accessibility-copy,
+      .landing-surprise {
+        display: none;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      @media (max-width: 360px) {
+        .shell.companion-landing {
+          padding-inline: 16px;
+        }
+        .companion-welcome h1 {
+          font-size: 32px;
+        }
+        .companion-composer form {
+          min-height: 58px;
+        }
+        .companion-submit {
+          width: 44px;
+          height: 44px;
+        }
+      }
     </style>
     <link
       rel="stylesheet"
@@ -1764,7 +1970,9 @@
     <link rel="stylesheet" href="assets/echoo-place-detail.css" />
     <link rel="stylesheet" href="assets/echoo-live-stays.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
-    <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
   </head>
   <body>
     <header class="topbar">
@@ -1782,7 +1990,11 @@
             <img src="assets/landing-page-logo-3d.webp" alt="" />
           </div>
           <h1 id="companion-title">Hear The City</h1>
-          <span class="landing-accessibility-copy" id="headline" aria-hidden="true"></span>
+          <span
+            class="landing-accessibility-copy"
+            id="headline"
+            aria-hidden="true"
+          ></span>
           <p id="subhead" class="landing-accessibility-copy" aria-hidden="true">
             Tell us what you're feeling. Echoo finds the places, plans the
             route, and connects the dots.
@@ -1797,16 +2009,46 @@
 
         <div class="ask-card companion-composer">
           <form id="plan-form">
-            <button class="companion-add" type="button" aria-label="Add details"></button>
-            <label class="sr-only" for="plan-query">Ask Echo A.I. for a plan</label>
-            <input id="plan-query" autocomplete="off" placeholder="Ask for a plan" />
-            <button class="companion-submit" type="submit" aria-label="Create plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            <button
+              class="companion-add"
+              type="button"
+              aria-label="Add details"
+            ></button>
+            <label class="sr-only" for="plan-query"
+              >Ask Echo A.I. for a plan</label
+            >
+            <input
+              id="plan-query"
+              autocomplete="off"
+              placeholder="Ask for a plan"
+            />
+            <button
+              class="companion-submit"
+              type="submit"
+              aria-label="Create plan"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
           </form>
-          <button class="ghost landing-surprise" id="surprise">Surprise me</button>
+          <button class="ghost landing-surprise" id="surprise">
+            Surprise me
+          </button>
         </div>
       </section>
 
-      <section class="grid landing-accessibility-copy" aria-label="Quick actions">
+      <section
+        class="grid landing-accessibility-copy"
+        aria-label="Quick actions"
+      >
         <button class="module" data-action="nearby">
           <small>Nearby</small>
           <strong>What's open around me</strong>
@@ -1922,9 +2164,25 @@
     </div>
 
     <!-- Native Quick Plan stays separate from the AI companion. -->
-    <section id="quick-plan-modal" class="echoo-quick-plan-modal" aria-hidden="true" aria-label="Quick Plan">
-      <button id="quick-plan-backdrop" class="echoo-quick-plan-backdrop" type="button" tabindex="-1" aria-label="Close Quick Plan"></button>
-      <div class="echoo-quick-plan-sheet" role="dialog" aria-modal="true" aria-labelledby="quick-plan-title">
+    <section
+      id="quick-plan-modal"
+      class="echoo-quick-plan-modal"
+      aria-hidden="true"
+      aria-label="Quick Plan"
+    >
+      <button
+        id="quick-plan-backdrop"
+        class="echoo-quick-plan-backdrop"
+        type="button"
+        tabindex="-1"
+        aria-label="Close Quick Plan"
+      ></button>
+      <div
+        class="echoo-quick-plan-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-plan-title"
+      >
         <div class="echoo-quick-plan-handle" aria-hidden="true"></div>
         <div id="quick-plan-content"></div>
       </div>
@@ -1954,8 +2212,12 @@
       </a>
       <a class="nav-link" href="linkup.html">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          <path
+            d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+          />
+          <path
+            d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+          />
         </svg>
         <span>Link Up</span>
       </a>
@@ -2042,7 +2304,8 @@
       }
 
       name = name || "Preview User";
-      city = window.EchooLocationPlatform.cityByName(city)?.name ||
+      city =
+        window.EchooLocationPlatform.cityByName(city)?.name ||
         "Greater Toronto Area";
       vibes = vibes ? vibes.split(",") : [];
       budget = budget || "$";
@@ -2108,18 +2371,13 @@
         });
       }
 
-      const authGate = window.EchooAuth
-        ? window.EchooAuth.requireOnboarding({
-            next: window.EchooAuth.currentRelativeUrl(),
-            redirect: false,
-          }).then((state) => {
-            if (state.ok) {
-              activeSession = state.session;
-              applyPreferenceSnapshot(state.preferences);
-            }
-            return state.ok ? state : { ...state, ok: true };
-          })
-        : Promise.resolve({ ok: true });
+      const authGate = window.echooAccessReady.then((state) => {
+        if (state.ok) {
+          activeSession = state.session;
+          applyPreferenceSnapshot(state.preferences);
+        }
+        return state;
+      });
 
       function setBudgetPreference(nextBudget) {
         budget = nextBudget || budget || "$";
@@ -2463,7 +2721,6 @@
       const detailModalContent = document.getElementById(
         "card-detail-modal-content",
       );
-      const DETAIL_PENDING_KEY = "echoo_pending_place_detail";
       const quickPlanModal = document.getElementById("quick-plan-modal");
       const quickPlanContent = document.getElementById("quick-plan-content");
       const quickPlanBackdrop = document.getElementById("quick-plan-backdrop");
@@ -2510,7 +2767,6 @@
           .querySelectorAll("[data-close-sheet]")
           .forEach((button) => {
             button.onclick = () => {
-              clearPendingPlaceDetail();
               closePlaceDetailModal();
             };
           });
@@ -2525,22 +2781,11 @@
         }
       }
 
-      function clearPendingPlaceDetail() {
-        sessionStorage.removeItem(DETAIL_PENDING_KEY);
-      }
-
-      function savePendingPlaceDetail(payload) {
-        sessionStorage.setItem(
-          DETAIL_PENDING_KEY,
-          JSON.stringify({
-            payload,
-            createdAt: Date.now(),
-          }),
-        );
-      }
-
       function buildFallbackPlaceDetail(payload = {}) {
-        const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
+        const normalize = (value) =>
+          String(value || "")
+            .replace(/\s+/g, " ")
+            .trim();
         const rating = Number(
           payload.community?.ratingAverage ||
             payload.rating ||
@@ -2554,16 +2799,28 @@
             0,
         );
         const hasRating = Number.isFinite(rating);
-        const confidence = hasRating ? Math.min(1, Math.max(0.45, rating / 5)) : null;
+        const confidence = hasRating
+          ? Math.min(1, Math.max(0.45, rating / 5))
+          : null;
         return {
           place: {
             id: payload.placeId || "",
             name: normalize(payload.title || payload.name || "This place"),
             category: payload.category || "Place",
-            municipality: normalize(payload.city || payload.neighborhood || city || "Greater Toronto Area"),
+            municipality: normalize(
+              payload.city ||
+                payload.neighborhood ||
+                city ||
+                "Greater Toronto Area",
+            ),
             city: normalize(payload.city || city || "Greater Toronto Area"),
-            formatted_address:
-              normalize(payload.neighborhood || payload.address || payload.city || city || "Greater Toronto Area"),
+            formatted_address: normalize(
+              payload.neighborhood ||
+                payload.address ||
+                payload.city ||
+                city ||
+                "Greater Toronto Area",
+            ),
             latitude: payload.latitude || null,
             longitude: payload.longitude || null,
             timezone: "America/Toronto",
@@ -2619,27 +2876,6 @@
           throw new Error(payload?.error || "Place detail failed");
         }
         return payload?.data || null;
-      }
-
-      async function resumePendingPlaceDetail() {
-        const raw = sessionStorage.getItem(DETAIL_PENDING_KEY);
-        if (!raw || !window.EchooAuth?.getAuthState) return;
-        let pending;
-        try {
-          pending = JSON.parse(raw);
-        } catch (_) {
-          clearPendingPlaceDetail();
-          return;
-        }
-        const authState = await window.EchooAuth.getAuthState({
-          requireFresh: true,
-        });
-        if (!authState.ok) return;
-        clearPendingPlaceDetail();
-        await addPlaceDetailBubble(
-          pending.payload?.placeId || "",
-          pending.payload || {},
-        );
       }
 
       if (overlay) {
@@ -2705,7 +2941,6 @@
 
       if (detailModalBackdrop) {
         detailModalBackdrop.addEventListener("click", () => {
-          clearPendingPlaceDetail();
           closePlaceDetailModal();
         });
       }
@@ -3002,7 +3237,6 @@
               copy: stop.vibe || "",
               vibe: stop.vibe || "",
             };
-            savePendingPlaceDetail(payload);
             addPlaceDetailBubble(detailId, payload);
           });
         }
@@ -3231,30 +3465,8 @@
 
       async function addPlaceDetailBubble(placeId, payload = {}) {
         if (!placeId) return;
-        const authState = window.EchooAuth?.getAuthState
-          ? await window.EchooAuth.getAuthState({ requireFresh: true })
-          : { ok: false, signedIn: false, needsLogin: true, needsReauth: false };
-        const nextUrl =
-          `${window.location.pathname.split("/").pop() || "app.html"}${window.location.search}${window.location.hash}`;
         const heroImage =
           payload.image || payload.img || "assets/optimized/news-date-768.jpg";
-
-        if (!authState.ok) {
-          savePendingPlaceDetail({ placeId, ...payload });
-          setPlaceDetailContent(
-            window.EchooPlaceDetail.renderAuthPrompt({
-              title: "Sign in to unlock this place",
-              subhead: "Back in a sec.",
-              note: "We’ll bring you back here after a quick sign-in.",
-              nextUrl,
-              seed: payload.title || payload.name || placeId,
-              primaryLabel: "Sign in",
-              secondaryLabel: "Keep browsing",
-            }),
-          );
-          openPlaceDetailModal();
-          return;
-        }
 
         openPlaceDetailModal();
         setPlaceDetailContent(
@@ -3264,7 +3476,8 @@
               heroImage,
               preview: true,
               directionsHref:
-                Number.isFinite(Number(payload.latitude)) && Number.isFinite(Number(payload.longitude))
+                Number.isFinite(Number(payload.latitude)) &&
+                Number.isFinite(Number(payload.longitude))
                   ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${payload.latitude},${payload.longitude}`)}&dir_action=navigate`
                   : undefined,
             },
@@ -3274,9 +3487,7 @@
         try {
           const detail = await fetchPlaceDetail(placeId);
           const resolvedHeroImage =
-            detail?.place?.image_url ||
-            detail?.place?.imageUrl ||
-            heroImage;
+            detail?.place?.image_url || detail?.place?.imageUrl || heroImage;
           setPlaceDetailContent(
             window.EchooPlaceDetail.renderPlaceDetail(
               detail || buildFallbackPlaceDetail({ ...payload, placeId }),
@@ -3285,7 +3496,6 @@
               },
             ),
           );
-          clearPendingPlaceDetail();
         } catch (error) {
           console.warn("Echoo: place detail failed.", error);
           setPlaceDetailContent(
@@ -3296,7 +3506,6 @@
               },
             ),
           );
-          clearPendingPlaceDetail();
         }
       }
 
@@ -3310,7 +3519,11 @@
       let quickPlanRequestId = 0;
 
       function quickPlanDefaultBudget() {
-        return budget === "$" ? "value" : budget === "$$$" ? "elevated" : "balanced";
+        return budget === "$"
+          ? "value"
+          : budget === "$$$"
+            ? "elevated"
+            : "balanced";
       }
 
       function quickPlanHistoryKey(anchor) {
@@ -3319,18 +3532,30 @@
 
       function quickPlanRecent(anchor) {
         try {
-          const saved = JSON.parse(localStorage.getItem(quickPlanHistoryKey(anchor)) || "[]");
-          return Array.isArray(saved) ? saved.filter((id) => typeof id === "string").slice(0, 30) : [];
+          const saved = JSON.parse(
+            localStorage.getItem(quickPlanHistoryKey(anchor)) || "[]",
+          );
+          return Array.isArray(saved)
+            ? saved.filter((id) => typeof id === "string").slice(0, 30)
+            : [];
         } catch (_) {
           return [];
         }
       }
 
       function rememberQuickPlan(anchor, plan) {
-        const next = (plan?.stops || []).filter((stop) => !stop.isAnchor).map((stop) => String(stop.id || "")).filter(Boolean);
+        const next = (plan?.stops || [])
+          .filter((stop) => !stop.isAnchor)
+          .map((stop) => String(stop.id || ""))
+          .filter(Boolean);
         if (!next.length) return;
         try {
-          localStorage.setItem(quickPlanHistoryKey(anchor), JSON.stringify([...new Set([...next, ...quickPlanRecent(anchor)])].slice(0, 30)));
+          localStorage.setItem(
+            quickPlanHistoryKey(anchor),
+            JSON.stringify(
+              [...new Set([...next, ...quickPlanRecent(anchor)])].slice(0, 30),
+            ),
+          );
         } catch (_) {}
       }
 
@@ -3351,9 +3576,10 @@
 
       function quickPlanStopMarkup(stop, index) {
         const travel = Number(stop.travelMinutes || 0);
-        const descriptor = index === 0
-          ? `${stop.reason || "Your anchor"}${stop.category ? ` · ${stop.category}` : ""}`
-          : `${travel ? `${travel} min away` : "Nearby"}${stop.reason ? ` · ${stop.reason}` : ""}${stop.priceLabel ? ` · ${stop.priceLabel}` : ""}`;
+        const descriptor =
+          index === 0
+            ? `${stop.reason || "Your anchor"}${stop.category ? ` · ${stop.category}` : ""}`
+            : `${travel ? `${travel} min away` : "Nearby"}${stop.reason ? ` · ${stop.reason}` : ""}${stop.priceLabel ? ` · ${stop.priceLabel}` : ""}`;
         return `
           <button class="echoo-quick-plan-stop" type="button" data-quick-plan-stop="${escapeHtml(stop.id)}">
             <span class="echoo-quick-plan-stop-number">${index + 1}</span>
@@ -3371,23 +3597,35 @@
         const finalStop = stops[stops.length - 1] || quickPlanState?.anchor;
         const latitude = Number(finalStop?.latitude);
         const longitude = Number(finalStop?.longitude);
-        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude))
+          return null;
         return {
           latitude,
           longitude,
-          destinationName: finalStop?.name || quickPlanState?.anchor?.name || "your final stop",
+          destinationName:
+            finalStop?.name ||
+            quickPlanState?.anchor?.name ||
+            "your final stop",
           timeZone: quickPlanState?.anchor?.timeZone || "America/Toronto",
         };
       }
 
       function renderQuickPlan() {
         if (!quickPlanContent || !quickPlanState) return;
-        const { anchor, stopCount, budgetStyle, loading, error, plan } = quickPlanState;
-        const name = String(anchor?.name || "this place").trim() || "this place";
-        const choiceMarkup = (choices) => choices.map(([kind, value, label]) => {
-          const selected = kind === "stops" ? Number(value) === stopCount : value === budgetStyle;
-          return `<button type="button" class="echoo-quick-plan-choice" data-quick-plan-choice="${kind}" data-quick-plan-value="${value}" aria-pressed="${selected}">${label}</button>`;
-        }).join("");
+        const { anchor, stopCount, budgetStyle, loading, error, plan } =
+          quickPlanState;
+        const name =
+          String(anchor?.name || "this place").trim() || "this place";
+        const choiceMarkup = (choices) =>
+          choices
+            .map(([kind, value, label]) => {
+              const selected =
+                kind === "stops"
+                  ? Number(value) === stopCount
+                  : value === budgetStyle;
+              return `<button type="button" class="echoo-quick-plan-choice" data-quick-plan-choice="${kind}" data-quick-plan-value="${value}" aria-pressed="${selected}">${label}</button>`;
+            })
+            .join("");
         const stopControls = choiceMarkup([
           ["stops", 2, "2 stops"],
           ["stops", 3, "3 stops"],
@@ -3409,9 +3647,10 @@
             ? `<div class="echoo-quick-plan-result">${routeMeta}${planMeta}<div class="echoo-quick-plan-stops">${(plan.stops || []).map(quickPlanStopMarkup).join("")}</div></div>`
             : `<p class="echoo-quick-plan-error">${escapeHtml(error || "Echoo could not make a reliable plan around this place yet.")}</p>`;
         const stayAnchor = plan ? quickPlanStayAnchor() : null;
-        const lateStayAction = stayAnchor && window.EchooLiveStays?.isLateNight(stayAnchor.timeZone)
-          ? `<button type="button" class="echoo-quick-plan-stay-button" data-quick-plan-stays>Need a stay near your final stop? <span aria-hidden="true">→</span></button>`
-          : "";
+        const lateStayAction =
+          stayAnchor && window.EchooLiveStays?.isLateNight(stayAnchor.timeZone)
+            ? `<button type="button" class="echoo-quick-plan-stay-button" data-quick-plan-stays>Need a stay near your final stop? <span aria-hidden="true">→</span></button>`
+            : "";
         quickPlanContent.innerHTML = `
           <div class="echoo-quick-plan-topline">
             <p class="echoo-quick-plan-kicker">Quick Plan</p>
@@ -3431,37 +3670,53 @@
           ${lateStayAction}
           ${plan ? `<div class="echoo-quick-plan-footer"><p class="echoo-quick-plan-note">${escapeHtml(plan.availabilityNote || "Built from live Echoo place data.")}</p><button type="button" class="echoo-quick-plan-route-button" data-quick-plan-route>Start directions</button></div>` : ""}`;
 
-        quickPlanContent.querySelectorAll("[data-quick-plan-choice]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const kind = button.getAttribute("data-quick-plan-choice");
-            const value = button.getAttribute("data-quick-plan-value");
-            if (kind === "stops") quickPlanState.stopCount = Number(value) === 2 ? 2 : 3;
-            if (kind === "budget") quickPlanState.budgetStyle = value || "balanced";
-            loadQuickPlan();
-          });
-        });
-        quickPlanContent.querySelector("[data-quick-plan-close]")?.addEventListener("click", closeQuickPlan);
-        quickPlanContent.querySelector("[data-quick-plan-route]")?.addEventListener("click", openQuickPlanRoute);
-        quickPlanContent.querySelector("[data-quick-plan-stays]")?.addEventListener("click", () => {
-          const liveStayAnchor = quickPlanStayAnchor();
-          if (liveStayAnchor) window.EchooLiveStays?.openSheet(liveStayAnchor, { late: true });
-        });
-        quickPlanContent.querySelectorAll("[data-quick-plan-stop]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const stop = (quickPlanState?.plan?.stops || []).find((item) => item.id === button.getAttribute("data-quick-plan-stop"));
-            if (!stop) return;
-            closeQuickPlan();
-            addPlaceDetailBubble(stop.id, {
-              placeId: stop.id,
-              title: stop.name,
-              category: stop.category,
-              address: stop.address,
-              latitude: stop.latitude,
-              longitude: stop.longitude,
-              image: stop.imageUrl,
+        quickPlanContent
+          .querySelectorAll("[data-quick-plan-choice]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              const kind = button.getAttribute("data-quick-plan-choice");
+              const value = button.getAttribute("data-quick-plan-value");
+              if (kind === "stops")
+                quickPlanState.stopCount = Number(value) === 2 ? 2 : 3;
+              if (kind === "budget")
+                quickPlanState.budgetStyle = value || "balanced";
+              loadQuickPlan();
             });
           });
-        });
+        quickPlanContent
+          .querySelector("[data-quick-plan-close]")
+          ?.addEventListener("click", closeQuickPlan);
+        quickPlanContent
+          .querySelector("[data-quick-plan-route]")
+          ?.addEventListener("click", openQuickPlanRoute);
+        quickPlanContent
+          .querySelector("[data-quick-plan-stays]")
+          ?.addEventListener("click", () => {
+            const liveStayAnchor = quickPlanStayAnchor();
+            if (liveStayAnchor)
+              window.EchooLiveStays?.openSheet(liveStayAnchor, { late: true });
+          });
+        quickPlanContent
+          .querySelectorAll("[data-quick-plan-stop]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              const stop = (quickPlanState?.plan?.stops || []).find(
+                (item) =>
+                  item.id === button.getAttribute("data-quick-plan-stop"),
+              );
+              if (!stop) return;
+              closeQuickPlan();
+              addPlaceDetailBubble(stop.id, {
+                placeId: stop.id,
+                title: stop.name,
+                category: stop.category,
+                address: stop.address,
+                latitude: stop.latitude,
+                longitude: stop.longitude,
+                image: stop.imageUrl,
+              });
+            });
+          });
       }
 
       async function loadQuickPlan() {
@@ -3472,7 +3727,9 @@
         renderQuickPlan();
         try {
           const headers = window.EchooAuth
-            ? await window.EchooAuth.authHeaders({ "Content-Type": "application/json" })
+            ? await window.EchooAuth.authHeaders({
+                "Content-Type": "application/json",
+              })
             : {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
@@ -3493,7 +3750,10 @@
           const payload = await response.json().catch(() => ({}));
           if (requestId !== quickPlanRequestId) return;
           if (!response.ok || !payload?.plan) {
-            throw new Error(payload?.error || "Quick Plan could not build a reliable route right now.");
+            throw new Error(
+              payload?.error ||
+                "Quick Plan could not build a reliable route right now.",
+            );
           }
           quickPlanState.plan = payload.plan;
           rememberQuickPlan(quickPlanState.anchor, payload.plan);
@@ -3503,21 +3763,15 @@
           if (requestId !== quickPlanRequestId) return;
           quickPlanState.loading = false;
           quickPlanState.plan = null;
-          quickPlanState.error = error?.message || "Quick Plan could not build a reliable route right now.";
+          quickPlanState.error =
+            error?.message ||
+            "Quick Plan could not build a reliable route right now.";
           renderQuickPlan();
         }
       }
 
       async function openQuickPlan(anchor) {
         if (!anchor?.id) return;
-        const access = await window.EchooAuth?.requireAuthenticatedAction?.({
-          next: window.EchooAuth.currentRelativeUrl(),
-          mode: "signup",
-          intent: "quick_plan",
-          reason: "quick_plan_required",
-          caption: "Create an account to build a personal Quick Plan.",
-        });
-        if (!access?.ok) return;
         quickPlanState = {
           anchor,
           stopCount: 3,
@@ -3534,16 +3788,10 @@
       async function openQuickPlanRoute() {
         const stops = quickPlanState?.plan?.stops || [];
         if (!stops.length) return;
-        const access = await window.EchooAuth?.requireAuthenticatedAction?.({
-          next: window.EchooAuth.currentRelativeUrl(),
-          mode: "signup",
-          intent: "directions",
-          reason: "directions_required",
-          caption: "Create an account before starting directions from Echoo.",
-        });
-        if (!access?.ok) return;
         if (window.ReactNativeWebView?.postMessage) {
-          window.ReactNativeWebView.postMessage(`echoo:route-plan:${JSON.stringify({ stops })}`);
+          window.ReactNativeWebView.postMessage(
+            `echoo:route-plan:${JSON.stringify({ stops })}`,
+          );
           return;
         }
         const coordinate = `${stops[0].latitude},${stops[0].longitude}`;
@@ -3840,8 +4088,13 @@
           : { ...base, city };
       }
 
-      const DISCOVERY_CITY_NAMES = window.EchooLocationPlatform.SUPPORTED_CITIES
-        .flatMap((supportedCity) => [supportedCity.name, ...(supportedCity.aliases || [])]);
+      const DISCOVERY_CITY_NAMES =
+        window.EchooLocationPlatform.SUPPORTED_CITIES.flatMap(
+          (supportedCity) => [
+            supportedCity.name,
+            ...(supportedCity.aliases || []),
+          ],
+        );
 
       const LIVE_DISCOVERY_PATTERN =
         /\b(live|happening|event|events|concert|concerts|show|shows|festival|festivals|ticket|tickets|meet people|newcomer|networking|nightlife)\b/i;
@@ -4097,14 +4350,6 @@
 
       /* ── Open / close ── */
       async function openChat(userText) {
-        const access = await window.EchooAuth?.requireAuthenticatedAction?.({
-          next: window.EchooAuth.currentRelativeUrl(),
-          mode: "signup",
-          intent: "personal_plan",
-          reason: "personal_plan_required",
-          caption: "Create an account to get a plan shaped around you.",
-        });
-        if (!access?.ok) return;
         chatBody.innerHTML = "";
         if (fab) fab.style.display = "none";
         resetFabPosition();
@@ -4424,21 +4669,12 @@
         openChat(q);
       });
 
-      document.getElementById("surprise").addEventListener("click", async () => {
-        const surpriseUrl = "events.html?mode=surprise";
-        const authState = window.EchooAuth?.getAuthState
-          ? await window.EchooAuth.getAuthState({ requireFresh: true })
-          : { ok: false };
-        if (!authState.ok) {
-          window.EchooAuth?.redirectToAuth?.(surpriseUrl, "signup", {
-            intent: "surprise",
-            reason: "surprise_required",
-            caption: "Sign in and Echoo will roll a pick made for you.",
-          });
-          return;
-        }
-        window.location.assign(surpriseUrl);
-      });
+      document
+        .getElementById("surprise")
+        .addEventListener("click", async () => {
+          const surpriseUrl = "events.html?mode=surprise";
+          window.location.assign(surpriseUrl);
+        });
 
       /* ── Nav plan link ── */
       const navPlanEl = document.getElementById("nav-plan");
@@ -4474,10 +4710,6 @@
       if (incomingQuery) {
         openChat(incomingQuery);
       }
-
-      resumePendingPlaceDetail().catch((error) =>
-        console.warn("Echoo: pending place detail resume failed.", error),
-      );
 
       /* Retry any onboarding profile that was saved only to localStorage */
       if (window.EchooAuth?.syncPendingProfile) {

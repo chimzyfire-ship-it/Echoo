@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="assets/echoo-place-detail.css" />
     <link rel="stylesheet" href="assets/echoo-linkup.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
     <style>
       :root {
         color-scheme: dark;
@@ -17,65 +20,157 @@
         --peach: #f7d5b2;
         --line: rgba(248, 245, 239, 0.08);
       }
-      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-      html, body {
-        margin: 0; padding: 0; min-height: 100%; max-width: 100%;
-        background: var(--bg-black); color: var(--ink);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        max-width: 100%;
+        background: var(--bg-black);
+        color: var(--ink);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          sans-serif;
         overflow-x: hidden;
       }
-      body { display: flex; justify-content: center; }
+      body {
+        display: flex;
+        justify-content: center;
+      }
       .app-shell {
-        width: min(100%, 430px); max-width: 100%; min-height: 100svh;
+        width: min(100%, 430px);
+        max-width: 100%;
+        min-height: 100svh;
         position: relative;
         background:
-          radial-gradient(circle at 50% -2%, rgba(247, 213, 178, 0.10), transparent 22rem),
+          radial-gradient(
+            circle at 50% -2%,
+            rgba(247, 213, 178, 0.1),
+            transparent 22rem
+          ),
           linear-gradient(180deg, #0c0c0c 0%, #050505 100%);
         padding-bottom: 100px;
       }
       .topbar {
-        position: sticky; top: 0; z-index: 30;
-        display: flex; align-items: center; gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        gap: 12px;
         padding: calc(24px + env(safe-area-inset-top)) 20px 14px;
         background: rgba(5, 5, 5, 0.85);
-        backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
       }
       .topbar-back {
-        display: inline-flex; align-items: center; gap: 4px;
-        color: var(--ink); text-decoration: none;
-        font: 600 15px/1 "Inter", sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--ink);
+        text-decoration: none;
+        font:
+          600 15px/1 "Inter",
+          sans-serif;
       }
-      .topbar-back svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-      .topbar-title { font: 700 17px/1 "Inter", sans-serif; color: var(--ink); }
-      .settings-main { display: flex; flex-direction: column; gap: 22px; padding: 8px 20px 30px; }
+      .topbar-back svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .topbar-title {
+        font:
+          700 17px/1 "Inter",
+          sans-serif;
+        color: var(--ink);
+      }
+      .settings-main {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        padding: 8px 20px 30px;
+      }
       .settings-section-title {
         margin: 0 0 -8px 2px;
-        font: 700 11px/1 "Inter", sans-serif;
-        letter-spacing: 0.1em; text-transform: uppercase;
+        font:
+          700 11px/1 "Inter",
+          sans-serif;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
         color: rgba(248, 245, 239, 0.45);
       }
       .settings-state {
-        padding: 26px 22px; text-align: center;
-        background: #111; border: 1px solid var(--line); border-radius: 20px;
+        padding: 26px 22px;
+        text-align: center;
+        background: #111;
+        border: 1px solid var(--line);
+        border-radius: 20px;
       }
-      .settings-state-copy { margin: 0; font: 520 14px/1.45 "Inter", sans-serif; color: var(--muted); }
+      .settings-state-copy {
+        margin: 0;
+        font:
+          520 14px/1.45 "Inter",
+          sans-serif;
+        color: var(--muted);
+      }
       .bottom-nav {
-        position: fixed; left: 50%; bottom: 12px; z-index: 30;
-        width: min(376px, calc(100% - 52px)); min-height: 72px;
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+        position: fixed;
+        left: 50%;
+        bottom: 12px;
+        z-index: 30;
+        width: min(376px, calc(100% - 52px));
+        min-height: 72px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
         padding: 10px 15px 8px;
-        border: 1px solid rgba(248, 245, 239, 0.06); border-radius: 28px;
+        border: 1px solid rgba(248, 245, 239, 0.06);
+        border-radius: 28px;
         background: rgba(25, 25, 24, 0.82);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 44px rgba(0,0,0,0.42);
-        backdrop-filter: blur(26px); transform: translateX(-50%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 18px 44px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(26px);
+        transform: translateX(-50%);
       }
       .nav-link {
-        min-width: 0; display: grid; justify-items: center; align-content: center; gap: 5px;
-        color: rgba(248, 245, 239, 0.62); font-size: 12px; font-weight: 560; text-decoration: none;
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 5px;
+        color: rgba(248, 245, 239, 0.62);
+        font-size: 12px;
+        font-weight: 560;
+        text-decoration: none;
       }
-      .nav-link.active { color: var(--peach); }
-      .nav-link svg { width: 27px; height: 27px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .nav-link.active svg { fill: currentColor; stroke-width: 0; }
+      .nav-link.active {
+        color: var(--peach);
+      }
+      .nav-link svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .nav-link.active svg {
+        fill: currentColor;
+        stroke-width: 0;
+      }
     </style>
   </head>
   <body data-page="linkup-settings">
@@ -89,7 +184,11 @@
 
       <main class="settings-main">
         <div class="settings-state" id="linkup-settings-state">
-          <div class="echoo-linkup-spinner" aria-hidden="true" style="margin:0 auto;"></div>
+          <div
+            class="echoo-linkup-spinner"
+            aria-hidden="true"
+            style="margin: 0 auto"
+          ></div>
         </div>
 
         <section>
@@ -98,9 +197,18 @@
             <div class="echoo-linkup-settings-row">
               <div class="echoo-linkup-settings-text">
                 <div class="echoo-linkup-settings-label">Link Up</div>
-                <div class="echoo-linkup-settings-hint">Pause to stop being matched. Active chats keep their grace window.</div>
+                <div class="echoo-linkup-settings-hint">
+                  Pause to stop being matched. Active chats keep their grace
+                  window.
+                </div>
               </div>
-              <button type="button" id="linkup-pause-toggle" class="echoo-linkup-toggle" aria-label="Toggle Link Up" disabled></button>
+              <button
+                type="button"
+                id="linkup-pause-toggle"
+                class="echoo-linkup-toggle"
+                aria-label="Toggle Link Up"
+                disabled
+              ></button>
             </div>
           </div>
         </section>
@@ -111,9 +219,16 @@
             <div class="echoo-linkup-settings-row">
               <div class="echoo-linkup-settings-text">
                 <div class="echoo-linkup-settings-label">Blocked members</div>
-                <div class="echoo-linkup-settings-hint" id="linkup-blocked-hint">People you've blocked can't match you again.</div>
+                <div
+                  class="echoo-linkup-settings-hint"
+                  id="linkup-blocked-hint"
+                >
+                  People you've blocked can't match you again.
+                </div>
               </div>
-              <span class="echoo-linkup-peer-reason" id="linkup-blocked-count">—</span>
+              <span class="echoo-linkup-peer-reason" id="linkup-blocked-count"
+                >—</span
+              >
             </div>
           </div>
         </section>
@@ -121,19 +236,35 @@
         <section>
           <h3 class="settings-section-title">More</h3>
           <div class="echoo-linkup-settings-card">
-            <a class="echoo-linkup-settings-row echoo-linkup-settings-link-row" href="culture.html">
+            <a
+              class="echoo-linkup-settings-row echoo-linkup-settings-link-row"
+              href="culture.html"
+            >
               <div class="echoo-linkup-settings-text">
                 <div class="echoo-linkup-settings-label">Culture Lens</div>
-                <div class="echoo-linkup-settings-hint">Shape who you match with.</div>
+                <div class="echoo-linkup-settings-hint">
+                  Shape who you match with.
+                </div>
               </div>
-              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
+              <div class="echoo-linkup-way-arrow">
+                <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
+              </div>
             </a>
-            <a class="echoo-linkup-settings-row echoo-linkup-settings-link-row" href="auth.html#profile">
+            <a
+              class="echoo-linkup-settings-row echoo-linkup-settings-link-row"
+              href="auth.html#profile"
+            >
               <div class="echoo-linkup-settings-text">
-                <div class="echoo-linkup-settings-label">Profile &amp; photo</div>
-                <div class="echoo-linkup-settings-hint">Your face and one-liner, required to match.</div>
+                <div class="echoo-linkup-settings-label">
+                  Profile &amp; photo
+                </div>
+                <div class="echoo-linkup-settings-hint">
+                  Your face and one-liner, required to match.
+                </div>
               </div>
-              <div class="echoo-linkup-way-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg></div>
+              <div class="echoo-linkup-way-arrow">
+                <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" /></svg>
+              </div>
             </a>
           </div>
         </section>
@@ -141,22 +272,34 @@
 
       <nav class="bottom-nav" aria-label="Main navigation">
         <a class="nav-link" href="index.html">
-          <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" /></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3Z" />
+          </svg>
           <span>Home</span>
         </a>
         <a class="nav-link" href="events.html">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m16 16 4 4" />
+          </svg>
           <span>Discover</span>
         </a>
         <a class="nav-link active" href="linkup.html" aria-current="page">
           <svg viewBox="0 0 24 24">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            />
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            />
           </svg>
           <span>Link Up</span>
         </a>
         <a class="nav-link" href="auth.html">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
           <span>Profile</span>
         </a>
       </nav>
@@ -251,7 +394,9 @@
         }
 
         toggle.addEventListener("click", onToggle);
-        await load().catch(() => showState("Couldn't load settings. Pull to retry."));
+        await load().catch(() =>
+          showState("Couldn't load settings. Pull to retry."),
+        );
       })();
     </script>
     <script src="assets/page-loader.js"></script>

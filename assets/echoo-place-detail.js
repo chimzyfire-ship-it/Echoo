@@ -1,15 +1,5 @@
 (function () {
   const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const AUTH_CAPTIONS = [
-    "Tiny detour.",
-    "Quick check-in.",
-    "Velvet rope.",
-    "Back in a sec.",
-    "Keys first.",
-    "One tap in.",
-    "Briefly official.",
-    "The good stuff.",
-  ];
   // Public Uber application identifier used only to identify Echoo in the
   // handoff link. It is not an access token or a private credential.
   const UBER_APPLICATION_ID = "Oao1ZwwzG4M-DV-nR1lr9go1DYjpfYHe";
@@ -24,7 +14,9 @@
   }
 
   function cleanText(value, fallback = "") {
-    return String(value || fallback).replace(/\s+/g, " ").trim();
+    return String(value || fallback)
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   function listFrom(value) {
@@ -70,20 +62,35 @@
   }
 
   function sourceCountFor(detail) {
-    return Number(detail?.sourceStatus?.sourceCount || detail?.sources?.length || 0);
+    return Number(
+      detail?.sourceStatus?.sourceCount || detail?.sources?.length || 0,
+    );
   }
 
   function pulseItemsFor(detail) {
     const allowedLabels = new Set([
-      "Now", "Today", "Tonight", "Setting", "Best for", "Good to know", "Access", "What to expect", "Cuisine", "Amenities",
+      "Now",
+      "Today",
+      "Tonight",
+      "Setting",
+      "Best for",
+      "Good to know",
+      "Access",
+      "What to expect",
+      "Cuisine",
+      "Amenities",
     ]);
-    const items = (Array.isArray(detail?.pulse?.items) ? detail.pulse.items : [])
+    const items = (
+      Array.isArray(detail?.pulse?.items) ? detail.pulse.items : []
+    )
       .map((item) => ({
         label: cleanText(item?.label),
         value: cleanText(item?.value),
         source: cleanText(item?.source),
       }))
-      .filter((item) => allowedLabels.has(item.label) && item.value && item.source)
+      .filter(
+        (item) => allowedLabels.has(item.label) && item.value && item.source,
+      )
       .slice(0, 3);
     if (items.length) return items;
 
@@ -94,7 +101,8 @@
     const category = cleanText(place.subcategory || place.category);
     const locality = cleanText(place.municipality || place.city);
     const address = cleanText(place.formatted_address || place.address);
-    const setting = category && locality ? `${category} in ${locality}` : address || locality;
+    const setting =
+      category && locality ? `${category} in ${locality}` : address || locality;
     return setting
       ? [{ label: "Setting", value: setting, source: "Echoo place record" }]
       : [];
@@ -139,16 +147,20 @@
   function isDetailReady(detail) {
     const place = detail?.place || {};
     return Boolean(
-      cleanText(place.name) || cleanText(place.formatted_address || place.address),
+      cleanText(place.name) ||
+      cleanText(place.formatted_address || place.address),
     );
   }
 
   function summaryFor(detail) {
     const place = detail.place || {};
     const profile = detail.profile || {};
-    const sourceDescription = cleanText(place.metadata?.description || place.description);
+    const sourceDescription = cleanText(
+      place.metadata?.description || place.description,
+    );
     if (sourceDescription) return sourceDescription;
-    if (profile.human_review_status === "approved") return cleanText(profile.summary);
+    if (profile.human_review_status === "approved")
+      return cleanText(profile.summary);
     return "";
   }
 
@@ -160,18 +172,24 @@
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-      }).formatToParts(new Date()).map((part) => [part.type, part.value]),
+      })
+        .formatToParts(new Date())
+        .map((part) => [part.type, part.value]),
     );
     const dateKey = `${parts.year}-${parts.month}-${parts.day}`;
     return (Array.isArray(detail?.hours) ? detail.hours : []).filter((row) => {
       const updated = Date.parse(cleanText(row?.updated_at));
       const confidence = Number(row?.confidence_score);
-      return Boolean(cleanText(row?.source)) &&
-        Number.isFinite(confidence) && confidence >= 0.85 &&
-        Number.isFinite(updated) && updated <= now &&
+      return (
+        Boolean(cleanText(row?.source)) &&
+        Number.isFinite(confidence) &&
+        confidence >= 0.85 &&
+        Number.isFinite(updated) &&
+        updated <= now &&
         now - updated <= 1000 * 60 * 60 * 24 * 21 &&
         (!cleanText(row?.valid_from) || cleanText(row.valid_from) <= dateKey) &&
-        (!cleanText(row?.valid_to) || cleanText(row.valid_to) >= dateKey);
+        (!cleanText(row?.valid_to) || cleanText(row.valid_to) >= dateKey)
+      );
     });
   }
 
@@ -182,7 +200,8 @@
       .map((row) => {
         const day = Number(row.day_of_week);
         if (!Number.isInteger(day) || day < 0 || day > 6) return null;
-        if (row.is_closed) return { day, value: "Closed", active: day === dayIndex };
+        if (row.is_closed)
+          return { day, value: "Closed", active: day === dayIndex };
         const opens = formatTime(row.opens_at);
         const closes = formatTime(row.closes_at);
         if (!opens || !closes) return null;
@@ -201,7 +220,11 @@
     const groups = [];
     for (const row of rowsToGroup) {
       const previous = groups.at(-1);
-      if (previous && previous.end === row.day - 1 && previous.value === row.value) {
+      if (
+        previous &&
+        previous.end === row.day - 1 &&
+        previous.value === row.value
+      ) {
         previous.end = row.day;
         previous.active = previous.active || row.active;
       } else {
@@ -237,12 +260,17 @@
       minute: "2-digit",
       hourCycle: "h23",
     }).formatToParts(now);
-    const parts = Object.fromEntries(local.map((part) => [part.type, part.value]));
+    const parts = Object.fromEntries(
+      local.map((part) => [part.type, part.value]),
+    );
     const minutes = Number(parts.hour) * 60 + Number(parts.minute);
-    const isOpen = closes > opens
-      ? minutes >= opens && minutes < closes
-      : minutes >= opens || minutes < closes;
-    return isOpen ? `Open now · until ${formatTime(row.closes_at)}` : `Today · ${formatTime(row.opens_at)} - ${formatTime(row.closes_at)}`;
+    const isOpen =
+      closes > opens
+        ? minutes >= opens && minutes < closes
+        : minutes >= opens || minutes < closes;
+    return isOpen
+      ? `Open now · until ${formatTime(row.closes_at)}`
+      : `Today · ${formatTime(row.opens_at)} - ${formatTime(row.closes_at)}`;
   }
 
   function todayHours(detail) {
@@ -266,9 +294,12 @@
   function mapsLinkFor(place) {
     const latitude = Number(place?.latitude);
     const longitude = Number(place?.longitude);
-    const query = Number.isFinite(latitude) && Number.isFinite(longitude)
-      ? `${latitude},${longitude}`
-      : [place?.name, place?.formatted_address || place?.address].filter(Boolean).join(" ");
+    const query =
+      Number.isFinite(latitude) && Number.isFinite(longitude)
+        ? `${latitude},${longitude}`
+        : [place?.name, place?.formatted_address || place?.address]
+            .filter(Boolean)
+            .join(" ");
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&dir_action=navigate`;
   }
 
@@ -327,10 +358,17 @@
     const hours = compactHours(detail);
     const today = todayHours(detail);
     const sourceCount = sourceCountFor(detail);
-    const sourceNames = [...new Set((detail.sources || []).map((source) => cleanText(source.source_name)).filter(Boolean))].slice(0, 2);
-    const tags = profile.human_review_status === "approved"
-      ? listFrom(profile.good_for).slice(0, 4)
-      : [];
+    const sourceNames = [
+      ...new Set(
+        (detail.sources || [])
+          .map((source) => cleanText(source.source_name))
+          .filter(Boolean),
+      ),
+    ].slice(0, 2);
+    const tags =
+      profile.human_review_status === "approved"
+        ? listFrom(profile.good_for).slice(0, 4)
+        : [];
     const heroImage = heroImageFor(detail, options);
     const heroPhoto = photos.find((photo) => photo.url === heroImage) || null;
     const galleryPhotos = photos.filter((photo) => photo.url !== heroImage);
@@ -338,7 +376,8 @@
     const directionsHref = options.directionsHref || mapsLinkFor(place);
     const routeLatitude = Number(place.latitude);
     const routeLongitude = Number(place.longitude);
-    const canRouteInsideEchoo = Number.isFinite(routeLatitude) && Number.isFinite(routeLongitude);
+    const canRouteInsideEchoo =
+      Number.isFinite(routeLatitude) && Number.isFinite(routeLongitude);
     const placeTimeZone = cleanText(place.timezone, "America/Toronto");
     const uberHref = uberLinkFor(place);
     const pulseItems = pulseItemsFor(detail);
@@ -356,11 +395,15 @@
     return `
       <section class="echoo-place-detail">
         <div class="echoo-place-hero">
-          ${heroImage ? `
+          ${
+            heroImage
+              ? `
             <img id="echoo-place-main-hero-img" class="echoo-place-hero-image" src="${escapeHtml(heroImage)}" alt="${escapeHtml(title)}" loading="eager" decoding="async">
-          ` : `
+          `
+              : `
             <div class="echoo-place-hero-fallback" aria-hidden="true"></div>
-          `}
+          `
+          }
           <div class="echoo-place-hero-shade"></div>
           <div class="echoo-place-hero-copy">
             <h1>${escapeHtml(title)}</h1>
@@ -369,75 +412,119 @@
         </div>
 
         <div class="echoo-place-body">
-          ${today ? `
+          ${
+            today
+              ? `
             <section class="echoo-place-hours-summary" aria-label="Today's opening hours">
               <span class="echoo-place-hours-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"></circle><path d="M12 7.8v4.7l3.1 1.9"></path></svg></span>
               <span class="echoo-place-hours-summary-copy"><small>${escapeHtml(today.status)}</small><strong>${escapeHtml(today.value || "Closed")}</strong></span>
             </section>
-          ` : ""}
-          ${pulseItems.length ? `
+          `
+              : ""
+          }
+          ${
+            pulseItems.length
+              ? `
             <section class="echoo-place-section echoo-place-setting-section">
               <div class="echoo-place-setting-values">
-                ${pulseItems.map((fact) => `
+                ${pulseItems
+                  .map(
+                    (fact) => `
                   <div class="echoo-place-setting-text">${escapeHtml(fact.value)}</div>
-                `).join("")}
+                `,
+                  )
+                  .join("")}
               </div>
             </section>
-          ` : ""}
+          `
+              : ""
+          }
 
-          ${summary ? `
+          ${
+            summary
+              ? `
             <section class="echoo-place-section">
               <p class="echoo-place-eyebrow">Overview</p>
               <p class="echoo-place-summary">${escapeHtml(summary)}</p>
             </section>
-          ` : ""}
+          `
+              : ""
+          }
 
-          ${galleryPhotos.length ? `
+          ${
+            galleryPhotos.length
+              ? `
             <section class="echoo-place-section echoo-place-photo-section">
               <div class="echoo-place-section-heading">
                 <p class="echoo-place-eyebrow">More photos</p>
                 <span>${galleryPhotos.length} more</span>
               </div>
               <div class="echoo-place-gallery" aria-label="Verified place photos">
-                ${galleryPhotos.map((photo, index) => `
+                ${galleryPhotos
+                  .map(
+                    (photo, index) => `
                   <button class="echoo-place-gallery-item" type="button" data-photo-src="${escapeHtml(photo.url)}" data-photo-alt="${escapeHtml(photo.alt || title)}" data-photo-credit="${escapeHtml(photo.credit)}" data-photo-credit-url="${escapeHtml(photo.creditUrl)}" aria-label="View photo ${index + 1}">
                     <img src="${escapeHtml(photo.url)}" alt="" loading="lazy" decoding="async">
                   </button>
-                `).join("")}
+                `,
+                  )
+                  .join("")}
               </div>
               ${photoCreditMarkup(initialPhotoCredit)}
             </section>
-          ` : heroPhoto ? photoCreditMarkup(heroPhoto) : ""}
+          `
+              : heroPhoto
+                ? photoCreditMarkup(heroPhoto)
+                : ""
+          }
 
-          ${tags.length ? `
+          ${
+            tags.length
+              ? `
             <section class="echoo-place-section">
               <p class="echoo-place-eyebrow">Good for</p>
               <div class="echoo-place-tag-row">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
             </section>
-          ` : ""}
+          `
+              : ""
+          }
 
-          ${hours.length ? `
+          ${
+            hours.length
+              ? `
             <section class="echoo-place-section">
               <p class="echoo-place-eyebrow">Hours</p>
               <div class="echoo-place-hours-list">
-                ${hours.map((row) => `
+                ${hours
+                  .map(
+                    (row) => `
                   <div class="echoo-place-hours-row${row.active ? " active" : ""}">
                     <span>${escapeHtml(row.label)}</span><strong>${escapeHtml(row.value)}</strong>
                   </div>
-                `).join("")}
+                `,
+                  )
+                  .join("")}
               </div>
             </section>
-          ` : ""}
+          `
+              : ""
+          }
 
-          ${sourceCount > 0 || sourceNames.length ? `
+          ${
+            sourceCount > 0 || sourceNames.length
+              ? `
             <div class="echoo-place-source-line">
               <span>${escapeHtml(confidenceLabel(detail.sourceStatus?.confidenceScore || profile.confidence_score, sourceCount))}</span>
               ${sourceCount > 0 ? `<span>${escapeHtml(`${sourceCount} ${sourceCount === 1 ? "source" : "sources"}`)}</span>` : ""}
               ${sourceNames.length ? `<span>${escapeHtml(sourceNames.join(" · "))}</span>` : ""}
             </div>
-          ` : ""}
+          `
+              : ""
+          }
 
-          ${uberHref ? `
+          ${
+            uberHref
+              ? `
             <section class="echoo-uber-card" aria-label="Ride with Uber">
               <span class="echoo-uber-car" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M5.2 10.1 6.5 6.7c.3-.8 1-1.3 1.9-1.3h7.2c.8 0 1.6.5 1.9 1.3l1.3 3.4c.7.4 1.2 1.2 1.2 2.1v4.1c0 .8-.6 1.4-1.4 1.4h-1.1c-.7 0-1.3-.5-1.4-1.2H7.9c-.1.7-.7 1.2-1.4 1.2H5.4c-.8 0-1.4-.6-1.4-1.4v-4.1c0-.9.5-1.7 1.2-2.1Zm2.2.1h9.2l-.9-2.5c-.1-.3-.4-.5-.8-.5H8.2c-.3 0-.6.2-.8.5l-1 2.5Zm.3 4.2a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Zm8.6 0a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Z"/></svg></span>
               <div class="echoo-uber-card-copy">
@@ -448,10 +535,14 @@
                 <span>Open</span><svg aria-hidden="true" viewBox="0 0 16 16" focusable="false"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
               </button>
             </section>
-          ` : ""}
+          `
+              : ""
+          }
 
           <div class="echoo-place-actions">
-            ${canRouteInsideEchoo ? `
+            ${
+              canRouteInsideEchoo
+                ? `
               <button
                 type="button"
                 class="echoo-place-btn-primary"
@@ -465,7 +556,9 @@
                 data-route-timezone="${escapeHtml(placeTimeZone)}"
                 data-route-fallback="${escapeHtml(directionsHref)}"
               ><span>Directions</span><span aria-hidden="true">↗</span></button>
-            ` : `<button type="button" class="echoo-place-btn-primary" data-echoo-route data-route-fallback="${escapeHtml(directionsHref)}"><span>Directions</span><span aria-hidden="true">↗</span></button>`}
+            `
+                : `<button type="button" class="echoo-place-btn-primary" data-echoo-route data-route-fallback="${escapeHtml(directionsHref)}"><span>Directions</span><span aria-hidden="true">↗</span></button>`
+            }
             <button
               type="button"
               class="echoo-place-btn-secondary"
@@ -483,7 +576,9 @@
             ><span>Quick plan</span><span aria-hidden="true">→</span></button>
             <span class="echoo-linkup-host" data-echoo-linkup-host data-linkup-place-id="${escapeHtml(cleanText(place.id || place.place_id))}" data-linkup-place-name="${escapeHtml(title)}" aria-hidden="true"></span>
           </div>
-          ${canRouteInsideEchoo ? `
+          ${
+            canRouteInsideEchoo
+              ? `
             <button
               type="button"
               class="echoo-place-stay-trigger"
@@ -493,7 +588,9 @@
               data-stay-longitude="${escapeHtml(String(routeLongitude))}"
               data-stay-timezone="${escapeHtml(placeTimeZone)}"
             ><span>Stay nearby</span><span>Real hotels close to this place <i aria-hidden="true">→</i></span></button>
-          ` : ""}
+          `
+              : ""
+          }
         </div>
       </section>
     `;
@@ -510,7 +607,9 @@
         mainImage.style.opacity = "0.45";
         mainImage.src = src;
         mainImage.alt = item.getAttribute("data-photo-alt") || "Place photo";
-        mainImage.onload = () => { mainImage.style.opacity = "1"; };
+        mainImage.onload = () => {
+          mainImage.style.opacity = "1";
+        };
         const credit = document.getElementById("echoo-place-photo-credit");
         if (credit) {
           const text = item.getAttribute("data-photo-credit") || "";
@@ -528,7 +627,9 @@
             credit.append(text);
           }
         }
-        items.forEach((candidate) => candidate.classList.toggle("active", candidate === item));
+        items.forEach((candidate) =>
+          candidate.classList.toggle("active", candidate === item),
+        );
       };
     });
   }
@@ -536,28 +637,49 @@
   function bindQuickPlanInteractions() {
     document.querySelectorAll("[data-quick-plan-message]").forEach((button) => {
       button.onclick = async () => {
-        if (!(await gateMemberAction("quick_plan", "quick_plan_required"))) return;
-        const message = cleanText(button.getAttribute("data-quick-plan-message"));
+        const message = cleanText(
+          button.getAttribute("data-quick-plan-message"),
+        );
         if (!message) return;
-        const latitude = Number(button.getAttribute("data-quick-plan-latitude"));
-        const longitude = Number(button.getAttribute("data-quick-plan-longitude"));
-        window.dispatchEvent(new CustomEvent("echoo:quick-plan", {
-          detail: {
-            message,
-            anchor: {
-              id: cleanText(button.getAttribute("data-quick-plan-place-id")),
-              name: cleanText(button.getAttribute("data-quick-plan-name"), "This place"),
-              category: cleanText(button.getAttribute("data-quick-plan-category")),
-              subcategory: cleanText(button.getAttribute("data-quick-plan-subcategory")),
-              city: cleanText(button.getAttribute("data-quick-plan-city")),
-              address: cleanText(button.getAttribute("data-quick-plan-address")),
-              latitude: Number.isFinite(latitude) ? latitude : null,
-              longitude: Number.isFinite(longitude) ? longitude : null,
-              timeZone: cleanText(button.getAttribute("data-quick-plan-timezone"), "America/Toronto"),
-              imageUrl: cleanText(button.getAttribute("data-quick-plan-image")),
+        const latitude = Number(
+          button.getAttribute("data-quick-plan-latitude"),
+        );
+        const longitude = Number(
+          button.getAttribute("data-quick-plan-longitude"),
+        );
+        window.dispatchEvent(
+          new CustomEvent("echoo:quick-plan", {
+            detail: {
+              message,
+              anchor: {
+                id: cleanText(button.getAttribute("data-quick-plan-place-id")),
+                name: cleanText(
+                  button.getAttribute("data-quick-plan-name"),
+                  "This place",
+                ),
+                category: cleanText(
+                  button.getAttribute("data-quick-plan-category"),
+                ),
+                subcategory: cleanText(
+                  button.getAttribute("data-quick-plan-subcategory"),
+                ),
+                city: cleanText(button.getAttribute("data-quick-plan-city")),
+                address: cleanText(
+                  button.getAttribute("data-quick-plan-address"),
+                ),
+                latitude: Number.isFinite(latitude) ? latitude : null,
+                longitude: Number.isFinite(longitude) ? longitude : null,
+                timeZone: cleanText(
+                  button.getAttribute("data-quick-plan-timezone"),
+                  "America/Toronto",
+                ),
+                imageUrl: cleanText(
+                  button.getAttribute("data-quick-plan-image"),
+                ),
+              },
             },
-          },
-        }));
+          }),
+        );
       };
     });
   }
@@ -565,7 +687,6 @@
   function bindRouteInteractions() {
     document.querySelectorAll("[data-echoo-route]").forEach((button) => {
       button.onclick = async () => {
-        if (!(await gateMemberAction("directions", "directions_required"))) return;
         const latitude = Number(button.getAttribute("data-route-latitude"));
         const longitude = Number(button.getAttribute("data-route-longitude"));
         const fallback = button.getAttribute("data-route-fallback") || "";
@@ -576,12 +697,17 @@
 
         const route = {
           id: cleanText(button.getAttribute("data-route-id")),
-          googlePlaceId: cleanText(button.getAttribute("data-route-google-place-id")),
+          googlePlaceId: cleanText(
+            button.getAttribute("data-route-google-place-id"),
+          ),
           name: cleanText(button.getAttribute("data-route-name"), "This place"),
           address: cleanText(button.getAttribute("data-route-address")),
           latitude,
           longitude,
-          timeZone: cleanText(button.getAttribute("data-route-timezone"), "America/Toronto"),
+          timeZone: cleanText(
+            button.getAttribute("data-route-timezone"),
+            "America/Toronto",
+          ),
         };
         await window.EchooLiveStays?.maybePromptLateRoute(route);
         // Remember this destination so Link Up can silently check the user in
@@ -591,7 +717,9 @@
           name: route.name,
         });
         if (window.ReactNativeWebView?.postMessage) {
-          window.ReactNativeWebView.postMessage(`echoo:route:${JSON.stringify(route)}`);
+          window.ReactNativeWebView.postMessage(
+            `echoo:route:${JSON.stringify(route)}`,
+          );
           return;
         }
         if (fallback) window.open(fallback, "_blank", "noopener,noreferrer");
@@ -605,16 +733,24 @@
         const latitude = Number(button.getAttribute("data-stay-latitude"));
         const longitude = Number(button.getAttribute("data-stay-longitude"));
         if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
-        window.dispatchEvent(new CustomEvent("echoo:live-stays", {
-          detail: {
-            anchor: {
-              name: cleanText(button.getAttribute("data-stay-name"), "this place"),
-              latitude,
-              longitude,
-              timeZone: cleanText(button.getAttribute("data-stay-timezone"), "America/Toronto"),
+        window.dispatchEvent(
+          new CustomEvent("echoo:live-stays", {
+            detail: {
+              anchor: {
+                name: cleanText(
+                  button.getAttribute("data-stay-name"),
+                  "this place",
+                ),
+                latitude,
+                longitude,
+                timeZone: cleanText(
+                  button.getAttribute("data-stay-timezone"),
+                  "America/Toronto",
+                ),
+              },
             },
-          },
-        }));
+          }),
+        );
       };
     });
   }
@@ -640,70 +776,18 @@
       host.setAttribute("aria-hidden", "false");
       const place = {
         id: cleanText(host.getAttribute("data-linkup-place-id")),
-        name: cleanText(host.getAttribute("data-linkup-place-name"), "this place"),
+        name: cleanText(
+          host.getAttribute("data-linkup-place-name"),
+          "this place",
+        ),
       };
       if (window.EchooLinkUp) {
         window.EchooLinkUp.setPlaceContext(place);
-        document.dispatchEvent(new CustomEvent("echoo:place-detail:open", { detail: place }));
+        document.dispatchEvent(
+          new CustomEvent("echoo:place-detail:open", { detail: place }),
+        );
       }
     });
-  }
-
-  async function gateMemberAction(intent, reason) {
-    const nextUrl = `${window.location.pathname.split("/").pop() || "events.html"}${window.location.search}${window.location.hash}`;
-    if (window.EchooAuth?.requireAuthenticatedAction) {
-      const state = await window.EchooAuth.requireAuthenticatedAction({
-        next: nextUrl,
-        mode: "signup",
-        intent,
-        reason,
-        caption: "Create an account to make this part of your day yours.",
-      });
-      return state.ok;
-    }
-    window.location.href = buildAuthUrl(nextUrl, {
-      mode: "signup",
-      intent,
-      reason,
-      caption: "Create an account to make this part of your day yours.",
-    });
-    return false;
-  }
-
-  function buildAuthUrl(nextUrl, options = {}) {
-    const url = new URL("auth.html", window.location.href);
-    url.searchParams.set("next", nextUrl || `${window.location.pathname.split("/").pop() || "index.html"}${window.location.search}${window.location.hash}`);
-    url.searchParams.set("mode", options.mode || "signin");
-    url.searchParams.set("intent", options.intent || "place_detail");
-    url.searchParams.set("reason", options.reason || "detail_access");
-    const caption = cleanText(options.caption || pickCaption(nextUrl));
-    if (caption) url.searchParams.set("caption", caption);
-    return url.toString();
-  }
-
-  function pickCaption(seed = "") {
-    let total = 0;
-    for (const character of String(seed || "")) total += character.charCodeAt(0);
-    return AUTH_CAPTIONS[total % AUTH_CAPTIONS.length];
-  }
-
-  function renderAuthPrompt(options = {}) {
-    const title = cleanText(options.title, "Sign in to unlock this place");
-    const note = cleanText(options.note, "We’ll bring you right back here after a quick sign-in.");
-    const nextUrl = options.nextUrl || `${window.location.pathname.split("/").pop() || "index.html"}${window.location.search}${window.location.hash}`;
-    const authHref = options.authHref || buildAuthUrl(nextUrl, options);
-    return `
-      <section class="echoo-place-detail echoo-place-unavailable">
-        <div class="echoo-place-unavailable-mark">E</div>
-        <p class="echoo-place-eyebrow">${escapeHtml(pickCaption(options.seed || title))}</p>
-        <h2>${escapeHtml(title)}</h2>
-        <p>${escapeHtml(note)}</p>
-        <div class="echoo-place-actions">
-          <a class="echoo-place-btn-primary" href="${escapeHtml(authHref)}">${escapeHtml(cleanText(options.primaryLabel, "Sign in"))}</a>
-          <button type="button" class="echoo-place-btn-secondary" data-close-sheet>${escapeHtml(cleanText(options.secondaryLabel, "Keep browsing"))}</button>
-        </div>
-      </section>
-    `;
   }
 
   window.EchooPlaceDetail = {
@@ -713,14 +797,11 @@
     bindStayInteractions,
     bindUberInteractions,
     bindCheckinInteractions,
-    buildAuthUrl,
     confidenceLabel,
     escapeHtml,
     heroImageFor,
     isDetailReady,
-    pickCaption,
     pulseItemsFor,
-    renderAuthPrompt,
     renderPlaceDetail,
     renderUnavailablePlaceDetail,
     verifiedPhotos,

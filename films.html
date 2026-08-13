@@ -538,8 +538,12 @@
         </a>
         <a class="nav-link" href="linkup.html">
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            />
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            />
           </svg>
           <span>Link Up</span>
         </a>
@@ -553,6 +557,8 @@
       </nav>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
     <script src="assets/hero-copy.js"></script>
     <script src="assets/echoo-cinema.js"></script>
     <script>
@@ -747,30 +753,29 @@
           );
           if (!res.ok) return;
           const data = await res.json();
-          const movies = (data.movies || []).filter((m) => m.trailer_youtube_id);
+          const movies = (data.movies || []).filter(
+            (m) => m.trailer_youtube_id,
+          );
           if (movies.length > 0) selectMovie(movies[0]);
         } catch (_err) {
           // Keep the curated fallback film already on screen.
         }
       }
 
-      renderQueue();
-      setFilm(0);
-
-      // ── Boot the cinema rails ──
-      if (window.EchooCinema) {
-        window.EchooCinema.init({
-          container: document.getElementById("cinema-rails"),
-          onSelect: selectMovie,
-          fallbacks: films,
-        });
-      }
-
-      // Deep-link takes priority; otherwise promote a current film to featured.
-      (async () => {
+      window.echooAccessReady.then(async (access) => {
+        if (!access?.ok) return;
+        renderQueue();
+        setFilm(0);
+        if (window.EchooCinema) {
+          window.EchooCinema.init({
+            container: document.getElementById("cinema-rails"),
+            onSelect: selectMovie,
+            fallbacks: films,
+          });
+        }
         const loaded = await loadDeepLinkedMovie();
         if (!loaded) loadFeaturedFromFeed();
-      })();
+      });
     </script>
     <script src="assets/page-loader.js"></script>
   </body>

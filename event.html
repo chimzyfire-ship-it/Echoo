@@ -234,13 +234,16 @@
     </style>
     <link rel="stylesheet" href="assets/echoo-live-stays.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
-    <script>document.documentElement.classList.add("echoo-page-loading");</script>
+    <script>
+      document.documentElement.classList.add("echoo-page-loading");
+    </script>
   </head>
   <body>
     <header class="topbar">
       <a class="brand" href="index.html">echoo</a>
       <nav>
-        <a href="happenings.html">Events</a><a href="tickets.html">My Tickets</a>
+        <a href="happenings.html">Events</a
+        ><a href="tickets.html">My Tickets</a>
       </nav>
     </header>
     <main>
@@ -334,16 +337,6 @@
         )
           return;
         try {
-          const authState = window.EchooAuth
-            ? await window.EchooAuth.requireOnboarding({ redirect: false })
-            : { ok: true };
-          if (authState && authState.ok === false) {
-            const next = window.EchooAuth
-              ? encodeURIComponent(window.EchooAuth.currentRelativeUrl())
-              : "index.html";
-            box.innerHTML = `<div class="empty"><a href="auth.html?next=${next}&mode=signup">Sign up to see AI-matched nearby plans.</a></div>`;
-            return;
-          }
           const response = await fetch(CONFIG.planEngineUrl, {
             method: "POST",
             headers: await plannerHeaders(),
@@ -379,9 +372,13 @@
       }
 
       function eventTimeZone(event) {
-        const city = String(event?.city || "").trim().toLowerCase();
-        if (city === "vancouver" || city === "victoria") return "America/Vancouver";
-        if (city === "calgary" || city === "edmonton") return "America/Edmonton";
+        const city = String(event?.city || "")
+          .trim()
+          .toLowerCase();
+        if (city === "vancouver" || city === "victoria")
+          return "America/Vancouver";
+        if (city === "calgary" || city === "edmonton")
+          return "America/Edmonton";
         if (city === "winnipeg") return "America/Winnipeg";
         if (city === "halifax") return "America/Halifax";
         return "America/Toronto";
@@ -407,7 +404,11 @@
 
       async function takeMeThere(event) {
         const anchor = stayAnchor(event);
-        if (!Number.isFinite(anchor.latitude) || !Number.isFinite(anchor.longitude)) return;
+        if (
+          !Number.isFinite(anchor.latitude) ||
+          !Number.isFinite(anchor.longitude)
+        )
+          return;
         await window.EchooLiveStays?.maybePromptLateRoute(anchor);
         const route = {
           id: event.id,
@@ -417,7 +418,9 @@
           longitude: anchor.longitude,
         };
         if (window.ReactNativeWebView?.postMessage) {
-          window.ReactNativeWebView.postMessage(`echoo:route:${JSON.stringify(route)}`);
+          window.ReactNativeWebView.postMessage(
+            `echoo:route:${JSON.stringify(route)}`,
+          );
           return;
         }
         const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${anchor.latitude},${anchor.longitude}`)}&dir_action=navigate`;
@@ -560,7 +563,9 @@
         }
       }
 
-      load();
+      window.echooAccessReady.then((access) => {
+        if (access?.ok) load();
+      });
     </script>
     <script src="assets/page-loader.js"></script>
   </body>
