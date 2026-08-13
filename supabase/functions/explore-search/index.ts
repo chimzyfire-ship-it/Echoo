@@ -575,6 +575,61 @@ function rankMergedResults(
     });
 }
 
+const OWNED_SEARCH_TIMEOUT_MS = 1_750;
+
+async function basicOwnedFallbackCards(input: {
+  supabase: ReturnType<typeof getSupabaseAdmin>;
+  cityFilter: string | null;
+  lat?: number;
+  lng?: number;
+  limit: number;
+}) {
+  // This deliberately small, indexed query is the recovery lane for the
+  // richer ranking RPC. It gives Discover real local cards even if a costly
+  // ranking plan is cancelled by Postgres' statement timeout.
+  let query = input.supabase
+    .from("location_entities")
+    .select("id,entity_type,title,category,description,city,latitude,longitude")
+    .eq("status", "published")
+    .eq("country_code", "CA")
+    .eq("admin_area_1", "ON");
+  if (input.cityFilter) query = query.eq("city", input.cityFilter);
+  const { data, error } = await query
+    .order("title", { ascending: true })
+    .limit(Math.min(Math.max(input.limit, 1), 24));
+  if (error) {
+    console.warn(
+      "Explore basic inventory fallback unavailable:",
+      cleanDiscoveryText(error.message, 160),
+    );
+    return [];
+  }
+  return (data || []).map((item: any) =>
+    ownedCard({
+      ...item,
+      entity_id: null,
+      starts_at: null,
+      distance_meters: metersBetween(
+        input.lat,
+        input.lng,
+        optionalDiscoveryNumber(item.latitude),
+        optionalDiscoveryNumber(item.longitude),
+      ),
+      feature_slugs: [],
+      cover_url: null,
+      cover_alt_text: null,
+      rating_average: null,
+      rating_count: 0,
+      verified_visit_count: 0,
+      save_count: 0,
+      hot_score: 0,
+      is_registered: false,
+      placement_tier: null,
+      rank_score: 0,
+    }),
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -683,6 +738,28 @@ Deno.serve(async (req) => {
     // an artificially small catalogue while preserving a local-first order.
     const cityFilter =
       lat === undefined && city.coverageLevel === "municipality" ? city.name : null;
+    const includeLiveFallback = asBoolean(get("includeLiveFallback"), true);
+    // Start live search before the owned-ranking RPC. That RPC can be
+    // temporarily slow as inventory grows; external place cards should never
+    // be held hostage by it.
+    const liveSearchPromise = includeLiveFallback
+      ? googleLiveSearch({
+          req,
+          query: searchQuery || category || "things to do",
+          category,
+          city: city.name,
+          lat,
+          lng,
+          limit,
+          pageToken: livePageToken,
+        }).catch((error) => {
+          console.warn(
+            "Explore live fallback unavailable:",
+            cleanDiscoveryText((error as Error)?.message, 160),
+          );
+          return { results: [], nextPageToken: null };
+        })
+      : Promise.resolve({ results: [], nextPageToken: null });
     const cacheKey = await sha256Hex(
       JSON.stringify({
         v: 4,
@@ -701,12 +778,23 @@ Deno.serve(async (req) => {
     );
     const cached = !livePageToken ? await readLocationCache(supabase, cacheKey) : null;
     let owned: OwnedResult[];
+    let ownedSearchDegraded = false;
     if (cached) {
       owned = (cached as any).owned || [];
     } else if (!livePageToken || cursor) {
-      const { data, error } = await supabase.rpc(
-        "search_discovery_owned_entities",
-        {
+      const timeout = new Promise<{ data: null; error: { message: string } }>(
+        (resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                data: null,
+                error: { message: "Owned discovery ranking timed out" },
+              }),
+            OWNED_SEARCH_TIMEOUT_MS,
+          ),
+      );
+      const { data, error } = await Promise.race([
+        supabase.rpc("search_discovery_owned_entities", {
           p_query: inventoryQuery || null,
           p_feature_slugs: featureSlugs,
           p_preference_feature_slugs: preferenceFeatureSlugs,
@@ -721,11 +809,20 @@ Deno.serve(async (req) => {
           p_limit: Math.min(limit + 1, 50),
           p_cursor_score: cursor?.score ?? null,
           p_cursor_id: cursor?.id ?? null,
-        },
-      );
-      if (error) throw error;
-      owned = data || [];
-      await writeLocationCache(supabase, cacheKey, { owned }, 90);
+        }),
+        timeout,
+      ]);
+      if (error) {
+        ownedSearchDegraded = true;
+        owned = [];
+        console.warn(
+          "Explore owned ranking degraded:",
+          cleanDiscoveryText(error.message, 160),
+        );
+      } else {
+        owned = data || [];
+        await writeLocationCache(supabase, cacheKey, { owned }, 90);
+      }
     } else {
       owned = [];
     }
@@ -734,32 +831,25 @@ Deno.serve(async (req) => {
       owned.length > limit || (limit === 50 && owned.length === 50);
     const page = owned.slice(0, limit);
     const ownedCards = page.map(ownedCard);
-    const includeLiveFallback = asBoolean(get("includeLiveFallback"), true);
-    // The two potentially slow provider lanes are independent. Run them in
-    // parallel so owned cards with newly resolved covers never wait behind the
-    // live catalogue request.
+    const basicFallbackCards = ownedSearchDegraded
+      ? await basicOwnedFallbackCards({
+          supabase,
+          cityFilter,
+          lat,
+          lng,
+          limit,
+        })
+      : [];
+    // Hydrating owned cards and the already-running live search are independent.
     const [live, hydratedOwnedCards] = await Promise.all([
-      includeLiveFallback
-        ? googleLiveSearch({
-            req,
-            // Do not concatenate onboarding or time prose into the provider
-            // query. A quick filter must remain a clean, unambiguous intent.
-            query: searchQuery || category || "things to do",
-            category,
-            city: city.name,
-            lat,
-            lng,
-            limit,
-            pageToken: livePageToken,
-          })
-        : Promise.resolve({ results: [], nextPageToken: null }),
+      liveSearchPromise,
       hydrateOwnedCardPhotos(req, supabase, ownedCards),
     ]);
     const last = page.at(-1);
     // Every photo that is shown is a real provider or approved venue photo.
     // Missing photography must never make a real local business disappear:
     // clients render an honest category fallback while enrichment continues.
-    const merged = [...hydratedOwnedCards, ...live.results]
+    const merged = [...hydratedOwnedCards, ...basicFallbackCards, ...live.results]
       .filter((item, index, all) =>
         all.findIndex((candidate) => discoveryResultKey(candidate) === discoveryResultKey(item)) === index,
       );
@@ -779,9 +869,10 @@ Deno.serve(async (req) => {
         (lat === undefined ? "manual_city" : "gta_fallback"),
       searchScope: cityFilter ? "municipality" : "gta_region",
       results: ranked,
-      ownedResultCount: page.length,
+      ownedResultCount: page.length || basicFallbackCards.length,
       registeredResultCount: ownedCards.filter((item: any) => item.placement?.sponsored).length,
       liveFallbackCount: live.results.length,
+      rankingDegraded: ownedSearchDegraded,
       nextCursor:
         hasNextPage && last
           ? encodeDiscoveryCursor(last.rank_score, last.id)
