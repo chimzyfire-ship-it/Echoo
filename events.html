@@ -811,6 +811,17 @@
           ),
           linear-gradient(145deg, #2a2926, #11110f 62%, #25211d);
       }
+      .place-visual-fallback {
+        background-position: center;
+        background-size: cover;
+      }
+      .place-photo {
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+      .place-photo.is-loaded {
+        opacity: 1;
+      }
       .place-visual-fallback[data-cover="music"] {
         background:
           radial-gradient(
@@ -852,7 +863,11 @@
          a visual of a place we have not verified. */
       .place-visual-fallback[data-cover] {
         background:
-          radial-gradient(circle at 76% 18%, rgba(247, 213, 178, 0.15), transparent 27%),
+          radial-gradient(
+            circle at 76% 18%,
+            rgba(247, 213, 178, 0.15),
+            transparent 27%
+          ),
           linear-gradient(145deg, #242321, #11110f 72%);
       }
       .place-visual-fallback[hidden] {
@@ -1252,7 +1267,12 @@
         flex-direction: column;
         justify-content: flex-end;
         padding: 14px;
-        background: linear-gradient(to top, rgba(5, 5, 5, 0.9), rgba(5, 5, 5, 0.08) 58%, transparent);
+        background: linear-gradient(
+          to top,
+          rgba(5, 5, 5, 0.9),
+          rgba(5, 5, 5, 0.08) 58%,
+          transparent
+        );
       }
       .discovery-result-copy small {
         display: none;
@@ -1618,6 +1638,9 @@
         .discover-refresh.is-refreshing svg {
           animation: none;
         }
+        .place-photo {
+          transition: none;
+        }
       }
 
       @keyframes skeleton-shimmer {
@@ -1751,15 +1774,28 @@
         border-radius: 50%;
         border: 1px solid rgba(247, 213, 178, 0.62);
         background:
-          radial-gradient(circle at 36% 32%, rgba(255, 255, 255, 0.26), transparent 19%),
-          radial-gradient(circle at 58% 65%, rgba(247, 213, 178, 0.28), transparent 44%),
+          radial-gradient(
+            circle at 36% 32%,
+            rgba(255, 255, 255, 0.26),
+            transparent 19%
+          ),
+          radial-gradient(
+            circle at 58% 65%,
+            rgba(247, 213, 178, 0.28),
+            transparent 44%
+          ),
           #211f1a;
         color: var(--peach);
         display: grid;
         place-items: center;
         z-index: 45;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        box-shadow:
+          0 10px 30px rgba(0, 0, 0, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        transition:
+          transform 0.2s ease,
+          border-color 0.2s ease,
+          background 0.2s ease;
       }
 
       .fab-culture:active {
@@ -2016,7 +2052,6 @@
             <div class="recommendation-card skeleton-card"></div>
           </div>
         </section>
-
       </main>
 
       <div
@@ -2060,12 +2095,19 @@
         </div>
       </div>
 
-      <a class="fab-culture" id="culture-lens-fab" href="culture.html" aria-label="Open Culture Lens">
+      <a
+        class="fab-culture"
+        id="culture-lens-fab"
+        href="culture.html"
+        aria-label="Open Culture Lens"
+      >
         <svg viewBox="0 0 24 24">
           <circle cx="8.1" cy="12" r="4.15" />
           <circle cx="15.9" cy="12" r="4.15" />
           <path d="M12.25 12h-.5M3.95 10.9 2.6 9.8M20.05 10.9l1.35-1.1" />
-          <path d="M6.35 12a1.75 1.75 0 0 0 3.5 0M14.15 12a1.75 1.75 0 0 0 3.5 0" />
+          <path
+            d="M6.35 12a1.75 1.75 0 0 0 3.5 0M14.15 12a1.75 1.75 0 0 0 3.5 0"
+          />
         </svg>
       </a>
 
@@ -2086,8 +2128,12 @@
         </a>
         <a class="nav-link" href="linkup.html">
           <svg viewBox="0 0 24 24">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            />
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            />
           </svg>
           <span>Link Up</span>
         </a>
@@ -2360,7 +2406,9 @@
       const surpriseMode = params.get("mode") === "surprise";
       const rememberedDiscoveryQuery = (() => {
         try {
-          return sessionStorage.getItem("echoo_discovery_active_query_v1") || "";
+          return (
+            sessionStorage.getItem("echoo_discovery_active_query_v1") || ""
+          );
         } catch (_) {
           return "";
         }
@@ -3022,6 +3070,8 @@
       const DISCOVERY_CACHE_GPS_TTL_MS = 1000 * 60 * 3;
       const DISCOVERY_CACHE_CITY_TTL_MS = 1000 * 60 * 5;
       const DISCOVERY_NETWORK_TIMEOUT_MS = 4500;
+      const DISCOVERY_IMAGE_READY_TIMEOUT_MS = 1200;
+      const DISCOVERY_PHOTO_RENEWAL_TIMEOUT_MS = 2600;
       const PLACE_FALLBACK_IMAGES = {
         food: "assets/optimized/news-date-768.webp",
         music: "assets/optimized/news-music-768.webp",
@@ -3059,11 +3109,116 @@
 
       function placeVisual(item, className, alt = "", { eager = false } = {}) {
         const image = realImageUrl(item);
-        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}"></div>`;
+        const fallbackImage = fallbackImageFor(item);
+        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}" style="background-image:linear-gradient(to top,rgba(5,5,5,.18),rgba(5,5,5,.02)),url('${esc(fallbackImage)}')"></div>`;
         const imageMarkup = image
-          ? `<img class="${className}" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" hidden onload="this.hidden=false;this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
+          ? `<img class="${className} place-photo" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" onload="this.classList.add('is-loaded');this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
           : "";
         return `${imageMarkup}${fallback}`;
+      }
+
+      async function warmDiscoveryImages(placeList = []) {
+        const urls = [
+          ...new Set(placeList.map(realImageUrl).filter(Boolean).slice(0, 8)),
+        ];
+        if (!urls.length) return;
+        const warm = Promise.allSettled(
+          urls.map(
+            (url) =>
+              new Promise((resolve) => {
+                const image = new Image();
+                image.decoding = "async";
+                image.onload = async () => {
+                  try {
+                    await image.decode?.();
+                  } catch (_) {}
+                  resolve();
+                };
+                image.onerror = resolve;
+                image.src = url;
+              }),
+          ),
+        );
+        await Promise.race([
+          warm,
+          new Promise((resolve) =>
+            window.setTimeout(resolve, DISCOVERY_IMAGE_READY_TIMEOUT_MS),
+          ),
+        ]);
+      }
+
+      function photoRenewalCards(placeList = []) {
+        return placeList
+          .filter((item) => {
+            const image = realImageUrl(item);
+            return (
+              !item?.isFallback && (!image || signedPhotoExpiresSoon(image))
+            );
+          })
+          .map((item) => ({
+            key: placeKey(item),
+            canonicalId: item.canonicalId || item.entityId || null,
+            googlePlaceId:
+              item.source === "google_places"
+                ? String(item.id || "").replace(/^google:/, "")
+                : null,
+            title: item.title || item.name,
+            city: item.city || city,
+            latitude: item.latitude,
+            longitude: item.longitude,
+          }))
+          .filter(
+            (item) => item.key && (item.canonicalId || item.googlePlaceId),
+          )
+          .slice(0, 16);
+      }
+
+      function signedPhotoExpiresSoon(value) {
+        if (!/\/functions\/v1\/place-photo\b/i.test(value || "")) return false;
+        try {
+          const token = new URL(value).searchParams.get("token") || "";
+          const normalized = token.replace(/-/g, "+").replace(/_/g, "/");
+          const padded =
+            normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+          const payload = JSON.parse(atob(padded));
+          return Number(payload.expiresAt || 0) - Date.now() < 60_000;
+        } catch (_) {
+          return true;
+        }
+      }
+
+      async function renewDiscoveryImages(placeList = [], requestId) {
+        const photoCards = photoRenewalCards(placeList);
+        if (!photoCards.length) return placeList;
+        const controller = new AbortController();
+        const timeout = window.setTimeout(
+          () => controller.abort(),
+          DISCOVERY_PHOTO_RENEWAL_TIMEOUT_MS,
+        );
+        try {
+          const response = await fetch(CONFIG.exploreUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ photoCards }),
+            signal: controller.signal,
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok || requestId !== discoveryRequestId)
+            return placeList;
+          const renewed = new Map(
+            (Array.isArray(payload.photos) ? payload.photos : []).map(
+              (entry) => [entry.key, entry.image],
+            ),
+          );
+          return placeList.map((item) => {
+            const image = renewed.get(placeKey(item));
+            return image ? { ...item, image } : item;
+          });
+        } catch (_) {
+          return placeList;
+        } finally {
+          window.clearTimeout(timeout);
+        }
       }
 
       function hotScoreFor(item) {
@@ -3123,13 +3278,17 @@
           // without churning on harmless GPS drift.
           return `gps:${Math.round(requestLat * 200) / 200},${Math.round(requestLng * 200) / 200}`;
         }
-        return `city:${String(request.city || city || DEFAULT_DISCOVERY_CITY).trim().toLowerCase()}`;
+        return `city:${String(request.city || city || DEFAULT_DISCOVERY_CITY)
+          .trim()
+          .toLowerCase()}`;
       }
 
       function discoveryCacheIdentity(request = {}) {
         return JSON.stringify({
           version: DISCOVERY_CACHE_VERSION,
-          query: String(activeQuery || "discover").trim().toLowerCase(),
+          query: String(activeQuery || "discover")
+            .trim()
+            .toLowerCase(),
           culture: activeCulture()?.slug || "local",
           location: cacheLocationScope(request),
           preferences: [...new Set(request.preferenceFeatureSlugs || [])]
@@ -3194,12 +3353,14 @@
             const entries = readCacheEntries(storage, key);
             storage.setItem(
               key,
-              JSON.stringify([
-                entry,
-                ...entries.filter(
-                  (candidate) => candidate?.identity !== identity,
-                ),
-              ].slice(0, DISCOVERY_CACHE_MAX_ENTRIES)),
+              JSON.stringify(
+                [
+                  entry,
+                  ...entries.filter(
+                    (candidate) => candidate?.identity !== identity,
+                  ),
+                ].slice(0, DISCOVERY_CACHE_MAX_ENTRIES),
+              ),
             );
           } catch (_) {
             // Restricted storage must never interrupt Discover.
@@ -3232,7 +3393,11 @@
         const nextUrl = new URL(window.location.href);
         if (activeQuery === "discover") nextUrl.searchParams.delete("query");
         else nextUrl.searchParams.set("query", activeQuery);
-        history.replaceState(null, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+        history.replaceState(
+          null,
+          "",
+          `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+        );
       }
 
       function resetRefreshControl() {
@@ -3248,15 +3413,24 @@
         // nightlife inventory. It is broad enough to feel like discovery and
         // consistently populated, while the UI still truthfully reads as the
         // unfiltered "All places" view.
-        if (key === "discover") return ["bar", "pub", "nightclub", "biergarten"];
+        if (key === "discover")
+          return ["bar", "pub", "nightclub", "biergarten"];
         if (key === "food")
           return ["restaurant", "cafe", "fast_food", "food_court", "ice_cream"];
         if (key === "live music" || key === "music")
-          return ["music", "event_venue", "nightclub", "theatre", "arts_centre"];
+          return [
+            "music",
+            "event_venue",
+            "nightclub",
+            "theatre",
+            "arts_centre",
+          ];
         if (key === "comedy")
           return ["theatre", "event_venue", "nightclub", "arts_centre"];
-        if (key === "nightlife") return ["bar", "pub", "nightclub", "biergarten"];
-        if (key === "tourism") return ["museum", "gallery", "attraction", "historic"];
+        if (key === "nightlife")
+          return ["bar", "pub", "nightclub", "biergarten"];
+        if (key === "tourism")
+          return ["museum", "gallery", "attraction", "historic"];
         if (key === "events") return ["event_venue", "arts_centre", "theatre"];
         return [];
       }
@@ -3285,7 +3459,7 @@
           const endpoint = new URL(`${CONFIG.restUrl}/location_entities`);
           endpoint.searchParams.set(
             "select",
-            "id,title,category,city,latitude,longitude,description,entity_type",
+            "id,place_id,title,category,city,latitude,longitude,description,entity_type,image_url",
           );
           endpoint.searchParams.set("status", "eq.published");
           endpoint.searchParams.set("country_code", "eq.CA");
@@ -3294,7 +3468,10 @@
           endpoint.searchParams.set("order", "title.asc");
           const categories = directInventoryCategories(activeQuery);
           if (categories.length)
-            endpoint.searchParams.set("category", `in.(${categories.join(",")})`);
+            endpoint.searchParams.set(
+              "category",
+              `in.(${categories.join(",")})`,
+            );
           if (
             !Number.isFinite(request.lat) &&
             request.city &&
@@ -3312,11 +3489,18 @@
           const rows = await response.json();
           return (Array.isArray(rows) ? rows : []).map((place) => ({
             ...place,
+            canonicalId: place.place_id || null,
             source: "echoo_inventory_fallback",
             type: place.entity_type === "event" ? "event" : "place",
             city: place.city || request.city || DEFAULT_DISCOVERY_CITY,
             distanceMeters: directInventoryDistance(place),
-            image: null,
+            image: place.image_url
+              ? {
+                  url: place.image_url,
+                  alt: place.title || "Local place",
+                  source: "echoo_inventory",
+                }
+              : null,
             features: [],
             community: null,
           }));
@@ -3480,7 +3664,7 @@
           openDetail(0);
       }
 
-      function renderItems() {
+      function renderItems({ preserveOrder = false } = {}) {
         if (discoveryFastFallbackTimer) {
           window.clearTimeout(discoveryFastFallbackTimer);
           discoveryFastFallbackTimer = 0;
@@ -3488,7 +3672,7 @@
         discoveryUiLoading = false;
         document.body.classList.remove("discover-is-loading");
         recommendationContainer.removeAttribute("aria-busy");
-        items = diversifyPlaces(items);
+        if (!preserveOrder) items = diversifyPlaces(items);
         if (items.length) {
           renderRecommendations(
             items.length > 10 ? items.slice(5, 15) : items.slice(0, 10),
@@ -3678,9 +3862,9 @@
           : "";
         resultsEl.innerHTML = pageItems.length
           ? pageItems
-              .map((item) => {
+              .map((item, pageIndex) => {
                 const itemIndex = items.indexOf(item);
-                return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place")}<span class="discovery-result-copy"><strong>${esc(item.title || "Local pick")}</strong></span></button>`;
+                return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place", { eager: pageIndex < 4 })}<span class="discovery-result-copy"><strong>${esc(item.title || "Local pick")}</strong></span></button>`;
               })
               .join("")
           : `<div class="discovery-fallback-note">A few local favourites are being lined up for you.</div>`;
@@ -4006,6 +4190,12 @@
         });
       }
 
+      function imageReadyResults(placeList = []) {
+        const withImages = placeList.filter((item) => realImageUrl(item));
+        const withoutImages = placeList.filter((item) => !realImageUrl(item));
+        return [...withImages, ...withoutImages];
+      }
+
       async function fetchDiscoveryPage({
         append = false,
         requestId = discoveryRequestId,
@@ -4049,7 +4239,7 @@
               payload?.error || "Discover is unavailable right now.",
             );
           const received = Array.isArray(payload.results)
-            ? payload.results
+            ? imageReadyResults(payload.results)
             : [];
           if (!append) {
             // An empty upstream response must never erase a good cached or
@@ -4092,12 +4282,15 @@
               resultPage,
             });
           }
-          if (render) renderItems();
+          if (render) {
+            if (!append && !items.some((item) => item.isFallback))
+              await warmDiscoveryImages(items);
+            if (requestId !== discoveryRequestId) return;
+            renderItems();
+          }
         } catch (_) {
           if (requestId !== discoveryRequestId) return;
-          const directInventory = append
-            ? []
-            : await directInventoryPromise;
+          const directInventory = append ? [] : await directInventoryPromise;
           if (requestId !== discoveryRequestId) return;
           if (directInventory.length) {
             items = directInventory;
@@ -4185,25 +4378,27 @@
           ? readDiscoveryCache(discoveryPaging.request)
           : null;
         if (cachedSurface) {
-          items = cachedSurface.results;
+          items = imageReadyResults(cachedSurface.results);
           discoveryPaging.cursor = cachedSurface.nextCursor;
           discoveryPaging.livePageToken = cachedSurface.liveNextPageToken;
           discoveryPaging.hasMore = Boolean(
             discoveryPaging.cursor || discoveryPaging.livePageToken,
           );
           resultPage = Math.max(0, Number(cachedSurface.resultPage) || 0);
-          renderItems();
+          items = await renewDiscoveryImages(items, requestId);
+          await warmDiscoveryImages(items);
+          if (requestId !== discoveryRequestId) return;
+          persistCurrentSurface();
+          renderItems({ preserveOrder: true });
           activeRequestIdentity = "";
           return;
         }
-        if (!options.refresh || !items.length) {
+        if (options.refresh && items.length) {
+          renderDiscoverLoading({ preserveVisibleResults: true });
+        } else {
           items = defaultPlaces.map((place) => ({ ...place }));
-          renderItems();
+          renderDiscoverLoading({ allowFallback: options.surprise });
         }
-        renderDiscoverLoading({
-          allowFallback: options.surprise,
-          preserveVisibleResults: !options.surprise,
-        });
         // Remote inventory can enrich in the background, but Discover itself
         // must always become useful promptly. A slow provider never leaves a
         // person staring at skeletons with no way forward.
@@ -4616,8 +4811,8 @@
 
       // Initial setup
       applyCultureMood();
-      items = defaultPlaces.map((place) => ({ ...place }));
-      renderItems();
+      items = [];
+      renderDiscoverLoading();
       if (surpriseMode) {
         surpriseLoader.hidden = false;
         surpriseLoader.dataset.startedAt = String(Date.now());

@@ -15,7 +15,16 @@ type LivePhotoResult = {
 };
 
 type PulseItem = {
-  kind: "now" | "tonight" | "setting" | "best_for" | "notice" | "access" | "experience" | "cuisine" | "amenity";
+  kind:
+    | "now"
+    | "tonight"
+    | "setting"
+    | "best_for"
+    | "notice"
+    | "access"
+    | "experience"
+    | "cuisine"
+    | "amenity";
   label: string;
   value: string;
   source: string;
@@ -28,7 +37,9 @@ const HOURS_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 21;
 const EVENTS_MAX_AGE_MS = 1000 * 60 * 60 * 36;
 
 function cleanText(value: unknown) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function safeTimeZone(value: unknown) {
@@ -53,7 +64,9 @@ function localParts(timeZone: string, date = new Date()) {
       hour: "2-digit",
       minute: "2-digit",
       hourCycle: "h23",
-    }).formatToParts(safeDate).map((part) => [part.type, part.value]),
+    })
+      .formatToParts(safeDate)
+      .map((part) => [part.type, part.value]),
   );
 }
 
@@ -88,10 +101,19 @@ function formatClock(value: unknown) {
 
 function isFresh(timestamp: unknown, maximumAgeMs: number) {
   const milliseconds = Date.parse(cleanText(timestamp));
-  return Number.isFinite(milliseconds) && milliseconds <= Date.now() && Date.now() - milliseconds <= maximumAgeMs;
+  return (
+    Number.isFinite(milliseconds) &&
+    milliseconds <= Date.now() &&
+    Date.now() - milliseconds <= maximumAgeMs
+  );
 }
 
-function buildPulse(place: any, hours: any[], events: any[], facts: any[]): PulseItem[] {
+function buildPulse(
+  place: any,
+  hours: any[],
+  events: any[],
+  facts: any[],
+): PulseItem[] {
   const candidates: Array<PulseItem & { priority: number }> = [];
   const timezone = safeTimeZone(place.timezone);
   const today = localDayIndex(timezone);
@@ -102,21 +124,42 @@ function buildPulse(place: any, hours: any[], events: any[], facts: any[]): Puls
 
   // Hours are shown only when the record identifies its source, is fresh, and
   // has a high confidence score. Unknown hours are safer than wrong hours.
-  if (hoursRow && cleanText(hoursRow.source) && Number(hoursRow.confidence_score) >= PULSE_MIN_CONFIDENCE &&
+  if (
+    hoursRow &&
+    cleanText(hoursRow.source) &&
+    Number(hoursRow.confidence_score) >= PULSE_MIN_CONFIDENCE &&
     isFresh(hoursRow.updated_at, HOURS_MAX_AGE_MS) &&
     (!hoursRow.valid_from || cleanText(hoursRow.valid_from) <= todayKey) &&
-    (!hoursRow.valid_to || cleanText(hoursRow.valid_to) >= todayKey)) {
+    (!hoursRow.valid_to || cleanText(hoursRow.valid_to) >= todayKey)
+  ) {
     if (hoursRow.is_closed) {
-      candidates.push({ kind: "now", label: "Today", value: "Closed today", source: cleanText(hoursRow.source), observedAt: cleanText(hoursRow.updated_at), expiresAt: null, priority: 100 });
+      candidates.push({
+        kind: "now",
+        label: "Today",
+        value: "Closed today",
+        source: cleanText(hoursRow.source),
+        observedAt: cleanText(hoursRow.updated_at),
+        expiresAt: null,
+        priority: 100,
+      });
     } else {
       const opens = timeInMinutes(hoursRow.opens_at);
       const closes = timeInMinutes(hoursRow.closes_at);
       if (opens !== null && closes !== null) {
-        const openNow = closes > opens ? nowMinutes >= opens && nowMinutes < closes : nowMinutes >= opens || nowMinutes < closes;
+        const openNow =
+          closes > opens
+            ? nowMinutes >= opens && nowMinutes < closes
+            : nowMinutes >= opens || nowMinutes < closes;
         candidates.push({
-          kind: "now", label: "Now",
-          value: openNow ? `Open now · until ${formatClock(hoursRow.closes_at)}` : `Opens at ${formatClock(hoursRow.opens_at)}`,
-          source: cleanText(hoursRow.source), observedAt: cleanText(hoursRow.updated_at), expiresAt: null, priority: 100,
+          kind: "now",
+          label: "Now",
+          value: openNow
+            ? `Open now · until ${formatClock(hoursRow.closes_at)}`
+            : `Opens at ${formatClock(hoursRow.opens_at)}`,
+          source: cleanText(hoursRow.source),
+          observedAt: cleanText(hoursRow.updated_at),
+          expiresAt: null,
+          priority: 100,
         });
       }
     }
@@ -124,43 +167,88 @@ function buildPulse(place: any, hours: any[], events: any[], facts: any[]): Puls
 
   const tonight = events.find((event) => {
     const startsAt = Date.parse(cleanText(event.starts_at));
-    return cleanText(event.source_provider) && Number.isFinite(startsAt) &&
-      isFresh(event.last_seen_at, EVENTS_MAX_AGE_MS) && localDateKey(timezone, new Date(startsAt)) === todayKey;
+    return (
+      cleanText(event.source_provider) &&
+      Number.isFinite(startsAt) &&
+      isFresh(event.last_seen_at, EVENTS_MAX_AGE_MS) &&
+      localDateKey(timezone, new Date(startsAt)) === todayKey
+    );
   });
   if (tonight) {
-    const starts = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, hour: "numeric", minute: "2-digit" }).format(new Date(tonight.starts_at));
-    candidates.push({ kind: "tonight", label: "Tonight", value: `${cleanText(tonight.title).slice(0, 100)} · ${starts}`, source: cleanText(tonight.source_provider), observedAt: cleanText(tonight.last_seen_at), expiresAt: cleanText(tonight.ends_at) || null, priority: 90 });
+    const starts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(tonight.starts_at));
+    candidates.push({
+      kind: "tonight",
+      label: "Tonight",
+      value: `${cleanText(tonight.title).slice(0, 100)} · ${starts}`,
+      source: cleanText(tonight.source_provider),
+      observedAt: cleanText(tonight.last_seen_at),
+      expiresAt: cleanText(tonight.ends_at) || null,
+      priority: 90,
+    });
   }
 
-  const labels: Record<string, PulseItem["label"]> = { best_for: "Best for", notice: "Good to know", access: "Access", experience: "What to expect", cuisine: "Cuisine", amenity: "Amenities" };
+  const labels: Record<string, PulseItem["label"]> = {
+    best_for: "Best for",
+    notice: "Good to know",
+    access: "Access",
+    experience: "What to expect",
+    cuisine: "Cuisine",
+    amenity: "Amenities",
+  };
   for (const fact of facts) {
-    if (Number(fact.confidence_score) < PULSE_MIN_CONFIDENCE || !cleanText(fact.source_name) || !cleanText(fact.value)) continue;
+    if (
+      Number(fact.confidence_score) < PULSE_MIN_CONFIDENCE ||
+      !cleanText(fact.source_name) ||
+      !cleanText(fact.value)
+    )
+      continue;
     if (Date.parse(cleanText(fact.expires_at)) <= Date.now()) continue;
-    candidates.push({ kind: fact.fact_type, label: labels[fact.fact_type] || "Good to know", value: cleanText(fact.value).slice(0, 180), source: cleanText(fact.source_name), observedAt: cleanText(fact.observed_at) || null, expiresAt: cleanText(fact.expires_at) || null, priority: 80 });
+    candidates.push({
+      kind: fact.fact_type,
+      label: labels[fact.fact_type] || "Good to know",
+      value: cleanText(fact.value).slice(0, 180),
+      source: cleanText(fact.source_name),
+      observedAt: cleanText(fact.observed_at) || null,
+      expiresAt: cleanText(fact.expires_at) || null,
+      priority: 80,
+    });
   }
 
   // This is the safe non-empty floor. It describes only the canonical record,
   // never a guessed quality, crowd, price, or availability claim.
   const category = cleanText(place.subcategory) || cleanText(place.category);
   const locality = cleanText(place.municipality) || cleanText(place.city);
-  const address = cleanText(place.formatted_address) || cleanText(place.address);
-  const setting = category && locality
-    ? `${category} in ${locality}`
-    : address || locality;
+  const address =
+    cleanText(place.formatted_address) || cleanText(place.address);
+  const setting =
+    category && locality ? `${category} in ${locality}` : address || locality;
   if (setting) {
     candidates.push({
-      kind: "setting", label: "Setting", value: setting.slice(0, 180),
-      source: "Echoo place record", observedAt: null, expiresAt: null, priority: 10,
+      kind: "setting",
+      label: "Setting",
+      value: setting.slice(0, 180),
+      source: "Echoo place record",
+      observedAt: null,
+      expiresAt: null,
+      priority: 10,
     });
   }
 
   const seen = new Set<string>();
-  return candidates.sort((a, b) => b.priority - a.priority).filter((item) => {
-    const identity = `${item.label}:${item.value}`.toLowerCase();
-    if (seen.has(identity)) return false;
-    seen.add(identity);
-    return true;
-  }).slice(0, 3).map(({ priority: _priority, ...item }) => item);
+  return candidates
+    .sort((a, b) => b.priority - a.priority)
+    .filter((item) => {
+      const identity = `${item.label}:${item.value}`.toLowerCase();
+      if (seen.has(identity)) return false;
+      seen.add(identity);
+      return true;
+    })
+    .slice(0, 3)
+    .map(({ priority: _priority, ...item }) => item);
 }
 
 function envelope(data: unknown, meta: Record<string, unknown> = {}) {
@@ -168,10 +256,17 @@ function envelope(data: unknown, meta: Record<string, unknown> = {}) {
 }
 
 function normalizedName(value: unknown) {
-  return cleanText(value).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return cleanText(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
-function namesMatch(placeName: unknown, candidateName: unknown, distance: number) {
+function namesMatch(
+  placeName: unknown,
+  candidateName: unknown,
+  distance: number,
+) {
   const expected = normalizedName(placeName);
   const received = normalizedName(candidateName);
   if (!expected || !received) return false;
@@ -179,7 +274,8 @@ function namesMatch(placeName: unknown, candidateName: unknown, distance: number
   if (distance > 60) return false;
   const expectedWords = new Set(expected.split(" "));
   const candidateWords = new Set(received.split(" "));
-  const smaller = expectedWords.size <= candidateWords.size ? expectedWords : candidateWords;
+  const smaller =
+    expectedWords.size <= candidateWords.size ? expectedWords : candidateWords;
   const larger = smaller === expectedWords ? candidateWords : expectedWords;
   return [...smaller].every((word) => larger.has(word));
 }
@@ -190,18 +286,23 @@ function metersBetween(
   latitudeB: number,
   longitudeB: number,
 ) {
-  const radians = (value: number) => value * Math.PI / 180;
+  const radians = (value: number) => (value * Math.PI) / 180;
   const earthRadius = 6_371_000;
   const latDelta = radians(latitudeB - latitudeA);
   const lonDelta = radians(longitudeB - longitudeA);
-  const a = Math.sin(latDelta / 2) ** 2 +
-    Math.cos(radians(latitudeA)) * Math.cos(radians(latitudeB)) *
+  const a =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(radians(latitudeA)) *
+      Math.cos(radians(latitudeB)) *
       Math.sin(lonDelta / 2) ** 2;
   return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function base64Url(value: string) {
-  return btoa(value).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+  return btoa(value)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }
 
 async function sign(value: string, secret: string) {
@@ -225,40 +326,59 @@ async function sign(value: string, secret: string) {
 async function signedPhotoUrl(photoName: string) {
   const secret = Deno.env.get("PLACE_MEDIA_SIGNING_SECRET");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  if (!secret || !supabaseUrl || !/^places\/[^/]+\/photos\/[^/]+$/.test(photoName)) {
+  if (
+    !secret ||
+    !supabaseUrl ||
+    !/^places\/[^/]+\/photos\/[^/]+$/.test(photoName)
+  ) {
     return null;
   }
-  const token = base64Url(JSON.stringify({ photoName, expiresAt: Date.now() + 5 * 60_000 }));
+  const token = base64Url(
+    JSON.stringify({ photoName, expiresAt: Date.now() + 10 * 60_000 }),
+  );
   const signature = await sign(token, secret);
-  return `${supabaseUrl}/functions/v1/place-photo?token=${encodeURIComponent(token)}&signature=${signature}`;
+  return `${supabaseUrl}/functions/v1/place-photo?token=${encodeURIComponent(token)}&signature=${signature}&surface=detail`;
 }
 
-async function resolveGooglePlaceId(supabase: ReturnType<typeof getSupabaseAdmin>, place: any, apiKey: string) {
+async function resolveGooglePlaceId(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  place: any,
+  apiKey: string,
+) {
   if (cleanText(place.google_place_id)) return cleanText(place.google_place_id);
-  if (cleanText(place.source_provider) === "google_places" && cleanText(place.source_id)) {
+  if (
+    cleanText(place.source_provider) === "google_places" &&
+    cleanText(place.source_id)
+  ) {
     return cleanText(place.source_id).replace(/^(places\/|google:)/, "");
   }
 
-  const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": "places.id,places.displayName,places.location",
-    },
-    body: JSON.stringify({
-      textQuery: `${place.name} ${place.formatted_address || place.address}`,
-      languageCode: "en",
-      regionCode: "CA",
-      locationBias: {
-        circle: {
-          center: { latitude: Number(place.latitude), longitude: Number(place.longitude) },
-          radius: 250,
-        },
+  const response = await fetch(
+    "https://places.googleapis.com/v1/places:searchText",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "places.id,places.displayName,places.location",
       },
-      maxResultCount: 1,
-    }),
-  });
+      body: JSON.stringify({
+        textQuery: `${place.name} ${place.formatted_address || place.address}`,
+        languageCode: "en",
+        regionCode: "CA",
+        locationBias: {
+          circle: {
+            center: {
+              latitude: Number(place.latitude),
+              longitude: Number(place.longitude),
+            },
+            radius: 250,
+          },
+        },
+        maxResultCount: 1,
+      }),
+    },
+  );
   if (!response.ok) return null;
   const candidate = (await response.json())?.places?.[0];
   const distance = metersBetween(
@@ -272,12 +392,16 @@ async function resolveGooglePlaceId(supabase: ReturnType<typeof getSupabaseAdmin
     !namesMatch(place.name, candidate.displayName?.text, distance) ||
     !Number.isFinite(distance) ||
     distance > 180
-  ) return null;
+  )
+    return null;
 
   // Google permits caching place IDs. No photo metadata or media is stored.
   await supabase
     .from("canonical_places")
-    .update({ google_place_id: candidate.id, google_place_matched_at: new Date().toISOString() })
+    .update({
+      google_place_id: candidate.id,
+      google_place_matched_at: new Date().toISOString(),
+    })
     .eq("id", place.id);
   return candidate.id;
 }
@@ -305,45 +429,62 @@ async function loadLiveGooglePhotos(
   req: Request,
   place: any,
 ): Promise<LivePhotoResult> {
-  const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY") || Deno.env.get("GOOGLE_MAPS_API_KEY");
-  if (!apiKey || !Deno.env.get("PLACE_MEDIA_SIGNING_SECRET")) return { photos: [], status: "not_configured" };
+  const apiKey =
+    Deno.env.get("GOOGLE_PLACES_API_KEY") ||
+    Deno.env.get("GOOGLE_MAPS_API_KEY");
+  if (!apiKey || !Deno.env.get("PLACE_MEDIA_SIGNING_SECRET"))
+    return { photos: [], status: "not_configured" };
 
   const rate = await isGoogleLookupAllowed(supabase, req, place.id);
-  if (!rate.allowed) return { photos: [], status: "rate_limited", clientKey: rate.clientKey };
+  if (!rate.allowed)
+    return { photos: [], status: "rate_limited", clientKey: rate.clientKey };
 
   const googlePlaceId = await resolveGooglePlaceId(supabase, place, apiKey);
-  if (!googlePlaceId) return { photos: [], status: "no_match", clientKey: rate.clientKey };
+  if (!googlePlaceId)
+    return { photos: [], status: "no_match", clientKey: rate.clientKey };
 
-  const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(googlePlaceId)}`, {
-    headers: {
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": "photos",
+  const response = await fetch(
+    `https://places.googleapis.com/v1/places/${encodeURIComponent(googlePlaceId)}`,
+    {
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "photos",
+      },
     },
-  });
-  if (!response.ok) return { photos: [], status: "provider_error", clientKey: rate.clientKey };
+  );
+  if (!response.ok)
+    return { photos: [], status: "provider_error", clientKey: rate.clientKey };
   const payload = await response.json();
   const photos = await Promise.all(
-    (payload.photos || []).slice(0, GOOGLE_PHOTO_LIMIT).map(async (photo: any) => {
-      const imageUrl = await signedPhotoUrl(cleanText(photo.name));
-      if (!imageUrl) return null;
-      const photographer = (photo.authorAttributions || [])
-        .map((author: any) => cleanText(author.displayName))
-        .filter(Boolean)
-        .join(", ");
-      const photographerUrl = (photo.authorAttributions || [])
-        .map((author: any) => cleanText(author.uri))
-        .find((uri: string) => /^https?:\/\//i.test(uri));
-      return {
-        image_url: imageUrl,
-        alt_text: cleanText(place.name),
-        attribution: photographer ? `Google Maps · ${photographer}` : "Google Maps",
-        attribution_url: photographerUrl || null,
-        source_name: "Google Maps",
-        source_url: null,
-      };
-    }),
+    (payload.photos || [])
+      .slice(0, GOOGLE_PHOTO_LIMIT)
+      .map(async (photo: any) => {
+        const imageUrl = await signedPhotoUrl(cleanText(photo.name));
+        if (!imageUrl) return null;
+        const photographer = (photo.authorAttributions || [])
+          .map((author: any) => cleanText(author.displayName))
+          .filter(Boolean)
+          .join(", ");
+        const photographerUrl = (photo.authorAttributions || [])
+          .map((author: any) => cleanText(author.uri))
+          .find((uri: string) => /^https?:\/\//i.test(uri));
+        return {
+          image_url: imageUrl,
+          alt_text: cleanText(place.name),
+          attribution: photographer
+            ? `Google Maps · ${photographer}`
+            : "Google Maps",
+          attribution_url: photographerUrl || null,
+          source_name: "Google Maps",
+          source_url: null,
+        };
+      }),
   );
-  return { photos: photos.filter(Boolean), status: "loaded", clientKey: rate.clientKey };
+  return {
+    photos: photos.filter(Boolean),
+    status: "loaded",
+    clientKey: rate.clientKey,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -352,7 +493,10 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
   if (req.method !== "GET") {
-    return jsonResponse({ data: null, error: "Method not allowed", meta: {} }, 405);
+    return jsonResponse(
+      { data: null, error: "Method not allowed", meta: {} },
+      405,
+    );
   }
 
   const supabase = getSupabaseAdmin();
@@ -361,7 +505,10 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const id = cleanText(url.searchParams.get("id"));
     if (!id) {
-      return jsonResponse({ data: null, error: "id is required.", meta: {} }, 422);
+      return jsonResponse(
+        { data: null, error: "id is required.", meta: {} },
+        422,
+      );
     }
 
     const { data: place, error: placeError } = await supabase
@@ -375,67 +522,90 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (placeError) throw placeError;
     if (!place) {
-      return jsonResponse({ data: null, error: "Place not found.", meta: {} }, 404);
+      return jsonResponse(
+        { data: null, error: "Place not found.", meta: {} },
+        404,
+      );
     }
 
-    const [profile, hours, sources, photos, relatedEvents, alternatives, pulseFacts] =
-      await Promise.all([
-        supabase
-          .from("place_profiles")
-          .select("*")
-          .eq("place_id", place.id)
-          .maybeSingle(),
-        supabase
-          .from("place_hours")
-          .select("*")
-          .eq("place_id", place.id)
-          .order("day_of_week", { ascending: true }),
-        supabase
-          .from("place_sources")
-          .select(
-            "source_name, source_url, source_license, source_record_id, fetched_at",
-          )
-          .eq("place_id", place.id)
-          .order("fetched_at", { ascending: false }),
-        supabase
-          .from("place_photos")
-          .select(
-            "id, image_url, alt_text, caption, attribution, source_name, source_url, sort_order",
-          )
-          .eq("place_id", place.id)
-          .eq("approval_status", "approved")
-          .order("sort_order", { ascending: true })
-          .order("created_at", { ascending: true })
-          .limit(8),
-        supabase
-          .from("ontario_events")
-          .select("*")
-          .eq("place_id", place.id)
-          .eq("status", "published")
-          .gte("starts_at", new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString())
-          .order("starts_at", { ascending: true })
-          .limit(10),
-        supabase.rpc("search_ontario_places", {
-          p_query: null,
-          p_city: place.municipality || place.city,
-          p_lat: place.latitude,
-          p_lng: place.longitude,
-          p_radius_meters: 5000,
-          p_category: place.category,
-          p_limit: 6,
-        }),
-        supabase
-          .from("place_pulse_facts")
-          .select("fact_type,value,source_name,confidence_score,observed_at,expires_at")
-          .eq("place_id", place.id)
-          .eq("approval_status", "approved")
-          .gt("expires_at", new Date().toISOString())
-          .order("confidence_score", { ascending: false })
-          .order("observed_at", { ascending: false })
-          .limit(6),
-      ]);
+    const [
+      profile,
+      hours,
+      sources,
+      photos,
+      relatedEvents,
+      alternatives,
+      pulseFacts,
+    ] = await Promise.all([
+      supabase
+        .from("place_profiles")
+        .select("*")
+        .eq("place_id", place.id)
+        .maybeSingle(),
+      supabase
+        .from("place_hours")
+        .select("*")
+        .eq("place_id", place.id)
+        .order("day_of_week", { ascending: true }),
+      supabase
+        .from("place_sources")
+        .select(
+          "source_name, source_url, source_license, source_record_id, fetched_at",
+        )
+        .eq("place_id", place.id)
+        .order("fetched_at", { ascending: false }),
+      supabase
+        .from("place_photos")
+        .select(
+          "id, image_url, alt_text, caption, attribution, source_name, source_url, sort_order",
+        )
+        .eq("place_id", place.id)
+        .eq("approval_status", "approved")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true })
+        .limit(8),
+      supabase
+        .from("ontario_events")
+        .select("*")
+        .eq("place_id", place.id)
+        .eq("status", "published")
+        .gte(
+          "starts_at",
+          new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+        )
+        .order("starts_at", { ascending: true })
+        .limit(10),
+      supabase.rpc("search_ontario_places", {
+        p_query: null,
+        p_city: place.municipality || place.city,
+        p_lat: place.latitude,
+        p_lng: place.longitude,
+        p_radius_meters: 5000,
+        p_category: place.category,
+        p_limit: 6,
+      }),
+      supabase
+        .from("place_pulse_facts")
+        .select(
+          "fact_type,value,source_name,confidence_score,observed_at,expires_at",
+        )
+        .eq("place_id", place.id)
+        .eq("approval_status", "approved")
+        .gt("expires_at", new Date().toISOString())
+        .order("confidence_score", { ascending: false })
+        .order("observed_at", { ascending: false })
+        .limit(6),
+    ]);
 
-    for (const result of [profile, hours, sources, photos, relatedEvents, alternatives, pulseFacts]) {
+    for (const result of [
+      profile,
+      hours,
+      sources,
+      photos,
+      relatedEvents,
+      alternatives,
+      pulseFacts,
+    ]) {
       if (result.error) throw result.error;
     }
 
@@ -447,7 +617,8 @@ Deno.serve(async (req) => {
       await logLocationEvent(supabase, {
         functionName: "place-detail",
         eventType: "google_photo_lookup",
-        status: livePhotoResult.status === "loaded" ? "ok" : livePhotoResult.status,
+        status:
+          livePhotoResult.status === "loaded" ? "ok" : livePhotoResult.status,
         reason: livePhotoResult.clientKey,
         countryCode: "CA",
         adminArea1: "ON",
@@ -455,8 +626,15 @@ Deno.serve(async (req) => {
         responseSummary: { count: livePhotoResult.photos.length },
       });
     }
-    const displayPhotos = approvedPhotos.length ? approvedPhotos : livePhotoResult.photos;
-    const pulse = buildPulse(place, hours.data || [], relatedEvents.data || [], pulseFacts.data || []);
+    const displayPhotos = approvedPhotos.length
+      ? approvedPhotos
+      : livePhotoResult.photos;
+    const pulse = buildPulse(
+      place,
+      hours.data || [],
+      relatedEvents.data || [],
+      pulseFacts.data || [],
+    );
 
     const nearbyAlternatives = (alternatives.data || [])
       .filter((item: any) => item.id !== place.id)
@@ -515,10 +693,14 @@ Deno.serve(async (req) => {
             ),
           },
           detailStatus: {
-            isFeatureReady: Boolean(place.name && (place.formatted_address || place.address)),
+            isFeatureReady: Boolean(
+              place.name && (place.formatted_address || place.address),
+            ),
             hasVerifiedPhotos: displayPhotos.length > 0,
             photoCount: displayPhotos.length,
-            photoOrigin: approvedPhotos.length ? "approved" : livePhotoResult.status,
+            photoOrigin: approvedPhotos.length
+              ? "approved"
+              : livePhotoResult.status,
           },
         },
         { durationMs: Date.now() - startedAt },

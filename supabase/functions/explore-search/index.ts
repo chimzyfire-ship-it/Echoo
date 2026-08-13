@@ -33,6 +33,7 @@ type ExplorePayload = {
   cursor?: unknown;
   livePageToken?: unknown;
   includeLiveFallback?: unknown;
+  photoCards?: unknown;
 };
 
 type OwnedResult = Record<string, any>;
@@ -124,18 +125,24 @@ function ownedCard(item: OwnedResult) {
     },
     placement: item.is_registered
       ? {
-        // Never present paid placement as an organic community endorsement.
-        label: item.placement_tier === "top_pick" ? "Top Pick" : "Registered business",
-        tier: item.placement_tier || "registered",
-        sponsored: true,
-      }
+          // Never present paid placement as an organic community endorsement.
+          label:
+            item.placement_tier === "top_pick"
+              ? "Top Pick"
+              : "Registered business",
+          tier: item.placement_tier || "registered",
+          sponsored: true,
+        }
       : null,
     rankScore: optionalDiscoveryNumber(item.rank_score) || 0,
   };
 }
 
 function base64Url(value: string) {
-  return btoa(value).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+  return btoa(value)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
 }
 
 async function sign(value: string, secret: string) {
@@ -146,7 +153,11 @@ async function sign(value: string, secret: string) {
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value));
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(value),
+  );
   return Array.from(new Uint8Array(signature))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
@@ -154,9 +165,14 @@ async function sign(value: string, secret: string) {
 
 async function signedPhotoUrl(req: Request, photoName: unknown) {
   const name = cleanDiscoveryText(photoName, 500);
-  const secret = cleanDiscoveryText(Deno.env.get("PLACE_MEDIA_SIGNING_SECRET"), 500);
+  const secret = cleanDiscoveryText(
+    Deno.env.get("PLACE_MEDIA_SIGNING_SECRET"),
+    500,
+  );
   if (!secret || !/^places\/[^/]+\/photos\/[^/]+$/.test(name)) return null;
-  const token = base64Url(JSON.stringify({ photoName: name, expiresAt: Date.now() + 6 * 60_000 }));
+  const token = base64Url(
+    JSON.stringify({ photoName: name, expiresAt: Date.now() + 10 * 60_000 }),
+  );
   const signature = await sign(token, secret);
   const url = new URL(req.url);
   return `${url.origin}/functions/v1/place-photo?token=${encodeURIComponent(token)}&signature=${signature}`;
@@ -188,21 +204,28 @@ function namesMatch(a: unknown, b: unknown) {
   const left = normalizedName(a);
   const right = normalizedName(b);
   if (!left || !right) return false;
-  if (left === right || left.includes(right) || right.includes(left)) return true;
+  if (left === right || left.includes(right) || right.includes(left))
+    return true;
   const leftWords = new Set(left.split(" ").filter((word) => word.length > 2));
-  const rightWords = new Set(right.split(" ").filter((word) => word.length > 2));
+  const rightWords = new Set(
+    right.split(" ").filter((word) => word.length > 2),
+  );
   const shared = [...leftWords].filter((word) => rightWords.has(word));
   return shared.length >= Math.min(2, leftWords.size, rightWords.size);
 }
 
 function discoveryResultKey(item: Record<string, any>) {
   const title = normalizedName(item.title);
-  return title ? `${cleanDiscoveryText(item.type, 30)}:${title}` : cleanDiscoveryText(item.id, 220);
+  return title
+    ? `${cleanDiscoveryText(item.type, 30)}:${title}`
+    : cleanDiscoveryText(item.id, 220);
 }
 
 function normalizedLiveQuery(query: string, category: string | null) {
-  const normalized = cleanDiscoveryText(query || category || "things to do", 120)
-    .replace(/\b(restaurants?|resturants?|restaraunts?)\b/gi, "restaurant");
+  const normalized = cleanDiscoveryText(
+    query || category || "things to do",
+    120,
+  ).replace(/\b(restaurants?|resturants?|restaraunts?)\b/gi, "restaurant");
   return normalized || "things to do";
 }
 
@@ -215,11 +238,17 @@ function ownedInventoryQuery(query: string) {
   // text predicate would hide the whole owned catalogue unless a place happened
   // to contain the word “popular” in its title or description.
   if (/\b(trending|popular)\b|\bthings to do\b/.test(text)) return "";
-  if (/\b(restaurant|food|dining|eat|brunch|lunch|dinner|tasting|bakery)\b/.test(text)) return "restaurant";
+  if (
+    /\b(restaurant|food|dining|eat|brunch|lunch|dinner|tasting|bakery)\b/.test(
+      text,
+    )
+  )
+    return "restaurant";
   if (/\b(cafe|coffee|espresso)\b/.test(text)) return "cafe";
   if (/\b(bar|pub|nightlife|lounge)\b/.test(text)) return "bar";
   if (/\b(park|nature|trail|outdoor|walk)\b/.test(text)) return "park";
-  if (/\b(museum|gallery|tourism|landmark|attraction)\b/.test(text)) return "museum";
+  if (/\b(museum|gallery|tourism|landmark|attraction)\b/.test(text))
+    return "museum";
   return text;
 }
 
@@ -229,11 +258,20 @@ function metersBetween(
   destinationLat?: number,
   destinationLng?: number,
 ) {
-  if (![originLat, originLng, destinationLat, destinationLng].every(Number.isFinite)) return undefined;
+  if (
+    ![originLat, originLng, destinationLat, destinationLng].every(
+      Number.isFinite,
+    )
+  )
+    return undefined;
   const radians = Math.PI / 180;
   const latDelta = (Number(destinationLat) - Number(originLat)) * radians;
   const lngDelta = (Number(destinationLng) - Number(originLng)) * radians;
-  const a = Math.sin(latDelta / 2) ** 2 + Math.cos(Number(originLat) * radians) * Math.cos(Number(destinationLat) * radians) * Math.sin(lngDelta / 2) ** 2;
+  const a =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(Number(originLat) * radians) *
+      Math.cos(Number(destinationLat) * radians) *
+      Math.sin(lngDelta / 2) ** 2;
   return Math.round(6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
@@ -243,7 +281,9 @@ async function photoForOwnedCard(input: {
   card: Record<string, any>;
   googlePlaceId?: string;
 }) {
-  const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY") || Deno.env.get("GOOGLE_MAPS_API_KEY");
+  const apiKey =
+    Deno.env.get("GOOGLE_PLACES_API_KEY") ||
+    Deno.env.get("GOOGLE_MAPS_API_KEY");
   if (!apiKey || !Deno.env.get("PLACE_MEDIA_SIGNING_SECRET")) return null;
   let googlePlaceId = cleanDiscoveryText(input.googlePlaceId, 180);
   let photoName = "";
@@ -265,30 +305,39 @@ async function photoForOwnedCard(input: {
         photoName = cleanDiscoveryText(place?.photos?.[0]?.name, 500);
       }
     } else {
-      const response = await providerFetch("https://places.googleapis.com/v1/places:searchText", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": apiKey,
-          "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.photos",
+      const response = await providerFetch(
+        "https://places.googleapis.com/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask":
+              "places.id,places.displayName,places.location,places.photos",
+          },
+          body: JSON.stringify({
+            textQuery: `${cleanDiscoveryText(input.card.title, 160)} ${cleanDiscoveryText(input.card.city, 80)} Ontario`,
+            pageSize: 1,
+            languageCode: "en",
+            regionCode: "CA",
+            ...(Number.isFinite(input.card.latitude) &&
+            Number.isFinite(input.card.longitude)
+              ? {
+                  locationBias: {
+                    circle: {
+                      center: {
+                        latitude: input.card.latitude,
+                        longitude: input.card.longitude,
+                      },
+                      radius: 250,
+                    },
+                  },
+                }
+              : {}),
+          }),
         },
-        body: JSON.stringify({
-          textQuery: `${cleanDiscoveryText(input.card.title, 160)} ${cleanDiscoveryText(input.card.city, 80)} Ontario`,
-          pageSize: 1,
-          languageCode: "en",
-          regionCode: "CA",
-          ...(Number.isFinite(input.card.latitude) && Number.isFinite(input.card.longitude)
-            ? {
-              locationBias: {
-                circle: {
-                  center: { latitude: input.card.latitude, longitude: input.card.longitude },
-                  radius: 250,
-                },
-              },
-            }
-            : {}),
-        }),
-      }, 1_500);
+        1_500,
+      );
       if (!response.ok) return null;
       const candidate = (await response.json())?.places?.[0];
       const distance = metersBetween(
@@ -297,7 +346,11 @@ async function photoForOwnedCard(input: {
         optionalDiscoveryNumber(candidate?.location?.latitude),
         optionalDiscoveryNumber(candidate?.location?.longitude),
       );
-      if (!candidate?.id || !namesMatch(input.card.title, candidate.displayName?.text) || (distance !== undefined && distance > 250)) {
+      if (
+        !candidate?.id ||
+        !namesMatch(input.card.title, candidate.displayName?.text) ||
+        (distance !== undefined && distance > 250)
+      ) {
         return null;
       }
       googlePlaceId = cleanDiscoveryText(candidate.id, 180);
@@ -307,16 +360,26 @@ async function photoForOwnedCard(input: {
         // live and are only delivered through Echoo's short-lived proxy.
         await input.supabase
           .from("canonical_places")
-          .update({ google_place_id: googlePlaceId, google_place_matched_at: new Date().toISOString() })
+          .update({
+            google_place_id: googlePlaceId,
+            google_place_matched_at: new Date().toISOString(),
+          })
           .eq("id", input.card.canonicalId);
       }
     }
     const imageUrl = await signedPhotoUrl(input.req, photoName);
     return imageUrl
-      ? { url: imageUrl, alt: cleanDiscoveryText(input.card.title, 160), source: "google_places" }
+      ? {
+          url: imageUrl,
+          alt: cleanDiscoveryText(input.card.title, 160),
+          source: "google_places",
+        }
       : null;
   } catch (error) {
-    console.warn("Explore owned photo lookup skipped", cleanDiscoveryText((error as Error)?.message, 160));
+    console.warn(
+      "Explore owned photo lookup skipped",
+      cleanDiscoveryText((error as Error)?.message, 160),
+    );
     return null;
   }
 }
@@ -326,29 +389,114 @@ async function hydrateOwnedCardPhotos(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   cards: Record<string, any>[],
 ) {
-  const needsPhoto = cards.filter((card) => !card.image && card.canonicalId).slice(0, 10);
+  const needsPhoto = cards
+    .filter((card) => !card.image && card.canonicalId)
+    .slice(0, 20);
   if (!needsPhoto.length) return cards;
   const canonicalIds = needsPhoto.map((card) => card.canonicalId);
-  const { data } = await supabase
-    .from("canonical_places")
-    .select("id,google_place_id")
-    .in("id", canonicalIds);
-  const googleIds = new Map((data || []).map((place: any) => [place.id, place.google_place_id]));
-  await Promise.all(needsPhoto.map(async (card) => {
-    const image = await photoForOwnedCard({
-      req,
-      supabase,
-      card,
-      googlePlaceId: googleIds.get(card.canonicalId),
-    });
-    if (image) card.image = image;
-  }));
+  const [{ data: canonicalPlaces }, { data: approvedPhotos }] =
+    await Promise.all([
+      supabase
+        .from("canonical_places")
+        .select("id,google_place_id")
+        .in("id", canonicalIds),
+      supabase
+        .from("place_photos")
+        .select("place_id,image_url,alt_text,sort_order")
+        .in("place_id", canonicalIds)
+        .eq("approval_status", "approved")
+        .order("sort_order", { ascending: true }),
+    ]);
+  const approvedByPlace = new Map<string, any>();
+  for (const photo of approvedPhotos || []) {
+    if (
+      !approvedByPlace.has(photo.place_id) &&
+      /^https?:\/\//i.test(photo.image_url || "")
+    ) {
+      approvedByPlace.set(photo.place_id, photo);
+    }
+  }
+  for (const card of needsPhoto) {
+    const approved = approvedByPlace.get(card.canonicalId);
+    if (approved) {
+      card.image = {
+        url: approved.image_url,
+        alt: cleanDiscoveryText(approved.alt_text, 160) || card.title,
+        source: "echoo_approved",
+      };
+    }
+  }
+  const googleIds = new Map(
+    (canonicalPlaces || []).map((place: any) => [
+      place.id,
+      place.google_place_id,
+    ]),
+  );
+  await Promise.all(
+    needsPhoto
+      .filter((card) => !card.image)
+      .map(async (card) => {
+        const image = await photoForOwnedCard({
+          req,
+          supabase,
+          card,
+          googlePlaceId: googleIds.get(card.canonicalId),
+        });
+        if (image) card.image = image;
+      }),
+  );
   return cards;
+}
+
+async function renewCardPhotos(
+  req: Request,
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  value: unknown,
+) {
+  const requested: Record<string, any>[] = (Array.isArray(value) ? value : [])
+    .slice(0, 16)
+    .map((item: any) => ({
+      key: cleanDiscoveryText(item?.key, 220),
+      canonicalId: /^[0-9a-f-]{36}$/i.test(
+        cleanDiscoveryText(item?.canonicalId, 40),
+      )
+        ? cleanDiscoveryText(item.canonicalId, 40)
+        : null,
+      googlePlaceId: cleanDiscoveryText(item?.googlePlaceId, 180),
+      title: cleanDiscoveryText(item?.title, 160),
+      city: cleanDiscoveryText(item?.city, 80),
+      latitude: optionalDiscoveryNumber(item?.latitude),
+      longitude: optionalDiscoveryNumber(item?.longitude),
+      image: null,
+    }))
+    .filter(
+      (item) =>
+        item.key && item.title && (item.canonicalId || item.googlePlaceId),
+    );
+  if (!requested.length) return [];
+
+  await hydrateOwnedCardPhotos(req, supabase, requested);
+  await Promise.all(
+    requested
+      .filter((card) => !card.image && card.googlePlaceId)
+      .map(async (card) => {
+        card.image = await photoForOwnedCard({
+          req,
+          supabase,
+          card,
+          googlePlaceId: card.googlePlaceId,
+        });
+      }),
+  );
+  return requested
+    .filter((card) => card.image)
+    .map((card) => ({ key: card.key, image: card.image }));
 }
 
 function liveType(query: string, category: string | null) {
   const normalized = `${query} ${category || ""}`.toLowerCase();
-  if (/\b(restaurants?|resturants?|restaraunts?)\b/.test(normalized)) return "restaurant";
+  if (/\b(restaurants?|resturants?|restaraunts?)\b/.test(normalized))
+    return "restaurant";
   if (/\b(cafes?|coffee)\b/.test(normalized)) return "cafe";
   if (/\b(bars?|pubs?)\b/.test(normalized)) return "bar";
   if (/\b(parks?|trails?)\b/.test(normalized)) return "park";
@@ -413,7 +561,10 @@ async function googleLiveSearch(input: {
       3_500,
     );
   } catch (error) {
-    console.warn("Explore Google fallback timed out:", cleanDiscoveryText((error as Error)?.message, 160));
+    console.warn(
+      "Explore Google fallback timed out:",
+      cleanDiscoveryText((error as Error)?.message, 160),
+    );
     return { results: [], nextPageToken: null };
   }
   if (!response.ok) {
@@ -421,68 +572,92 @@ async function googleLiveSearch(input: {
     return { results: [], nextPageToken: null };
   }
   const data = await response.json();
-  const results = await Promise.all((data.places || []).map(async (place: any) => {
-    const latitude = optionalDiscoveryNumber(place.location?.latitude);
-    const longitude = optionalDiscoveryNumber(place.location?.longitude);
-    const photoName = cleanDiscoveryText(place.photos?.[0]?.name, 500);
-    const photoAuthors = Array.isArray(place.photos?.[0]?.authorAttributions)
-      ? place.photos[0].authorAttributions
-        .map((author: any) => ({
-          displayName: cleanDiscoveryText(author?.displayName, 160),
-          uri: cleanDiscoveryText(author?.uri, 500),
-        }))
-        .filter((author: { displayName: string }) => Boolean(author.displayName))
-      : [];
-    // The browser only receives a short-lived photo proxy URL, never a
-    // provider API key embedded in image markup.
-    const imageUrl = await signedPhotoUrl(input.req, photoName);
-    const ratingAverage = optionalDiscoveryNumber(place.rating);
-    const ratingCount = Math.max(0, Number(place.userRatingCount || 0));
-    // This is an observed popularity signal, not a claim about live capacity:
-    // rating quality and enough independent reviews make a place a strong
-    // candidate for Discover's “well loved” treatment.
-    const ratingQuality = ratingAverage === undefined
-      ? 0
-      : Math.max(0, Math.min(1, (ratingAverage - 3.8) / 1.2));
-    const reviewVolume = Math.max(0, Math.min(1, Math.log10(ratingCount + 1) / 4));
-    const hotScore = Number((ratingQuality * 0.62 + reviewVolume * 0.38).toFixed(3));
-    return {
-    id: `google:${cleanDiscoveryText(place.id, 160)}`,
-    source: "google_places",
-    type: "place",
-    title: cleanDiscoveryText(place.displayName?.text, 160) || "Place",
-    category:
-      cleanDiscoveryText(place.types?.[0], 80).replace(/_/g, " ") || "place",
-    description: cleanDiscoveryText(place.formattedAddress, 300),
-    address: cleanDiscoveryText(place.formattedAddress, 300),
-    city: input.city,
-    latitude,
-    longitude,
-    distanceMeters: metersBetween(input.lat, input.lng, latitude, longitude),
-    image: imageUrl
-      ? {
-        url: imageUrl,
-        alt: cleanDiscoveryText(place.displayName?.text, 160),
+  const results = await Promise.all(
+    (data.places || []).map(async (place: any) => {
+      const latitude = optionalDiscoveryNumber(place.location?.latitude);
+      const longitude = optionalDiscoveryNumber(place.location?.longitude);
+      const photoName = cleanDiscoveryText(place.photos?.[0]?.name, 500);
+      const photoAuthors = Array.isArray(place.photos?.[0]?.authorAttributions)
+        ? place.photos[0].authorAttributions
+            .map((author: any) => ({
+              displayName: cleanDiscoveryText(author?.displayName, 160),
+              uri: cleanDiscoveryText(author?.uri, 500),
+            }))
+            .filter((author: { displayName: string }) =>
+              Boolean(author.displayName),
+            )
+        : [];
+      // The browser only receives a short-lived photo proxy URL, never a
+      // provider API key embedded in image markup.
+      const imageUrl = await signedPhotoUrl(input.req, photoName);
+      const ratingAverage = optionalDiscoveryNumber(place.rating);
+      const ratingCount = Math.max(0, Number(place.userRatingCount || 0));
+      // This is an observed popularity signal, not a claim about live capacity:
+      // rating quality and enough independent reviews make a place a strong
+      // candidate for Discover's “well loved” treatment.
+      const ratingQuality =
+        ratingAverage === undefined
+          ? 0
+          : Math.max(0, Math.min(1, (ratingAverage - 3.8) / 1.2));
+      const reviewVolume = Math.max(
+        0,
+        Math.min(1, Math.log10(ratingCount + 1) / 4),
+      );
+      const hotScore = Number(
+        (ratingQuality * 0.62 + reviewVolume * 0.38).toFixed(3),
+      );
+      return {
+        id: `google:${cleanDiscoveryText(place.id, 160)}`,
         source: "google_places",
-        authors: photoAuthors,
-      }
-      : null,
-    features: [],
-    community: ratingAverage === undefined
-      ? null
-      : {
-        ratingAverage,
-        ratingCount,
-        hotScore,
-        isHot: ratingAverage >= 4.5 && ratingCount >= 100,
-      },
-    actionUrl: cleanDiscoveryText(place.googleMapsUri, 500) || null,
-    attribution: { provider: "Google Maps", requiredLabel: "Google Maps" },
-    isNewToEchoo: true,
-    };
-  }));
-  results.sort((a: any, b: any) => (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER));
-  return { results, nextPageToken: cleanDiscoveryText(data.nextPageToken, 2048) || null };
+        type: "place",
+        title: cleanDiscoveryText(place.displayName?.text, 160) || "Place",
+        category:
+          cleanDiscoveryText(place.types?.[0], 80).replace(/_/g, " ") ||
+          "place",
+        description: cleanDiscoveryText(place.formattedAddress, 300),
+        address: cleanDiscoveryText(place.formattedAddress, 300),
+        city: input.city,
+        latitude,
+        longitude,
+        distanceMeters: metersBetween(
+          input.lat,
+          input.lng,
+          latitude,
+          longitude,
+        ),
+        image: imageUrl
+          ? {
+              url: imageUrl,
+              alt: cleanDiscoveryText(place.displayName?.text, 160),
+              source: "google_places",
+              authors: photoAuthors,
+            }
+          : null,
+        features: [],
+        community:
+          ratingAverage === undefined
+            ? null
+            : {
+                ratingAverage,
+                ratingCount,
+                hotScore,
+                isHot: ratingAverage >= 4.5 && ratingCount >= 100,
+              },
+        actionUrl: cleanDiscoveryText(place.googleMapsUri, 500) || null,
+        attribution: { provider: "Google Maps", requiredLabel: "Google Maps" },
+        isNewToEchoo: true,
+      };
+    }),
+  );
+  results.sort(
+    (a: any, b: any) =>
+      (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) -
+      (b.distanceMeters ?? Number.MAX_SAFE_INTEGER),
+  );
+  return {
+    results,
+    nextPageToken: cleanDiscoveryText(data.nextPageToken, 2048) || null,
+  };
 }
 
 function discoveryTerms(value: unknown) {
@@ -491,16 +666,30 @@ function discoveryTerms(value: unknown) {
     .replace(/[_-]+/g, " ")
     .split(/[^a-z0-9]+/)
     .filter((term) => term.length > 2)
-    .filter((term) => !new Set(["popular", "places", "things", "nearby", "local", "today"]).has(term));
+    .filter(
+      (term) =>
+        !new Set([
+          "popular",
+          "places",
+          "things",
+          "nearby",
+          "local",
+          "today",
+        ]).has(term),
+    );
 }
 
 function profileAffinity(item: Record<string, any>, preferenceSlugs: string[]) {
   if (!preferenceSlugs.length) return 0;
   const features = Array.isArray(item.features)
-    ? item.features.map((feature: unknown) => cleanDiscoveryText(feature, 80).toLowerCase())
+    ? item.features.map((feature: unknown) =>
+        cleanDiscoveryText(feature, 80).toLowerCase(),
+      )
     : [];
   const haystack = [item.title, item.category, item.description, ...features]
-    .map((value) => cleanDiscoveryText(value, 300).toLowerCase().replace(/[_-]+/g, " "))
+    .map((value) =>
+      cleanDiscoveryText(value, 300).toLowerCase().replace(/[_-]+/g, " "),
+    )
     .join(" ");
   const matches = preferenceSlugs.filter((slug) => {
     const phrase = slug.replace(/_/g, " ");
@@ -516,26 +705,41 @@ function mergedDiscoveryScore(input: {
   hasCoordinates: boolean;
 }) {
   const { item, preferenceSlugs, hasCoordinates } = input;
-  const haystack = [item.title, item.category, item.description, ...(item.features || [])]
-    .map((value) => cleanDiscoveryText(value, 300).toLowerCase().replace(/[_-]+/g, " "))
+  const haystack = [
+    item.title,
+    item.category,
+    item.description,
+    ...(item.features || []),
+  ]
+    .map((value) =>
+      cleanDiscoveryText(value, 300).toLowerCase().replace(/[_-]+/g, " "),
+    )
     .join(" ");
   const queryTerms = [...new Set(discoveryTerms(input.query))];
-  const queryMatches = queryTerms.filter((term) => haystack.includes(term)).length;
+  const queryMatches = queryTerms.filter((term) =>
+    haystack.includes(term),
+  ).length;
   // Google has already ranked its response against the selected text query.
   // Echoo inventory carries an explicit relevance score from the same query.
-  const sourceRelevance = item.source === "echoo"
-    ? Math.max(0, Math.min(Number(item.rankScore || 0) / 1.15, 1))
-    : Math.min(0.9, 0.62 + queryMatches * 0.12);
+  const sourceRelevance =
+    item.source === "echoo"
+      ? Math.max(0, Math.min(Number(item.rankScore || 0) / 1.15, 1))
+      : Math.min(0.9, 0.62 + queryMatches * 0.12);
   const distance = Number(item.distanceMeters);
-  const distanceAffinity = hasCoordinates && Number.isFinite(distance)
-    ? Math.max(0, 1 - distance / 75_000)
-    : 0.5;
+  const distanceAffinity =
+    hasCoordinates && Number.isFinite(distance)
+      ? Math.max(0, 1 - distance / 75_000)
+      : 0.5;
   const quality = Math.max(
     0,
     Math.min(
       1,
       (Number(item.community?.ratingAverage || 0) / 5) * 0.6 +
-        Math.min(Math.log10(Number(item.community?.ratingCount || 0) + 1) / 4, 1) * 0.4,
+        Math.min(
+          Math.log10(Number(item.community?.ratingCount || 0) + 1) / 4,
+          1,
+        ) *
+          0.4,
     ),
   );
   // Intent remains dominant. GPS is substantial but not so strict that an
@@ -564,15 +768,19 @@ function rankMergedResults(
         hasCoordinates,
       }),
     }))
-    .sort((
-      a: Record<string, any> & { discoveryScore: number },
-      b: Record<string, any> & { discoveryScore: number },
-    ) => {
-      const scoreDelta = Number(b.discoveryScore) - Number(a.discoveryScore);
-      if (Math.abs(scoreDelta) > 0.0001) return scoreDelta;
-      return (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) -
-        (b.distanceMeters ?? Number.MAX_SAFE_INTEGER);
-    });
+    .sort(
+      (
+        a: Record<string, any> & { discoveryScore: number },
+        b: Record<string, any> & { discoveryScore: number },
+      ) => {
+        const scoreDelta = Number(b.discoveryScore) - Number(a.discoveryScore);
+        if (Math.abs(scoreDelta) > 0.0001) return scoreDelta;
+        return (
+          (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) -
+          (b.distanceMeters ?? Number.MAX_SAFE_INTEGER)
+        );
+      },
+    );
 }
 
 Deno.serve(async (req) => {
@@ -587,6 +795,12 @@ Deno.serve(async (req) => {
       req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const get = (key: keyof ExplorePayload) =>
       body[key] ?? url.searchParams.get(String(key)) ?? undefined;
+    const supabase = getSupabaseAdmin();
+    if (Array.isArray(body.photoCards)) {
+      return jsonResponse({
+        photos: await renewCardPhotos(req, supabase, body.photoCards),
+      });
+    }
     const query = cleanDiscoveryText(get("query"), 120);
     // Keep typo tolerance consistent across Echoo inventory and live places.
     // Without this, "resturants" reached Google correctly but missed Echoo's
@@ -617,7 +831,6 @@ Deno.serve(async (req) => {
     }
 
     const suppliedCity = cleanDiscoveryText(get("city"), 80);
-    const supabase = getSupabaseAdmin();
     const city =
       lat !== undefined && lng !== undefined
         ? await resolveGpsCity(supabase, lat, lng)
@@ -640,7 +853,8 @@ Deno.serve(async (req) => {
     const cursor = decodeDiscoveryCursor(get("cursor"));
     if (get("cursor") && !cursor)
       return jsonResponse({ error: "Invalid cursor" }, 422);
-    const livePageToken = cleanDiscoveryText(get("livePageToken"), 2048) || undefined;
+    const livePageToken =
+      cleanDiscoveryText(get("livePageToken"), 2048) || undefined;
     const { data: features, error: featuresError } = await supabase
       .from("discovery_feature_catalog")
       .select("slug,label,synonyms")
@@ -650,7 +864,8 @@ Deno.serve(async (req) => {
       body.featureSlugs ?? url.searchParams.getAll("featureSlugs"),
     );
     const explicitPreferenceFeatures = stringArray(
-      body.preferenceFeatureSlugs ?? url.searchParams.getAll("preferenceFeatureSlugs"),
+      body.preferenceFeatureSlugs ??
+        url.searchParams.getAll("preferenceFeatureSlugs"),
       10,
     );
     const knownSlugs = new Set(
@@ -682,7 +897,9 @@ Deno.serve(async (req) => {
     // the wider GTA envelope. This avoids a user in one neighbourhood seeing
     // an artificially small catalogue while preserving a local-first order.
     const cityFilter =
-      lat === undefined && city.coverageLevel === "municipality" ? city.name : null;
+      lat === undefined && city.coverageLevel === "municipality"
+        ? city.name
+        : null;
     const cacheKey = await sha256Hex(
       JSON.stringify({
         v: 4,
@@ -699,7 +916,9 @@ Deno.serve(async (req) => {
         cursor,
       }),
     );
-    const cached = !livePageToken ? await readLocationCache(supabase, cacheKey) : null;
+    const cached = !livePageToken
+      ? await readLocationCache(supabase, cacheKey)
+      : null;
     let owned: OwnedResult[];
     if (cached) {
       owned = (cached as any).owned || [];
@@ -759,16 +978,25 @@ Deno.serve(async (req) => {
     // Every photo that is shown is a real provider or approved venue photo.
     // Missing photography must never make a real local business disappear:
     // clients render an honest category fallback while enrichment continues.
-    const merged = [...hydratedOwnedCards, ...live.results]
-      .filter((item, index, all) =>
-        all.findIndex((candidate) => discoveryResultKey(candidate) === discoveryResultKey(item)) === index,
-      );
+    const merged = [...hydratedOwnedCards, ...live.results].filter(
+      (item, index, all) =>
+        all.findIndex(
+          (candidate) =>
+            discoveryResultKey(candidate) === discoveryResultKey(item),
+        ) === index,
+    );
     const ranked = rankMergedResults(
       merged,
       searchQuery || category || "things to do",
       preferenceFeatureSlugs,
       lat !== undefined && lng !== undefined,
     );
+    // Discovery is a visual surface. Keep relevance ordering within each lane,
+    // but never lead with image-less inventory when verified photos are ready.
+    const visualResults = [
+      ...ranked.filter((item: any) => item.image),
+      ...ranked.filter((item: any) => !item.image),
+    ];
     return jsonResponse({
       supported: true,
       query,
@@ -778,9 +1006,11 @@ Deno.serve(async (req) => {
         (city as { resolution?: string }).resolution ||
         (lat === undefined ? "manual_city" : "gta_fallback"),
       searchScope: cityFilter ? "municipality" : "gta_region",
-      results: ranked,
+      results: visualResults,
       ownedResultCount: page.length,
-      registeredResultCount: ownedCards.filter((item: any) => item.placement?.sponsored).length,
+      registeredResultCount: ownedCards.filter(
+        (item: any) => item.placement?.sponsored,
+      ).length,
       liveFallbackCount: live.results.length,
       nextCursor:
         hasNextPage && last
