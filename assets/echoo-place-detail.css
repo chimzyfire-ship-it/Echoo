@@ -144,6 +144,60 @@
   gap: 9px;
 }
 
+.echoo-place-hours-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 9px 12px;
+  border: 1px solid rgba(243, 209, 161, 0.2);
+  border-radius: 14px;
+  background: rgba(243, 209, 161, 0.055);
+}
+
+.echoo-place-hours-summary-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(243, 209, 161, 0.1);
+  color: var(--echoo-detail-accent);
+}
+
+.echoo-place-hours-summary-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.echoo-place-hours-summary-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.echoo-place-hours-summary-copy small {
+  color: var(--echoo-detail-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.echoo-place-hours-summary-copy strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 680;
+  line-height: 1.25;
+}
+
 .echoo-place-summary {
   margin: 0;
   color: rgba(248, 245, 239, 0.8);
