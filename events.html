@@ -2243,7 +2243,7 @@
       <a
         class="fab-culture"
         id="culture-lens-fab"
-        href="culture.html"
+        href="events.html?culturePicker=1"
         aria-label="Open Culture Lens"
       >
         <svg viewBox="0 0 24 24">
@@ -3005,10 +3005,16 @@
 
       async function openDetailByItem(item, options = {}) {
         const heroImage = realImageUrl(item);
+        const distanceOptions = {
+          distanceMeters: item?.distanceMeters,
+          userLatitude: lat,
+          userLongitude: lng,
+        };
 
         openDetailSheet();
         setDetailContent(
           window.EchooPlaceDetail.renderPlaceDetail(buildFallbackDetail(item), {
+            ...distanceOptions,
             heroImage,
             preview: true,
             directionsHref:
@@ -3027,6 +3033,7 @@
             detail?.place?.image_url || detail?.place?.imageUrl || heroImage;
           setDetailContent(
             window.EchooPlaceDetail.renderPlaceDetail(detail, {
+              ...distanceOptions,
               heroImage: resolvedHeroImage,
               directionsHref:
                 item?.id &&
@@ -3042,6 +3049,7 @@
             window.EchooPlaceDetail.renderPlaceDetail(
               buildFallbackDetail(item),
               {
+                ...distanceOptions,
                 heroImage,
               },
             ),
@@ -4604,9 +4612,11 @@
           ]);
           if (!(items.length || nearbyItems.length || recommendedItems.length))
             await discoveryPromise;
-          if (
-            !(items.length || nearbyItems.length || recommendedItems.length)
-          ) {
+          if (!(
+            items.length ||
+            nearbyItems.length ||
+            recommendedItems.length
+          )) {
             items = defaultPlaces
               .filter(
                 (place) =>
@@ -4934,6 +4944,10 @@
         .querySelectorAll("[data-close-sheet]")
         .forEach((btn) => (btn.onclick = closeDetail));
 
+      cultureLensFab.addEventListener("click", (event) => {
+        event.preventDefault();
+        openCulturePicker();
+      });
       culturePicker
         .querySelectorAll("[data-close-culture]")
         .forEach((button) =>

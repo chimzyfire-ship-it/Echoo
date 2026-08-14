@@ -52,19 +52,52 @@
     return WEEKDAY_LABELS.indexOf(weekday);
   }
 
-  function confidenceLabel(score, sourceCount = 0) {
-    const value = Number(score);
-    if (sourceCount <= 0) return "Core profile";
-    if (!Number.isFinite(value)) return "Source-backed";
-    if (value >= 0.9) return "Highly verified";
-    if (value >= 0.75) return "Well sourced";
-    return "Source-backed";
+  function optionalNumber(value) {
+    if (value === null || value === undefined || value === "") return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
-  function sourceCountFor(detail) {
-    return Number(
-      detail?.sourceStatus?.sourceCount || detail?.sources?.length || 0,
+  function distanceKmFor(place = {}, options = {}) {
+    const suppliedMeters = optionalNumber(options.distanceMeters);
+    if (suppliedMeters !== null && suppliedMeters >= 0) {
+      return suppliedMeters / 1000;
+    }
+
+    const location = window.EchooLocationPlatform?.readPreferences?.() || {};
+    const userLatitude = optionalNumber(
+      options.userLatitude ?? location.lastLat,
     );
+    const userLongitude = optionalNumber(
+      options.userLongitude ?? location.lastLng,
+    );
+    const placeLatitude = optionalNumber(place.latitude);
+    const placeLongitude = optionalNumber(place.longitude);
+    if (
+      userLatitude === null ||
+      userLongitude === null ||
+      placeLatitude === null ||
+      placeLongitude === null
+    ) {
+      return null;
+    }
+
+    const calculateDistance = window.EchooLocationPlatform?.distanceKm;
+    if (typeof calculateDistance !== "function") return null;
+    const distance = calculateDistance(
+      userLatitude,
+      userLongitude,
+      placeLatitude,
+      placeLongitude,
+    );
+    return Number.isFinite(distance) && distance >= 0 ? distance : null;
+  }
+
+  function distanceLabelFor(place, options) {
+    const distance = distanceKmFor(place, options);
+    if (distance === null) return "Turn on location to see distance";
+    if (distance < 0.1) return "Under 0.1 km away";
+    return `${distance.toFixed(distance < 10 ? 1 : 0)} km away`;
   }
 
   function pulseItemsFor(detail) {
@@ -130,10 +163,6 @@
       .map((photo) => ({
         url: cleanText(photo?.image_url || photo?.url),
         alt: cleanText(photo?.alt_text || photo?.caption),
-        credit: cleanText(photo?.attribution || photo?.source_name),
-        creditUrl: /^https?:\/\//i.test(cleanText(photo?.attribution_url))
-          ? cleanText(photo.attribution_url)
-          : "",
       }))
       .filter((photo) => /^https?:\/\//i.test(photo.url))
       .filter((photo) => {
@@ -337,15 +366,6 @@
     `;
   }
 
-  function photoCreditMarkup(photo) {
-    if (!photo) return "";
-    const content = escapeHtml(photo.credit || "");
-    const credit = photo.creditUrl
-      ? `<a href="${escapeHtml(photo.creditUrl)}" target="_blank" rel="noopener">${content}</a>`
-      : content;
-    return `<p id="echoo-place-photo-credit" class="echoo-place-photo-credit"${photo.credit ? "" : " hidden"}>Photo: ${credit}</p>`;
-  }
-
   function renderPlaceDetail(detail = {}, options = {}) {
     if (!isDetailReady(detail)) return renderUnavailablePlaceDetail(detail);
 
@@ -357,22 +377,13 @@
     const summary = summaryFor(detail);
     const hours = compactHours(detail);
     const today = todayHours(detail);
-    const sourceCount = sourceCountFor(detail);
-    const sourceNames = [
-      ...new Set(
-        (detail.sources || [])
-          .map((source) => cleanText(source.source_name))
-          .filter(Boolean),
-      ),
-    ].slice(0, 2);
     const tags =
       profile.human_review_status === "approved"
         ? listFrom(profile.good_for).slice(0, 4)
         : [];
     const heroImage = heroImageFor(detail, options);
-    const heroPhoto = photos.find((photo) => photo.url === heroImage) || null;
     const galleryPhotos = photos.filter((photo) => photo.url !== heroImage);
-    const initialPhotoCredit = heroPhoto || galleryPhotos[0] || null;
+    const distanceLabel = distanceLabelFor(place, options);
     const directionsHref = options.directionsHref || mapsLinkFor(place);
     const routeLatitude = Number(place.latitude);
     const routeLongitude = Number(place.longitude);
@@ -412,6 +423,7 @@
         </div>
 
         <div class="echoo-place-body">
+          <p class="echoo-place-distance">${escapeHtml(distanceLabel)}</p>
           ${
             today
               ? `
@@ -463,19 +475,16 @@
                 ${galleryPhotos
                   .map(
                     (photo, index) => `
-                  <button class="echoo-place-gallery-item" type="button" data-photo-src="${escapeHtml(photo.url)}" data-photo-alt="${escapeHtml(photo.alt || title)}" data-photo-credit="${escapeHtml(photo.credit)}" data-photo-credit-url="${escapeHtml(photo.creditUrl)}" aria-label="View photo ${index + 1}">
+                  <button class="echoo-place-gallery-item" type="button" data-photo-src="${escapeHtml(photo.url)}" data-photo-alt="${escapeHtml(photo.alt || title)}" aria-label="View photo ${index + 1}">
                     <img src="${escapeHtml(photo.url)}" alt="" loading="lazy" decoding="async">
                   </button>
                 `,
                   )
                   .join("")}
               </div>
-              ${photoCreditMarkup(initialPhotoCredit)}
             </section>
           `
-              : heroPhoto
-                ? photoCreditMarkup(heroPhoto)
-                : ""
+              : ""
           }
 
           ${
@@ -506,18 +515,6 @@
                   .join("")}
               </div>
             </section>
-          `
-              : ""
-          }
-
-          ${
-            sourceCount > 0 || sourceNames.length
-              ? `
-            <div class="echoo-place-source-line">
-              <span>${escapeHtml(confidenceLabel(detail.sourceStatus?.confidenceScore || profile.confidence_score, sourceCount))}</span>
-              ${sourceCount > 0 ? `<span>${escapeHtml(`${sourceCount} ${sourceCount === 1 ? "source" : "sources"}`)}</span>` : ""}
-              ${sourceNames.length ? `<span>${escapeHtml(sourceNames.join(" · "))}</span>` : ""}
-            </div>
           `
               : ""
           }
@@ -610,23 +607,6 @@
         mainImage.onload = () => {
           mainImage.style.opacity = "1";
         };
-        const credit = document.getElementById("echoo-place-photo-credit");
-        if (credit) {
-          const text = item.getAttribute("data-photo-credit") || "";
-          const url = item.getAttribute("data-photo-credit-url") || "";
-          credit.hidden = !text;
-          credit.replaceChildren("Photo: ");
-          if (/^https?:\/\//i.test(url)) {
-            const link = document.createElement("a");
-            link.href = url;
-            link.target = "_blank";
-            link.rel = "noopener";
-            link.textContent = text;
-            credit.appendChild(link);
-          } else {
-            credit.append(text);
-          }
-        }
         items.forEach((candidate) =>
           candidate.classList.toggle("active", candidate === item),
         );
@@ -797,7 +777,6 @@
     bindStayInteractions,
     bindUberInteractions,
     bindCheckinInteractions,
-    confidenceLabel,
     escapeHtml,
     heroImageFor,
     isDetailReady,
