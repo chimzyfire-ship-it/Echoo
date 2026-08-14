@@ -50,10 +50,12 @@ const MOBILE_CHROME_SCRIPT = `
       var eventSheet = document.getElementById('detail-sheet');
       var placeSheet = document.getElementById('card-detail-modal');
       var quickPlanSheet = document.getElementById('quick-plan-modal');
+      var culturePicker = document.getElementById('culture-picker');
       var isOpen = Boolean(
         (eventSheet && eventSheet.classList.contains('open')) ||
         (placeSheet && placeSheet.classList.contains('open')) ||
-        (quickPlanSheet && quickPlanSheet.getAttribute('aria-hidden') === 'false')
+        (quickPlanSheet && quickPlanSheet.getAttribute('aria-hidden') === 'false') ||
+        (culturePicker && culturePicker.classList.contains('is-open'))
       );
       if (window.ReactNativeWebView) {
         window.ReactNativeWebView.postMessage('echoo:detail-sheet:' + isOpen);
