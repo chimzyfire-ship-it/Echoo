@@ -6,6 +6,8 @@
 -- only when the caller shares an active/pending/accepted Link Up match with
 -- the target — so onboarding data stays private outside of an actual match.
 
+drop function if exists public.linkup_peer_profile(uuid);
+
 create or replace function public.linkup_peer_profile(target_user uuid)
 returns table (
   display_name text,
