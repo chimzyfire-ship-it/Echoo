@@ -3234,6 +3234,9 @@
               category: stop.tags || "Place",
               city: stop.city || "",
               neighborhood: stop.neighborhood || "",
+              latitude: stop.latitude ?? stop.coords?.[0],
+              longitude: stop.longitude ?? stop.coords?.[1],
+              distanceMeters: stop.distanceMeters ?? stop.distance_meters,
               copy: stop.vibe || "",
               vibe: stop.vibe || "",
             };
@@ -3467,12 +3470,18 @@
         if (!placeId) return;
         const heroImage =
           payload.image || payload.img || "assets/optimized/news-date-768.jpg";
+        const distanceOptions = {
+          distanceMeters: payload.distanceMeters ?? payload.distance_meters,
+          userLatitude: preciseLat,
+          userLongitude: preciseLng,
+        };
 
         openPlaceDetailModal();
         setPlaceDetailContent(
           window.EchooPlaceDetail.renderPlaceDetail(
             buildFallbackPlaceDetail({ ...payload, placeId }),
             {
+              ...distanceOptions,
               heroImage,
               preview: true,
               directionsHref:
@@ -3492,6 +3501,7 @@
             window.EchooPlaceDetail.renderPlaceDetail(
               detail || buildFallbackPlaceDetail({ ...payload, placeId }),
               {
+                ...distanceOptions,
                 heroImage: resolvedHeroImage,
               },
             ),
@@ -3502,6 +3512,7 @@
             window.EchooPlaceDetail.renderPlaceDetail(
               buildFallbackPlaceDetail({ ...payload, placeId }),
               {
+                ...distanceOptions,
                 heroImage,
               },
             ),
