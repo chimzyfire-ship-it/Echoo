@@ -8,10 +8,17 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.echoo.mobile"
+      "bundleIdentifier": "com.echoo.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Echoo uses your location while the app is open to rank nearby GTA places and plans."
+      }
     },
     "android": {
       "package": "com.echoo.mobile",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

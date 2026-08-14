@@ -36,6 +36,7 @@ create index if not exists linkup_presence_match_idx
 create index if not exists linkup_presence_user_idx
   on public.linkup_presence (user_id, created_at desc);
 
+drop trigger if exists linkup_presence_touch_updated_at on public.linkup_presence;
 create trigger linkup_presence_touch_updated_at
   before update on public.linkup_presence
   for each row execute function public.touch_updated_at();

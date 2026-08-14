@@ -245,17 +245,65 @@
         gap: 30px;
       }
 
-      /* Location Badge */
-      .location-badge {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--peach);
+      .discover-controls {
         display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .discover-location-pill {
+        display: inline-flex;
+        width: fit-content;
+        max-width: 100%;
+        min-height: 38px;
         align-items: center;
+        gap: 9px;
+        padding: 0 12px 0 10px;
+        color: var(--ink);
+        border: 1px solid rgba(247, 213, 178, 0.2);
+        border-radius: 999px;
+        background: rgba(247, 213, 178, 0.07);
+        text-align: left;
+      }
+      .discover-location-pill:hover,
+      .discover-location-pill:focus-visible {
+        border-color: rgba(247, 213, 178, 0.48);
+        background: rgba(247, 213, 178, 0.11);
+      }
+      .discover-location-pill svg {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        fill: none;
+        stroke: var(--peach);
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.8;
+      }
+      .discover-location-pill-copy {
+        display: flex;
+        min-width: 0;
+        align-items: baseline;
         gap: 6px;
-        margin-bottom: 2px;
+      }
+      .discover-location-pill-copy small {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 670;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .discover-location-pill-copy strong {
+        overflow: hidden;
+        font-size: 12px;
+        font-weight: 740;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .discover-location-pill .location-chevron {
+        width: 12px;
+        height: 12px;
+        stroke: var(--muted);
       }
 
       .discover-location-sheet {
@@ -265,6 +313,9 @@
         left: 18px;
         z-index: 55;
         max-width: 520px;
+        max-height: calc(100svh - 116px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
         margin: 0 auto;
         padding: 20px;
         border: 1px solid rgba(248, 245, 239, 0.14);
@@ -304,6 +355,11 @@
         border-color: transparent;
         background: var(--peach);
         color: #111;
+      }
+      .discover-location-actions button:focus-visible,
+      .discover-location-select:focus-visible {
+        outline: 2px solid var(--peach);
+        outline-offset: 2px;
       }
       .discover-location-select {
         width: 100%;
@@ -706,7 +762,7 @@
         padding: 0 0 2px;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        margin: -12px -24px 0;
+        margin: 0 -24px;
         padding-left: 24px;
         padding-right: 24px;
       }
@@ -1016,7 +1072,7 @@
         overscroll-behavior-x: contain;
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x proximity;
-        touch-action: pan-x;
+        touch-action: pan-x pan-y;
         padding-bottom: 8px;
         margin: 0 -24px;
         padding-left: 24px;
@@ -1049,6 +1105,12 @@
 
       .location-card:active {
         transform: scale(0.97);
+      }
+      .location-card:focus-visible,
+      .recommendation-card:focus-visible,
+      .discovery-result:focus-visible {
+        outline: 2px solid var(--peach);
+        outline-offset: 3px;
       }
 
       .location-card-img {
@@ -1102,6 +1164,12 @@
         align-items: center;
         gap: 4px;
         margin-top: 2px;
+      }
+
+      .location-card-distance {
+        color: rgba(248, 245, 239, 0.72);
+        font-size: 11px;
+        font-weight: 650;
       }
 
       .recommendation-grid {
@@ -2001,6 +2069,7 @@
               <input
                 id="query"
                 class="search-input"
+                type="search"
                 autocomplete="off"
                 placeholder="Search and discover places"
                 aria-controls="suggestions"
@@ -2025,15 +2094,83 @@
           </div>
         </section>
 
-        <!-- Category Pills -->
-        <div class="category-pills" id="chips" aria-label="Explore categories">
-          <button class="chip" data-query="food">Food</button>
-          <button class="chip" data-query="comedy">Comedy</button>
-          <button class="chip" data-query="music">Live music</button>
-          <button class="chip" data-query="nightlife">Nightlife</button>
-          <button class="chip" data-query="events">Events</button>
-          <button class="chip" data-query="tourism">Tourism</button>
+        <div class="discover-controls">
+          <button
+            class="discover-location-pill"
+            id="discover-location-pill"
+            type="button"
+            aria-label="Change discovery location"
+            aria-haspopup="dialog"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </svg>
+            <span class="discover-location-pill-copy">
+              <small>Exploring</small>
+              <strong id="discover-location-label">Toronto</strong>
+            </span>
+            <svg
+              class="location-chevron"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </button>
+
+          <div
+            class="category-pills"
+            id="chips"
+            role="group"
+            aria-label="Explore categories"
+          >
+            <button class="chip" type="button" data-query="food">Food</button>
+            <button class="chip" type="button" data-query="comedy">
+              Comedy
+            </button>
+            <button class="chip" type="button" data-query="music">
+              Live music
+            </button>
+            <button class="chip" type="button" data-query="nightlife">
+              Nightlife
+            </button>
+            <button class="chip" type="button" data-query="events">
+              Events
+            </button>
+            <button class="chip" type="button" data-query="tourism">
+              Tourism
+            </button>
+          </div>
         </div>
+
+        <section id="nearby-section" aria-label="Places nearby">
+          <div class="section-header">
+            <h2 id="nearby-heading">Near you</h2>
+          </div>
+          <div
+            class="horizontal-carousel"
+            id="nearby-container"
+            aria-live="polite"
+          >
+            <div class="location-card skeleton-card"></div>
+            <div class="location-card skeleton-card"></div>
+          </div>
+        </section>
+
+        <section id="recommendations-section" aria-label="Recommendations">
+          <div class="section-header">
+            <h2 id="recommendations-heading">Recommended for you</h2>
+          </div>
+          <div
+            class="recommendation-grid"
+            id="recommendation-container"
+            aria-live="polite"
+          >
+            <div class="recommendation-card skeleton-card"></div>
+            <div class="recommendation-card skeleton-card"></div>
+          </div>
+        </section>
 
         <section id="search-results-section" aria-label="All places">
           <div class="section-header">
@@ -2058,20 +2195,6 @@
           <div class="results-pagination" id="results-pagination" hidden>
             <button id="results-previous" type="button">Previous</button
             ><button id="results-next" type="button">Next</button>
-          </div>
-        </section>
-
-        <section id="recommendations-section" aria-label="Recommendations">
-          <div class="section-header">
-            <h2 id="recommendations-heading">Recommended for you</h2>
-          </div>
-          <div
-            class="recommendation-grid"
-            id="recommendation-container"
-            aria-live="polite"
-          >
-            <div class="recommendation-card skeleton-card"></div>
-            <div class="recommendation-card skeleton-card"></div>
           </div>
         </section>
       </main>
@@ -2210,6 +2333,8 @@
     <section
       class="discover-location-sheet"
       id="discover-location-sheet"
+      role="dialog"
+      aria-modal="true"
       aria-labelledby="discover-location-title"
       hidden
     >
@@ -2397,6 +2522,9 @@
       const queryInput = document.getElementById("query"),
         resultsEl = document.getElementById("results"),
         suggestionsEl = document.getElementById("suggestions"),
+        nearbyContainer = document.getElementById("nearby-container"),
+        nearbySection = document.getElementById("nearby-section"),
+        nearbyHeading = document.getElementById("nearby-heading"),
         resultsSection = document.getElementById("search-results-section"),
         resultsHeading = document.getElementById("results-heading"),
         resultsPageStatus = document.getElementById("results-page-status"),
@@ -2409,6 +2537,8 @@
         recommendationsSection = document.getElementById(
           "recommendations-section",
         ),
+        locationPill = document.getElementById("discover-location-pill"),
+        locationLabel = document.getElementById("discover-location-label"),
         surpriseLoader = document.getElementById("surprise-loader"),
         locationSheet = document.getElementById("discover-location-sheet"),
         locationMunicipality = document.getElementById("discover-municipality"),
@@ -2443,13 +2573,16 @@
             ? "discover"
             : params.get("query") || rememberedDiscoveryQuery || "discover",
         items = [],
+        nearbyItems = [],
+        recommendedItems = [],
+        discoveryLocation = null,
+        discoveryStoredAt = 0,
+        locationReturnFocus = null,
         suggestionTimer,
         selectedCultureGroup = "",
-        discoveryRefreshNonce = 0,
         resultPage = 0,
         discoveryPaging = {
           cursor: null,
-          livePageToken: null,
           hasMore: false,
           request: null,
         },
@@ -2705,9 +2838,11 @@
             : "Open Culture Lens",
         );
         if (culture) {
+          nearbyHeading.textContent = `${culture.label} · ${category.nearby}`;
           recommendationsHeading.textContent = `${culture.label} · ${category.recommendations}`;
           queryInput.placeholder = `Search ${culture.label} places`;
         } else {
+          nearbyHeading.textContent = category.nearby;
           recommendationsHeading.textContent = category.recommendations;
           queryInput.placeholder = "Search and discover places";
         }
@@ -2765,16 +2900,24 @@
           String(value || "")
             .replace(/\s+/g, " ")
             .trim();
-        const rating = Number(
-          item.community?.ratingAverage ||
-            item.rating ||
-            item.rating_average ||
-            "",
-        );
+        const rawRating =
+          item.community?.ratingAverage ?? item.rating ?? item.rating_average;
+        const rating =
+          rawRating === null || rawRating === undefined || rawRating === ""
+            ? NaN
+            : Number(rawRating);
         const ratingCount = Number(
           item.community?.ratingCount || item.rating_count || item.reviews || 0,
         );
         const hasRating = Number.isFinite(rating);
+        const heroImage = realImageUrl(item);
+        const photoAuthor = item?.image?.authors?.[0] || null;
+        const provider =
+          item?.attribution?.requiredLabel ||
+          (item?.image?.source === "google_places" ? "Google Maps" : "");
+        const photoCredit = [photoAuthor?.displayName, provider]
+          .filter(Boolean)
+          .join(" / ");
         return {
           place: {
             id: item.id || "",
@@ -2789,7 +2932,7 @@
             latitude: item.latitude || null,
             longitude: item.longitude || null,
             timezone: "America/Toronto",
-            image_url: realImageUrl(item),
+            image_url: heroImage,
             phone: normalize(item.phone || item.contactPhone || ""),
             website: normalize(item.website || ""),
             rating_average: hasRating ? rating : null,
@@ -2814,11 +2957,21 @@
               : null,
           },
           hours: [],
-          sources: [],
+          photos:
+            heroImage && photoCredit
+              ? [
+                  {
+                    image_url: heroImage,
+                    attribution: photoCredit,
+                    attribution_url: photoAuthor?.uri || item.actionUrl || "",
+                  },
+                ]
+              : [],
+          sources: provider ? [{ source_name: provider }] : [],
           relatedEvents: [],
           alternatives: [],
           sourceStatus: {
-            sourceCount: 0,
+            sourceCount: provider ? 1 : 0,
             confidenceScore: hasRating
               ? Math.min(1, Math.max(0.45, rating / 5))
               : null,
@@ -2828,7 +2981,11 @@
 
       async function fetchPlaceDetail(item) {
         const detailId = item?.canonicalId || item?.entityId || item?.id;
-        if (!detailId || String(detailId).startsWith("google:"))
+        if (
+          !detailId ||
+          item?.type === "event" ||
+          String(detailId).startsWith("google:")
+        )
           return buildFallbackDetail(item);
         const headersForDetail = window.EchooAuth?.authHeaders
           ? await window.EchooAuth.authHeaders({
@@ -3022,17 +3179,16 @@
       ];
       const DISCOVERY_HISTORY_KEY = "echoo_discovery_seen_v2";
       const SURPRISE_HISTORY_KEY = "echoo_surprise_history_v1";
-      const DISCOVERY_CACHE_KEY = "echoo_discovery_surface_cache_v3";
-      const DISCOVERY_SESSION_CACHE_KEY = "echoo_discovery_session_cache_v2";
+      const DISCOVERY_CACHE_KEY = "echoo_discovery_surface_cache_v4";
+      const DISCOVERY_SESSION_CACHE_KEY = "echoo_discovery_session_cache_v3";
       const DISCOVERY_ACTIVE_QUERY_KEY = "echoo_discovery_active_query_v1";
-      const DISCOVERY_CACHE_VERSION = 3;
+      const DISCOVERY_CACHE_VERSION = 4;
       const DISCOVERY_CACHE_MAX_ENTRIES = 24;
       // Explore photo URLs are short-lived. Keep the on-device surface fresh
       // enough that a warm cache never resolves to expired imagery.
       const DISCOVERY_CACHE_GPS_TTL_MS = 1000 * 60 * 3;
       const DISCOVERY_CACHE_CITY_TTL_MS = 1000 * 60 * 5;
       const DISCOVERY_NETWORK_TIMEOUT_MS = 7000;
-      const DISCOVERY_IMAGE_READY_TIMEOUT_MS = 2200;
       const DISCOVERY_PHOTO_RENEWAL_TIMEOUT_MS = 2600;
       const PLACE_FALLBACK_IMAGES = {
         food: "assets/optimized/news-date-768.webp",
@@ -3044,7 +3200,6 @@
       };
       let discoveryUiLoading = false;
       let discoveryLoadFailed = false;
-      const readyDiscoveryImageUrls = new Set();
       let surpriseRevealId = 0;
       let discoveryFastFallbackTimer = 0;
 
@@ -3073,46 +3228,12 @@
 
       function placeVisual(item, className, alt = "", { eager = false } = {}) {
         const image = realImageUrl(item);
-        const imageReady = readyDiscoveryImageUrls.has(image);
         const fallbackImage = fallbackImageFor(item);
-        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}" style="background-image:linear-gradient(to top,rgba(5,5,5,.18),rgba(5,5,5,.02)),url('${esc(fallbackImage)}')"${imageReady ? " hidden" : ""}></div>`;
+        const fallback = `<div class="${className} place-visual-fallback" data-cover="${categoryGroup(item)}" role="img" aria-label="${esc(alt || "Place image")}" style="background-image:linear-gradient(to top,rgba(5,5,5,.18),rgba(5,5,5,.02)),url('${esc(fallbackImage)}')"></div>`;
         const imageMarkup = image
-          ? `<img class="${className} place-photo${imageReady ? " is-loaded" : ""}" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" onload="this.classList.add('is-loaded');this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
+          ? `<img class="${className} place-photo" src="${esc(image)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" fetchpriority="${eager ? "high" : "low"}" decoding="async" onload="this.classList.add('is-loaded');this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />`
           : "";
         return `${imageMarkup}${fallback}`;
-      }
-
-      async function readyDiscoveryImages(placeList = []) {
-        const candidates = imageReadyResults(placeList).slice(0, 16);
-        const loaded = new Set();
-        if (!candidates.length) return [];
-        const warm = Promise.allSettled(
-          candidates.map(
-            (item) =>
-              new Promise((resolve) => {
-                const url = realImageUrl(item);
-                const image = new Image();
-                image.decoding = "async";
-                image.onload = async () => {
-                  try {
-                    await image.decode?.();
-                  } catch (_) {}
-                  loaded.add(url);
-                  readyDiscoveryImageUrls.add(url);
-                  resolve();
-                };
-                image.onerror = resolve;
-                image.src = url;
-              }),
-          ),
-        );
-        await Promise.race([
-          warm,
-          new Promise((resolve) =>
-            window.setTimeout(resolve, DISCOVERY_IMAGE_READY_TIMEOUT_MS),
-          ),
-        ]);
-        return candidates.filter((item) => loaded.has(realImageUrl(item)));
       }
 
       function photoRenewalCards(placeList = []) {
@@ -3194,25 +3315,36 @@
         return Number.isFinite(raw) ? raw : 0;
       }
 
-      function isHotPlace(item) {
-        return Boolean(item?.community?.isHot) || hotScoreFor(item) >= 0.68;
-      }
-
       function renderDiscoverLoading({
         allowFallback = false,
         preserveVisibleResults = false,
       } = {}) {
         // Normal Discover refreshes happen behind the visible, cached grid.
         // Only Surprise owns a full loading transition.
-        if (preserveVisibleResults && items.length) {
+        if (
+          preserveVisibleResults &&
+          (items.length || nearbyItems.length || recommendedItems.length)
+        ) {
+          nearbyContainer.setAttribute("aria-busy", "true");
           recommendationContainer.setAttribute("aria-busy", "true");
           return;
         }
         discoveryUiLoading = true;
         discoveryLoadFailed = false;
         document.body.classList.add("discover-is-loading");
+        nearbySection.hidden = false;
+        recommendationsSection.hidden = false;
         if (allowFallback && !items.length)
-          items = defaultPlaces.map((place) => ({ ...place }));
+          items = defaultPlaces
+            .filter(
+              (place) =>
+                String(place.city || "").toLowerCase() === city.toLowerCase(),
+            )
+            .map((place) => ({ ...place }));
+        nearbyContainer.innerHTML =
+          `<div class="location-card skeleton-card" aria-hidden="true"></div>`.repeat(
+            2,
+          );
         recommendationContainer.innerHTML =
           `<div class="recommendation-card skeleton-card" aria-hidden="true"></div>`.repeat(
             3,
@@ -3258,6 +3390,7 @@
           query: String(activeQuery || "discover")
             .trim()
             .toLowerCase(),
+          intent: String(request.intent || "discover").toLowerCase(),
           culture: activeCulture()?.slug || "local",
           location: cacheLocationScope(request),
           preferences: [...new Set(request.preferenceFeatureSlugs || [])]
@@ -3278,43 +3411,52 @@
 
       function readDiscoveryCache(request = {}) {
         const identity = discoveryCacheIdentity(request);
+        const maximumAge = cacheLocationScope(request).startsWith("gps:")
+          ? DISCOVERY_CACHE_GPS_TTL_MS
+          : DISCOVERY_CACHE_CITY_TTL_MS;
+        const isFresh = (entry) =>
+          Number.isFinite(Number(entry?.storedAt)) &&
+          Date.now() - Number(entry.storedAt) <= maximumAge;
         const sessionEntry = readCacheEntries(
           sessionStorage,
           DISCOVERY_SESSION_CACHE_KEY,
         ).find((candidate) => candidate?.identity === identity);
-        if (
-          Array.isArray(sessionEntry?.results) &&
-          imageReadyResults(sessionEntry.results).length
-        )
+        if (hasCachedLaneItems(sessionEntry) && isFresh(sessionEntry))
           return sessionEntry;
 
         const entry = readCacheEntries(localStorage, DISCOVERY_CACHE_KEY).find(
           (candidate) => candidate?.identity === identity,
         );
-        const maximumAge = cacheLocationScope(request).startsWith("gps:")
-          ? DISCOVERY_CACHE_GPS_TTL_MS
-          : DISCOVERY_CACHE_CITY_TTL_MS;
-        if (
-          !Array.isArray(entry?.results) ||
-          !imageReadyResults(entry.results).length ||
-          !Number.isFinite(Number(entry.storedAt)) ||
-          Date.now() - Number(entry.storedAt) > maximumAge
-        ) {
+        if (!hasCachedLaneItems(entry) || !isFresh(entry)) {
           return null;
         }
         return entry;
       }
 
+      function hasCachedLaneItems(entry) {
+        return [
+          entry?.lanes?.nearby,
+          entry?.lanes?.recommended,
+          entry?.lanes?.all,
+        ].some((lane) => Array.isArray(lane) && lane.length);
+      }
+
       function writeDiscoveryCache(request = {}, payload = {}) {
-        const results = Array.isArray(payload.results) ? payload.results : [];
-        if (!results.length) return;
+        const lanes = {
+          nearby: Array.isArray(payload.nearby) ? payload.nearby : [],
+          recommended: Array.isArray(payload.recommended)
+            ? payload.recommended
+            : [],
+          all: Array.isArray(payload.all) ? payload.all : [],
+        };
+        if (!Object.values(lanes).some((lane) => lane.length)) return;
         const identity = payload.identity || discoveryCacheIdentity(request);
         const entry = {
           identity,
-          storedAt: Date.now(),
-          results,
+          storedAt: Number(payload.storedAt) || Date.now(),
+          lanes,
+          location: payload.location || null,
           nextCursor: payload.nextCursor || null,
-          liveNextPageToken: payload.liveNextPageToken || null,
           resultPage: Math.max(0, Number(payload.resultPage) || 0),
         };
         [
@@ -3345,14 +3487,17 @@
           !currentSurfaceIdentity ||
           !discoveryPaging.request ||
           discoveryPaging.loading ||
-          !items.length
+          !(items.length || nearbyItems.length || recommendedItems.length)
         )
           return;
         writeDiscoveryCache(discoveryPaging.request, {
           identity: currentSurfaceIdentity,
-          results: items,
+          nearby: nearbyItems,
+          recommended: recommendedItems,
+          all: items,
+          location: discoveryLocation,
+          storedAt: discoveryStoredAt,
           nextCursor: discoveryPaging.cursor,
-          liveNextPageToken: discoveryPaging.livePageToken,
           resultPage,
         });
       }
@@ -3365,6 +3510,22 @@
         const nextUrl = new URL(window.location.href);
         if (activeQuery === "discover") nextUrl.searchParams.delete("query");
         else nextUrl.searchParams.set("query", activeQuery);
+        history.replaceState(
+          null,
+          "",
+          `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+        );
+      }
+
+      function rememberDiscoveryLocationInUrl() {
+        const nextUrl = new URL(window.location.href);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          nextUrl.searchParams.delete("city");
+          params.delete("city");
+        } else {
+          nextUrl.searchParams.set("city", city);
+          params.set("city", city);
+        }
         history.replaceState(
           null,
           "",
@@ -3394,71 +3555,55 @@
         } catch (_) {}
       }
 
-      function stableNumber(value) {
-        return [...String(value || "")].reduce(
-          (total, character) => (total * 31 + character.charCodeAt(0)) >>> 0,
-          7,
-        );
+      function distanceLabel(item) {
+        const meters = Number(item?.distanceMeters);
+        if (!Number.isFinite(meters)) return "";
+        if (meters < 1000)
+          return `${Math.max(50, Math.round(meters / 50) * 50)} m`;
+        return `${(meters / 1000).toFixed(meters < 10_000 ? 1 : 0)} km`;
       }
 
-      function diversifyPlaces(placeList) {
-        const unique = [];
-        const known = new Set();
-        (placeList || []).forEach((item) => {
-          const key = placeKey(item);
-          if (!key || known.has(key)) return;
-          known.add(key);
-          unique.push(item);
-        });
-        if (unique.length < 2) return unique;
-        if (activeQuery === "discover") {
-          const groups = new Map();
-          unique.forEach((item) => {
-            const key = categoryGroup(item);
-            groups.set(key, [...(groups.get(key) || []), item]);
-          });
-          const buckets = [...groups.values()],
-            mixed = [];
-          while (buckets.some((bucket) => bucket.length))
-            buckets.forEach((bucket) => {
-              if (bucket.length) mixed.push(bucket.shift());
-            });
-          const offset =
-            stableNumber(
-              `${city}|${activeCulture()?.slug || "local"}|${discoveryRefreshNonce}|${Math.floor(Date.now() / 14_400_000)}`,
-            ) % mixed.length;
-          return [...mixed.slice(offset), ...mixed.slice(0, offset)];
+      function renderNearby(placeList) {
+        const list = Array.isArray(placeList) ? placeList.slice(0, 8) : [];
+        nearbySection.hidden = !list.length;
+        if (!list.length) {
+          nearbyContainer.innerHTML = "";
+          return;
         }
-        // The API already balances relevance, profile affinity, time and
-        // distance. Do not shuffle that order when a person has shared GPS:
-        // it makes a carefully ranked local feed look arbitrary.
-        if (Number.isFinite(lat) && Number.isFinite(lng)) return unique;
-        const seen = new Map(
-          readDiscoveryHistory().map((entry) => [entry.key, entry.seenAt]),
-        );
-        const recentlySeen = 1000 * 60 * 60 * 36;
-        const now = Date.now();
-        const fresh = unique.filter(
-          (item) => now - Number(seen.get(placeKey(item)) || 0) > recentlySeen,
-        );
-        const base =
-          fresh.length >= Math.min(4, unique.length)
-            ? [...fresh, ...unique.filter((item) => !fresh.includes(item))]
-            : unique;
-        const hot = base
-          .filter(isHotPlace)
-          .sort((a, b) => hotScoreFor(b) - hotScoreFor(a));
-        const freshHot = hot.filter((item) => fresh.includes(item));
-        const lead = freshHot[0] || hot[0] || base[0];
-        const remaining = base.filter((item) => item !== lead);
-        const fourHourWindow = Math.floor(now / (1000 * 60 * 60 * 4));
-        const seed = `${city}|${activeQuery}|${activeCulture()?.slug || "local"}|${fourHourWindow}|${discoveryRefreshNonce}`;
-        const offset = stableNumber(seed) % remaining.length;
-        const rotated = [
-          ...remaining.slice(offset),
-          ...remaining.slice(0, offset),
-        ];
-        return [lead, ...rotated];
+        nearbyContainer.innerHTML = list
+          .map((item, index) => {
+            const distance = distanceLabel(item);
+            const rawRating = item?.community?.ratingAverage;
+            const rating =
+              rawRating === null || rawRating === undefined || rawRating === ""
+                ? NaN
+                : Number(rawRating);
+            const provider = item?.attribution?.requiredLabel || "";
+            const photoAuthor = item?.image?.authors?.[0]?.displayName || "";
+            const providerCredit = [
+              provider,
+              photoAuthor ? `Photo: ${photoAuthor}` : "",
+            ]
+              .filter(Boolean)
+              .join(" · ");
+            const context = [distance ? `${distance} away` : "", providerCredit]
+              .filter(Boolean)
+              .join(" · ");
+            const sourceLabel = provider
+              ? `. New to Echoo from ${provider}${photoAuthor ? `. Photo by ${photoAuthor}` : ""}`
+              : "";
+            const localityLabel = `. ${item.category || "Place"} in ${item.city || city}${distance ? `. ${distance} away` : ""}`;
+            return `<button class="location-card" type="button" data-nearby-index="${index}" aria-label="Open ${esc(item.title || "place")}${esc(localityLabel)}${esc(sourceLabel)}">${placeVisual(item, "location-card-img", item.title || "Local place", { eager: index < 3 })}<span class="location-card-overlay"><strong class="location-card-title">${esc(item.title || "Local pick")}</strong><span class="location-card-meta">${esc(item.category || "Place")} · ${esc(item.city || city)}</span>${context ? `<span class="location-card-distance">${esc(context)}</span>` : ""}${Number.isFinite(rating) ? `<span class="location-card-rating">★ ${rating.toFixed(1)}</span>` : ""}</span></button>`;
+          })
+          .join("");
+        nearbyContainer
+          .querySelectorAll("[data-nearby-index]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              const item = list[Number(button.dataset.nearbyIndex)];
+              if (item) openDetailByItem(item);
+            });
+          });
       }
 
       function renderRecommendations(placeList) {
@@ -3470,16 +3615,24 @@
         }
         recommendationContainer.innerHTML = list
           .map((item, index) => {
-            const placeIndex = items.indexOf(item);
-            return `<button class="recommendation-card" type="button" data-place-index="${placeIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick", { eager: index < 3 })}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(item.neighborhood || item.city || "GTA")}</span></span></button>`;
+            const provider = item?.attribution?.requiredLabel || "";
+            const photoAuthor = item?.image?.authors?.[0]?.displayName || "";
+            const context = provider
+              ? `New to Echoo · ${provider}${photoAuthor ? ` · Photo: ${photoAuthor}` : ""}`
+              : item.neighborhood || item.city || "GTA";
+            const sourceLabel = provider
+              ? `. New to Echoo from ${provider}${photoAuthor ? `. Photo by ${photoAuthor}` : ""}`
+              : "";
+            return `<button class="recommendation-card" type="button" data-recommendation-index="${index}" aria-label="Open ${esc(item.title || "place")}${esc(sourceLabel)}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick", { eager: index < 3 })}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(context)}</span></span></button>`;
           })
           .join("");
         recommendationContainer
-          .querySelectorAll("[data-place-index]")
+          .querySelectorAll("[data-recommendation-index]")
           .forEach((button) => {
-            button.addEventListener("click", () =>
-              openDetail(Number(button.dataset.placeIndex)),
-            );
+            button.addEventListener("click", () => {
+              const item = list[Number(button.dataset.recommendationIndex)];
+              if (item) openDetailByItem(item);
+            });
           });
       }
 
@@ -3535,21 +3688,23 @@
           openDetail(0);
       }
 
-      function renderItems({ preserveOrder = false } = {}) {
+      function renderItems() {
         if (discoveryFastFallbackTimer) {
           window.clearTimeout(discoveryFastFallbackTimer);
           discoveryFastFallbackTimer = 0;
         }
         discoveryUiLoading = false;
         document.body.classList.remove("discover-is-loading");
+        nearbyContainer.removeAttribute("aria-busy");
         recommendationContainer.removeAttribute("aria-busy");
-        if (!preserveOrder) items = diversifyPlaces(items);
-        if (items.length) {
-          renderRecommendations(items.length > 10 ? items.slice(10, 20) : []);
-          rememberShown(items.slice(0, 12));
-        } else {
-          renderRecommendations([]);
-        }
+        renderNearby(nearbyItems);
+        renderRecommendations(recommendedItems);
+        rememberShown(
+          mergeDiscoveryItems(
+            mergeDiscoveryItems(nearbyItems, recommendedItems),
+            items.slice(0, 12),
+          ).slice(0, 24),
+        );
         renderResultsPage();
       }
 
@@ -3632,21 +3787,30 @@
 
       async function revealSurprise() {
         const revealId = ++surpriseRevealId;
-        // A Surprise result must have a usable hero image: this is the image
-        // carried into the place-detail sheet, not a decorative fallback.
-        const candidates = items
-          .filter((item) => Boolean(realImageUrl(item)))
+        const discoveryPool = mergeDiscoveryItems(
+          mergeDiscoveryItems(nearbyItems, recommendedItems),
+          items,
+        );
+        const ranked = discoveryPool
           .map((item) => ({ item, score: surpriseScore(item) }))
           .sort((left, right) => right.score - left.score)
-          .slice(0, Math.min(30, items.length));
-        // Do not quietly fall back to an image-less result. The local fallback
-        // set has intentional cover art and keeps the detailed view polished
-        // if the discovery service is temporarily unavailable.
+          .slice(0, Math.min(30, discoveryPool.length));
+        // Prefer a real hero image, but never replace a valid local result with
+        // a hard-coded place from another municipality.
+        const candidates = ranked
+          .filter((entry) => Boolean(realImageUrl(entry.item)))
+          .slice(0, Math.min(30, ranked.length));
+        const localDefaults = defaultPlaces
+          .filter(
+            (item) =>
+              String(item.city || "").toLowerCase() === city.toLowerCase(),
+          )
+          .map((item) => ({ item, score: surpriseScore(item) }));
         const curated = candidates.length
           ? candidates
-          : defaultPlaces
-              .filter((item) => Boolean(realImageUrl(item)))
-              .map((item) => ({ item, score: surpriseScore(item) }));
+          : ranked.length
+            ? ranked
+            : localDefaults;
         const history = surpriseHistory();
         const cityHistory = history.filter((entry) => entry.city === city);
         const unseen = curated.filter(
@@ -3659,7 +3823,10 @@
           ({ item }) => categoryGroup(item) !== previousStyle,
         );
         const pool = varied.length ? varied : unseenPool;
-        if (!pool.length) return;
+        if (!pool.length) {
+          surpriseLoader.hidden = true;
+          return;
+        }
         const choice = pool[randomIndex(pool.length)].item;
         rememberSurprise(choice);
         const loaderCopy = document.getElementById("surprise-loader-copy");
@@ -3714,7 +3881,7 @@
             activeQuery === "discover"
               ? "Finding your next place"
               : `Finding ${activeQuery}`;
-          resultsPageStatus.textContent = "Refreshing nearby picks…";
+          resultsPageStatus.textContent = "Refreshing places…";
           resultsEl.innerHTML = `<div class="discover-loading-grid" aria-live="polite"><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div><div class="discover-loading-row"><span class="discover-loading-thumb"></span><span class="discover-loading-copy"><span class="discover-loading-line"></span><span class="discover-loading-line"></span><span class="discover-loading-line"></span></span><span class="discover-loading-index"></span></div></div>`;
           resultsPagination.hidden = true;
           return;
@@ -3735,7 +3902,7 @@
                 return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place", { eager: pageIndex < 4 })}<span class="discovery-result-copy"><strong>${esc(item.title || "Local pick")}</strong></span></button>`;
               })
               .join("")
-          : `<div class="discovery-fallback-note"><strong>${discoveryLoadFailed ? "Fresh photos took too long." : "Fresh local picks are on the way."}</strong><span>${discoveryLoadFailed ? "Nothing low-quality was substituted. Try once more for a new visual list." : "Echoo is lining up image-ready places for this view."}</span>${discoveryLoadFailed ? '<button type="button" data-discover-retry>Try again</button>' : ""}</div>`;
+          : `<div class="discovery-fallback-note"><strong>${discoveryLoadFailed ? "Places are unavailable right now." : "More local places are on the way."}</strong><span>${discoveryLoadFailed ? "Try this view once more, or choose another category." : "Try another category while Echoo expands this view."}</span>${discoveryLoadFailed ? '<button type="button" data-discover-retry>Try again</button>' : ""}</div>`;
         resultsEl
           .querySelectorAll("[data-result-index]")
           .forEach((button) =>
@@ -3757,8 +3924,15 @@
       }
 
       function updateLocationBadge() {
-        // Location still informs ranking, but Discover no longer uses a live
-        // location/status label in its visual hierarchy.
+        const hasExactLocation = Number.isFinite(lat) && Number.isFinite(lng);
+        const label =
+          discoveryLocation?.label ||
+          (hasExactLocation ? `Near ${city}` : city || DEFAULT_DISCOVERY_CITY);
+        locationLabel.textContent = label;
+        locationPill.setAttribute(
+          "aria-label",
+          `${hasExactLocation ? "Using current location" : `Exploring ${city}`}. Change discovery location`,
+        );
       }
 
       function rememberLocationChoice(extra = {}) {
@@ -3771,7 +3945,21 @@
       }
 
       function closeLocationSheet() {
+        if (locationSheet.hidden) return;
         locationSheet.hidden = true;
+        document.querySelector(".app-shell")?.removeAttribute("inert");
+        locationReturnFocus?.focus?.({ preventScroll: true });
+        locationReturnFocus = null;
+      }
+
+      function openLocationSheet() {
+        if (!locationSheet.hidden) return;
+        locationReturnFocus = document.activeElement;
+        document.querySelector(".app-shell")?.setAttribute("inert", "");
+        locationSheet.hidden = false;
+        requestAnimationFrame(() =>
+          locationMunicipality.focus({ preventScroll: true }),
+        );
       }
 
       function showLocationSheetIfNeeded() {
@@ -3780,10 +3968,64 @@
         if (prefs.locationPermissionState === "granted") return;
         if (prefs.locationPromptedAt && prefs.locationPrecision !== "gps")
           return;
-        locationSheet.hidden = false;
+        openLocationSheet();
       }
 
-      async function refreshGrantedDeviceLocation() {
+      async function clearDeviceLocation(
+        permissionState,
+        { refresh = true } = {},
+      ) {
+        const previousScope = cacheLocationScope({ city, lat, lng });
+        lat = NaN;
+        lng = NaN;
+        discoveryLocation = null;
+        rememberLocationChoice({
+          lastLat: undefined,
+          lastLng: undefined,
+          accuracy: undefined,
+          locationPermissionState: permissionState,
+          locationPrecision: "manual_region",
+          locationReason: "device_location_no_longer_granted",
+        });
+        updateLocationBadge();
+        rememberDiscoveryLocationInUrl();
+        const nextScope = cacheLocationScope({ city });
+        if (refresh && currentSurfaceIdentity && nextScope !== previousScope) {
+          await search(activeQuery, { contextChanged: true });
+        }
+      }
+
+      async function preflightStoredDeviceLocation() {
+        if (!(Number.isFinite(lat) && Number.isFinite(lng))) return;
+        if (!navigator.permissions?.query) {
+          // Do not send a session coordinate until getCurrentPosition confirms
+          // that the browser still grants location access.
+          lat = NaN;
+          lng = NaN;
+          discoveryLocation = null;
+          return;
+        }
+        try {
+          const permission = await navigator.permissions.query({
+            name: "geolocation",
+          });
+          if (permission.state !== "granted") {
+            await clearDeviceLocation(
+              permission.state === "denied" ? "denied" : "prompt",
+              { refresh: false },
+            );
+          }
+        } catch (_) {
+          lat = NaN;
+          lng = NaN;
+          discoveryLocation = null;
+        }
+      }
+
+      async function refreshGrantedDeviceLocation({
+        timeoutMs = 12000,
+        refreshResults = true,
+      } = {}) {
         if (!navigator.geolocation) return false;
         let permissionState = prefs.locationPermissionState || "prompt";
         if (navigator.permissions?.query) {
@@ -3795,21 +4037,22 @@
           } catch (_) {}
         }
         if (permissionState !== "granted") {
-          if (prefs.locationPermissionState === "granted") {
-            lat = NaN;
-            lng = NaN;
-            rememberLocationChoice({
-              lastLat: undefined,
-              lastLng: undefined,
-              locationPermissionState:
-                permissionState === "denied" ? "denied" : "prompt",
-              locationPrecision: "manual_region",
-              locationReason: "device_location_no_longer_granted",
-            });
+          if (
+            prefs.locationPermissionState === "granted" ||
+            (Number.isFinite(lat) && Number.isFinite(lng))
+          ) {
+            await clearDeviceLocation(
+              permissionState === "denied" ? "denied" : "prompt",
+              { refresh: refreshResults },
+            );
           }
           return false;
         }
-        return applyCurrentLocation({ silent: true });
+        return applyCurrentLocation({
+          silent: true,
+          timeoutMs,
+          refreshResults,
+        });
       }
 
       function stableDeviceCoordinates(position) {
@@ -3870,7 +4113,11 @@
         };
       }
 
-      async function applyCurrentLocation({ silent = false } = {}) {
+      async function applyCurrentLocation({
+        silent = false,
+        timeoutMs = 12000,
+        refreshResults = true,
+      } = {}) {
         if (!navigator.geolocation) {
           if (!silent)
             rememberLocationChoice({
@@ -3884,14 +4131,14 @@
           useLocationButton.disabled = true;
           useLocationButton.textContent = "Checking…";
         }
+        const previousScope = cacheLocationScope({
+          city,
+          lat: Number.isFinite(lat) ? lat : undefined,
+          lng: Number.isFinite(lng) ? lng : undefined,
+        });
         return new Promise((resolve) =>
           navigator.geolocation.getCurrentPosition(
             async (position) => {
-              const previousScope = cacheLocationScope({
-                city,
-                lat: Number.isFinite(lat) ? lat : undefined,
-                lng: Number.isFinite(lng) ? lng : undefined,
-              });
               const deviceLocation = stableDeviceCoordinates(position);
               lat = deviceLocation.lat;
               lng = deviceLocation.lng;
@@ -3920,6 +4167,7 @@
                 : resolved.supported
                   ? "Greater Toronto Area"
                   : DEFAULT_DISCOVERY_CITY;
+              discoveryLocation = null;
               if (!resolved.supported) {
                 // Do not keep sending out-of-coverage coordinates after the
                 // regional fallback has been chosen.
@@ -3952,9 +4200,10 @@
                 locationMunicipality.value = city;
               }
               updateLocationBadge();
+              rememberDiscoveryLocationInUrl();
               closeLocationSheet();
               const nextScope = cacheLocationScope({ city, lat, lng });
-              if (nextScope !== previousScope)
+              if (refreshResults && nextScope !== previousScope)
                 await search(activeQuery, { contextChanged: true });
               if (!silent) {
                 useLocationButton.disabled = false;
@@ -3962,12 +4211,12 @@
               }
               resolve(Boolean(resolved.supported));
             },
-            () => {
-              if (!silent)
-                rememberLocationChoice({
-                  locationPermissionState: "denied",
-                  locationPrecision: "manual_region",
+            async (error) => {
+              if (Number(error?.code) === 1) {
+                await clearDeviceLocation("denied", {
+                  refresh: refreshResults,
                 });
+              }
               if (!silent) {
                 useLocationButton.disabled = false;
                 useLocationButton.textContent = "Use my current location";
@@ -3975,9 +4224,30 @@
               closeLocationSheet();
               resolve(false);
             },
-            { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+            {
+              enableHighAccuracy: true,
+              timeout: timeoutMs,
+              maximumAge: 60000,
+            },
           ),
         );
+      }
+
+      function discoveryIntentForActiveView() {
+        if (
+          [
+            "discover",
+            "food",
+            "comedy",
+            "music",
+            "nightlife",
+            "events",
+            "tourism",
+          ].includes(activeQuery)
+        ) {
+          return activeQuery;
+        }
+        return "search";
       }
 
       function discoveryRequestForActiveView() {
@@ -3988,6 +4258,9 @@
             ? "popular places things to do"
             : activeQuery;
         return {
+          version: 2,
+          intent: discoveryIntentForActiveView(),
+          cultureSlug: culture?.slug || undefined,
           // The selected filter stays the search intent. Profile and time are
           // passed separately as ranking signals so "Music" cannot turn into
           // an unrelated literal phrase such as "music yoga coffee".
@@ -4009,7 +4282,6 @@
               ]
             : timePreferenceSlugs(),
           includeLiveFallback: true,
-          requireImages: true,
           // One visual page at a time; the cursor continues across the full
           // GTA inventory instead of treating ten as the total.
           limit: 20,
@@ -4038,8 +4310,11 @@
             !(Number.isFinite(lat) && Number.isFinite(lng)) &&
             !params.has("city")
           ) {
-            city =
+            const nextCity =
               window.EchooLocationPlatform.cityByName(prefs.city)?.name || city;
+            if (nextCity !== city) discoveryLocation = null;
+            city = nextCity;
+            rememberDiscoveryLocationInUrl();
           }
           if (refresh && personalizationSignature(prefs) !== before) {
             updateLocationBadge();
@@ -4061,10 +4336,6 @@
               index
           );
         });
-      }
-
-      function imageReadyResults(placeList = []) {
-        return placeList.filter((item) => realImageUrl(item));
       }
 
       async function fetchDiscoveryPage({
@@ -4093,7 +4364,6 @@
             body: JSON.stringify({
               ...request,
               cursor: append ? discoveryPaging.cursor : undefined,
-              livePageToken: append ? discoveryPaging.livePageToken : undefined,
             }),
             signal: controller.signal,
           });
@@ -4103,24 +4373,30 @@
             throw new Error(
               payload?.error || "Discover is unavailable right now.",
             );
-          let received = Array.isArray(payload.results)
-            ? imageReadyResults(payload.results)
+          const received = Array.isArray(payload?.all?.items)
+            ? payload.all.items
             : [];
-          if (received.length) {
-            received = await readyDiscoveryImages(received);
-            if (requestId !== discoveryRequestId) return;
-          }
+          if (!append || !discoveryStoredAt) discoveryStoredAt = Date.now();
           if (!append) {
-            if (received.length) items = received;
-            discoveryLoadFailed = !items.length;
+            items = received;
+            nearbyItems = Array.isArray(payload?.nearby?.items)
+              ? payload.nearby.items
+              : [];
+            recommendedItems = Array.isArray(payload?.recommended?.items)
+              ? payload.recommended.items
+              : [];
+            discoveryLocation = payload?.location || null;
+            updateLocationBadge();
+            discoveryLoadFailed = !(
+              items.length ||
+              nearbyItems.length ||
+              recommendedItems.length
+            );
           } else {
             items = mergeDiscoveryItems(items, received);
           }
-          discoveryPaging.cursor = payload.nextCursor || null;
-          discoveryPaging.livePageToken = payload.liveNextPageToken || null;
-          discoveryPaging.hasMore = Boolean(
-            discoveryPaging.cursor || discoveryPaging.livePageToken,
-          );
+          discoveryPaging.cursor = payload?.all?.pagination?.nextCursor || null;
+          discoveryPaging.hasMore = Boolean(discoveryPaging.cursor);
           // A municipality can occasionally be ahead of the live index. Fall
           // back to the GTA feed rather than leaving the page empty.
           if (
@@ -4129,6 +4405,11 @@
             city !== DEFAULT_DISCOVERY_CITY
           ) {
             city = DEFAULT_DISCOVERY_CITY;
+            lat = NaN;
+            lng = NaN;
+            discoveryLocation = null;
+            updateLocationBadge();
+            rememberDiscoveryLocationInUrl();
             discoveryPaging.request = discoveryRequestForActiveView();
             currentSurfaceIdentity = discoveryCacheIdentity(
               discoveryPaging.request,
@@ -4137,11 +4418,17 @@
             discoveryPaging.loading = false;
             return fetchDiscoveryPage({ append: false, requestId, render });
           }
-          if (!append && items.length) {
+          if (
+            !append &&
+            (items.length || nearbyItems.length || recommendedItems.length)
+          ) {
             writeDiscoveryCache(request, {
-              results: items,
+              nearby: nearbyItems,
+              recommended: recommendedItems,
+              all: items,
+              location: discoveryLocation,
+              storedAt: discoveryStoredAt,
               nextCursor: discoveryPaging.cursor,
-              liveNextPageToken: discoveryPaging.livePageToken,
               resultPage,
             });
           }
@@ -4151,9 +4438,22 @@
           }
         } catch (_) {
           if (requestId !== discoveryRequestId) return;
-          if (!append && !items.some((item) => !item.isFallback)) items = [];
-          discoveryLoadFailed = !items.length;
-          discoveryPaging.hasMore = false;
+          if (
+            !append &&
+            ![...items, ...nearbyItems, ...recommendedItems].some(
+              (item) => !item.isFallback,
+            )
+          ) {
+            items = [];
+            nearbyItems = [];
+            recommendedItems = [];
+          }
+          discoveryLoadFailed = !(
+            items.length ||
+            nearbyItems.length ||
+            recommendedItems.length
+          );
+          if (!append) discoveryPaging.hasMore = false;
           if (render) renderItems();
         } finally {
           clearTimeout(timeout);
@@ -4176,7 +4476,6 @@
         const previousQuery = activeQuery;
         persistCurrentSurface();
         activeQuery = cleanQuery;
-        if (options.refresh) discoveryRefreshNonce += 1;
         applyCultureMood();
         document
           .querySelectorAll(".chip")
@@ -4195,7 +4494,6 @@
         suggestionsEl.hidden = true;
         const nextPaging = {
           cursor: null,
-          livePageToken: null,
           hasMore: false,
           request: discoveryRequestForActiveView(),
           loading: false,
@@ -4206,7 +4504,7 @@
           !options.surprise &&
           !options.contextChanged &&
           currentSurfaceIdentity === nextIdentity &&
-          items.length
+          (items.length || nearbyItems.length || recommendedItems.length)
         ) {
           rememberActiveDiscoveryQuery();
           return;
@@ -4224,7 +4522,10 @@
         resetRefreshControl();
         activeRequestIdentity = nextIdentity;
         currentSurfaceIdentity = nextIdentity;
-        resultPage = previousQuery === activeQuery ? resultPage : 0;
+        resultPage =
+          previousQuery === activeQuery && !options.contextChanged
+            ? resultPage
+            : 0;
         if (discoveryFastFallbackTimer)
           window.clearTimeout(discoveryFastFallbackTimer);
         discoveryPaging = nextPaging;
@@ -4233,27 +4534,57 @@
           ? readDiscoveryCache(discoveryPaging.request)
           : null;
         if (cachedSurface) {
-          items = imageReadyResults(cachedSurface.results);
+          nearbyItems = Array.isArray(cachedSurface?.lanes?.nearby)
+            ? cachedSurface.lanes.nearby
+            : [];
+          recommendedItems = Array.isArray(cachedSurface?.lanes?.recommended)
+            ? cachedSurface.lanes.recommended
+            : [];
+          items = Array.isArray(cachedSurface?.lanes?.all)
+            ? cachedSurface.lanes.all
+            : [];
+          discoveryLocation = cachedSurface.location || null;
+          discoveryStoredAt = Number(cachedSurface.storedAt) || Date.now();
           discoveryPaging.cursor = cachedSurface.nextCursor;
-          discoveryPaging.livePageToken = cachedSurface.liveNextPageToken;
-          discoveryPaging.hasMore = Boolean(
-            discoveryPaging.cursor || discoveryPaging.livePageToken,
-          );
+          discoveryPaging.hasMore = Boolean(discoveryPaging.cursor);
           resultPage = Math.max(0, Number(cachedSurface.resultPage) || 0);
-          items = await renewDiscoveryImages(items, requestId);
-          items = await readyDiscoveryImages(items);
-          if (requestId !== discoveryRequestId) return;
-          if (items.length) {
+          if (items.length || nearbyItems.length || recommendedItems.length) {
+            discoveryLoadFailed = false;
+            updateLocationBadge();
             persistCurrentSurface();
-            renderItems({ preserveOrder: true });
+            renderItems();
             activeRequestIdentity = "";
+            const cachedCards = mergeDiscoveryItems(
+              mergeDiscoveryItems(nearbyItems, recommendedItems),
+              items,
+            );
+            renewDiscoveryImages(cachedCards, requestId).then((renewed) => {
+              if (requestId !== discoveryRequestId) return;
+              const renewedByKey = new Map(
+                renewed.map((item) => [placeKey(item), item]),
+              );
+              const applyRenewal = (list) =>
+                list.map((item) => renewedByKey.get(placeKey(item)) || item);
+              nearbyItems = applyRenewal(nearbyItems);
+              recommendedItems = applyRenewal(recommendedItems);
+              items = applyRenewal(items);
+              persistCurrentSurface();
+              renderItems();
+            });
+            if (options.surprise) await revealSurprise();
             return;
           }
         }
-        if (options.refresh && items.length) {
+        if (
+          options.refresh &&
+          (items.length || nearbyItems.length || recommendedItems.length)
+        ) {
           renderDiscoverLoading({ preserveVisibleResults: true });
         } else {
           items = [];
+          nearbyItems = [];
+          recommendedItems = [];
+          discoveryStoredAt = 0;
           renderDiscoverLoading({ allowFallback: options.surprise });
         }
         // Remote inventory can enrich in the background, but Discover itself
@@ -4271,8 +4602,17 @@
             discoveryPromise,
             new Promise((resolve) => window.setTimeout(resolve, 1450)),
           ]);
-          if (!items.length) {
-            items = defaultPlaces.map((place) => ({ ...place }));
+          if (!(items.length || nearbyItems.length || recommendedItems.length))
+            await discoveryPromise;
+          if (
+            !(items.length || nearbyItems.length || recommendedItems.length)
+          ) {
+            items = defaultPlaces
+              .filter(
+                (place) =>
+                  String(place.city || "").toLowerCase() === city.toLowerCase(),
+              )
+              .map((place) => ({ ...place }));
             discoveryPaging.hasMore = false;
             renderItems();
           }
@@ -4641,17 +4981,51 @@
             `<option value="${esc(municipality.name)}">${esc(municipality.name)}</option>`,
         ).join("");
       locationMunicipality.value = city;
+      locationPill.addEventListener("click", () => {
+        locationMunicipality.value =
+          window.EchooLocationPlatform.cityByName(city)?.name ||
+          DEFAULT_DISCOVERY_CITY;
+        openLocationSheet();
+      });
+      locationSheet.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeLocationSheet();
+          return;
+        }
+        if (event.key !== "Tab") return;
+        const focusable = [
+          ...locationSheet.querySelectorAll(
+            "select, button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])",
+          ),
+        ];
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
       useLocationButton.addEventListener("click", applyCurrentLocation);
       useMunicipalityButton.addEventListener("click", async () => {
         city = locationMunicipality.value || DEFAULT_DISCOVERY_CITY;
         lat = NaN;
         lng = NaN;
+        discoveryLocation = null;
         rememberLocationChoice({
+          lastLat: undefined,
+          lastLng: undefined,
+          accuracy: undefined,
           locationPermissionState: "manual",
           locationPrecision: "manual_region",
           locationReason: "municipality_choice",
         });
         updateLocationBadge();
+        rememberDiscoveryLocationInUrl();
         closeLocationSheet();
         await search(activeQuery, { contextChanged: true });
       });
@@ -4666,8 +5040,12 @@
 
       window.echooAccessReady.then(async (access) => {
         if (!access?.ok) return;
+        await preflightStoredDeviceLocation();
         applyCultureMood();
+        updateLocationBadge();
         items = [];
+        nearbyItems = [];
+        recommendedItems = [];
         renderDiscoverLoading();
         if (surpriseMode) {
           surpriseLoader.hidden = false;
@@ -4676,6 +5054,15 @@
             hydrateOnboardingSignals({ refresh: false }),
             new Promise((resolve) => setTimeout(resolve, 850)),
           ]);
+          if (
+            !(Number.isFinite(lat) && Number.isFinite(lng)) &&
+            prefs.locationPermissionState === "granted"
+          ) {
+            await refreshGrantedDeviceLocation({
+              timeoutMs: 2500,
+              refreshResults: false,
+            });
+          }
           search(activeQuery, { surprise: true });
         } else {
           search(activeQuery);

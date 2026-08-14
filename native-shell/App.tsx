@@ -397,6 +397,7 @@ function EchooShell() {
         originWhitelist={["http://*", "https://*"]}
         javaScriptEnabled
         domStorageEnabled
+        geolocationEnabled
         // The shell intentionally has no durable browser storage. Echoo's
         // auth token lives in sessionStorage, so closing the app requires a
         // new sign-in while a foreground session remains uninterrupted.

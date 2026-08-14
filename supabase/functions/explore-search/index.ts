@@ -14,13 +14,19 @@ import {
   cleanDiscoveryText,
   clampDiscoveryLimit,
   decodeDiscoveryCursor,
+  discoveryTermPattern,
   encodeDiscoveryCursor,
   matchedFeatureSlugs,
   optionalDiscoveryNumber,
+  resolveDiscoveryIntent,
   type DiscoveryFeature,
+  type DiscoveryIntent,
 } from "../_shared/hybrid-discovery.ts";
 
 type ExplorePayload = {
+  version?: unknown;
+  intent?: unknown;
+  cultureSlug?: unknown;
   query?: unknown;
   city?: unknown;
   lat?: unknown;
@@ -109,7 +115,7 @@ function ownedCard(item: OwnedResult) {
       ? {
           storagePath: coverUrl,
           alt: item.cover_alt_text || item.title,
-          source: "echoo_approved",
+          source: item.cover_source || "echoo_approved",
         }
       : null,
     features: item.feature_slugs || [],
@@ -226,7 +232,10 @@ function normalizedLiveQuery(query: string, category: string | null) {
   const normalized = cleanDiscoveryText(
     query || category || "things to do",
     120,
-  ).replace(/\b(restaurants?|resturants?|restaraunts?)\b/gi, "restaurant");
+  ).replace(
+    discoveryTermPattern("restaurants?|resturants?|restaraunts?", true),
+    "restaurant",
+  );
   return normalized || "things to do";
 }
 
@@ -238,17 +247,23 @@ function ownedInventoryQuery(query: string) {
   // “Trending” is a browse mode, not a literal venue name. Leaving it as a
   // text predicate would hide the whole owned catalogue unless a place happened
   // to contain the word “popular” in its title or description.
-  if (/\b(trending|popular)\b|\bthings to do\b/.test(text)) return "";
+  if (discoveryTermPattern("trending|popular|things to do").test(text))
+    return "";
   if (
-    /\b(restaurant|food|dining|eat|brunch|lunch|dinner|tasting|bakery)\b/.test(
+    discoveryTermPattern(
+      "restaurant|food|dining|eat|brunch|lunch|dinner|tasting|bakery",
+    ).test(text)
+  )
+    return "restaurant";
+  if (discoveryTermPattern("cafe|coffee|espresso").test(text)) return "cafe";
+  if (discoveryTermPattern("bar|pub|nightlife|lounge").test(text)) return "bar";
+  if (discoveryTermPattern("park|nature|trail|outdoor|walk").test(text))
+    return "park";
+  if (
+    discoveryTermPattern("museum|gallery|tourism|landmark|attraction").test(
       text,
     )
   )
-    return "restaurant";
-  if (/\b(cafe|coffee|espresso)\b/.test(text)) return "cafe";
-  if (/\b(bar|pub|nightlife|lounge)\b/.test(text)) return "bar";
-  if (/\b(park|nature|trail|outdoor|walk)\b/.test(text)) return "park";
-  if (/\b(museum|gallery|tourism|landmark|attraction)\b/.test(text))
     return "museum";
   return text;
 }
@@ -496,13 +511,18 @@ async function renewCardPhotos(
 
 function liveType(query: string, category: string | null) {
   const normalized = `${query} ${category || ""}`.toLowerCase();
-  if (/\b(restaurants?|resturants?|restaraunts?)\b/.test(normalized))
+  if (
+    discoveryTermPattern("restaurants?|resturants?|restaraunts?").test(
+      normalized,
+    )
+  )
     return "restaurant";
-  if (/\b(cafes?|coffee)\b/.test(normalized)) return "cafe";
-  if (/\b(bars?|pubs?)\b/.test(normalized)) return "bar";
-  if (/\b(parks?|trails?)\b/.test(normalized)) return "park";
-  if (/\b(libraries?)\b/.test(normalized)) return "library";
-  if (/\b(museums?|galleries?)\b/.test(normalized)) return "museum";
+  if (discoveryTermPattern("cafes?|coffee").test(normalized)) return "cafe";
+  if (discoveryTermPattern("bars?|pubs?").test(normalized)) return "bar";
+  if (discoveryTermPattern("parks?|trails?").test(normalized)) return "park";
+  if (discoveryTermPattern("libraries?").test(normalized)) return "library";
+  if (discoveryTermPattern("museums?|galleries?").test(normalized))
+    return "museum";
   return null;
 }
 
@@ -784,6 +804,320 @@ function rankMergedResults(
     );
 }
 
+function uniqueDiscoveryResults(results: Record<string, any>[]) {
+  const seen = new Set<string>();
+  return results.filter((item) => {
+    const key = discoveryResultKey(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function cardIdentityKey(item: Record<string, any>) {
+  return `${cleanDiscoveryText(item.source, 40)}:${cleanDiscoveryText(item.id, 220)}`;
+}
+
+function presentV2Card(item: Record<string, any>) {
+  const { discoveryScore: _discoveryScore, ...card } = item;
+  if (card.source !== "google_places") return card;
+  const { community: _providerCommunity, ...liveCard } = card;
+  return liveCard;
+}
+
+function rankNearbyLane(
+  results: Record<string, any>[],
+  query: string,
+  preferenceSlugs: string[],
+  hasCoordinates: boolean,
+) {
+  return rankMergedResults(
+    uniqueDiscoveryResults(results),
+    query,
+    preferenceSlugs,
+    hasCoordinates,
+  ).sort((left: Record<string, any>, right: Record<string, any>) => {
+    const score = (item: Record<string, any>) => {
+      const distance = Number(item.distanceMeters);
+      const distanceAffinity =
+        hasCoordinates && Number.isFinite(distance)
+          ? Math.max(0, 1 - distance / 35_000)
+          : 0;
+      return hasCoordinates
+        ? distanceAffinity * 0.74 +
+            Number(item.discoveryScore || 0) * 0.18 +
+            (item.image ? 0.08 : 0)
+        : Number(item.discoveryScore || 0) * 0.9 + (item.image ? 0.1 : 0);
+    };
+    return score(right) - score(left);
+  });
+}
+
+function rankRecommendedLane(
+  results: Record<string, any>[],
+  query: string,
+  preferenceSlugs: string[],
+  hasCoordinates: boolean,
+) {
+  return rankMergedResults(
+    uniqueDiscoveryResults(results),
+    query,
+    preferenceSlugs,
+    hasCoordinates,
+  ).sort(
+    (left: Record<string, any>, right: Record<string, any>) =>
+      Number(right.discoveryScore || 0) +
+      (right.image ? 0.07 : 0) -
+      (Number(left.discoveryScore || 0) + (left.image ? 0.07 : 0)),
+  );
+}
+
+function v2Lane(
+  items: Record<string, any>[],
+  nextCursor: string | null = null,
+) {
+  return {
+    items,
+    pagination: {
+      nextCursor,
+      hasMore: Boolean(nextCursor),
+    },
+  };
+}
+
+async function v2ExploreResponse(input: {
+  req: Request;
+  supabase: ReturnType<typeof getSupabaseAdmin>;
+  query: string;
+  inventoryQuery: string;
+  intent: DiscoveryIntent;
+  city: Record<string, any>;
+  cityFilter: string | null;
+  lat?: number;
+  lng?: number;
+  radiusMeters: number;
+  category: string | null;
+  cultureSlug: string | null;
+  featureSlugs: string[];
+  preferenceFeatureSlugs: string[];
+  limit: number;
+  cursor: { score: number; id: string } | null;
+  includeLiveFallback: boolean;
+}) {
+  const {
+    req,
+    supabase,
+    query,
+    inventoryQuery,
+    intent,
+    city,
+    cityFilter,
+    lat,
+    lng,
+    radiusMeters,
+    category,
+    cultureSlug,
+    featureSlugs,
+    preferenceFeatureSlugs,
+    cursor,
+    includeLiveFallback,
+  } = input;
+  const hasCoordinates = lat !== undefined && lng !== undefined;
+  const isInitialPage = !cursor;
+  const allLimit = Math.min(input.limit, 40);
+  const primaryLimit = isInitialPage
+    ? Math.max(allLimit + 1, 24)
+    : allLimit + 1;
+  const sqlQuery = intent.id === "search" ? inventoryQuery || query : null;
+  const cacheKey = await sha256Hex(
+    JSON.stringify({
+      v: 5,
+      intent: intent.id,
+      query: sqlQuery?.toLowerCase() || null,
+      city: cityFilter,
+      lat: lat?.toFixed(4) || null,
+      lng: lng?.toFixed(4) || null,
+      radiusMeters,
+      category,
+      cultureSlug,
+      featureSlugs,
+      preferenceFeatureSlugs,
+      allLimit,
+      cursor,
+      curated: isInitialPage,
+    }),
+  );
+  const cached = await readLocationCache(supabase, cacheKey);
+  let primaryRows: OwnedResult[] = [];
+  let nearbyRows: OwnedResult[] = [];
+
+  if (cached) {
+    primaryRows = (cached as any).primaryRows || [];
+    nearbyRows = (cached as any).nearbyRows || [];
+  } else {
+    const rpcInput = {
+      p_query: sqlQuery,
+      p_intent: intent.id,
+      p_culture_slug: cultureSlug,
+      p_feature_slugs: featureSlugs,
+      p_preference_feature_slugs: preferenceFeatureSlugs,
+      p_lat: lat ?? null,
+      p_lng: lng ?? null,
+      p_radius_meters: radiusMeters,
+      p_city: cityFilter,
+      p_category: category,
+    };
+    const [primaryResult, nearbyResult] = await Promise.all([
+      supabase.rpc("search_discovery_owned_entities_v2", {
+        ...rpcInput,
+        p_lane: "all",
+        p_limit: primaryLimit,
+        p_cursor_score: cursor?.score ?? null,
+        p_cursor_id: cursor?.id ?? null,
+      }),
+      isInitialPage && hasCoordinates
+        ? supabase.rpc("search_discovery_owned_entities_v2", {
+            ...rpcInput,
+            p_lane: "nearby",
+            p_limit: 16,
+            p_cursor_score: null,
+            p_cursor_id: null,
+          })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (primaryResult.error) throw primaryResult.error;
+    if (nearbyResult.error) {
+      console.warn(
+        "Explore V2 nearby lane unavailable:",
+        cleanDiscoveryText(nearbyResult.error.message, 160),
+      );
+    }
+    primaryRows = primaryResult.data || [];
+    nearbyRows = nearbyResult.error ? [] : nearbyResult.data || [];
+    await writeLocationCache(
+      supabase,
+      cacheKey,
+      { primaryRows, nearbyRows },
+      90,
+    );
+  }
+
+  const allRows = primaryRows.slice(0, allLimit);
+  const hasNextPage = primaryRows.length > allLimit;
+  const last = allRows.at(-1);
+  const nextCursor =
+    hasNextPage && last
+      ? encodeDiscoveryCursor(last.rank_score, last.id)
+      : null;
+
+  let allCards: Record<string, any>[] = allRows.map(ownedCard);
+  let nearby: Record<string, any>[] = [];
+  let recommended: Record<string, any>[] = [];
+  let liveCount = 0;
+
+  if (isInitialPage) {
+    const primaryCards = primaryRows.slice(0, 24).map(ownedCard);
+    const localNearbyCards = (
+      nearbyRows.length ? nearbyRows : primaryRows.slice(0, 16)
+    ).map(ownedCard);
+    const ownedCurated = uniqueDiscoveryResults([
+      ...localNearbyCards,
+      ...primaryCards,
+    ]).slice(0, 32);
+    const [live, hydratedOwned] = await Promise.all([
+      includeLiveFallback
+        ? googleLiveSearch({
+            req,
+            query: query || intent.providerQuery,
+            category,
+            city: city.name,
+            lat,
+            lng,
+            limit: 20,
+          })
+        : Promise.resolve({ results: [], nextPageToken: null }),
+      hydrateOwnedCardPhotos(req, supabase, ownedCurated),
+    ]);
+    liveCount = live.results.length;
+    const hydratedByKey = new Map(
+      hydratedOwned.map((card) => [cardIdentityKey(card), card]),
+    );
+    const hydrated = (card: Record<string, any>) =>
+      hydratedByKey.get(cardIdentityKey(card)) || card;
+    allCards = allCards.map(hydrated);
+    const nearbyCandidates = [
+      ...localNearbyCards.map(hydrated),
+      ...live.results,
+    ];
+    const nearbyRanked = rankNearbyLane(
+      nearbyCandidates,
+      query || intent.providerQuery,
+      preferenceFeatureSlugs,
+      hasCoordinates,
+    );
+    nearby = nearbyRanked.slice(0, 8);
+
+    const recommendedRanked = rankRecommendedLane(
+      [...primaryCards.map(hydrated), ...live.results],
+      query || intent.providerQuery,
+      preferenceFeatureSlugs,
+      hasCoordinates,
+    );
+    const nearbyKeys = new Set(nearby.map(discoveryResultKey));
+    recommended = [
+      ...recommendedRanked.filter(
+        (card) => !nearbyKeys.has(discoveryResultKey(card)),
+      ),
+      ...recommendedRanked.filter((card) =>
+        nearbyKeys.has(discoveryResultKey(card)),
+      ),
+    ].slice(0, 10);
+    nearby = nearby.map(presentV2Card);
+    recommended = recommended.map(presentV2Card);
+  } else {
+    allCards = await hydrateOwnedCardPhotos(req, supabase, allCards);
+  }
+
+  const locationMode = hasCoordinates
+    ? "gps"
+    : city.coverageLevel === "municipality"
+      ? "municipality"
+      : "gta";
+  const locationLabel = hasCoordinates
+    ? city.coverageLevel === "municipality"
+      ? `Near ${city.name}`
+      : "Near you"
+    : city.name;
+
+  return {
+    version: 2,
+    supported: true,
+    query,
+    intent: { id: intent.id, label: intent.label },
+    location: {
+      mode: locationMode,
+      label: locationLabel,
+      city: city.name,
+      province: "Ontario",
+      radiusMeters: hasCoordinates ? radiusMeters : null,
+      resolution:
+        city.resolution || (hasCoordinates ? "gta_fallback" : "manual_city"),
+      scope: cityFilter ? "municipality" : "gta_region",
+    },
+    nearby: v2Lane(nearby),
+    recommended: v2Lane(recommended),
+    all: v2Lane(allCards, nextCursor),
+    meta: {
+      ownedResultCount: allRows.length,
+      liveCuratedResultCount: liveCount,
+      registeredResultCount: allCards.filter(
+        (item: any) => item.placement?.sponsored,
+      ).length,
+      curatedSnapshot: isInitialPage,
+    },
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -802,12 +1136,14 @@ Deno.serve(async (req) => {
         photos: await renewCardPhotos(req, supabase, body.photoCards),
       });
     }
+    const apiVersion = Number(get("version")) === 2 ? 2 : 1;
     const query = cleanDiscoveryText(get("query"), 120);
     // Keep typo tolerance consistent across Echoo inventory and live places.
     // Without this, "resturants" reached Google correctly but missed Echoo's
     // own search index entirely.
     const searchQuery = query ? normalizedLiveQuery(query, null) : "";
     const inventoryQuery = ownedInventoryQuery(searchQuery);
+    const intent = resolveDiscoveryIntent(get("intent"), searchQuery);
     const lat = optionalDiscoveryNumber(get("lat"));
     const lng = optionalDiscoveryNumber(get("lng"));
     if ((lat === undefined) !== (lng === undefined))
@@ -820,6 +1156,17 @@ Deno.serve(async (req) => {
       lng !== undefined &&
       !isInsideGtaBounds(lat, lng)
     ) {
+      if (apiVersion === 2) {
+        return jsonResponse({
+          version: 2,
+          supported: false,
+          reason: "outside_gta",
+          location: null,
+          nearby: v2Lane([]),
+          recommended: v2Lane([]),
+          all: v2Lane([]),
+        });
+      }
       return jsonResponse(
         {
           supported: false,
@@ -836,7 +1183,18 @@ Deno.serve(async (req) => {
       lat !== undefined && lng !== undefined
         ? await resolveGpsCity(supabase, lat, lng)
         : normalizeCityName(suppliedCity || "GTA");
-    if (!city)
+    if (!city) {
+      if (apiVersion === 2) {
+        return jsonResponse({
+          version: 2,
+          supported: false,
+          reason: "unsupported_city",
+          location: null,
+          nearby: v2Lane([]),
+          recommended: v2Lane([]),
+          all: v2Lane([]),
+        });
+      }
       return jsonResponse(
         {
           supported: false,
@@ -846,11 +1204,17 @@ Deno.serve(async (req) => {
         },
         200,
       );
+    }
 
     const limit = clampDiscoveryLimit(get("limit"), 20, 50);
     const radiusMeters = clampRadiusMeters(get("radiusMeters"));
     const category =
       cleanDiscoveryText(get("category"), 80).toLowerCase() || null;
+    const cultureSlug =
+      cleanDiscoveryText(get("cultureSlug"), 80).toLowerCase() || null;
+    if (cultureSlug && !/^[a-z0-9]+(?:_[a-z0-9]+)*$/.test(cultureSlug)) {
+      return jsonResponse({ error: "Invalid culture slug" }, 422);
+    }
     const cursor = decodeDiscoveryCursor(get("cursor"));
     if (get("cursor") && !cursor)
       return jsonResponse({ error: "Invalid cursor" }, 422);
@@ -901,6 +1265,29 @@ Deno.serve(async (req) => {
       lat === undefined && city.coverageLevel === "municipality"
         ? city.name
         : null;
+    if (apiVersion === 2) {
+      return jsonResponse(
+        await v2ExploreResponse({
+          req,
+          supabase,
+          query: searchQuery,
+          inventoryQuery,
+          intent,
+          city,
+          cityFilter,
+          lat,
+          lng,
+          radiusMeters,
+          category,
+          cultureSlug,
+          featureSlugs,
+          preferenceFeatureSlugs,
+          limit,
+          cursor,
+          includeLiveFallback: asBoolean(get("includeLiveFallback"), true),
+        }),
+      );
+    }
     const cacheKey = await sha256Hex(
       JSON.stringify({
         v: 4,
