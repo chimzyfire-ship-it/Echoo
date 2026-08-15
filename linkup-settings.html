@@ -357,6 +357,10 @@
 
           current = profile.linkup_status || "active";
           stateEl.innerHTML = ""; // healthy — no banner needed
+          if (current === "ghost") {
+            stateEl.innerHTML =
+              '<p class="settings-state-copy">Ghost mode is on — you stay checked in but hidden from new matches. Toggle it off from your presence card or here.</p>';
+          }
           toggle.disabled = false;
           toggle.classList.toggle("is-on", current === "active");
           toggle.setAttribute("aria-pressed", String(current === "active"));
@@ -377,6 +381,8 @@
         async function onToggle() {
           if (toggle.disabled) return;
           toggle.disabled = true;
+          // Ghost is toggled from the presence card; here it's the plain
+          // active/paused switch, and turning it on also clears ghost.
           const next = current === "active" ? "paused" : "active";
           const { error } = await client
             .from("user_onboarding_profiles")

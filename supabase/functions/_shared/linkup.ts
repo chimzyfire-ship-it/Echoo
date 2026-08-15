@@ -22,6 +22,11 @@ export const PRESENCE_TTL_MAX_MINUTES = 360; // hard cap
 export const MATCH_FUSE_MINUTES = 10; // pending match acceptance window
 export const CONVERSATION_GRACE_HOURS = 24; // chat stays writable after match ends
 
+// Days after any prior match (open, connected, declined, expired, or ended)
+// before the same pair can be proposed again (invariant 7 — declines must not
+// be re-asked quickly).
+export const REMATCH_SUPPRESSION_DAYS = 7;
+
 // Cap on how many co-present members a single check-in scans for matches.
 // Bounds the per-check-in work at very crowded venues (festivals, stadiums).
 // Candidates are ordered oldest-first, so the person waiting longest is still
@@ -57,7 +62,10 @@ export function isUuid(value: string): boolean {
 
 export function disabledResponse(): Response {
   // Returns HTTP 200 with disabled:true so clients can no-op quietly.
-  return jsonResponse({ ok: false, disabled: true, error: "Link Up is not available" }, 200);
+  return jsonResponse(
+    { ok: false, disabled: true, error: "Link Up is not available" },
+    200,
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -85,7 +93,12 @@ export type OnboardingProfile = {
 
 export interface LinkupEligibility {
   eligible: boolean;
-  reason?: "no_onboarding" | "underage" | "unverified" | "incomplete_profile" | "paused";
+  reason?:
+    | "no_onboarding"
+    | "underage"
+    | "unverified"
+    | "incomplete_profile"
+    | "paused";
   dateOfBirth?: string;
   age?: number;
   // Returned alongside eligibility so the matching loop can reuse it for
@@ -127,8 +140,8 @@ export async function isUserEligible(
   //   1. Completed onboarding.
   //   2. A profile photo AND a bio — so every match pop-up has a face and a
   //      self-written line. This is the quality bar for the feature.
-  // Email verification and DOB remain advisory (see notes below); tighten them
-  // here once email + age verification ship in onboarding.
+  //   3. A date of birth proving 18+ (invariant 8 — adults only). No DOB,
+  //      no Link Up.
   const profile = await getOnboardingProfile(supabase, userId);
   if (!profile || !profile.completed_at) {
     return { eligible: false, reason: "no_onboarding" };
@@ -143,23 +156,38 @@ export async function isUserEligible(
   if (!profile.profile_photo_url || !profile.bio?.trim()) {
     return { eligible: false, reason: "incomplete_profile" };
   }
-  const age = ageFromDob(profile.date_of_birth);
+  const dobAge = ageFromDob(profile.date_of_birth);
+  if (dobAge === null || dobAge < MIN_AGE) {
+    return { eligible: false, reason: "age_unverified" };
+  }
   return {
     eligible: true,
-    age: age ?? undefined,
+    age: dobAge,
     dateOfBirth: profile.date_of_birth ?? undefined,
     // Attach the profile so callers reuse it instead of re-fetching.
     profile,
   };
 }
 
-export function ageBandCompatible(ageA: number | null | undefined, ageB: number | null | undefined): boolean {
+export function ageBandCompatible(
+  ageA: number | null | undefined,
+  ageB: number | null | undefined,
+): boolean {
   // If either side has no DOB, we can't enforce a band — allow it (identity is
   // gated by completed onboarding + the affinity threshold elsewhere). If both
   // have a DOB, enforce the band and the 18+ floor.
-  if (ageA === null || ageA === undefined || ageB === null || ageB === undefined) return true;
+  if (
+    ageA === null ||
+    ageA === undefined ||
+    ageB === null ||
+    ageB === undefined
+  )
+    return true;
   if (ageA < MIN_AGE || ageB < MIN_AGE) return false;
-  return Math.abs(ageA - ageB) <= Math.min(ageBandHalfWidth(ageA), ageBandHalfWidth(ageB));
+  return (
+    Math.abs(ageA - ageB) <=
+    Math.min(ageBandHalfWidth(ageA), ageBandHalfWidth(ageB))
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -220,7 +248,7 @@ export function computeAffinity(
     interests * 0.34 +
     styles * 0.22 +
     motiv * 0.14 +
-    audiences * 0.10 +
+    audiences * 0.1 +
     (sameEnergy ? 0.06 : 0) +
     (sameBudget ? 0.05 : 0) +
     (sameTone ? 0.04 : 0) +
@@ -258,7 +286,10 @@ export type LinkupAction =
 // `message` is therefore enforced by the linkup_messages_rate_limit trigger
 // (migration 202608120001). Keep the trigger's 30 / 10-minute figures in sync
 // with the values below — Postgres can't read this constant.
-export const ACTION_LIMITS: Record<LinkupAction, { max: number; windowMinutes: number }> = {
+export const ACTION_LIMITS: Record<
+  LinkupAction,
+  { max: number; windowMinutes: number }
+> = {
   checkin: { max: 10, windowMinutes: 60 },
   checkout: { max: 20, windowMinutes: 60 },
   match_accept: { max: 20, windowMinutes: 60 },
@@ -289,7 +320,9 @@ export async function checkRateLimit(
   action: LinkupAction,
 ): Promise<boolean> {
   const limit = ACTION_LIMITS[action];
-  const since = new Date(Date.now() - limit.windowMinutes * 60_000).toISOString();
+  const since = new Date(
+    Date.now() - limit.windowMinutes * 60_000,
+  ).toISOString();
   const { count, error } = await supabase
     .from("linkup_action_events")
     .select("id", { count: "exact", head: true })
@@ -323,14 +356,17 @@ export async function recentlyMatched(
   supabase: SupabaseClient,
   userA: string,
   userB: string,
-  withinHours = 24,
 ): Promise<boolean> {
-  // Suppress re-proposing ONLY when a prior match between this pair is still
-  // open (pending) or was accepted (a real conversation happened). A declined
-  // or expired match does NOT block a natural re-encounter — two people can
-  // still cross paths again at the same place and get another shot.
+  // Two suppression windows (architecture invariant 7):
+  //   - pending/accepted matches suppress re-proposal for 7 days — an open or
+  //     once-connected pair must not be re-proposed quickly.
+  //   - declined/expired matches suppress for 7 days too: a decline must not
+  //     be re-asked quickly (re-harassment guard). After the window, a natural
+  //     re-encounter at the same place can propose again.
   if (userA === userB) return false;
-  const since = new Date(Date.now() - withinHours * 60 * 60_000).toISOString();
+  const since = new Date(
+    Date.now() - REMATCH_SUPPRESSION_DAYS * 24 * 60 * 60_000,
+  ).toISOString();
   const { data: aRows, error: e1 } = await supabase
     .from("linkup_match_members")
     .select("match_id")
@@ -339,7 +375,7 @@ export async function recentlyMatched(
   if (e1) throw e1;
   if (!aRows || aRows.length === 0) return false;
   const ids = aRows.map((r: { match_id: string }) => r.match_id);
-  // Are any of those shared matches still pending or accepted?
+  // Are any of those matches shared with the other member?
   const { data: shared, error: e2 } = await supabase
     .from("linkup_match_members")
     .select("match_id")
@@ -352,7 +388,7 @@ export async function recentlyMatched(
     .from("linkup_matches")
     .select("id", { count: "exact", head: true })
     .in("id", sharedIds)
-    .in("status", ["pending", "accepted"]);
+    .in("status", ["pending", "accepted", "declined", "expired", "ended"]);
   // Fail safe: a DB error here must surface, not silently allow a re-match.
   if (e3) throw e3;
   return (count ?? 0) > 0;

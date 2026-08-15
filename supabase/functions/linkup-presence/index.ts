@@ -54,7 +54,9 @@ Deno.serve(async (req) => {
     const body = (await req.json().catch(() => ({}))) as PresencePayload;
     const action = String(body.action || "").trim();
     const placeId = String(body.placeId || "").trim();
-    const sessionToken = body.sessionToken ? String(body.sessionToken).slice(0, 64) : null;
+    const sessionToken = body.sessionToken
+      ? String(body.sessionToken).slice(0, 64)
+      : null;
 
     // A cheap liveness/flag probe the client uses at boot to decide whether
     // to render any Link Up UI. Returns ok:true only when the flag is on and
@@ -88,11 +90,37 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Invalid placeId" }, 422);
 
     // ── checkin ────────────────────────────────────────────────────────
+    // Presence eligibility. Hard gates that block even presence: no
+    // onboarding, no photo/bio, under-18/no DOB (invariant 8). Non-active
+    // linkup_status maps to "paused" — ghost members keep presence with the
+    // scan skipped below; truly paused/opted-out members are fully out.
     const eligibility = await isUserEligible(supabase, userId);
-    if (!eligibility.eligible) {
+    if (!eligibility.eligible && eligibility.reason !== "paused") {
       const reason = eligibility.reason || "ineligible";
       return jsonResponse(
-        { ok: false, error: "Link Up isn't available for this account", reason },
+        {
+          ok: false,
+          error: "Link Up isn't available for this account",
+          reason,
+        },
+        403,
+      );
+    }
+
+    // Ghost: presence without matching. isUserEligible returns "paused" for
+    // every non-active status, so re-read the raw status to tell ghost apart.
+    const myProfile =
+      eligibility.profile ?? (await getOnboardingProfile(supabase, userId));
+    const isGhost = myProfile?.linkup_status === "ghost";
+    const isPaused =
+      !eligibility.eligible && eligibility.reason === "paused" && !isGhost;
+    if (isPaused) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: "Link Up is paused for this account",
+          reason: "paused",
+        },
         403,
       );
     }
@@ -140,7 +168,16 @@ Deno.serve(async (req) => {
     await recordAction(supabase, userId, "checkin", placeId);
 
     // ── Matching ───────────────────────────────────────────────────────
-    const myProfile = await getOnboardingProfile(supabase, userId);
+    // Ghost members keep presence but never scan (invariant 10).
+    if (isGhost) {
+      return jsonResponse({
+        ok: true,
+        presence: { id: presence.id, expiresAt: presence.expiresAt },
+        ghost: true,
+        proposedMatches: 0,
+      });
+    }
+
     const myAge = eligibility.age ?? null;
 
     // Active presences at the same place, not me. Order by arrived_at ASC so
@@ -166,16 +203,22 @@ Deno.serve(async (req) => {
       // Skip if there's an open (pending/accepted) match with this person.
       if (await recentlyMatched(supabase, userId, otherId)) continue;
 
-      // Eligibility on the other side.
+      // Eligibility on the other side — non-active statuses (paused, ghost,
+      // opted_out) are never proposed as peers.
       const otherElig = await isUserEligible(supabase, otherId);
       if (!otherElig.eligible) continue;
 
-      // Age band — only enforced when BOTH have a DOB (advisory, not a hard
-      // gate, since DOB is optional in onboarding).
-      if (!ageBandCompatible(myAge, otherElig.age ?? null)) continue;
+      // Age band. DOB is a hard gate on both sides (invariant 8), so a
+      // missing age here means the peer was eligible pre-migration — treat
+      // conservatively and skip.
+      if (otherElig.age === undefined || otherElig.age === null) continue;
+      if (!ageBandCompatible(myAge, otherElig.age)) continue;
 
       const otherProfile = await getOnboardingProfile(supabase, otherId);
-      const { affinity, reason_tags } = computeAffinity(myProfile, otherProfile);
+      const { affinity, reason_tags } = computeAffinity(
+        myProfile,
+        otherProfile,
+      );
 
       // Only propose when there's real compatibility signal. This is the line
       // between "magical" (the right person) and "spammy" (any person).
