@@ -1144,7 +1144,7 @@
       document.documentElement.classList.add("echoo-page-loading");
     </script>
   </head>
-  <body>
+  <body data-page="auth">
     <div class="app-shell">
       <header class="topbar" aria-label="Echoo">
         <a class="brand" href="index.html" aria-label="Echoo home">
@@ -3397,7 +3397,11 @@
         startOnboarding("");
       }
 
-      bootAuthPage();
+      bootAuthPage().finally(() => {
+        // Single reveal: hold the skeleton until the boot decision lands so
+        // the panel never pops in behind a vanished loader (start flicker).
+        window.echooDismissPageLoader?.();
+      });
     </script>
     <script src="assets/page-loader.js"></script>
   </body>
