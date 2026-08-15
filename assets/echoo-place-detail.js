@@ -65,12 +65,10 @@
     }
 
     const location = window.EchooLocationPlatform?.readPreferences?.() || {};
-    const userLatitude = optionalNumber(
-      options.userLatitude ?? location.lastLat,
-    );
-    const userLongitude = optionalNumber(
-      options.userLongitude ?? location.lastLng,
-    );
+    const userLatitude =
+      optionalNumber(options.userLatitude) ?? optionalNumber(location.lastLat);
+    const userLongitude =
+      optionalNumber(options.userLongitude) ?? optionalNumber(location.lastLng);
     const placeLatitude = optionalNumber(place.latitude);
     const placeLongitude = optionalNumber(place.longitude);
     if (
@@ -95,9 +93,54 @@
 
   function distanceLabelFor(place, options) {
     const distance = distanceKmFor(place, options);
-    if (distance === null) return "Turn on location to see distance";
-    if (distance < 0.1) return "Under 0.1 km away";
+    if (distance === null) return "Location off";
+    if (distance < 0.1) return "Nearby";
     return `${distance.toFixed(distance < 10 ? 1 : 0)} km away`;
+  }
+
+  // Resolves the member's location once per page load when a place view opens
+  // without a usable fix, then persists it through the session-scoped location
+  // platform so every later distance renders instantly.
+  let userLocationPromise = null;
+  let lastRenderedPlace = null;
+
+  function resolveUserLocation() {
+    if (userLocationPromise) return userLocationPromise;
+    userLocationPromise = new Promise((resolve) => {
+      const geolocation =
+        typeof navigator !== "undefined" &&
+        navigator?.geolocation?.getCurrentPosition;
+      if (!geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latitude = optionalNumber(position?.coords?.latitude);
+          const longitude = optionalNumber(position?.coords?.longitude);
+          if (latitude === null || longitude === null) return resolve(null);
+          try {
+            window.EchooLocationPlatform?.writeLocationState?.({
+              lastLat: latitude,
+              lastLng: longitude,
+              accuracy: position?.coords?.accuracy,
+              locationPrecision: "gps",
+            });
+          } catch (_) {}
+          resolve({ latitude, longitude });
+        },
+        () => resolve(null),
+        { timeout: 10000, maximumAge: 60000, enableHighAccuracy: false },
+      );
+    });
+    return userLocationPromise;
+  }
+
+  function refreshDistancePills() {
+    if (typeof document === "undefined" || !lastRenderedPlace) return;
+    try {
+      const label = distanceLabelFor(lastRenderedPlace, {});
+      document
+        .querySelectorAll(".echoo-place-distance")
+        .forEach((pill) => (pill.textContent = label));
+    } catch (_) {}
   }
 
   function pulseItemsFor(detail) {
@@ -383,7 +426,11 @@
         : [];
     const heroImage = heroImageFor(detail, options);
     const galleryPhotos = photos.filter((photo) => photo.url !== heroImage);
+    lastRenderedPlace = place;
     const distanceLabel = distanceLabelFor(place, options);
+    if (distanceLabel === "Location off") {
+      resolveUserLocation().then(() => refreshDistancePills());
+    }
     const directionsHref = options.directionsHref || mapsLinkFor(place);
     const routeLatitude = Number(place.latitude);
     const routeLongitude = Number(place.longitude);

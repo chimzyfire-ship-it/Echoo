@@ -63,8 +63,6 @@ Deno.serve(async (req) => {
 
     if (!["checkin", "checkout"].includes(action))
       return jsonResponse({ error: "Invalid action" }, 422);
-    if (!isUuid(placeId))
-      return jsonResponse({ error: "Invalid placeId" }, 422);
 
     const supabase = getSupabaseAdmin();
     const { data: auth, error: authError } = await supabase.auth.getUser(
@@ -74,6 +72,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Sign in to use Link Up" }, 401);
     const userId = auth.user.id;
 
+    // Checkout ends every active presence for the caller — no placeId needed.
     if (action === "checkout") {
       await supabase
         .from("linkup_presence")
@@ -84,6 +83,9 @@ Deno.serve(async (req) => {
       await recordAction(supabase, userId, "checkout");
       return jsonResponse({ ok: true });
     }
+
+    if (!isUuid(placeId))
+      return jsonResponse({ error: "Invalid placeId" }, 422);
 
     // ── checkin ────────────────────────────────────────────────────────
     const eligibility = await isUserEligible(supabase, userId);
