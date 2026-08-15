@@ -348,8 +348,50 @@
         },
         (payload) => onMatchMemberChange(payload),
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "linkup_matches",
+        },
+        (payload) => onMatchStatusChange(payload),
+      )
       .subscribe();
     state.matchChannel = channel;
+  }
+
+  // The authoritative joint state lives on linkup_matches (RLS scopes the
+  // payload to matches this user can read). Listening here — not only on the
+  // caller's own member row — is what reliably tells the FIRST accepter that
+  // the second person accepted and a conversation now exists.
+  async function onMatchStatusChange(payload) {
+    const match = payload.new;
+    if (!match || !match.id) return;
+
+    if (match.status === "accepted") {
+      const { data: conv } = await state.supabase
+        .from("linkup_conversations")
+        .select("id, expires_at")
+        .eq("match_id", match.id)
+        .maybeSingle();
+      if (conv) {
+        const { data: members } = await state.supabase
+          .from("linkup_match_members")
+          .select("user_id")
+          .eq("match_id", match.id);
+        const other = (members || []).find((m) => m.user_id !== state.userId);
+        state.popupQueue = state.popupQueue.filter((p) => p.id !== match.id);
+        if (state.activePopup?.id === match.id) dismissPopup("resolved");
+        openChat({
+          conversationId: conv.id,
+          matchId: match.id,
+          expiresAt: conv.expires_at,
+          peerUserId: other?.user_id || null,
+        });
+      }
+    }
+    Hub.scheduleRefresh();
   }
 
   async function onMatchMemberChange(payload) {
@@ -367,6 +409,11 @@
       enqueuePopup(match);
     } else if (match.status === "accepted") {
       // Both accepted — open the conversation.
+      const { data: members } = await state.supabase
+        .from("linkup_match_members")
+        .select("user_id")
+        .eq("match_id", match.id);
+      const other = (members || []).find((m) => m.user_id !== state.userId);
       const { data: conv } = await state.supabase
         .from("linkup_conversations")
         .select("id, expires_at")
@@ -377,6 +424,7 @@
           conversationId: conv.id,
           matchId: match.id,
           expiresAt: conv.expires_at,
+          peerUserId: other?.user_id || null,
         });
     }
     Hub.scheduleRefresh();
@@ -660,14 +708,17 @@
     wrap
       .querySelector(".echoo-linkup-backdrop")
       .addEventListener("click", (e) => {
-        if (e.target === e.currentTarget) dismissPopup("declined");
+        // A backdrop tap is a real "Not now" — record the decline server-side
+        // so the proposal doesn't come back on the hub until re-encounter rules
+        // allow it.
+        if (e.target === e.currentTarget) respondPopup("declined");
       });
     wrap
       .querySelector("[data-linkup-accept]")
       .addEventListener("click", () => respondPopup("accepted"));
     wrap
       .querySelector("[data-linkup-decline]")
-      .addEventListener("click", () => dismissPopup("declined"));
+      .addEventListener("click", () => respondPopup("declined"));
   }
 
   async function respondPopup(choice) {
@@ -818,6 +869,7 @@
             </div>
             <div class="echoo-linkup-chat-actions">
               <button type="button" class="echoo-linkup-chat-action" data-linkup-report>Report</button>
+              <button type="button" class="echoo-linkup-chat-action" data-linkup-block>Block</button>
               <button type="button" class="echoo-linkup-chat-action" data-linkup-end>End</button>
             </div>
           </div>
@@ -844,8 +896,30 @@
       .querySelector("[data-linkup-end]")
       .addEventListener("click", () => endCurrentMatch());
     wrap
+      .querySelector("[data-linkup-block]")
+      .addEventListener("click", () => blockCurrentChat());
+    wrap
       .querySelector("[data-linkup-report]")
       .addEventListener("click", () => reportCurrentChat());
+  }
+
+  // Block: permanent for matching purposes, ends the open chat immediately.
+  // Requires the peer's user id, threaded through openChat contexts.
+  async function blockCurrentChat() {
+    const ctx = state.openChat;
+    if (!ctx?.peerUserId) return;
+    if (
+      !confirm(
+        "Block this person? They won't be able to match or chat with you again.",
+      )
+    )
+      return;
+    await callFunction("linkup-block", { userId: ctx.peerUserId }).catch(
+      () => {},
+    );
+    closeChat();
+    state.openChat = null;
+    Hub.scheduleRefresh();
   }
 
   function closeChat() {
@@ -865,9 +939,7 @@
 
   async function endCurrentMatch() {
     if (!state.openChat) return;
-    if (
-      !confirm("End this Link Up? You won't be matched again with this person.")
-    )
+    if (!confirm("End this Link Up? The chat will close and become read-only."))
       return;
     await callFunction("linkup-match", {
       action: "end",
@@ -1243,6 +1315,7 @@
                    data-linkup-conv="${escapeHtml(c.conversationId)}"
                    data-linkup-match="${escapeHtml(c.matchId)}"
                    data-linkup-title="${name}"
+                   data-linkup-peer="${escapeHtml(c.peer?.userId || "")}"
                    data-linkup-expires="${escapeHtml(c.expiresAt || "")}">
             <div class="echoo-linkup-peer-avatar ${c.peer?.photoUrl ? "has-photo" : ""}" ${photo}>${fallback}</div>
             <div class="echoo-linkup-peer-body">
@@ -1332,8 +1405,9 @@
       const matchId = row.getAttribute("data-linkup-match");
       const title = row.getAttribute("data-linkup-title") || "Link Up";
       const expiresAt = row.getAttribute("data-linkup-expires") || undefined;
+      const peerUserId = row.getAttribute("data-linkup-peer") || null;
       if (!conversationId) return;
-      await openChat({ conversationId, matchId, title, expiresAt });
+      await openChat({ conversationId, matchId, title, expiresAt, peerUserId });
     }
 
     // ── TTL countdown ──────────────────────────────────────────────────
@@ -1488,35 +1562,34 @@
     const tabSignup = document.getElementById("auth-tab-signup");
     const tabSignin = document.getElementById("auth-tab-signin");
     const submitBtn = document.getElementById("auth-submit-btn");
+    let currentMode = mode === "signin" ? "signin" : "signup";
 
-    if (mode === "signup") {
-      tabSignup?.classList.add("active");
-      tabSignin?.classList.remove("active");
-      if (submitBtn) submitBtn.textContent = "Create account →";
-    } else {
-      tabSignin?.classList.add("active");
-      tabSignup?.classList.remove("active");
-      if (submitBtn) submitBtn.textContent = "Sign in →";
+    function paintMode() {
+      if (currentMode === "signup") {
+        tabSignup?.classList.add("active");
+        tabSignin?.classList.remove("active");
+        if (submitBtn) submitBtn.textContent = "Create account →";
+      } else {
+        tabSignin?.classList.add("active");
+        tabSignup?.classList.remove("active");
+        if (submitBtn) submitBtn.textContent = "Sign in →";
+      }
     }
+    paintMode();
 
     sheet.classList.add("is-open");
     sheet.setAttribute("aria-hidden", "false");
 
-    if (tabSignup) {
+    if (tabSignup)
       tabSignup.onclick = () => {
-        tabSignup.classList.add("active");
-        tabSignin.classList.remove("active");
-        if (submitBtn) submitBtn.textContent = "Create account →";
+        currentMode = "signup";
+        paintMode();
       };
-    }
-
-    if (tabSignin) {
+    if (tabSignin)
       tabSignin.onclick = () => {
-        tabSignin.classList.add("active");
-        tabSignup.classList.remove("active");
-        if (submitBtn) submitBtn.textContent = "Sign in →";
+        currentMode = "signin";
+        paintMode();
       };
-    }
 
     const closeBtn = document.getElementById("auth-close-btn");
     if (closeBtn) {
@@ -1527,17 +1600,61 @@
     }
 
     const form = document.getElementById("linkup-minimal-auth-form");
-    if (form) {
-      form.onsubmit = (e) => {
+    if (form && !form.dataset.echooAuthWired) {
+      form.dataset.echooAuthWired = "true";
+      form.onsubmit = async (e) => {
         e.preventDefault();
-        sheet.classList.remove("is-open");
+        const errorEl = document.getElementById("linkup-auth-error");
+        const showError = (message) => {
+          if (!errorEl) return;
+          errorEl.textContent = message;
+          errorEl.hidden = false;
+        };
+        if (errorEl) errorEl.hidden = true;
+
+        const email = String(
+          document.getElementById("auth-email-input")?.value || "",
+        )
+          .trim()
+          .toLowerCase();
+        const password = String(
+          document.getElementById("auth-pass-input")?.value || "",
+        );
+        if (!email || !password)
+          return showError("Enter your email and password.");
+
+        const client = window.EchooAuth?.client;
+        if (!client) return showError("Sign in isn't available right now.");
+
+        if (submitBtn) submitBtn.disabled = true;
         try {
-          localStorage.setItem("echoo_linkup_intro_seen", "true");
-        } catch (_e) {}
-        const introShell = document.getElementById("echoo-linkup-intro-shell");
-        const viewport = document.getElementById("echoo-linkup-viewport");
-        if (introShell) introShell.style.display = "none";
-        if (viewport) viewport.style.display = "flex";
+          if (currentMode === "signup") {
+            const { data, error } = await client.auth.signUp({
+              email,
+              password,
+            });
+            if (error) return showError(error.message);
+            if (!data?.session) {
+              return showError(
+                "Check your email to confirm your account, then sign in.",
+              );
+            }
+          } else {
+            const { error } = await client.auth.signInWithPassword({
+              email,
+              password,
+            });
+            if (error) return showError(error.message);
+          }
+          try {
+            localStorage.setItem("echoo_linkup_intro_seen", "true");
+          } catch (_e) {}
+          window.location.reload();
+        } catch (_e) {
+          showError("Couldn't sign in right now. Try again in a moment.");
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
       };
     }
   }
