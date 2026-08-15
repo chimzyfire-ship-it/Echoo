@@ -25,6 +25,12 @@ Each layer is a state machine. Layers compose; they never skip.
    standby → ready (in range) → here → leaving/expired → standby
    ghost variant: here but excluded from the matching pool
 
+   Location gate: every check-in requires a fresh foreground GPS fix within
+   150 m of the place. No fix → locked with the reason surfaced ("Turn on
+   location to check in here"); fix but out of range → locked ("Get within
+   150 m to check in"); place without coordinates → locked ("This place
+   can't host check-ins yet"). One-shot pings only — never watchPosition.
+
 3. MATCH (per pair, fuse 10 min)
    proposed → both accept → connected
    proposed → any decline / fuse lapses → terminal
@@ -98,15 +104,19 @@ against everyone already present at that place.
 
 ## 6. Screen inventory
 
-| Screen                      | Type                          | Layer states                                                        |
-| --------------------------- | ----------------------------- | ------------------------------------------------------------------- |
-| Home                        | page (`linkup.html`)          | signed-out, rolling-out, incomplete, paused, standby, active, ghost |
-| Find a Place                | sheet over Home               | search, nearby                                                      |
-| Place Detail · Link Up mode | sheet (shared component)      | locked, ready, here, ghost                                          |
-| Proposal                    | popup (queued)                | proposal, countdown                                                 |
-| Waiting                     | inline card on Home           | "You're in — waiting for them", fuse countdown                      |
-| Chat                        | sheet                         | loading, active, sending, failed, expired, ended                    |
-| Settings                    | page (`linkup-settings.html`) | active/paused/ghost, blocked members                                |
+| Screen                      | Type                          | Layer states                                                                                                                  |
+| --------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Home                        | page (`linkup.html`)          | signed-out hero (background image, "Find a place", quiet auth links), rolling-out, incomplete, paused, standby, active, ghost |
+| Find a Place                | sheet over Home               | search, nearby                                                                                                                |
+| Place Detail · Link Up mode | sheet (shared component)      | locked (+ reason), ready, here, ghost                                                                                         |
+| Proposal                    | popup (queued)                | proposal, countdown                                                                                                           |
+| Waiting                     | inline card on Home           | "You're in — waiting for them", fuse countdown                                                                                |
+| Chat                        | sheet                         | loading, active, sending, failed, expired, ended                                                                              |
+| Settings                    | page (`linkup-settings.html`) | active/paused/ghost, blocked members                                                                                          |
+
+Auth routing invariant: **`auth.html` is the app's only auth surface.** Every
+create-account / sign-in affordance (hero, intro overlay, access redirects)
+routes there with a `next` return path. No embedded auth sheets.
 
 ## 7. State map (per member, client truth)
 

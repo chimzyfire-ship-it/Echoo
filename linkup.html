@@ -188,24 +188,20 @@
             </div>
           </div>
 
-          <!-- Bottom Action Buttons (No Profile Icon, No Description Paragraph) -->
+          <!-- Bottom Actions: one aesthetic label on the image, quiet auth links.
+               Auth lives ONLY on auth.html (single auth surface app-wide). -->
           <div class="intro-action-group">
-            <button
-              class="echoo-linkup-btn--hero"
-              id="btn-create-account"
-              type="button"
-              style="width: 100%"
-            >
-              Create account &rarr;
-            </button>
-            <button
-              class="echoo-linkup-btn--outline"
-              id="btn-sign-in"
-              type="button"
-              style="width: 100%"
-            >
-              Sign in
-            </button>
+            <a class="linkup-find-btn" href="events.html">
+              <span>Find a place</span>
+              <span class="linkup-find-arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <div class="linkup-auth-links">
+              <a href="auth.html?mode=signup&amp;next=linkup.html"
+                >Create account</a
+              >
+              <span class="linkup-auth-sep" aria-hidden="true">·</span>
+              <a href="auth.html?mode=signin&amp;next=linkup.html">Sign in</a>
+            </div>
           </div>
         </section>
 
@@ -268,24 +264,22 @@
               </div>
             </div>
 
-            <!-- Overlay CTAs -->
+            <!-- Overlay CTAs — routed to the single auth surface (auth.html) -->
             <div class="intro-overlay-actions">
-              <button
+              <a
                 class="echoo-linkup-btn--hero"
-                id="overlay-btn-create"
-                type="button"
+                href="auth.html?mode=signup&amp;next=linkup.html"
                 style="width: 100%"
               >
                 Create account &rarr;
-              </button>
-              <button
+              </a>
+              <a
                 class="echoo-linkup-btn--outline"
-                id="overlay-btn-signin"
-                type="button"
+                href="auth.html?mode=signin&amp;next=linkup.html"
                 style="width: 100%"
               >
                 Sign in
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -305,84 +299,6 @@
           </div>
         </section>
       </main>
-
-      <!-- Super Minimal Auth Sheet Modal Overlay -->
-      <div
-        class="linkup-minimal-auth-sheet"
-        id="linkup-minimal-auth-sheet"
-        aria-hidden="true"
-      >
-        <div class="linkup-minimal-auth-card">
-          <div class="linkup-auth-nav-tabs">
-            <button
-              class="linkup-auth-tab active"
-              id="auth-tab-signup"
-              type="button"
-            >
-              Create Account
-            </button>
-            <button class="linkup-auth-tab" id="auth-tab-signin" type="button">
-              Sign In
-            </button>
-          </div>
-
-          <form
-            id="linkup-minimal-auth-form"
-            class="linkup-auth-input-group"
-            onsubmit="event.preventDefault()"
-          >
-            <input
-              class="linkup-auth-field"
-              type="email"
-              id="auth-email-input"
-              placeholder="Email address or phone number"
-              required
-            />
-            <input
-              class="linkup-auth-field"
-              type="password"
-              id="auth-pass-input"
-              placeholder="Password"
-              required
-            />
-            <button
-              class="echoo-linkup-btn--hero"
-              type="submit"
-              id="auth-submit-btn"
-              style="width: 100%; margin-top: 6px"
-            >
-              Continue →
-            </button>
-            <p
-              id="linkup-auth-error"
-              hidden
-              style="
-                margin: 10px 0 0;
-                color: #f3b1a1;
-                font-size: 12px;
-                line-height: 1.45;
-                text-align: center;
-              "
-            ></p>
-          </form>
-
-          <button
-            type="button"
-            id="auth-close-btn"
-            style="
-              background: none;
-              border: 0;
-              color: rgba(248, 245, 239, 0.5);
-              font-size: 12px;
-              font-weight: 500;
-              cursor: pointer;
-              text-align: center;
-            "
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
 
       <!-- Floating Bottom Navigation -->
       <nav class="bottom-nav" aria-label="Main navigation">

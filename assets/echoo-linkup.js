@@ -170,21 +170,25 @@
       state.activePresence &&
       state.activePresence.placeId === state.placeContext.id
     ) {
+      state.lockReason = null;
       setPresenceState("here");
       return "here";
     }
     const placeCoords = state.placeCoords || resolvePlaceCoords();
     state.placeCoords = placeCoords;
     if (!placeCoords) {
+      state.lockReason = "no-coords";
       setPresenceState("locked");
       return "locked";
     }
     const fix = await pingLocation();
     if (!fix) {
+      state.lockReason = "location-off";
       setPresenceState("locked");
       return "locked";
     }
     const within = distanceMeters(fix, placeCoords) <= PROXIMITY_RADIUS_M;
+    state.lockReason = within ? null : "too-far";
     setPresenceState(within ? "ready" : "locked");
     return state.presenceState;
   }
@@ -469,11 +473,28 @@
       );
       btn.addEventListener("click", () => onCheckinToggle());
     } else {
-      // Locked: blurred, not focusable, not clickable.
+      // Locked: blurred, not focusable. The quiet hint says WHY — location
+      // off, too far, or the venue has no coordinates — so the state never
+      // feels broken.
+      const hint =
+        state.lockReason === "location-off"
+          ? "Turn on location to check in here"
+          : state.lockReason === "too-far"
+            ? "Get within 150 m to check in"
+            : state.lockReason === "no-coords"
+              ? "This place can't host check-ins yet"
+              : "Link Up check-in is nearby only";
       btn.setAttribute("disabled", "disabled");
       btn.setAttribute("aria-disabled", "true");
       btn.setAttribute("tabindex", "-1");
-      btn.setAttribute("aria-label", "Link Up check-in is nearby only");
+      btn.setAttribute("aria-label", hint);
+      btn.title = hint;
+      host.appendChild(btn);
+      const caption = document.createElement("span");
+      caption.className = "echoo-linkup-checkin-hint";
+      caption.textContent = hint;
+      host.appendChild(caption);
+      return;
     }
     host.appendChild(btn);
   }
@@ -1636,12 +1657,12 @@
 
     const openCreate = () => {
       dismissOverlay();
-      openMinimalAuth("signup");
+      window.location.href = "auth.html?mode=signup&next=linkup.html";
     };
 
     const openSignIn = () => {
       dismissOverlay();
-      openMinimalAuth("signin");
+      window.location.href = "auth.html?mode=signin&next=linkup.html";
     };
 
     if (btnCreateAccount)
@@ -1658,109 +1679,7 @@
     }
   }
 
-  function openMinimalAuth(mode = "signup") {
-    const sheet = document.getElementById("linkup-minimal-auth-sheet");
-    if (!sheet) return;
-
-    const tabSignup = document.getElementById("auth-tab-signup");
-    const tabSignin = document.getElementById("auth-tab-signin");
-    const submitBtn = document.getElementById("auth-submit-btn");
-    let currentMode = mode === "signin" ? "signin" : "signup";
-
-    function paintMode() {
-      if (currentMode === "signup") {
-        tabSignup?.classList.add("active");
-        tabSignin?.classList.remove("active");
-        if (submitBtn) submitBtn.textContent = "Create account →";
-      } else {
-        tabSignin?.classList.add("active");
-        tabSignup?.classList.remove("active");
-        if (submitBtn) submitBtn.textContent = "Sign in →";
-      }
-    }
-    paintMode();
-
-    sheet.classList.add("is-open");
-    sheet.setAttribute("aria-hidden", "false");
-
-    if (tabSignup)
-      tabSignup.onclick = () => {
-        currentMode = "signup";
-        paintMode();
-      };
-    if (tabSignin)
-      tabSignin.onclick = () => {
-        currentMode = "signin";
-        paintMode();
-      };
-
-    const closeBtn = document.getElementById("auth-close-btn");
-    if (closeBtn) {
-      closeBtn.onclick = () => {
-        sheet.classList.remove("is-open");
-        sheet.setAttribute("aria-hidden", "true");
-      };
-    }
-
-    const form = document.getElementById("linkup-minimal-auth-form");
-    if (form && !form.dataset.echooAuthWired) {
-      form.dataset.echooAuthWired = "true";
-      form.onsubmit = async (e) => {
-        e.preventDefault();
-        const errorEl = document.getElementById("linkup-auth-error");
-        const showError = (message) => {
-          if (!errorEl) return;
-          errorEl.textContent = message;
-          errorEl.hidden = false;
-        };
-        if (errorEl) errorEl.hidden = true;
-
-        const email = String(
-          document.getElementById("auth-email-input")?.value || "",
-        )
-          .trim()
-          .toLowerCase();
-        const password = String(
-          document.getElementById("auth-pass-input")?.value || "",
-        );
-        if (!email || !password)
-          return showError("Enter your email and password.");
-
-        const client = window.EchooAuth?.client;
-        if (!client) return showError("Sign in isn't available right now.");
-
-        if (submitBtn) submitBtn.disabled = true;
-        try {
-          if (currentMode === "signup") {
-            const { data, error } = await client.auth.signUp({
-              email,
-              password,
-            });
-            if (error) return showError(error.message);
-            if (!data?.session) {
-              return showError(
-                "Check your email to confirm your account, then sign in.",
-              );
-            }
-          } else {
-            const { error } = await client.auth.signInWithPassword({
-              email,
-              password,
-            });
-            if (error) return showError(error.message);
-          }
-          try {
-            localStorage.setItem("echoo_linkup_intro_seen", "true");
-          } catch (_e) {}
-          window.location.reload();
-        } catch (_e) {
-          showError("Couldn't sign in right now. Try again in a moment.");
-        } finally {
-          if (submitBtn) submitBtn.disabled = false;
-        }
-      };
-    }
-  }
+  // Auto-init: engine first, then Hub & smart intro slide overlay.
 
   // Auto-init: engine first, then Hub & smart intro slide overlay
   function boot() {
