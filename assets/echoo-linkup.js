@@ -247,7 +247,13 @@
     const within =
       distanceMeters(fix, { lat: pd.lat, lng: pd.lng }) <= PROXIMITY_RADIUS_M;
     if (!within) return;
-    // Silently check in. No banner. The text flip is the whole confirmation.
+    // Invariant 1: presence is declared, never derived. Being back near the
+    // venue may PROMPT, never act — one quiet confirm, then the normal
+    // explicit check-in path.
+    const arrived = confirm(
+      `Back at ${pd.name || "this place"}? Check in for Link Up?`,
+    );
+    if (!arrived) return;
     await performCheckin(pd.placeId, pd.name);
   }
 
@@ -509,6 +515,15 @@
       showIncompleteProfilePrompt();
       return;
     }
+    // Invariant 8: adults only. No DOB (or under 18) → no Link Up.
+    if (res && res.reason === "age_unverified") {
+      showNotice(
+        "Link Up is 18+. Add your date of birth to join.",
+        "auth.html#profile",
+        "Add",
+      );
+      return;
+    }
     if (res?.ok && res.presence) {
       state.activePresence = {
         id: res.presence.id,
@@ -524,14 +539,22 @@
   }
 
   function showIncompleteProfilePrompt() {
+    showNotice(
+      "Add a photo and a one-liner to start linking up.",
+      "auth.html#profile",
+      "Add",
+    );
+  }
+
+  function showNotice(copy, linkHref, linkLabel) {
     let el = document.getElementById("echoo-linkup-notice");
     if (!el) {
       el = document.createElement("div");
       el.id = "echoo-linkup-notice";
       el.className = "echoo-linkup-notice";
       el.innerHTML = `
-        <span class="echoo-linkup-notice-copy">Add a photo and a one-liner to start linking up.</span>
-        <a class="echoo-linkup-notice-link" href="auth.html#profile">Add</a>`;
+        <span class="echoo-linkup-notice-copy"></span>
+        <a class="echoo-linkup-notice-link" href="#"></a>`;
       document.body.appendChild(el);
       requestAnimationFrame(() => el.classList.add("is-open"));
       setTimeout(() => {
@@ -539,6 +562,10 @@
         setTimeout(() => el.remove(), 300);
       }, 6000);
     }
+    el.querySelector(".echoo-linkup-notice-copy").textContent = copy;
+    const link = el.querySelector(".echoo-linkup-notice-link");
+    link.href = linkHref;
+    link.textContent = linkLabel;
   }
 
   async function autoCheckout() {
@@ -1056,8 +1083,11 @@
         .eq("user_id", userId)
         .maybeSingle();
       const incomplete = false;
+      const ghost = profile?.linkup_status === "ghost";
       const paused =
-        !!profile?.linkup_status && profile.linkup_status !== "active";
+        !!profile?.linkup_status &&
+        profile.linkup_status !== "active" &&
+        profile.linkup_status !== "ghost";
 
       const { data: presences } = await client
         .from("linkup_presence")
@@ -1078,8 +1108,12 @@
         .select("match_id, response")
         .eq("user_id", userId);
       const matchIds = (myMembers || []).map((m) => m.match_id);
+      const myResponses = new Map(
+        (myMembers || []).map((m) => [m.match_id, m.response]),
+      );
 
       const pending = [];
+      const waiting = [];
       const conversations = [];
       if (matchIds.length) {
         const { data: matches } = await client
@@ -1094,7 +1128,10 @@
             new Date(m.expires_at).getTime() > Date.now()
           ) {
             const row = await loadMatchPeer(client, m, userId);
-            if (row) pending.push(row);
+            if (!row) continue;
+            // Split pending by my response: "You're in — waiting for them."
+            if (myResponses.get(m.id) === "accepted") waiting.push(row);
+            else pending.push(row);
           } else if (m.status === "accepted") {
             const row = await loadAcceptedConvo(client, m, userId);
             if (row) conversations.push(row);
@@ -1105,9 +1142,11 @@
       return {
         incomplete,
         paused,
+        ghost,
         presence,
         placeName,
         pending,
+        waiting,
         conversations,
       };
     }
@@ -1239,10 +1278,21 @@
 
       const parts = [renderPresence(snap)];
       if (snap.pending.length) parts.push(renderPending(snap.pending));
+      if (snap.waiting.length) parts.push(renderWaiting(snap.waiting));
       if (snap.conversations.length)
         parts.push(renderConversations(snap.conversations));
-      if (!snap.pending.length && !snap.conversations.length) {
-        parts.push(snap.presence ? renderScanning() : renderEmptyStandby());
+      if (
+        !snap.pending.length &&
+        !snap.waiting.length &&
+        !snap.conversations.length
+      ) {
+        parts.push(
+          snap.presence
+            ? snap.ghost
+              ? renderGhosting()
+              : renderScanning()
+            : renderEmptyStandby(),
+        );
       }
       setHtml(parts.join(""));
       if (snap.presence) startTtl(snap.presence.expires_at);
@@ -1260,12 +1310,16 @@
         </div>`;
       }
       const where = escapeHtml(snap.placeName || "your spot");
-      return `<div class="echoo-linkup-presence-card echoo-linkup-presence-card--active">
+      const ghostActive = snap.ghost
+        ? `<button type="button" class="echoo-linkup-presence-cta echoo-linkup-presence-cta--ghost" data-linkup-unghost title="Visible to new matches again">Ghost · on</button>`
+        : `<button type="button" class="echoo-linkup-presence-cta echoo-linkup-presence-cta--ghost" data-linkup-ghost title="Stay checked in but hidden from new matches">Ghost</button>`;
+      return `<div class="echoo-linkup-presence-card echoo-linkup-presence-card--active${snap.ghost ? " is-ghost" : ""}">
         <span class="echoo-linkup-presence-dot echoo-linkup-presence-dot--live"></span>
         <div class="echoo-linkup-presence-text">
-          <span class="echoo-linkup-presence-title">Presence active · ${where}</span>
+          <span class="echoo-linkup-presence-title">${snap.ghost ? "Ghosting" : "Presence active"} · ${where}</span>
           <span class="echoo-linkup-presence-sub" data-linkup-ttl>Expires soon</span>
         </div>
+        ${ghostActive}
         <button type="button" class="echoo-linkup-presence-cta echoo-linkup-presence-cta--ghost" data-linkup-leave>Leave</button>
       </div>`;
     }
@@ -1340,6 +1394,37 @@
       return `<div class="echoo-linkup-empty"><p class="echoo-linkup-empty-copy">Scanning for the right people here — we'll ping you the moment there's a match.</p></div>`;
     }
 
+    function renderGhosting() {
+      return `<div class="echoo-linkup-empty"><p class="echoo-linkup-empty-copy">Ghosting — you're checked in but hidden from new matches. Your conversations stay open.</p></div>`;
+    }
+
+    function renderWaiting(list) {
+      const cards = list
+        .map((m) => {
+          const name = escapeHtml(m.peer.displayName);
+          const photo = m.peer.photoUrl
+            ? `style="background-image:url('${escapeHtml(m.peer.photoUrl)}')"`
+            : "";
+          const fallback = m.peer.photoUrl ? "" : initials(m.peer.displayName);
+          const where = escapeHtml(m.placeName || "this place");
+          return `<article class="echoo-linkup-peer-card echoo-linkup-peer-card--waiting">
+            <div class="echoo-linkup-peer-avatar ${m.peer.photoUrl ? "has-photo" : ""}" ${photo}>${fallback}</div>
+            <div class="echoo-linkup-peer-body">
+              <div class="echoo-linkup-peer-row">
+                <span class="echoo-linkup-peer-name">${name}</span>
+                <span class="echoo-linkup-peer-reason">You're in</span>
+              </div>
+              <span class="echoo-linkup-peer-meta">Waiting for them · at ${where}</span>
+            </div>
+          </article>`;
+        })
+        .join("");
+      return `<section class="echoo-linkup-section">
+        <h3 class="echoo-linkup-section-title">Waiting on them</h3>
+        <div class="echoo-linkup-match-list">${cards}</div>
+      </section>`;
+    }
+
     // ── Actions ────────────────────────────────────────────────────────
     function wireActions() {
       const vp = viewport();
@@ -1349,6 +1434,12 @@
       );
       vp.querySelectorAll("[data-linkup-resume]").forEach((b) =>
         b.addEventListener("click", onResume),
+      );
+      vp.querySelectorAll("[data-linkup-ghost]").forEach((b) =>
+        b.addEventListener("click", () => onGhostToggle("ghost")),
+      );
+      vp.querySelectorAll("[data-linkup-unghost]").forEach((b) =>
+        b.addEventListener("click", () => onGhostToggle("active")),
       );
       vp.querySelectorAll("[data-linkup-accept]").forEach((b) =>
         b.addEventListener("click", () =>
@@ -1385,6 +1476,18 @@
       const { error } = await state.supabase
         .from("user_onboarding_profiles")
         .update({ linkup_status: "active" })
+        .eq("user_id", state.userId);
+      if (error) return;
+      await run();
+    }
+
+    // Ghost mode: presence without new matching (invariant 10). One field
+    // toggle on the presence card — no scanner, no infra.
+    async function onGhostToggle(nextStatus) {
+      if (!state.supabase || !state.userId) return;
+      const { error } = await state.supabase
+        .from("user_onboarding_profiles")
+        .update({ linkup_status: nextStatus })
         .eq("user_id", state.userId);
       if (error) return;
       await run();
