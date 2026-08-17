@@ -1587,7 +1587,7 @@
   };
 
   // ────────────────────────────────────────────────────────────────────
-  // Intro Multi-Step Showcase Controller & Minimal Auth Sheet
+  // Intro Multi-Step Flash Showcase Controller & Auth Navigation
   // ────────────────────────────────────────────────────────────────────
   function initIntroCarousel() {
     const slides = document.querySelectorAll(".linkup-slide-layer");
