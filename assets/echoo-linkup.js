@@ -1297,23 +1297,24 @@
       // Paused / opted out via settings — show a resume card.
       if (snap.paused) return renderPaused();
 
+      const hasActivity =
+        snap.pending.length ||
+        snap.waiting.length ||
+        snap.conversations.length;
+
+      // Clean standby landing when not checked in and no matches/chats.
+      if (!snap.presence && !hasActivity) {
+        setHtml(renderEmptyStandby());
+        return;
+      }
+
       const parts = [renderPresence(snap)];
       if (snap.pending.length) parts.push(renderPending(snap.pending));
       if (snap.waiting.length) parts.push(renderWaiting(snap.waiting));
       if (snap.conversations.length)
         parts.push(renderConversations(snap.conversations));
-      if (
-        !snap.pending.length &&
-        !snap.waiting.length &&
-        !snap.conversations.length
-      ) {
-        parts.push(
-          snap.presence
-            ? snap.ghost
-              ? renderGhosting()
-              : renderScanning()
-            : renderEmptyStandby(),
-        );
+      if (!hasActivity) {
+        parts.push(snap.ghost ? renderGhosting() : renderScanning());
       }
       setHtml(parts.join(""));
       if (snap.presence) startTtl(snap.presence.expires_at);
@@ -1327,7 +1328,7 @@
             <span class="echoo-linkup-presence-title">Presence off · Standby</span>
             <span class="echoo-linkup-presence-sub">Check in at a venue to start matching.</span>
           </div>
-          <a class="echoo-linkup-presence-cta" href="events.html">Find a place</a>
+          <button type="button" class="echoo-linkup-presence-cta" data-linkup-find-place>Find a place</button>
         </div>`;
       }
       const where = escapeHtml(snap.placeName || "your spot");
@@ -1408,7 +1409,16 @@
     }
 
     function renderEmptyStandby() {
-      return `<div class="echoo-linkup-empty"><p class="echoo-linkup-empty-copy">No matches yet. Check in somewhere to meet the right people.</p></div>`;
+      return `<div class="echoo-linkup-standby">
+        <div class="echoo-linkup-standby-icon" aria-hidden="true">${ICON_LINK}</div>
+        <h2 class="echoo-linkup-standby-title">Ready when you are</h2>
+        <p class="echoo-linkup-standby-copy">Find a place nearby, check in when you arrive, and meet people who match your vibe.</p>
+        <button type="button" class="echoo-linkup-standby-cta" data-linkup-find-place>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+          Find a place
+        </button>
+        <p class="echoo-linkup-standby-hint">Matching only starts after you check in.</p>
+      </div>`;
     }
 
     function renderScanning() {
@@ -1450,6 +1460,9 @@
     function wireActions() {
       const vp = viewport();
       if (!vp) return;
+      vp.querySelectorAll("[data-linkup-find-place]").forEach((b) =>
+        b.addEventListener("click", () => FindPlace.open()),
+      );
       vp.querySelectorAll("[data-linkup-leave]").forEach((b) =>
         b.addEventListener("click", onLeave),
       );
@@ -1571,6 +1584,7 @@
     refreshHub: Hub.scheduleRefresh,
     checkIn: onCheckinToggle,
     isEnabled: () => state.enabled === true,
+    openFindPlace: () => FindPlace.open(),
     // For the place-detail integration to call when a place sheet opens.
     setPlaceContext(ctx) {
       state.placeContext = ctx;
@@ -1587,95 +1601,417 @@
   };
 
   // ────────────────────────────────────────────────────────────────────
-  // Intro Multi-Step Flash Showcase Controller & Auth Navigation
+  // First-time welcome overlay (localStorage-gated, blurs the hub)
   // ────────────────────────────────────────────────────────────────────
-  function initIntroCarousel() {
-    const slides = document.querySelectorAll(".linkup-slide-layer");
-    const dots = document.querySelectorAll("[data-slide-indicator]");
-    const skipBtn = document.getElementById("linkup-skip-btn");
-    const btnNextStep = document.getElementById("btn-next-step");
-    const btnSignIn = document.getElementById("btn-sign-in");
+  const WELCOME_KEY = "echoo_linkup_welcome_seen";
 
-    let currentSlide = 0;
+  function hasSeenWelcome() {
+    try {
+      return localStorage.getItem(WELCOME_KEY) === "1";
+    } catch (_e) {
+      return false;
+    }
+  }
 
-    function goToSlide(index) {
-      if (!slides.length) return;
-      currentSlide = Math.max(0, Math.min(index, slides.length - 1));
-      slides.forEach((s, i) => s.classList.toggle("active", i === currentSlide));
-      dots.forEach((d, i) => d.classList.toggle("active", i === currentSlide));
+  function markWelcomeSeen() {
+    try {
+      localStorage.setItem(WELCOME_KEY, "1");
+    } catch (_e) {
+      /* private mode */
+    }
+  }
 
-      if (btnNextStep) {
-        if (currentSlide === slides.length - 1) {
-          btnNextStep.innerHTML = "Create account &rarr;";
-        } else {
-          btnNextStep.innerHTML = "Next &rarr;";
-        }
+  const Welcome = (() => {
+    let index = 0;
+    let wired = false;
+    let onDone = null;
+
+    function root() {
+      return document.getElementById("echoo-linkup-welcome");
+    }
+
+    function paint() {
+      const el = root();
+      if (!el) return;
+      const slides = el.querySelectorAll("[data-welcome-slide]");
+      const dots = el.querySelectorAll("[data-welcome-dot]");
+      const next = document.getElementById("linkup-welcome-next");
+      slides.forEach((s, i) => s.classList.toggle("is-active", i === index));
+      dots.forEach((d, i) => d.classList.toggle("is-on", i === index));
+      if (next) {
+        next.textContent = index >= slides.length - 1 ? "Done" : "Next";
       }
     }
 
-    dots.forEach((dot, index) => {
-      dot.addEventListener("click", () => {
-        goToSlide(index);
-      });
-    });
-
-    if (skipBtn) {
-      skipBtn.addEventListener("click", () => {
-        goToSlide(slides.length - 1);
-      });
+    function finish() {
+      markWelcomeSeen();
+      const el = root();
+      if (el) {
+        el.hidden = true;
+        el.setAttribute("aria-hidden", "true");
+      }
+      document.body.classList.remove("linkup-welcome-open");
+      if (typeof onDone === "function") {
+        const cb = onDone;
+        onDone = null;
+        cb();
+      }
     }
 
-    if (btnNextStep) {
-      btnNextStep.addEventListener("click", () => {
-        if (currentSlide < slides.length - 1) {
-          goToSlide(currentSlide + 1);
-        } else {
-          window.location.href = "auth.html?mode=signup&next=linkup.html";
+    function open(done) {
+      const el = root();
+      // Returning visitors: never show carousel, never auto-open Find a place.
+      if (!el || hasSeenWelcome()) return;
+      onDone = done || null;
+      index = 0;
+      el.hidden = false;
+      el.setAttribute("aria-hidden", "false");
+      document.body.classList.add("linkup-welcome-open");
+      paint();
+      wire();
+    }
+
+    function wire() {
+      if (wired) return;
+      wired = true;
+      const el = root();
+      if (!el) return;
+      const next = document.getElementById("linkup-welcome-next");
+      const skip = document.getElementById("linkup-welcome-skip");
+      const slides = el.querySelectorAll("[data-welcome-slide]");
+
+      if (next) {
+        next.addEventListener("click", () => {
+          if (index < slides.length - 1) {
+            index += 1;
+            paint();
+          } else {
+            finish();
+          }
+        });
+      }
+      if (skip) skip.addEventListener("click", finish);
+      el.querySelectorAll("[data-welcome-skip]").forEach((n) =>
+        n.addEventListener("click", finish),
+      );
+    }
+
+    return { open, finish };
+  })();
+
+  // ────────────────────────────────────────────────────────────────────
+  // Find a place sheet — nearby search + discover handoff
+  // ────────────────────────────────────────────────────────────────────
+  const FindPlace = (() => {
+    const SEARCH_URL =
+      "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/location-search";
+    const EXPLORE_URL =
+      "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1/explore-search";
+    const ANON = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
+
+    let wired = false;
+    let category = "";
+    let query = "";
+    let debounce = null;
+    let coords = null;
+    let lastToken = 0;
+
+    function root() {
+      return document.getElementById("echoo-linkup-find");
+    }
+    function resultsEl() {
+      return document.getElementById("linkup-find-results");
+    }
+    function inputEl() {
+      return document.getElementById("linkup-find-input");
+    }
+
+    async function headers() {
+      if (window.EchooAuth?.authHeaders) {
+        return window.EchooAuth.authHeaders({
+          "Content-Type": "application/json",
+        });
+      }
+      return {
+        "Content-Type": "application/json",
+        apikey: ANON,
+        Authorization: `Bearer ${ANON}`,
+      };
+    }
+
+    function cityFallback() {
+      try {
+        const prefs = JSON.parse(
+          localStorage.getItem("echoo_preferences") || "{}",
+        );
+        return prefs.city || "Toronto";
+      } catch (_e) {
+        return "Toronto";
+      }
+    }
+
+    function formatDistance(meters) {
+      if (!Number.isFinite(meters)) return "";
+      if (meters < 1000) return `${Math.max(1, Math.round(meters))} m`;
+      return `${(meters / 1000).toFixed(meters < 10000 ? 1 : 0)} km`;
+    }
+
+    function mapRow(item) {
+      const id = item.entity_id || item.id || item.canonicalId || "";
+      const name = item.title || item.name || item.display_name || "Place";
+      const categoryLabel =
+        item.category || item.entity_type || item.primaryCategory || "";
+      const address =
+        item.address ||
+        item.formatted_address ||
+        item.city ||
+        item.subtitle ||
+        "";
+      const meters =
+        item.distance_meters ??
+        item.distanceMeters ??
+        (Number.isFinite(item.distance) ? item.distance : null);
+      const image =
+        item.image_url ||
+        item.imageUrl ||
+        item.image?.url ||
+        item.photo_url ||
+        "";
+      return {
+        id: String(id || ""),
+        name: String(name),
+        detail: [categoryLabel, address].filter(Boolean).join(" · "),
+        distance: formatDistance(Number(meters)),
+        image: String(image || ""),
+      };
+    }
+
+    function setLoading(copy) {
+      const box = resultsEl();
+      if (!box) return;
+      box.innerHTML = `<div class="linkup-find-loading"><div class="echoo-linkup-spinner" aria-hidden="true"></div><span>${escapeHtml(copy || "Looking nearby…")}</span></div>`;
+    }
+
+    function setEmpty(copy) {
+      const box = resultsEl();
+      if (!box) return;
+      box.innerHTML = `<div class="linkup-find-empty">${escapeHtml(copy || "No places found. Try another search.")}</div>`;
+    }
+
+    function renderRows(rows) {
+      const box = resultsEl();
+      if (!box) return;
+      if (!rows.length) return setEmpty();
+      box.innerHTML = rows
+        .map((r) => {
+          const thumb = r.image
+            ? `style="background-image:url('${escapeHtml(r.image)}')"`
+            : "";
+          const letter = escapeHtml((r.name || "?").charAt(0).toUpperCase());
+          const href = r.id
+            ? `events.html?place=${encodeURIComponent(r.id)}&name=${encodeURIComponent(r.name)}`
+            : `events.html?query=${encodeURIComponent(r.name)}`;
+          return `<a class="linkup-find-row" href="${escapeHtml(href)}">
+            <span class="linkup-find-thumb" ${thumb}>${r.image ? "" : letter}</span>
+            <span class="linkup-find-meta">
+              <span class="linkup-find-name">${escapeHtml(r.name)}</span>
+              <span class="linkup-find-detail">${escapeHtml(r.detail || "Nearby place")}</span>
+            </span>
+            ${r.distance ? `<span class="linkup-find-dist">${escapeHtml(r.distance)}</span>` : ""}
+          </a>`;
+        })
+        .join("");
+    }
+
+    async function searchNearby() {
+      const token = ++lastToken;
+      setLoading(query ? "Searching…" : "Looking nearby…");
+      if (!coords) {
+        coords = await pingLocation();
+      }
+      const hdrs = await headers();
+      let rows = [];
+
+      try {
+        if (coords) {
+          const res = await fetch(SEARCH_URL, {
+            method: "POST",
+            headers: hdrs,
+            body: JSON.stringify({
+              lat: coords.lat,
+              lng: coords.lng,
+              radiusMeters: 12000,
+              category: category || undefined,
+              limit: 24,
+            }),
+          });
+          if (res.ok) {
+            const payload = await res.json();
+            rows = (payload.results || []).map(mapRow);
+          }
         }
-      });
+      } catch (_e) {
+        /* fall through */
+      }
+
+      if (query || !rows.length) {
+        try {
+          const q =
+            query ||
+            (category
+              ? `${category} near me`
+              : `places to go in ${cityFallback()}`);
+          const res = await fetch(EXPLORE_URL, {
+            method: "POST",
+            headers: hdrs,
+            body: JSON.stringify({
+              query: q,
+              city: cityFallback(),
+              lat: coords?.lat,
+              lng: coords?.lng,
+              includeLiveFallback: true,
+              limit: 16,
+            }),
+          });
+          if (res.ok) {
+            const payload = await res.json();
+            const explore = (payload.results || []).map(mapRow);
+            if (query || !rows.length) rows = explore;
+            else {
+              const seen = new Set(rows.map((r) => r.id || r.name));
+              for (const r of explore) {
+                const key = r.id || r.name;
+                if (!seen.has(key)) {
+                  seen.add(key);
+                  rows.push(r);
+                }
+              }
+            }
+          }
+        } catch (_e) {
+          /* ignore */
+        }
+      }
+
+      if (token !== lastToken) return;
+
+      if (query) {
+        const q = query.toLowerCase();
+        rows = rows.filter(
+          (r) =>
+            r.name.toLowerCase().includes(q) ||
+            r.detail.toLowerCase().includes(q),
+        );
+      }
+      if (category && rows.length) {
+        const c = category.toLowerCase();
+        const filtered = rows.filter((r) =>
+          `${r.name} ${r.detail}`.toLowerCase().includes(c),
+        );
+        if (filtered.length) rows = filtered;
+      }
+
+      renderRows(rows.slice(0, 20));
     }
 
-    if (btnSignIn) {
-      btnSignIn.addEventListener("click", () => {
-        window.location.href = "auth.html?mode=signin&next=linkup.html";
-      });
+    function scheduleSearch() {
+      clearTimeout(debounce);
+      debounce = setTimeout(searchNearby, 220);
     }
 
-    goToSlide(0);
-  }
+    function open() {
+      const el = root();
+      if (!el) {
+        window.location.href = "events.html";
+        return;
+      }
+      wire();
+      el.hidden = false;
+      el.setAttribute("aria-hidden", "false");
+      requestAnimationFrame(() => el.classList.add("is-open"));
+      document.body.classList.add("linkup-find-open");
+      const input = inputEl();
+      if (input && !input.value) input.focus({ preventScroll: true });
+      searchNearby();
+    }
 
-  // Auto-init: engine first, then Hub & stable intro showcase
+    function close() {
+      const el = root();
+      if (!el) return;
+      el.classList.remove("is-open");
+      document.body.classList.remove("linkup-find-open");
+      setTimeout(() => {
+        if (!el.classList.contains("is-open")) {
+          el.hidden = true;
+          el.setAttribute("aria-hidden", "true");
+        }
+      }, 240);
+    }
+
+    function wire() {
+      if (wired) return;
+      wired = true;
+      const el = root();
+      if (!el) return;
+
+      el.querySelectorAll("[data-find-close]").forEach((n) =>
+        n.addEventListener("click", close),
+      );
+
+      el.querySelectorAll("[data-find-chip]").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          category = chip.getAttribute("data-find-chip") || "";
+          el.querySelectorAll("[data-find-chip]").forEach((c) =>
+            c.classList.toggle("is-on", c === chip),
+          );
+          scheduleSearch();
+        });
+      });
+
+      const input = inputEl();
+      if (input) {
+        input.addEventListener("input", () => {
+          query = input.value.trim();
+          scheduleSearch();
+        });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            query = input.value.trim();
+            searchNearby();
+          }
+        });
+      }
+    }
+
+    return { open, close };
+  })();
+
+  // Auto-init: stable hub first (no carousel flash), welcome only once
   function boot() {
-    let accessAllowed = false;
+    const vp = document.getElementById("echoo-linkup-viewport");
+    if (vp) vp.style.display = "flex";
+
     Promise.resolve(window.echooAccessReady)
       .then((access) => {
         if (!access?.ok) return null;
-        accessAllowed = true;
         return init();
       })
       .then(() => {
-        if (!accessAllowed) return;
-        Hub.init();
-        const introShell = document.getElementById("echoo-linkup-intro-shell");
-        const viewport = document.getElementById("echoo-linkup-viewport");
-
-        if (state.userId) {
-          // User is logged into Echoo -> IMMEDIATELY show Link Up normal logged-in feature page!
-          if (introShell) introShell.style.display = "none";
-          if (viewport) viewport.style.display = "flex";
-        } else {
-          // Signed-out user → show stable hero landing screen & stepper
-          if (introShell) introShell.style.display = "flex";
-          if (viewport) viewport.style.display = "none";
-          initIntroCarousel();
+        if (document.getElementById("echoo-linkup-viewport")) {
+          Hub.init();
         }
       })
       .catch(() => {
-        const introShell = document.getElementById("echoo-linkup-intro-shell");
-        const viewport = document.getElementById("echoo-linkup-viewport");
-        if (introShell) introShell.style.display = "flex";
-        if (viewport) viewport.style.display = "none";
-        initIntroCarousel();
+        /* hub stays on loading / signed-out state */
+      })
+      .finally(() => {
+        Welcome.open(() => {
+          // After first-time carousel, surface Find a place for signed-in standby.
+          if (state.userId) {
+            setTimeout(() => FindPlace.open(), 280);
+          }
+        });
       });
   }
 

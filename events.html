@@ -5085,6 +5085,16 @@
         }
         if (params.get("culturePicker") === "1")
           setTimeout(openCulturePicker, 180);
+        const deepPlace = params.get("place");
+        if (deepPlace) {
+          setTimeout(() => {
+            openDetailByItem({
+              id: deepPlace,
+              canonicalId: deepPlace,
+              title: params.get("name") || "Place",
+            });
+          }, 320);
+        }
       });
       window.addEventListener("pagehide", persistCurrentSurface);
       document
