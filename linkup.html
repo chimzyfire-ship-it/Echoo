@@ -85,22 +85,6 @@
         align-items: center;
         gap: 10px;
       }
-      .culture-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 9999px;
-        background: rgba(248, 245, 239, 0.06);
-        border: 1px solid rgba(248, 245, 239, 0.12);
-        color: var(--ink);
-        font-size: 12px;
-        font-weight: 550;
-        text-decoration: none;
-      }
-      .culture-pill-icon {
-        font-size: 13px;
-      }
       .bottom-nav {
         position: fixed;
         left: 50%;
@@ -152,7 +136,6 @@
   </head>
   <body data-page="linkup">
     <div class="app-shell">
-      <!-- Top Bar -->
       <header class="topbar" aria-label="Echoo">
         <a class="brand" href="index.html" aria-label="Echoo home">
           <img src="assets/echoo-wordmark.png" alt="echoo" />
@@ -173,84 +156,11 @@
         </div>
       </header>
 
-      <!-- Link Up Module Main Shell -->
       <main class="echoo-linkup-module">
-        <!-- Unified, Stable Multi-Step Flash Landing Showcase -->
-        <section class="echoo-linkup-intro-shell" id="echoo-linkup-intro-shell" aria-label="Link Up Introduction">
-          <!-- Top Progress Stepper & Skip Action -->
-          <div class="linkup-top-nav">
-            <div class="linkup-progress-track" aria-label="Slide indicators">
-              <button class="linkup-progress-dot active" data-slide-indicator="0" type="button" aria-label="Slide 1"></button>
-              <button class="linkup-progress-dot" data-slide-indicator="1" type="button" aria-label="Slide 2"></button>
-              <button class="linkup-progress-dot" data-slide-indicator="2" type="button" aria-label="Slide 3"></button>
-              <button class="linkup-progress-dot" data-slide-indicator="3" type="button" aria-label="Slide 4"></button>
-            </div>
-            <button class="linkup-skip-btn" id="linkup-skip-btn" type="button">Skip</button>
-          </div>
-
-          <!-- Flash Screen Slide Layers (Only active slide is visible) -->
-          <div class="linkup-slides-container">
-            <!-- Slide 0: Link Up -->
-            <div class="linkup-slide-layer active" data-slide-index="0">
-              <div class="linkup-slide-content">
-                <h1 class="linkup-hero-title">Link up.</h1>
-                <p class="linkup-hero-tagline">
-                  <span class="gold-text">Right people. Right place.</span><br />
-                  Real connections.
-                </p>
-                <p class="linkup-hero-desc">See who's at the same spot or nearby in real time.</p>
-              </div>
-            </div>
-
-            <!-- Slide 1: Vibe Check -->
-            <div class="linkup-slide-layer" data-slide-index="1">
-              <div class="linkup-slide-content">
-                <h2 class="linkup-hero-title">Vibe check.</h2>
-                <p class="linkup-hero-tagline">
-                  <span class="gold-text">Instant matches.</span><br />
-                  Curated by vibe.
-                </p>
-                <p class="linkup-hero-desc">Connect with people who share your scene, music, and energy.</p>
-              </div>
-            </div>
-
-            <!-- Slide 2: Chat on the Spot -->
-            <div class="linkup-slide-layer" data-slide-index="2">
-              <div class="linkup-slide-content">
-                <h2 class="linkup-hero-title">Chat on the spot.</h2>
-                <p class="linkup-hero-tagline">
-                  <span class="gold-text">Real-time unlocked.</span><br />
-                  Ephemeral &amp; private.
-                </p>
-                <p class="linkup-hero-desc">Messages unlock when you're close and vanish when you leave.</p>
-              </div>
-            </div>
-
-            <!-- Slide 3: No Endless DMs -->
-            <div class="linkup-slide-layer" data-slide-index="3">
-              <div class="linkup-slide-content">
-                <h2 class="linkup-hero-title">No endless DMs.</h2>
-                <p class="linkup-hero-tagline">
-                  <span class="gold-text">Meet in real life.</span><br />
-                  Zero small talk.
-                </p>
-                <p class="linkup-hero-desc">Skip the awkward messaging and link up right where you are.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Action Group (Cleanly elevated above floating bottom navigation) -->
-          <div class="intro-action-group">
-            <button class="echoo-linkup-btn--hero" id="btn-next-step" type="button">Next &rarr;</button>
-            <button class="echoo-linkup-btn--outline" id="btn-sign-in" type="button">Sign in</button>
-          </div>
-        </section>
-        <!-- Live Presence Viewport (When User is Signed In & Active) -->
         <section
           id="echoo-linkup-viewport"
           class="echoo-linkup-viewport"
           data-linkup-viewport
-          style="display: none"
         >
           <div class="echoo-linkup-state">
             <div
@@ -261,7 +171,6 @@
         </section>
       </main>
 
-      <!-- Floating Bottom Navigation -->
       <nav class="bottom-nav" aria-label="Main navigation">
         <a class="nav-link" href="index.html">
           <svg viewBox="0 0 24 24">
@@ -297,7 +206,232 @@
       </nav>
     </div>
 
-    <!-- Scripts -->
+    <!-- First-time welcome overlay (blur + full-screen card) -->
+    <div
+      id="echoo-linkup-welcome"
+      class="linkup-welcome"
+      hidden
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Welcome to Link Up"
+    >
+      <div class="linkup-welcome-scrim" data-welcome-skip></div>
+      <div class="linkup-welcome-card">
+        <div class="linkup-welcome-top">
+          <div class="linkup-welcome-dots" aria-label="Slide indicators">
+            <span class="linkup-welcome-dot is-on" data-welcome-dot="0"></span>
+            <span class="linkup-welcome-dot" data-welcome-dot="1"></span>
+            <span class="linkup-welcome-dot" data-welcome-dot="2"></span>
+            <span class="linkup-welcome-dot" data-welcome-dot="3"></span>
+          </div>
+          <button
+            type="button"
+            class="linkup-welcome-skip"
+            id="linkup-welcome-skip"
+          >
+            Skip
+          </button>
+        </div>
+
+        <div class="linkup-welcome-slides">
+          <article
+            class="linkup-welcome-slide is-active"
+            data-welcome-slide="0"
+            style="
+              background-image:
+                linear-gradient(
+                  180deg,
+                  rgba(5, 5, 5, 0.55) 0%,
+                  rgba(5, 5, 5, 0.1) 36%,
+                  rgba(5, 5, 5, 0.88) 100%
+                ),
+                url('assets/echoo-linkup-bg.png');
+            "
+          >
+            <div class="linkup-welcome-copy">
+              <h1>Link up.</h1>
+              <p class="linkup-welcome-tag">
+                <span>Right people. Right place.</span><br />Real connections.
+              </p>
+              <p class="linkup-welcome-desc">
+                See who's at the same spot or nearby in real time.
+              </p>
+            </div>
+          </article>
+          <article
+            class="linkup-welcome-slide"
+            data-welcome-slide="1"
+            style="
+              background-image:
+                linear-gradient(
+                  180deg,
+                  rgba(5, 5, 5, 0.55) 0%,
+                  rgba(5, 5, 5, 0.1) 36%,
+                  rgba(5, 5, 5, 0.88) 100%
+                ),
+                url('assets/linkup-illus-2.jpg');
+            "
+          >
+            <div class="linkup-welcome-copy">
+              <h1>Vibe check.</h1>
+              <p class="linkup-welcome-tag">
+                <span>Instant matches.</span><br />Curated by vibe.
+              </p>
+              <p class="linkup-welcome-desc">
+                Connect with people who share your scene, music, and energy.
+              </p>
+            </div>
+          </article>
+          <article
+            class="linkup-welcome-slide"
+            data-welcome-slide="2"
+            style="
+              background-image:
+                linear-gradient(
+                  180deg,
+                  rgba(5, 5, 5, 0.55) 0%,
+                  rgba(5, 5, 5, 0.1) 36%,
+                  rgba(5, 5, 5, 0.88) 100%
+                ),
+                url('assets/linkup-illus-3.jpg');
+            "
+          >
+            <div class="linkup-welcome-copy">
+              <h1>Chat on the spot.</h1>
+              <p class="linkup-welcome-tag">
+                <span>Real-time unlocked.</span><br />Ephemeral &amp; private.
+              </p>
+              <p class="linkup-welcome-desc">
+                Messages unlock when you're close and vanish when you leave.
+              </p>
+            </div>
+          </article>
+          <article
+            class="linkup-welcome-slide"
+            data-welcome-slide="3"
+            style="
+              background-image:
+                linear-gradient(
+                  180deg,
+                  rgba(5, 5, 5, 0.55) 0%,
+                  rgba(5, 5, 5, 0.1) 36%,
+                  rgba(5, 5, 5, 0.88) 100%
+                ),
+                url('assets/linkup-illus-4.jpg');
+            "
+          >
+            <div class="linkup-welcome-copy">
+              <h1>No endless DMs.</h1>
+              <p class="linkup-welcome-tag">
+                <span>Meet in real life.</span><br />Zero small talk.
+              </p>
+              <p class="linkup-welcome-desc">
+                Skip the awkward messaging and link up right where you are.
+              </p>
+            </div>
+          </article>
+        </div>
+
+        <div class="linkup-welcome-actions">
+          <button
+            type="button"
+            class="linkup-welcome-next"
+            id="linkup-welcome-next"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Find a place sheet -->
+    <div
+      id="echoo-linkup-find"
+      class="linkup-find"
+      hidden
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="linkup-find-title"
+    >
+      <button
+        type="button"
+        class="linkup-find-scrim"
+        data-find-close
+        aria-label="Close"
+      ></button>
+      <div class="linkup-find-sheet">
+        <div class="linkup-find-handle" aria-hidden="true"></div>
+        <header class="linkup-find-head">
+          <div>
+            <p class="linkup-find-eyebrow">Check in</p>
+            <h2 id="linkup-find-title">Find a place</h2>
+          </div>
+          <button
+            type="button"
+            class="linkup-find-close"
+            data-find-close
+            aria-label="Close find a place"
+          >
+            ✕
+          </button>
+        </header>
+        <p class="linkup-find-sub">
+          Pick a nearby spot. Check in when you're there to start matching.
+        </p>
+        <label class="linkup-find-search" for="linkup-find-input">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m16 16 4 4" />
+          </svg>
+          <input
+            id="linkup-find-input"
+            type="search"
+            placeholder="Search cafés, bars, venues…"
+            autocomplete="off"
+            enterkeyhint="search"
+          />
+        </label>
+        <div class="linkup-find-chips" role="list">
+          <button type="button" class="linkup-find-chip is-on" data-find-chip="">
+            Nearby
+          </button>
+          <button type="button" class="linkup-find-chip" data-find-chip="cafe">
+            Cafés
+          </button>
+          <button type="button" class="linkup-find-chip" data-find-chip="bar">
+            Bars
+          </button>
+          <button
+            type="button"
+            class="linkup-find-chip"
+            data-find-chip="restaurant"
+          >
+            Food
+          </button>
+          <button
+            type="button"
+            class="linkup-find-chip"
+            data-find-chip="nightlife"
+          >
+            Night
+          </button>
+        </div>
+        <div
+          id="linkup-find-results"
+          class="linkup-find-results"
+          aria-live="polite"
+        >
+          <div class="linkup-find-loading">
+            <div class="echoo-linkup-spinner" aria-hidden="true"></div>
+            <span>Looking nearby…</span>
+          </div>
+        </div>
+        <a class="linkup-find-browse" href="events.html">Browse all on Discover →</a>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
     <script src="assets/culture-context.js"></script>
