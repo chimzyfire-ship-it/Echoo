@@ -1253,7 +1253,63 @@
   height: 22px;
   border-radius: 50%;
   background: #fff;
-  transiti.echoo-linkup-intro-shell {
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.echoo-linkup-toggle.is-on::after {
+  transform: translateX(20px);
+}
+.echoo-linkup-toggle[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Settings rows */
+.echoo-linkup-settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #111111;
+  border: 1px solid rgba(248, 245, 239, 0.08);
+  border-radius: 18px;
+  padding: 6px 16px;
+}
+.echoo-linkup-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(248, 245, 239, 0.06);
+}
+.echoo-linkup-settings-row:last-child {
+  border-bottom: 0;
+}
+.echoo-linkup-settings-text {
+  flex: 1;
+  min-width: 0;
+}
+.echoo-linkup-settings-label {
+  font:
+    650 15px/1.2 "Inter",
+    sans-serif;
+  color: var(--ink);
+}
+.echoo-linkup-settings-hint {
+  margin-top: 3px;
+  font:
+    520 12px/1.35 "Inter",
+    sans-serif;
+  color: var(--muted);
+}
+.echoo-linkup-settings-link-row {
+  text-decoration: none;
+  color: var(--ink);
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Unified Hero Landing Shell & Multi-Step Flash Onboarding Showcase
+   ─────────────────────────────────────────────────────────────────────── */
+.echoo-linkup-intro-shell {
   position: relative;
   margin: 8px 14px 110px 14px;
   height: calc(100svh - 78px - env(safe-area-inset-top, 0px) - 105px);
@@ -1328,7 +1384,7 @@
   border-color: rgba(231, 201, 142, 0.35);
 }
 
-/* Slides Container & Layers */
+/* Slides Container & Flash Screen Layers */
 .linkup-slides-container {
   position: absolute;
   inset: 0;
@@ -1364,7 +1420,7 @@
   pointer-events: auto;
 }
 
-/* Background image mappings with multi-stop dark gradient scrims */
+/* Background image mappings with warm coffee neon lifestyle and dark gradient scrims */
 .linkup-slide-layer[data-slide-index="0"] {
   background-image:
     linear-gradient(180deg, rgba(5, 5, 5, 0.65) 0%, rgba(5, 5, 5, 0.12) 32%, rgba(5, 5, 5, 0.42) 65%, rgba(5, 5, 5, 0.95) 100%),
@@ -1426,7 +1482,7 @@
   max-width: 320px;
 }
 
-/* Bottom Action Buttons (Strictly above floating bottom nav) */
+/* Bottom Action Buttons (Strictly elevated above floating bottom nav) */
 .intro-action-group {
   position: relative;
   z-index: 10;
