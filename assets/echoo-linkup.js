@@ -1587,101 +1587,64 @@
   };
 
   // ────────────────────────────────────────────────────────────────────
-  // Intro Onboarding Slide Carousel & Minimal Auth Sheet
+  // Intro Multi-Step Showcase Controller & Minimal Auth Sheet
   // ────────────────────────────────────────────────────────────────────
   function initIntroCarousel() {
-    const overlay = document.getElementById("intro-slide-overlay");
-    const slides = document.querySelectorAll(".intro-slide");
+    const slides = document.querySelectorAll(".linkup-slide-layer");
     const dots = document.querySelectorAll("[data-slide-indicator]");
-
-    const skipBtn = document.getElementById("intro-skip-btn");
-    const btnCreateAccount = document.getElementById("btn-create-account");
+    const skipBtn = document.getElementById("linkup-skip-btn");
+    const btnNextStep = document.getElementById("btn-next-step");
     const btnSignIn = document.getElementById("btn-sign-in");
-    const overlayBtnCreate = document.getElementById("overlay-btn-create");
-    const overlayBtnSignin = document.getElementById("overlay-btn-signin");
 
     let currentSlide = 0;
-    let autoTimer = null;
 
     function goToSlide(index) {
       if (!slides.length) return;
-      currentSlide = (index + slides.length) % slides.length;
-      slides.forEach((s, i) =>
-        s.classList.toggle("active", i === currentSlide),
-      );
+      currentSlide = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((s, i) => s.classList.toggle("active", i === currentSlide));
       dots.forEach((d, i) => d.classList.toggle("active", i === currentSlide));
-    }
 
-    function startAutoPlay() {
-      stopAutoPlay();
-      if (!slides.length) return;
-      autoTimer = setInterval(() => {
-        goToSlide(currentSlide + 1);
-      }, 4000);
-    }
-
-    function stopAutoPlay() {
-      if (autoTimer) clearInterval(autoTimer);
-      autoTimer = null;
+      if (btnNextStep) {
+        if (currentSlide === slides.length - 1) {
+          btnNextStep.innerHTML = "Create account &rarr;";
+        } else {
+          btnNextStep.innerHTML = "Next &rarr;";
+        }
+      }
     }
 
     dots.forEach((dot, index) => {
       dot.addEventListener("click", () => {
-        stopAutoPlay();
         goToSlide(index);
       });
     });
 
-    function dismissOverlay() {
-      stopAutoPlay();
-      try {
-        localStorage.setItem("echoo_linkup_intro_seen", "true");
-      } catch (_e) {}
-      if (overlay) overlay.style.display = "none";
-    }
-
     if (skipBtn) {
       skipBtn.addEventListener("click", () => {
-        dismissOverlay();
-        // If user is already signed in, reveal viewport cleanly
-        if (state.userId) {
-          const introShell = document.getElementById(
-            "echoo-linkup-intro-shell",
-          );
-          const viewport = document.getElementById("echoo-linkup-viewport");
-          if (introShell) introShell.style.display = "none";
-          if (viewport) viewport.style.display = "flex";
+        goToSlide(slides.length - 1);
+      });
+    }
+
+    if (btnNextStep) {
+      btnNextStep.addEventListener("click", () => {
+        if (currentSlide < slides.length - 1) {
+          goToSlide(currentSlide + 1);
+        } else {
+          window.location.href = "auth.html?mode=signup&next=linkup.html";
         }
       });
     }
 
-    const openCreate = () => {
-      dismissOverlay();
-      window.location.href = "auth.html?mode=signup&next=linkup.html";
-    };
-
-    const openSignIn = () => {
-      dismissOverlay();
-      window.location.href = "auth.html?mode=signin&next=linkup.html";
-    };
-
-    if (btnCreateAccount)
-      btnCreateAccount.addEventListener("click", openCreate);
-    if (overlayBtnCreate)
-      overlayBtnCreate.addEventListener("click", openCreate);
-
-    if (btnSignIn) btnSignIn.addEventListener("click", openSignIn);
-    if (overlayBtnSignin)
-      overlayBtnSignin.addEventListener("click", openSignIn);
-
-    if (overlay && overlay.style.display !== "none") {
-      startAutoPlay();
+    if (btnSignIn) {
+      btnSignIn.addEventListener("click", () => {
+        window.location.href = "auth.html?mode=signin&next=linkup.html";
+      });
     }
+
+    goToSlide(0);
   }
 
-  // Auto-init: engine first, then Hub & smart intro slide overlay.
-
-  // Auto-init: engine first, then Hub & smart intro slide overlay
+  // Auto-init: engine first, then Hub & stable intro showcase
   function boot() {
     let accessAllowed = false;
     Promise.resolve(window.echooAccessReady)
@@ -1694,34 +1657,26 @@
         if (!accessAllowed) return;
         Hub.init();
         const introShell = document.getElementById("echoo-linkup-intro-shell");
-        const overlay = document.getElementById("intro-slide-overlay");
         const viewport = document.getElementById("echoo-linkup-viewport");
-
-        let hasSeenIntro = false;
-        try {
-          hasSeenIntro =
-            localStorage.getItem("echoo_linkup_intro_seen") === "true";
-        } catch (_e) {}
 
         if (state.userId) {
           // User is logged into Echoo -> IMMEDIATELY show Link Up normal logged-in feature page!
           if (introShell) introShell.style.display = "none";
-          if (overlay) overlay.style.display = "none";
           if (viewport) viewport.style.display = "flex";
         } else {
-          // Signed-out user → show hero landing screen
-          if (introShell) introShell.style.display = "";
+          // Signed-out user → show stable hero landing screen & stepper
+          if (introShell) introShell.style.display = "flex";
           if (viewport) viewport.style.display = "none";
-
-          if (!hasSeenIntro && overlay) {
-            overlay.style.display = "flex";
-            initIntroCarousel();
-          } else if (overlay) {
-            overlay.style.display = "none";
-          }
+          initIntroCarousel();
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        const introShell = document.getElementById("echoo-linkup-intro-shell");
+        const viewport = document.getElementById("echoo-linkup-viewport");
+        if (introShell) introShell.style.display = "flex";
+        if (viewport) viewport.style.display = "none";
+        initIntroCarousel();
+      });
   }
 
   if (document.readyState === "loading") {
