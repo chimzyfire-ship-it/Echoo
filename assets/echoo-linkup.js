@@ -1237,14 +1237,21 @@
     }
 
     // ── Rendering ──────────────────────────────────────────────────────
+    let lastHtml = "";
     function setHtml(html) {
       const vp = viewport();
       if (!vp) return;
+      // Skip identical paints — presence realtime + refresh timers were
+      // re-mounting the landing and making Find a place feel like it "fires".
+      if (html === lastHtml && vp.childElementCount) return;
+      lastHtml = html;
       vp.innerHTML = html;
       wireActions();
     }
 
     function renderLoading() {
+      // Only show spinner on the very first paint; later refreshes keep UI.
+      if (lastHtml) return;
       setHtml(
         '<div class="echoo-linkup-state"><div class="echoo-linkup-spinner" aria-label="Loading Link Up"></div><p class="echoo-linkup-state-copy">Finding your Link Up status…</p></div>',
       );
@@ -1605,26 +1612,45 @@
   // ────────────────────────────────────────────────────────────────────
   const WELCOME_KEY = "echoo_linkup_welcome_seen";
 
-  function hasSeenWelcome() {
+  function storageGet(key) {
     try {
-      return localStorage.getItem(WELCOME_KEY) === "1";
+      if (localStorage.getItem(key) === "1") return true;
     } catch (_e) {
-      return false;
+      /* private mode */
     }
+    try {
+      if (sessionStorage.getItem(key) === "1") return true;
+    } catch (_e) {
+      /* private mode */
+    }
+    return false;
   }
 
-  function markWelcomeSeen() {
+  function storageSet(key) {
     try {
-      localStorage.setItem(WELCOME_KEY, "1");
+      localStorage.setItem(key, "1");
+    } catch (_e) {
+      /* private mode */
+    }
+    try {
+      sessionStorage.setItem(key, "1");
     } catch (_e) {
       /* private mode */
     }
   }
 
+  function hasSeenWelcome() {
+    return storageGet(WELCOME_KEY);
+  }
+
+  function markWelcomeSeen() {
+    storageSet(WELCOME_KEY);
+  }
+
   const Welcome = (() => {
     let index = 0;
     let wired = false;
-    let onDone = null;
+    let openOnce = false;
 
     function root() {
       return document.getElementById("echoo-linkup-welcome");
@@ -1645,30 +1671,28 @@
 
     function finish() {
       markWelcomeSeen();
+      openOnce = false;
       const el = root();
       if (el) {
         el.hidden = true;
         el.setAttribute("aria-hidden", "true");
       }
       document.body.classList.remove("linkup-welcome-open");
-      if (typeof onDone === "function") {
-        const cb = onDone;
-        onDone = null;
-        cb();
-      }
+      // Intentionally does NOT open Find a place — landing stays put.
     }
 
-    function open(done) {
+    function open() {
       const el = root();
-      // Returning visitors: never show carousel, never auto-open Find a place.
-      if (!el || hasSeenWelcome()) return;
-      onDone = done || null;
+      // Hub-only, first visit only, never re-enter while already open.
+      if (!el || hasSeenWelcome() || openOnce) return false;
+      openOnce = true;
       index = 0;
       el.hidden = false;
       el.setAttribute("aria-hidden", "false");
       document.body.classList.add("linkup-welcome-open");
       paint();
       wire();
+      return true;
     }
 
     function wire() {
@@ -1691,9 +1715,7 @@
         });
       }
       if (skip) skip.addEventListener("click", finish);
-      el.querySelectorAll("[data-welcome-skip]").forEach((n) =>
-        n.addEventListener("click", finish),
-      );
+      // Scrim is visual only — do not dismiss/finish on backdrop tap.
     }
 
     return { open, finish };
@@ -1710,6 +1732,7 @@
     const ANON = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
 
     let wired = false;
+    let isOpen = false;
     let category = "";
     let query = "";
     let debounce = null;
@@ -1920,28 +1943,35 @@
     }
 
     function open() {
+      // Explicit user action only. Never navigate away if the sheet is absent
+      // (this script also loads on Discover for check-in affordances).
       const el = root();
-      if (!el) {
-        window.location.href = "events.html";
-        return;
-      }
+      if (!el || isOpen) return;
+      isOpen = true;
       wire();
       el.hidden = false;
       el.setAttribute("aria-hidden", "false");
       requestAnimationFrame(() => el.classList.add("is-open"));
       document.body.classList.add("linkup-find-open");
       const input = inputEl();
-      if (input && !input.value) input.focus({ preventScroll: true });
+      if (input && !input.value) {
+        try {
+          input.focus({ preventScroll: true });
+        } catch (_e) {
+          /* ignore */
+        }
+      }
       searchNearby();
     }
 
     function close() {
       const el = root();
-      if (!el) return;
+      if (!el || !isOpen) return;
+      isOpen = false;
       el.classList.remove("is-open");
       document.body.classList.remove("linkup-find-open");
       setTimeout(() => {
-        if (!el.classList.contains("is-open")) {
+        if (!isOpen) {
           el.hidden = true;
           el.setAttribute("aria-hidden", "true");
         }
@@ -1987,31 +2017,33 @@
     return { open, close };
   })();
 
-  // Auto-init: stable hub first (no carousel flash), welcome only once
-  function boot() {
-    const vp = document.getElementById("echoo-linkup-viewport");
-    if (vp) vp.style.display = "flex";
+  // Auto-init. Hub welcome/find UI is linkup.html only. On Discover this
+  // script still loads for place-detail check-in — never open overlays there.
+  function isLinkUpHubPage() {
+    return (
+      document.body?.dataset?.page === "linkup" ||
+      Boolean(document.getElementById("echoo-linkup-viewport"))
+    );
+  }
 
+  function boot() {
+    // Always init the shared engine (check-in affordance on place detail).
     Promise.resolve(window.echooAccessReady)
       .then((access) => {
         if (!access?.ok) return null;
         return init();
       })
       .then(() => {
-        if (document.getElementById("echoo-linkup-viewport")) {
-          Hub.init();
-        }
+        if (!isLinkUpHubPage()) return;
+        const vp = document.getElementById("echoo-linkup-viewport");
+        if (vp) vp.style.display = "flex";
+        Hub.init();
+        // First-time welcome only. Never auto-open Find a place.
+        Welcome.open();
       })
       .catch(() => {
-        /* hub stays on loading / signed-out state */
-      })
-      .finally(() => {
-        Welcome.open(() => {
-          // After first-time carousel, surface Find a place for signed-in standby.
-          if (state.userId) {
-            setTimeout(() => FindPlace.open(), 280);
-          }
-        });
+        if (!isLinkUpHubPage()) return;
+        Welcome.open();
       });
   }
 

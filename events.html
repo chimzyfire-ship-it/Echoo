@@ -306,65 +306,134 @@
         stroke: var(--muted);
       }
 
+      .discover-location-wrap {
+        position: relative;
+        width: fit-content;
+        max-width: 100%;
+      }
+
       .discover-location-sheet {
-        position: fixed;
-        right: 18px;
-        bottom: 96px;
-        left: 18px;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
         z-index: 55;
-        max-width: 520px;
-        max-height: calc(100svh - 116px);
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        margin: 0 auto;
-        padding: 20px;
-        border: 1px solid rgba(248, 245, 239, 0.14);
-        border-radius: 24px;
-        background: rgba(24, 24, 23, 0.97);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        width: min(300px, calc(100vw - 40px));
+        padding: 12px;
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        border-radius: 18px;
+        background: rgba(18, 18, 17, 0.98);
+        box-shadow:
+          0 18px 48px rgba(0, 0, 0, 0.55),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        transform-origin: top left;
+        animation: discover-loc-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes discover-loc-in {
+        from {
+          opacity: 0;
+          transform: translateY(-6px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
 
       .discover-location-sheet[hidden] {
         display: none;
       }
-      .discover-location-sheet h2 {
+
+      .discover-location-sheet-label {
         margin: 0 0 8px;
-        font-size: 24px;
+        padding: 0 4px;
+        color: rgba(248, 245, 239, 0.48);
+        font-size: 10px;
+        font-weight: 680;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
-      .discover-location-sheet p {
-        margin: 0 0 16px;
-        color: var(--muted);
-        line-height: 1.4;
-      }
-      .discover-location-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 9px;
-      }
-      .discover-location-actions button,
+
       .discover-location-select {
-        min-height: 46px;
-        border: 1px solid rgba(248, 245, 239, 0.14);
-        border-radius: 14px;
-        background: rgba(248, 245, 239, 0.07);
+        width: 100%;
+        min-height: 44px;
+        margin: 0 0 10px;
+        padding: 0 12px;
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        border-radius: 12px;
+        background: rgba(248, 245, 239, 0.06);
         color: var(--ink);
         font: inherit;
-        font-weight: 650;
+        font-size: 14px;
+        font-weight: 620;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239e978e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        cursor: pointer;
       }
-      .discover-location-actions .primary {
-        border-color: transparent;
-        background: var(--peach);
-        color: #111;
-      }
-      .discover-location-actions button:focus-visible,
+
       .discover-location-select:focus-visible {
         outline: 2px solid var(--peach);
         outline-offset: 2px;
       }
-      .discover-location-select {
+
+      .discover-location-gps {
         width: 100%;
-        margin: 0 0 9px;
-        padding: 0 12px;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 12px;
+        background: linear-gradient(
+          135deg,
+          rgba(231, 201, 142, 0.95),
+          rgba(247, 213, 178, 0.95)
+        );
+        color: #12100c;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 720;
+        cursor: pointer;
+        transition:
+          transform 0.14s ease,
+          filter 0.14s ease;
+      }
+
+      .discover-location-gps:active {
+        transform: scale(0.98);
+      }
+
+      .discover-location-gps:disabled {
+        opacity: 0.7;
+        cursor: default;
+      }
+
+      .discover-location-gps svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .discover-location-pill[aria-expanded="true"] {
+        border-color: rgba(247, 213, 178, 0.48);
+        background: rgba(247, 213, 178, 0.12);
+      }
+
+      .discover-location-pill[aria-expanded="true"] .location-chevron {
+        transform: rotate(90deg);
+      }
+
+      .discover-location-pill .location-chevron {
+        transition: transform 0.16s ease;
       }
 
       /* Hero Section */
@@ -2095,29 +2164,59 @@
         </section>
 
         <div class="discover-controls">
-          <button
-            class="discover-location-pill"
-            id="discover-location-pill"
-            type="button"
-            aria-label="Change discovery location"
-            aria-haspopup="dialog"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
-              <circle cx="12" cy="10" r="2.5" />
-            </svg>
-            <span class="discover-location-pill-copy">
-              <small>Exploring</small>
-              <strong id="discover-location-label">Toronto</strong>
-            </span>
-            <svg
-              class="location-chevron"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+          <div class="discover-location-wrap">
+            <button
+              class="discover-location-pill"
+              id="discover-location-pill"
+              type="button"
+              aria-label="Change discovery location"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="discover-location-sheet"
             >
-              <path d="m9 6 6 6-6 6" />
-            </svg>
-          </button>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+              <span class="discover-location-pill-copy">
+                <small>Exploring</small>
+                <strong id="discover-location-label">Toronto</strong>
+              </span>
+              <svg
+                class="location-chevron"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="m9 6 6 6-6 6" />
+              </svg>
+            </button>
+
+            <div
+              class="discover-location-sheet"
+              id="discover-location-sheet"
+              role="dialog"
+              aria-label="Choose location"
+              hidden
+            >
+              <p class="discover-location-sheet-label">City</p>
+              <select
+                class="discover-location-select"
+                id="discover-municipality"
+                aria-label="Choose a GTA municipality"
+              ></select>
+              <button
+                class="discover-location-gps"
+                type="button"
+                id="discover-use-location"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+                Use my location
+              </button>
+            </div>
+          </div>
 
           <div
             class="category-pills"
@@ -2330,35 +2429,6 @@
       </div>
     </section>
 
-    <section
-      class="discover-location-sheet"
-      id="discover-location-sheet"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="discover-location-title"
-      hidden
-    >
-      <h2 id="discover-location-title">Find places close to you?</h2>
-      <p>
-        Use your current location to rank GTA places by distance. You can also
-        browse a municipality instead.
-      </p>
-      <select
-        class="discover-location-select"
-        id="discover-municipality"
-        aria-label="Choose a GTA municipality"
-      ></select>
-      <div class="discover-location-actions">
-        <button class="primary" type="button" id="discover-use-location">
-          Use my location
-        </button>
-        <button type="button" id="discover-use-municipality">
-          Use municipality
-        </button>
-        <button type="button" id="discover-location-later">Not now</button>
-      </div>
-    </section>
-
     <section class="culture-picker" id="culture-picker" aria-hidden="true">
       <button
         class="culture-picker-backdrop"
@@ -2542,13 +2612,7 @@
         surpriseLoader = document.getElementById("surprise-loader"),
         locationSheet = document.getElementById("discover-location-sheet"),
         locationMunicipality = document.getElementById("discover-municipality"),
-        useLocationButton = document.getElementById("discover-use-location"),
-        useMunicipalityButton = document.getElementById(
-          "discover-use-municipality",
-        ),
-        locationLaterButton = document.getElementById(
-          "discover-location-later",
-        );
+        useLocationButton = document.getElementById("discover-use-location");
 
       const cultureLensFab = document.getElementById("culture-lens-fab"),
         culturePicker = document.getElementById("culture-picker"),
@@ -3953,30 +4017,60 @@
       }
 
       function closeLocationSheet() {
-        if (locationSheet.hidden) return;
+        if (!locationSheet || locationSheet.hidden) return;
         locationSheet.hidden = true;
-        document.querySelector(".app-shell")?.removeAttribute("inert");
+        locationPill?.setAttribute("aria-expanded", "false");
         locationReturnFocus?.focus?.({ preventScroll: true });
         locationReturnFocus = null;
       }
 
       function openLocationSheet() {
-        if (!locationSheet.hidden) return;
+        if (!locationSheet || !locationSheet.hidden) return;
         locationReturnFocus = document.activeElement;
-        document.querySelector(".app-shell")?.setAttribute("inert", "");
+        locationMunicipality.value =
+          window.EchooLocationPlatform.cityByName(city)?.name ||
+          DEFAULT_DISCOVERY_CITY;
         locationSheet.hidden = false;
+        locationPill?.setAttribute("aria-expanded", "true");
         requestAnimationFrame(() =>
           locationMunicipality.focus({ preventScroll: true }),
         );
       }
 
-      function showLocationSheetIfNeeded() {
-        const hasExactLocation = Number.isFinite(lat) && Number.isFinite(lng);
-        if (hasExactLocation || params.has("city")) return;
-        if (prefs.locationPermissionState === "granted") return;
-        if (prefs.locationPromptedAt && prefs.locationPrecision !== "gps")
+      function toggleLocationSheet() {
+        if (!locationSheet) return;
+        if (locationSheet.hidden) openLocationSheet();
+        else closeLocationSheet();
+      }
+
+      async function applyMunicipality(nextCity, { close = true } = {}) {
+        const resolved =
+          window.EchooLocationPlatform.cityByName(nextCity)?.name ||
+          DEFAULT_DISCOVERY_CITY;
+        if (resolved === city && !Number.isFinite(lat) && !Number.isFinite(lng)) {
+          if (close) closeLocationSheet();
           return;
-        openLocationSheet();
+        }
+        city = resolved;
+        lat = NaN;
+        lng = NaN;
+        discoveryLocation = null;
+        rememberLocationChoice({
+          lastLat: undefined,
+          lastLng: undefined,
+          accuracy: undefined,
+          locationPermissionState: "manual",
+          locationPrecision: "manual_region",
+          locationReason: "municipality_choice",
+        });
+        updateLocationBadge();
+        rememberDiscoveryLocationInUrl();
+        if (close) closeLocationSheet();
+        await search(activeQuery, { contextChanged: true });
+      }
+
+      function showLocationSheetIfNeeded() {
+        // No blocking prompt — location is a quiet pill dropdown now.
       }
 
       async function clearDeviceLocation(
@@ -4121,6 +4215,13 @@
         };
       }
 
+      function resetLocationGpsButton() {
+        if (!useLocationButton) return;
+        useLocationButton.disabled = false;
+        useLocationButton.innerHTML =
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>Use my location';
+      }
+
       async function applyCurrentLocation({
         silent = false,
         timeoutMs = 12000,
@@ -4135,7 +4236,7 @@
           closeLocationSheet();
           return false;
         }
-        if (!silent) {
+        if (!silent && useLocationButton) {
           useLocationButton.disabled = true;
           useLocationButton.textContent = "Checking…";
         }
@@ -4213,10 +4314,7 @@
               const nextScope = cacheLocationScope({ city, lat, lng });
               if (refreshResults && nextScope !== previousScope)
                 await search(activeQuery, { contextChanged: true });
-              if (!silent) {
-                useLocationButton.disabled = false;
-                useLocationButton.textContent = "Use my current location";
-              }
+              if (!silent) resetLocationGpsButton();
               resolve(Boolean(resolved.supported));
             },
             async (error) => {
@@ -4225,10 +4323,7 @@
                   refresh: refreshResults,
                 });
               }
-              if (!silent) {
-                useLocationButton.disabled = false;
-                useLocationButton.textContent = "Use my current location";
-              }
+              if (!silent) resetLocationGpsButton();
               closeLocationSheet();
               resolve(false);
             },
@@ -4995,62 +5090,32 @@
             `<option value="${esc(municipality.name)}">${esc(municipality.name)}</option>`,
         ).join("");
       locationMunicipality.value = city;
-      locationPill.addEventListener("click", () => {
-        locationMunicipality.value =
-          window.EchooLocationPlatform.cityByName(city)?.name ||
-          DEFAULT_DISCOVERY_CITY;
-        openLocationSheet();
+      locationPill.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleLocationSheet();
+      });
+      // Instant apply — no extra confirm button.
+      locationMunicipality.addEventListener("change", () => {
+        applyMunicipality(locationMunicipality.value);
+      });
+      locationSheet.addEventListener("click", (event) => {
+        event.stopPropagation();
       });
       locationSheet.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
           event.preventDefault();
           closeLocationSheet();
-          return;
-        }
-        if (event.key !== "Tab") return;
-        const focusable = [
-          ...locationSheet.querySelectorAll(
-            "select, button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])",
-          ),
-        ];
-        if (!focusable.length) return;
-        const first = focusable[0];
-        const last = focusable.at(-1);
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
         }
       });
-      useLocationButton.addEventListener("click", applyCurrentLocation);
-      useMunicipalityButton.addEventListener("click", async () => {
-        city = locationMunicipality.value || DEFAULT_DISCOVERY_CITY;
-        lat = NaN;
-        lng = NaN;
-        discoveryLocation = null;
-        rememberLocationChoice({
-          lastLat: undefined,
-          lastLng: undefined,
-          accuracy: undefined,
-          locationPermissionState: "manual",
-          locationPrecision: "manual_region",
-          locationReason: "municipality_choice",
-        });
-        updateLocationBadge();
-        rememberDiscoveryLocationInUrl();
-        closeLocationSheet();
-        await search(activeQuery, { contextChanged: true });
-      });
-      locationLaterButton.addEventListener("click", () => {
-        rememberLocationChoice({
-          locationPermissionState: "skipped",
-          locationPrecision: "manual_region",
-          locationReason: "gta_trends",
-        });
+      document.addEventListener("click", (event) => {
+        if (locationSheet?.hidden) return;
+        if (locationSheet.contains(event.target)) return;
+        if (locationPill?.contains(event.target)) return;
         closeLocationSheet();
       });
+      useLocationButton?.addEventListener("click", () =>
+        applyCurrentLocation(),
+      );
 
       window.echooAccessReady.then(async (access) => {
         if (!access?.ok) return;
