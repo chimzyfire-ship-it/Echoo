@@ -1923,7 +1923,8 @@
         stroke-width: 0;
       }
 
-      /* Floating Culture Lens control */
+      /* Floating Culture Lens control
+         tap (off) → open picker · tap (on) → turn off · long-press → open picker */
       .fab-culture {
         position: fixed;
         bottom: 96px;
@@ -1951,10 +1952,15 @@
         box-shadow:
           0 10px 30px rgba(0, 0, 0, 0.45),
           inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
         transition:
           transform 0.2s ease,
           border-color 0.2s ease,
-          background 0.2s ease;
+          background 0.2s ease,
+          box-shadow 0.2s ease;
       }
 
       .fab-culture:active {
@@ -1965,6 +1971,13 @@
         color: #1b1711;
         border-color: var(--peach);
         background: var(--peach);
+        box-shadow:
+          0 10px 30px rgba(247, 213, 178, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      }
+
+      .fab-culture.is-pressing {
+        transform: scale(0.9);
       }
 
       .fab-culture svg {
@@ -2343,7 +2356,9 @@
         class="fab-culture"
         id="culture-lens-fab"
         href="events.html?culturePicker=1"
-        aria-label="Open Culture Lens"
+        role="button"
+        aria-label="Culture Lens. Tap to choose a culture. Long press to open options."
+        title="Tap to toggle · Long press for options"
       >
         <svg viewBox="0 0 24 24">
           <circle cx="8.1" cy="12" r="4.15" />
@@ -2898,8 +2913,14 @@
         cultureLensFab?.setAttribute(
           "aria-label",
           culture
-            ? `Open Culture Lens. ${culture.label} is selected`
-            : "Open Culture Lens",
+            ? `Culture Lens on: ${culture.label}. Tap to turn off. Long press to change.`
+            : "Culture Lens. Tap to choose a culture. Long press to open options.",
+        );
+        cultureLensFab?.setAttribute(
+          "title",
+          culture
+            ? `${culture.label} on · Tap to turn off · Long press to change`
+            : "Tap to choose · Long press for options",
         );
         if (culture) {
           nearbyHeading.textContent = `${culture.label} · ${category.nearby}`;
@@ -5039,10 +5060,83 @@
         .querySelectorAll("[data-close-sheet]")
         .forEach((btn) => (btn.onclick = closeDetail));
 
-      cultureLensFab.addEventListener("click", (event) => {
-        event.preventDefault();
-        openCulturePicker();
-      });
+      // FAB: tap on → off; tap off → picker; long-press → picker (characteristics)
+      {
+        const LONG_PRESS_MS = 480;
+        let pressTimer = null;
+        let longPressFired = false;
+        let pressMoved = false;
+        let startX = 0;
+        let startY = 0;
+
+        const clearPressTimer = () => {
+          if (pressTimer) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+          }
+          cultureLensFab.classList.remove("is-pressing");
+        };
+
+        const openPickerFromFab = () => {
+          if (navigator.vibrate) {
+            try {
+              navigator.vibrate(10);
+            } catch (_error) {}
+          }
+          openCulturePicker();
+        };
+
+        cultureLensFab.addEventListener("pointerdown", (event) => {
+          if (event.button != null && event.button !== 0) return;
+          longPressFired = false;
+          pressMoved = false;
+          startX = event.clientX;
+          startY = event.clientY;
+          clearPressTimer();
+          cultureLensFab.classList.add("is-pressing");
+          pressTimer = setTimeout(() => {
+            pressTimer = null;
+            longPressFired = true;
+            cultureLensFab.classList.remove("is-pressing");
+            openPickerFromFab();
+          }, LONG_PRESS_MS);
+        });
+
+        cultureLensFab.addEventListener("pointermove", (event) => {
+          if (!pressTimer && !cultureLensFab.classList.contains("is-pressing"))
+            return;
+          const dx = event.clientX - startX;
+          const dy = event.clientY - startY;
+          if (dx * dx + dy * dy > 100) {
+            pressMoved = true;
+            clearPressTimer();
+          }
+        });
+
+        cultureLensFab.addEventListener("pointerup", (event) => {
+          const wasLong = longPressFired;
+          const moved = pressMoved;
+          clearPressTimer();
+          if (wasLong || moved) return;
+          if (event.button != null && event.button !== 0) return;
+          if (activeCulture()) {
+            cultureContext?.clear();
+          } else {
+            openCulturePicker();
+          }
+        });
+
+        cultureLensFab.addEventListener("pointercancel", clearPressTimer);
+        cultureLensFab.addEventListener("pointerleave", (event) => {
+          if (event.pointerType === "mouse") clearPressTimer();
+        });
+        cultureLensFab.addEventListener("click", (event) => {
+          event.preventDefault();
+        });
+        cultureLensFab.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+        });
+      }
       culturePicker
         .querySelectorAll("[data-close-culture]")
         .forEach((button) =>
@@ -5059,7 +5153,13 @@
       culturePickerList.addEventListener("click", (event) => {
         const option = event.target.closest("[data-culture]");
         if (!option) return;
-        cultureContext?.setActive(option.dataset.culture);
+        const slug = option.dataset.culture;
+        // Tap active culture again to turn lens off
+        if (activeCulture()?.slug === slug) {
+          cultureContext?.clear();
+        } else {
+          cultureContext?.setActive(slug);
+        }
         closeCulturePicker();
       });
       culturePickerSearch.addEventListener("input", renderCulturePicker);
