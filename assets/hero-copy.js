@@ -33,7 +33,7 @@
       ],
       evening: [
         ["The night has entered the chat.", "Live plans, good rooms, and fewer bad maybes."],
-        ["Pick a lane. Make it lovely.", "Shows, tables, and places that work tonight."],
+        ["Don't waste the night.", "Tables, sets, and spots the city actually loves."],
       ],
       late: [
         ["Still out? Respect.", "Late picks that do not feel like leftovers."],
