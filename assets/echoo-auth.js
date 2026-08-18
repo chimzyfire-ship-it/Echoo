@@ -420,6 +420,62 @@
     return clean(data) || null;
   }
 
+  function readCultureLensActive() {
+    if (window.EchooCultureContext?.getActive) {
+      return window.EchooCultureContext.getActive() || null;
+    }
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem("echoo_culture_lens_v1") || "{}",
+      );
+      const slug = clean(
+        stored.active || stored.current || stored.selected?.[0] || "",
+      );
+      if (!slug) return null;
+      return { slug, label: slug.replace(/_/g, " ") };
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function clearCultureLensLocal() {
+    if (window.EchooCultureContext?.clear) {
+      window.EchooCultureContext.clear();
+      return;
+    }
+    try {
+      localStorage.setItem(
+        "echoo_culture_lens_v1",
+        JSON.stringify({
+          version: 3,
+          active: "",
+          selected: [],
+          current: "",
+          updatedAt: new Date().toISOString(),
+        }),
+      );
+      const preferences = JSON.parse(
+        localStorage.getItem("echoo_preferences") || "{}",
+      );
+      localStorage.setItem(
+        "echoo_preferences",
+        JSON.stringify({
+          ...preferences,
+          cultureLens: "",
+          cultureLensSlug: "",
+          personalizationProfile: {
+            ...(preferences.personalizationProfile || {}),
+            cultureLens: "",
+            cultureLensSlug: "",
+          },
+        }),
+      );
+    } catch (_error) {}
+    window.dispatchEvent(
+      new CustomEvent("echoo:culture-changed", { detail: { culture: null } }),
+    );
+  }
+
   function installCultureLensFab(options = {}) {
     if (
       (currentPage() === "auth.html" && !options.allowOnProfile) ||
@@ -431,15 +487,114 @@
       const style = document.createElement("style");
       style.id = "echoo-culture-lens-fab-style";
       style.textContent = `
-        .echoo-culture-lens-fab{position:fixed;right:max(16px,calc((100vw - 430px)/2 + 16px));bottom:calc(96px + env(safe-area-inset-bottom));z-index:45;display:grid;width:48px;height:48px;place-items:center;color:#050505;background:#f7d5b2;border:1px solid rgba(255,255,255,.18);border-radius:50%;box-shadow:0 8px 24px rgba(247,213,178,.28);transition:transform .18s ease,box-shadow .18s ease}.echoo-culture-lens-fab:active{transform:scale(.94)}.echoo-culture-lens-fab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}@media(prefers-reduced-motion:reduce){.echoo-culture-lens-fab{transition:none}}body.sheet-open .echoo-culture-lens-fab,body.chat-open .echoo-culture-lens-fab{display:none}`;
+        .echoo-culture-lens-fab{position:fixed;right:max(16px,calc((100vw - 430px)/2 + 16px));bottom:calc(96px + env(safe-area-inset-bottom));z-index:45;display:grid;width:48px;height:48px;place-items:center;color:#f7d5b2;background:#211f1a;border:1px solid rgba(247,213,178,.62);border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease,border-color .18s ease}
+        .echoo-culture-lens-fab:active,.echoo-culture-lens-fab.is-pressing{transform:scale(.94)}
+        .echoo-culture-lens-fab.is-active{color:#1b1711;background:#f7d5b2;border-color:#f7d5b2;box-shadow:0 8px 24px rgba(247,213,178,.28)}
+        .echoo-culture-lens-fab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+        @media(prefers-reduced-motion:reduce){.echoo-culture-lens-fab{transition:none}}
+        body.sheet-open .echoo-culture-lens-fab,body.chat-open .echoo-culture-lens-fab{display:none}`;
       document.head.appendChild(style);
     }
     const fab = document.createElement("a");
     fab.id = "echoo-culture-lens-fab";
     fab.className = "echoo-culture-lens-fab";
     fab.href = "events.html?culturePicker=1";
-    fab.setAttribute("aria-label", "Open Culture Lens");
+    fab.setAttribute("role", "button");
     fab.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.1" cy="12" r="4.15"/><circle cx="15.9" cy="12" r="4.15"/><path d="M12.25 12h-.5M3.95 10.9 2.6 9.8M20.05 10.9l1.35-1.1"/><path d="M6.35 12a1.75 1.75 0 0 0 3.5 0M14.15 12a1.75 1.75 0 0 0 3.5 0"/></svg>`;
+
+    const pickerUrl = "events.html?culturePicker=1";
+    const syncFabState = () => {
+      const culture = readCultureLensActive();
+      fab.classList.toggle("is-active", Boolean(culture));
+      fab.setAttribute(
+        "aria-label",
+        culture
+          ? `Culture Lens on: ${culture.label}. Tap to turn off. Long press to change.`
+          : "Culture Lens. Tap to choose a culture. Long press to open options.",
+      );
+      fab.title = culture
+        ? `${culture.label} on · Tap to turn off · Long press to change`
+        : "Tap to choose · Long press for options";
+    };
+
+    const openPicker = () => {
+      window.location.href = pickerUrl;
+    };
+
+    // tap on → off; tap off → picker; long-press → picker
+    const LONG_PRESS_MS = 480;
+    let pressTimer = null;
+    let longPressFired = false;
+    let pressMoved = false;
+    let startX = 0;
+    let startY = 0;
+
+    const clearPressTimer = () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      fab.classList.remove("is-pressing");
+    };
+
+    fab.addEventListener("pointerdown", (event) => {
+      if (event.button != null && event.button !== 0) return;
+      longPressFired = false;
+      pressMoved = false;
+      startX = event.clientX;
+      startY = event.clientY;
+      clearPressTimer();
+      fab.classList.add("is-pressing");
+      pressTimer = setTimeout(() => {
+        pressTimer = null;
+        longPressFired = true;
+        fab.classList.remove("is-pressing");
+        if (navigator.vibrate) {
+          try {
+            navigator.vibrate(10);
+          } catch (_error) {}
+        }
+        openPicker();
+      }, LONG_PRESS_MS);
+    });
+
+    fab.addEventListener("pointermove", (event) => {
+      if (!pressTimer && !fab.classList.contains("is-pressing")) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (dx * dx + dy * dy > 100) {
+        pressMoved = true;
+        clearPressTimer();
+      }
+    });
+
+    fab.addEventListener("pointerup", (event) => {
+      const wasLong = longPressFired;
+      const moved = pressMoved;
+      clearPressTimer();
+      if (wasLong || moved) return;
+      if (event.button != null && event.button !== 0) return;
+      if (readCultureLensActive()) {
+        clearCultureLensLocal();
+        syncFabState();
+      } else {
+        openPicker();
+      }
+    });
+
+    fab.addEventListener("pointercancel", clearPressTimer);
+    fab.addEventListener("pointerleave", (event) => {
+      if (event.pointerType === "mouse") clearPressTimer();
+    });
+    fab.addEventListener("click", (event) => {
+      event.preventDefault();
+    });
+    fab.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+    window.addEventListener("echoo:culture-changed", syncFabState);
+
+    syncFabState();
     document.body.appendChild(fab);
   }
 
