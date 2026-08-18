@@ -618,7 +618,7 @@
               data-quick-plan-timezone="${escapeHtml(placeTimeZone)}"
               data-quick-plan-image="${escapeHtml(/^https?:\/\//i.test(heroImage) ? heroImage : "")}"
             ><span>Quick plan</span><span aria-hidden="true">→</span></button>
-            <span class="echoo-linkup-host" data-echoo-linkup-host data-linkup-place-id="${escapeHtml(cleanText(place.id || place.place_id))}" data-linkup-place-name="${escapeHtml(title)}" aria-hidden="true"></span>
+            <span class="echoo-linkup-host" data-echoo-linkup-host data-linkup-place-id="${escapeHtml(cleanText(place.id || place.place_id))}" data-linkup-place-name="${escapeHtml(title)}" data-linkup-lat="${escapeHtml(String(routeLatitude))}" data-linkup-lng="${escapeHtml(String(routeLongitude))}" aria-hidden="true"></span>
           </div>
           ${
             canRouteInsideEchoo

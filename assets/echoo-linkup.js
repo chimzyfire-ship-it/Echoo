@@ -148,11 +148,16 @@
     });
   }
 
-  // Resolve the place's coordinates from the place-detail host's route attrs.
+  // Resolve the place's coordinates from the place-detail host attrs first,
+  // then the Directions button. Without coords the check-in stays locked.
   function resolvePlaceCoords() {
     const host = document.querySelector("[data-echoo-linkup-host]");
     if (!host) return null;
-    // The sibling route button carries lat/lng; fall back to any route button.
+    const hostLat = Number(host.getAttribute("data-linkup-lat"));
+    const hostLng = Number(host.getAttribute("data-linkup-lng"));
+    if (Number.isFinite(hostLat) && Number.isFinite(hostLng)) {
+      return { lat: hostLat, lng: hostLng };
+    }
     const routeBtn =
       host.parentElement?.querySelector("[data-echoo-route]") ||
       document.querySelector("[data-echoo-route]");

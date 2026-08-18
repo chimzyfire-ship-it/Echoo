@@ -85,18 +85,7 @@
         position: relative;
         isolation: isolate;
         overflow: hidden;
-        background:
-          radial-gradient(
-            circle at 50% -4%,
-            rgba(255, 255, 255, 0.14),
-            transparent 18rem
-          ),
-          radial-gradient(
-            circle at 16% 46%,
-            rgba(255, 212, 166, 0.08),
-            transparent 14rem
-          ),
-          linear-gradient(145deg, #161716 0%, #080808 44%, #030303 100%);
+        background: #050505;
       }
 
       .app-shell::before {
@@ -106,23 +95,14 @@
         content: "";
         background:
           linear-gradient(
-            90deg,
-            rgba(0, 0, 0, 0.72) 0%,
-            rgba(0, 0, 0, 0.3) 55%,
-            rgba(0, 0, 0, 0.1) 100%
-          ),
-          linear-gradient(
             180deg,
-            rgba(0, 0, 0, 0.45) 0%,
-            transparent 22%,
-            transparent 70%,
-            rgba(0, 0, 0, 0.85) 100%
+            rgba(5, 5, 5, 0.42) 0%,
+            rgba(5, 5, 5, 0.08) 28%,
+            rgba(5, 5, 5, 0.18) 55%,
+            rgba(5, 5, 5, 0.72) 78%,
+            rgba(5, 5, 5, 0.92) 100%
           ),
-          url("assets/echoo-mobile-bg.jpg");
-        background-size: cover;
-        background-position: center;
-        opacity: 1;
-        filter: none;
+          url("assets/echoo-home-bg.jpg") center / cover no-repeat;
       }
 
       .app-shell::after {
@@ -131,9 +111,9 @@
         z-index: -1;
         content: "";
         background: radial-gradient(
-          ellipse at center,
-          transparent 40%,
-          rgba(0, 0, 0, 0.55) 100%
+          ellipse 90% 70% at 50% 42%,
+          transparent 0%,
+          rgba(0, 0, 0, 0.35) 100%
         );
         pointer-events: none;
       }
@@ -144,30 +124,69 @@
         min-height: 100svh;
         display: flex;
         flex-direction: column;
-        padding: calc(28px + env(safe-area-inset-top)) 27px
-          calc(94px + env(safe-area-inset-bottom));
+        padding: calc(22px + env(safe-area-inset-top)) 24px
+          calc(110px + env(safe-area-inset-bottom));
       }
 
       .topbar {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        margin-bottom: clamp(42px, 8svh, 66px);
+        justify-content: center;
+        position: relative;
+        margin-bottom: 0;
+        min-height: 40px;
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
-        width: 96px;
-        height: 34px;
+        justify-content: center;
+        width: auto;
+        height: 28px;
         overflow: hidden;
       }
 
       .brand img {
         display: block;
-        width: 96px;
-        height: auto;
-        filter: brightness(1.2) contrast(1.05);
+        width: auto;
+        height: 26px;
+        filter: brightness(1.25) contrast(1.05);
+      }
+
+      .tickets-entry {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid rgba(248, 245, 239, 0.14);
+        background: rgba(8, 8, 8, 0.28);
+        color: var(--ink);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition:
+          border-color 0.16s ease,
+          background 0.16s ease,
+          transform 0.16s ease;
+      }
+
+      .tickets-entry:active {
+        transform: translateY(-50%) scale(0.96);
+      }
+
+      .tickets-entry svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .profile-link {
@@ -204,27 +223,37 @@
       }
 
       .hero {
-        display: grid;
-        gap: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 14px;
+        padding: 8px 6px 24px;
+        min-height: 0;
       }
 
       .hero h1 {
-        max-width: 376px;
+        max-width: 11ch;
         margin: 0;
-        font-size: clamp(45px, 13.2vw, 58px);
+        color: #f8f5ef;
+        font-size: clamp(40px, 11.5vw, 52px);
         line-height: 1.02;
-        font-weight: 820;
-        letter-spacing: 0;
+        font-weight: 780;
+        letter-spacing: -0.035em;
+        text-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
       }
 
       .tagline {
-        max-width: 294px;
-        margin: -11px 0 0;
-        color: #aaa39d;
-        font-size: clamp(18px, 5vw, 23px);
-        line-height: 1.24;
-        font-weight: 520;
-        letter-spacing: 0;
+        max-width: 22ch;
+        margin: 2px 0 10px;
+        color: rgba(248, 245, 239, 0.78);
+        font-size: clamp(15px, 4.2vw, 18px);
+        line-height: 1.35;
+        font-weight: 480;
+        letter-spacing: -0.01em;
+        text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
       }
 
       .prompt {
@@ -927,7 +956,7 @@
       }
 
       .bored-cta {
-        width: min(100%, 214px);
+        width: min(100%, 240px);
         min-height: 52px;
         border: none;
         border-radius: 999px;
@@ -937,15 +966,40 @@
         font-weight: 700;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 0 19px;
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
+        justify-content: center;
+        gap: 10px;
+        padding: 0 22px;
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
         cursor: pointer;
         transition:
           transform 0.2s ease,
           background-color 0.2s ease;
-        margin-top: 2px;
-        justify-self: start;
+        margin-top: 8px;
+      }
+
+      .home-footer {
+        margin-top: auto;
+        padding-top: 18px;
+        font-size: 11px;
+        color: rgba(248, 245, 239, 0.42);
+        text-align: center;
+        display: grid;
+        gap: 8px;
+      }
+
+      .home-footer a {
+        text-decoration: none;
+        color: rgba(248, 245, 239, 0.55);
+      }
+
+      .home-footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+      }
+
+      .category-grid {
+        display: none !important;
       }
 
       .bored-cta:hover,
@@ -1323,11 +1377,24 @@
           <a class="brand" href="index.html" aria-label="Echoo home">
             <img src="assets/echoo-wordmark.png" alt="echoo" />
           </a>
+          <a
+            class="tickets-entry"
+            href="tickets.html"
+            aria-label="My tickets"
+            title="Tickets"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9Z"
+              />
+              <path d="M9 7v10" />
+            </svg>
+          </a>
         </header>
 
-        <main>
+        <main style="flex: 1; display: flex; flex-direction: column; min-height: 0">
           <section class="hero" aria-labelledby="landing-title">
-            <h1 id="landing-title">Pick a lane.<br />Make it<br />lovely.</h1>
+            <h1 id="landing-title">Pick a lane.<br />Make it lovely.</h1>
             <p class="tagline">
               Shows, tables, and places<br />that make tonight worth it.
             </p>
@@ -1341,82 +1408,10 @@
             </button>
           </section>
 
-          <section class="content" aria-label="Browse by category">
-            <div class="category-grid" aria-label="Category Grid">
-              <a class="category-card" href="events.html?query=food">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M6 3v8" />
-                  <path d="M10 3v8" />
-                  <path d="M8 3v18" />
-                  <path d="M17 3v18" />
-                  <path d="M14 3v8a3 3 0 0 0 6 0V3" />
-                </svg>
-                <span>Food</span>
-              </a>
-              <a class="category-card" href="events.html?query=comedy">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M8 10h.01" />
-                  <path d="M16 10h.01" />
-                  <path d="M8.5 15a5 5 0 0 0 7 0" />
-                </svg>
-                <span>Comedy</span>
-              </a>
-              <a class="category-card" href="events.html?query=music">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9 18V5l10-2v13" />
-                  <path d="M9 18a3 3 0 1 1-2-2.83" />
-                  <path d="M19 16a3 3 0 1 1-2-2.83" />
-                </svg>
-                <span>Live music</span>
-              </a>
-              <a class="category-card" href="events.html?query=nightlife">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M8 22h8" />
-                  <path d="M12 15v7" />
-                  <path d="M6 3h12l-6 9-6-9Z" />
-                </svg>
-                <span>Nightlife</span>
-              </a>
-              <a class="category-card" href="events.html?query=events">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                  <line x1="16" x2="16" y1="2" y2="6" />
-                  <line x1="8" x2="8" y1="2" y2="6" />
-                  <line x1="3" x2="21" y1="10" y2="10" />
-                </svg>
-                <span>Events</span>
-              </a>
-              <a class="category-card" href="films.html">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path
-                    d="M2 8h3v2H2zM2 14h3v2H2zM19 8h3v2h-3zM19 14h3v2h-3zM7 4v16M17 4v16"
-                  />
-                </svg>
-                <span>Movies</span>
-              </a>
-            </div>
-          </section>
-          <footer
-            style="
-              margin-top: 48px;
-              border-top: 1px solid var(--line);
-              padding-top: 18px;
-              font-size: 11px;
-              color: var(--muted);
-              text-align: center;
-              display: grid;
-              gap: 8px;
-            "
-          >
-            <div style="display: flex; justify-content: center; gap: 14px">
-              <a href="privacy.html" style="text-decoration: underline"
-                >Privacy Policy</a
-              >
-              <a href="terms.html" style="text-decoration: underline"
-                >Terms of Service</a
-              >
+          <footer class="home-footer">
+            <div class="home-footer-links">
+              <a href="privacy.html">Privacy</a>
+              <a href="terms.html">Terms</a>
             </div>
             <span>Copyright © 2026 Idris Oyejobi. All rights reserved.</span>
           </footer>

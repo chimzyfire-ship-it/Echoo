@@ -120,6 +120,35 @@
         filter: brightness(1.2);
       }
 
+      .tickets-entry {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid rgba(248, 245, 239, 0.12);
+        background: rgba(248, 245, 239, 0.04);
+        color: var(--ink);
+        text-decoration: none;
+        transition:
+          border-color 0.16s ease,
+          background 0.16s ease,
+          transform 0.14s ease;
+      }
+      .tickets-entry:active {
+        transform: scale(0.96);
+      }
+      .tickets-entry svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
       .culture-control {
         display: flex;
         align-items: center;
@@ -255,55 +284,55 @@
         display: inline-flex;
         width: fit-content;
         max-width: 100%;
-        min-height: 38px;
+        min-height: 28px;
         align-items: center;
-        gap: 9px;
-        padding: 0 12px 0 10px;
+        gap: 6px;
+        padding: 0;
         color: var(--ink);
-        border: 1px solid rgba(247, 213, 178, 0.2);
-        border-radius: 999px;
-        background: rgba(247, 213, 178, 0.07);
+        border: 0;
+        border-radius: 0;
+        background: transparent;
         text-align: left;
+        cursor: pointer;
       }
       .discover-location-pill:hover,
       .discover-location-pill:focus-visible {
-        border-color: rgba(247, 213, 178, 0.48);
-        background: rgba(247, 213, 178, 0.11);
+        color: var(--peach);
+        outline: none;
       }
       .discover-location-pill svg {
         width: 14px;
         height: 14px;
         flex: 0 0 auto;
         fill: none;
-        stroke: var(--peach);
+        stroke: currentColor;
         stroke-linecap: round;
         stroke-linejoin: round;
         stroke-width: 1.8;
+        opacity: 0.9;
       }
       .discover-location-pill-copy {
         display: flex;
         min-width: 0;
         align-items: baseline;
-        gap: 6px;
+        gap: 0;
       }
       .discover-location-pill-copy small {
-        color: var(--muted);
-        font-size: 10px;
-        font-weight: 670;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
+        display: none;
       }
       .discover-location-pill-copy strong {
         overflow: hidden;
-        font-size: 12px;
-        font-weight: 740;
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .discover-location-pill .location-chevron {
-        width: 12px;
-        height: 12px;
-        stroke: var(--muted);
+        display: none;
+      }
+      .discover-location-pill[aria-expanded="true"] {
+        color: var(--peach);
       }
 
       .discover-location-wrap {
@@ -423,18 +452,7 @@
         stroke-linejoin: round;
       }
 
-      .discover-location-pill[aria-expanded="true"] {
-        border-color: rgba(247, 213, 178, 0.48);
-        background: rgba(247, 213, 178, 0.12);
-      }
 
-      .discover-location-pill[aria-expanded="true"] .location-chevron {
-        transform: rotate(90deg);
-      }
-
-      .discover-location-pill .location-chevron {
-        transition: transform 0.16s ease;
-      }
 
       /* Hero Section */
       .hero {
@@ -816,16 +834,21 @@
 
       .chip {
         white-space: nowrap;
-        min-height: 34px;
-        padding: 0 12px;
-        border-radius: var(--pill-radius);
-        font-size: 12px;
-        font-weight: 650;
-        color: var(--muted);
-        background: rgba(248, 245, 239, 0.035);
-        border: 1px solid var(--line);
-        transition: all 0.2s ease;
+        min-height: 28px;
+        padding: 0 2px;
+        border-radius: 0;
+        font-size: 13px;
+        font-weight: 560;
+        color: rgba(248, 245, 239, 0.55);
+        background: transparent;
+        border: 0;
+        border-bottom: 1.5px solid transparent;
+        transition:
+          color 0.18s ease,
+          border-color 0.18s ease,
+          opacity 0.18s ease;
         flex-shrink: 0;
+        cursor: pointer;
       }
 
       .chip:hover {
@@ -833,10 +856,10 @@
       }
 
       .chip.active {
-        background: var(--peach);
-        color: #050505;
-        font-weight: 650;
-        border-color: var(--peach);
+        background: transparent;
+        color: var(--peach);
+        font-weight: 680;
+        border-bottom-color: rgba(231, 201, 142, 0.85);
       }
 
       /* Section Headers */
@@ -2105,6 +2128,19 @@
         <a class="brand" href="index.html" aria-label="Echoo home">
           <img src="assets/echoo-wordmark.png" alt="echoo" />
         </a>
+        <a
+          class="tickets-entry"
+          href="tickets.html"
+          aria-label="My tickets"
+          title="Tickets"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9Z"
+            />
+            <path d="M9 7v10" />
+          </svg>
+        </a>
       </header>
 
       <!-- Main Shell Content -->
@@ -2166,16 +2202,8 @@
                 <circle cx="12" cy="10" r="2.5" />
               </svg>
               <span class="discover-location-pill-copy">
-                <small>Exploring</small>
                 <strong id="discover-location-label">Toronto</strong>
               </span>
-              <svg
-                class="location-chevron"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="m9 6 6 6-6 6" />
-              </svg>
             </button>
 
             <div
@@ -3618,22 +3646,9 @@
               rawRating === null || rawRating === undefined || rawRating === ""
                 ? NaN
                 : Number(rawRating);
-            const provider = item?.attribution?.requiredLabel || "";
-            const photoAuthor = item?.image?.authors?.[0]?.displayName || "";
-            const providerCredit = [
-              provider,
-              photoAuthor ? `Photo: ${photoAuthor}` : "",
-            ]
-              .filter(Boolean)
-              .join(" · ");
-            const context = [distance ? `${distance} away` : "", providerCredit]
-              .filter(Boolean)
-              .join(" · ");
-            const sourceLabel = provider
-              ? `. New to Echoo from ${provider}${photoAuthor ? `. Photo by ${photoAuthor}` : ""}`
-              : "";
+            const context = distance ? `${distance} away` : "";
             const localityLabel = `. ${item.category || "Place"} in ${item.city || city}${distance ? `. ${distance} away` : ""}`;
-            return `<button class="location-card" type="button" data-nearby-index="${index}" aria-label="Open ${esc(item.title || "place")}${esc(localityLabel)}${esc(sourceLabel)}">${placeVisual(item, "location-card-img", item.title || "Local place", { eager: index < 3 })}<span class="location-card-overlay"><strong class="location-card-title">${esc(item.title || "Local pick")}</strong><span class="location-card-meta">${esc(item.category || "Place")} · ${esc(item.city || city)}</span>${context ? `<span class="location-card-distance">${esc(context)}</span>` : ""}${Number.isFinite(rating) ? `<span class="location-card-rating">★ ${rating.toFixed(1)}</span>` : ""}</span></button>`;
+            return `<button class="location-card" type="button" data-nearby-index="${index}" aria-label="Open ${esc(item.title || "place")}${esc(localityLabel)}">${placeVisual(item, "location-card-img", item.title || "Local place", { eager: index < 3 })}<span class="location-card-overlay"><strong class="location-card-title">${esc(item.title || "Local pick")}</strong><span class="location-card-meta">${esc(item.category || "Place")} · ${esc(item.city || city)}</span>${context ? `<span class="location-card-distance">${esc(context)}</span>` : ""}${Number.isFinite(rating) ? `<span class="location-card-rating">★ ${rating.toFixed(1)}</span>` : ""}</span></button>`;
           })
           .join("");
         nearbyContainer
@@ -3655,15 +3670,8 @@
         }
         recommendationContainer.innerHTML = list
           .map((item, index) => {
-            const provider = item?.attribution?.requiredLabel || "";
-            const photoAuthor = item?.image?.authors?.[0]?.displayName || "";
-            const context = provider
-              ? `New to Echoo · ${provider}${photoAuthor ? ` · Photo: ${photoAuthor}` : ""}`
-              : item.neighborhood || item.city || "GTA";
-            const sourceLabel = provider
-              ? `. New to Echoo from ${provider}${photoAuthor ? `. Photo by ${photoAuthor}` : ""}`
-              : "";
-            return `<button class="recommendation-card" type="button" data-recommendation-index="${index}" aria-label="Open ${esc(item.title || "place")}${esc(sourceLabel)}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick", { eager: index < 3 })}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(context)}</span></span></button>`;
+            const context = item.neighborhood || item.city || "GTA";
+            return `<button class="recommendation-card" type="button" data-recommendation-index="${index}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick", { eager: index < 3 })}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(context)}</span></span></button>`;
           })
           .join("");
         recommendationContainer
@@ -3967,11 +3975,13 @@
         const hasExactLocation = Number.isFinite(lat) && Number.isFinite(lng);
         const label =
           discoveryLocation?.label ||
-          (hasExactLocation ? `Near ${city}` : city || DEFAULT_DISCOVERY_CITY);
+          (hasExactLocation
+            ? city || DEFAULT_DISCOVERY_CITY
+            : city || DEFAULT_DISCOVERY_CITY);
         locationLabel.textContent = label;
         locationPill.setAttribute(
           "aria-label",
-          `${hasExactLocation ? "Using current location" : `Exploring ${city}`}. Change discovery location`,
+          `${label}. Change discovery location`,
         );
       }
 
