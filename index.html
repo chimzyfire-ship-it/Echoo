@@ -155,74 +155,48 @@
         filter: brightness(1.25) contrast(1.05);
       }
 
-      .tickets-entry {
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
+      .signin-entry {
         display: inline-flex;
+        width: min(100%, 248px);
+        min-height: 50px;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 1px solid rgba(248, 245, 239, 0.14);
-        background: rgba(8, 8, 8, 0.28);
+        gap: 9px;
+        padding: 0 22px;
         color: var(--ink);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(247, 213, 178, 0.34);
+        border-radius: 999px;
+        background: rgba(9, 9, 9, 0.44);
+        font-size: 14px;
+        font-weight: 640;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
         transition:
-          border-color 0.16s ease,
-          background 0.16s ease,
-          transform 0.16s ease;
+          border-color 0.18s ease,
+          background 0.18s ease,
+          transform 0.18s ease,
+          box-shadow 0.18s ease;
       }
 
-      .tickets-entry:active {
-        transform: translateY(-50%) scale(0.96);
-      }
-
-      .tickets-entry svg {
-        width: 18px;
-        height: 18px;
+      .signin-entry svg {
+        width: 15px;
+        height: 15px;
+        stroke: var(--peach);
+        stroke-width: 2.2;
         fill: none;
-        stroke: currentColor;
-        stroke-width: 1.7;
         stroke-linecap: round;
         stroke-linejoin: round;
       }
 
-      .signin-entry {
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        display: inline-flex;
-        min-height: 38px;
-        align-items: center;
-        justify-content: center;
-        padding: 0 14px;
-        color: var(--ink);
-        border: 1px solid rgba(248, 245, 239, 0.18);
-        border-radius: 999px;
-        background: rgba(8, 8, 8, 0.3);
-        font-size: 12px;
-        font-weight: 650;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        transition:
-          border-color 0.16s ease,
-          background 0.16s ease,
-          transform 0.16s ease;
-      }
-
       .signin-entry:active {
-        transform: translateY(-50%) scale(0.96);
+        transform: scale(0.96);
       }
 
       .signin-entry:hover,
       .signin-entry:focus-visible {
-        border-color: rgba(247, 213, 178, 0.6);
-        background: rgba(247, 213, 178, 0.1);
+        border-color: rgba(247, 213, 178, 0.72);
+        background: rgba(247, 213, 178, 0.12);
         outline: none;
       }
 
@@ -1440,25 +1414,8 @@
     <div class="app-shell">
       <div class="page">
         <header class="topbar" aria-label="Echoo">
-          <a
-            class="signin-entry"
-            href="auth.html?mode=signin&amp;next=events.html"
-          >Sign in</a>
           <a class="brand" href="index.html" aria-label="Echoo home">
             <img src="assets/echoo-wordmark.png" alt="echoo" />
-          </a>
-          <a
-            class="tickets-entry"
-            href="tickets.html"
-            aria-label="My tickets"
-            title="Tickets"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9Z"
-              />
-              <path d="M9 7v10" />
-            </svg>
           </a>
         </header>
 
@@ -1479,6 +1436,17 @@
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
             </button>
+
+            <a
+              class="signin-entry"
+              href="auth.html?mode=signin&amp;next=events.html"
+            >
+              <span>Sign in</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="4" y1="12" x2="19" y2="12"></line>
+                <polyline points="13 6 19 12 13 18"></polyline>
+              </svg>
+            </a>
           </section>
 
           <footer class="home-footer">
