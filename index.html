@@ -191,6 +191,41 @@
         stroke-linejoin: round;
       }
 
+      .signin-entry {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
+        min-height: 38px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+        color: var(--ink);
+        border: 1px solid rgba(248, 245, 239, 0.18);
+        border-radius: 999px;
+        background: rgba(8, 8, 8, 0.3);
+        font-size: 12px;
+        font-weight: 650;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition:
+          border-color 0.16s ease,
+          background 0.16s ease,
+          transform 0.16s ease;
+      }
+
+      .signin-entry:active {
+        transform: translateY(-50%) scale(0.96);
+      }
+
+      .signin-entry:hover,
+      .signin-entry:focus-visible {
+        border-color: rgba(247, 213, 178, 0.6);
+        background: rgba(247, 213, 178, 0.1);
+        outline: none;
+      }
+
       .profile-link {
         width: 34px;
         height: 34px;
@@ -1405,6 +1440,10 @@
     <div class="app-shell">
       <div class="page">
         <header class="topbar" aria-label="Echoo">
+          <a
+            class="signin-entry"
+            href="auth.html?mode=signin&amp;next=events.html"
+          >Sign in</a>
           <a class="brand" href="index.html" aria-label="Echoo home">
             <img src="assets/echoo-wordmark.png" alt="echoo" />
           </a>

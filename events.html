@@ -511,7 +511,7 @@
       .culture-picker-sheet {
         position: relative;
         width: min(100%, 430px);
-        max-height: min(76svh, 650px);
+        max-height: min(52svh, 390px);
         display: flex;
         flex-direction: column;
         gap: 13px;
@@ -584,12 +584,12 @@
         flex: 0 0 auto;
         align-items: center;
         gap: 9px;
-        min-height: 43px;
+        min-height: 54px;
         margin: 0;
         padding: 0 13px;
         border: 1px solid var(--line);
-        border-radius: 14px;
-        background: rgba(248, 245, 239, 0.045);
+        border-radius: 16px;
+        background: rgba(248, 245, 239, 0.06);
       }
       .culture-picker-search svg {
         width: 16px;
@@ -607,66 +607,22 @@
         color: var(--ink);
         background: transparent;
         font: inherit;
-        font-size: 12px;
+        font-size: 16px;
+        font-weight: 600;
       }
       .culture-picker-search input::placeholder {
         color: var(--muted);
       }
-      .culture-picker-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        flex: 1 1 auto;
-        align-content: start;
-        gap: 8px;
-        min-height: 0;
-        overflow-y: auto;
-        padding: 1px;
-        overscroll-behavior: contain;
-      }
-      .culture-choice {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        min-height: 52px;
-        padding: 10px 10px 10px 12px;
+      .culture-picker-selection {
+        min-height: 18px;
+        margin: -4px 2px 0;
         color: var(--muted);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        background: rgba(248, 245, 239, 0.035);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        text-align: left;
-        transition:
-          border-color 0.16s ease,
-          background 0.16s ease,
-          color 0.16s ease;
-      }
-      .culture-choice:active {
-        transform: scale(0.98);
-      }
-      .culture-choice.is-active {
-        color: #1b1711;
-        border-color: var(--peach);
-        background: var(--peach);
-      }
-      .culture-choice-mark {
-        display: grid;
-        width: 18px;
-        height: 18px;
-        flex: 0 0 18px;
-        place-items: center;
-        color: transparent;
-        border: 1px solid rgba(248, 245, 239, 0.28);
-        border-radius: 50%;
         font-size: 11px;
-        font-weight: 800;
+        line-height: 1.4;
       }
-      .culture-choice.is-active .culture-choice-mark {
-        color: #1b1711;
-        border-color: rgba(27, 23, 17, 0.28);
-        background: rgba(27, 23, 17, 0.1);
+      .culture-picker-selection strong {
+        color: var(--peach);
+        font-weight: 750;
       }
       .culture-picker-footer {
         display: flex;
@@ -2464,10 +2420,9 @@
         <div class="culture-picker-heading">
           <div>
             <small>Culture Lens</small>
-            <h2 id="culture-picker-title">Choose a category.</h2>
+            <h2 id="culture-picker-title">Choose a country.</h2>
             <p>
-              One tap shapes Discover around that culture. Tap again to turn it
-              off.
+              Search or select one country to shape your Discover results.
             </p>
           </div>
           <button
@@ -2485,16 +2440,14 @@
             <path d="m16 16 4 4" /></svg
           ><input
             id="culture-picker-search"
-            type="search"
+            type="text"
+            list="culture-picker-list"
             autocomplete="off"
-            placeholder="Search categories"
+            inputmode="search"
+            placeholder="Search countries"
         /></label>
-        <div
-          class="culture-picker-list"
-          id="culture-picker-list"
-          role="list"
-          aria-label="Choose a culture category"
-        ></div>
+        <datalist id="culture-picker-list"></datalist>
+        <p class="culture-picker-selection" id="culture-picker-selection"></p>
         <div class="culture-picker-footer">
           <button class="culture-clear" id="culture-clear" type="button">
             Turn off Culture Lens · show <strong>local picks</strong>
@@ -2630,6 +2583,9 @@
         culturePicker = document.getElementById("culture-picker"),
         culturePickerList = document.getElementById("culture-picker-list"),
         culturePickerSearch = document.getElementById("culture-picker-search"),
+        culturePickerSelection = document.getElementById(
+          "culture-picker-selection",
+        ),
         cultureClear = document.getElementById("culture-clear");
 
       const surpriseMode = params.get("mode") === "surprise";
@@ -2774,44 +2730,43 @@
         return ["late_night", "today"];
       }
 
-      function cultureCategories() {
+      function cultureCountries() {
         return (
-          cultureContext?.categories ||
+          cultureContext?.countries ||
           cultureContext?.catalogue ||
-          cultureContext?.browseGroups ||
           []
         );
       }
 
       function renderCulturePicker() {
-        const term = String(culturePickerSearch?.value || "")
-          .trim()
-          .toLowerCase();
-        const selected = activeCulture()?.slug || "";
-        const options = cultureCategories().filter((culture) => {
-          if (!term) return true;
-          const searchValues = [
-            culture.label,
-            culture.slug,
-            ...(culture.aliases || []),
-            ...(culture.terms || []),
-          ];
-          return searchValues.some((value) =>
-            String(value).toLowerCase().includes(term),
-          );
-        });
-        culturePickerList.innerHTML = options.length
-          ? options
-              .map(
-                (culture) =>
-                  `<button type="button" class="culture-choice${culture.slug === selected ? " is-active" : ""}" role="listitem" data-culture="${esc(culture.slug)}" aria-pressed="${culture.slug === selected}"><span>${esc(culture.label)}</span><span class="culture-choice-mark" aria-hidden="true">${culture.slug === selected ? "✓" : ""}</span></button>`,
-              )
-              .join("")
-          : `<p class="culture-picker-empty">No category matches that search. Try Canadian, American, West Africa, East Asia…</p>`;
+        culturePickerList.innerHTML = cultureCountries()
+          .map(
+            (country) =>
+              `<option value="${esc(country.label)}">${esc(country.code || "")}</option>`,
+          )
+          .join("");
+        const selected = activeCulture();
+        culturePickerSelection.innerHTML = selected
+          ? `Active lens: <strong>${esc(selected.label)}</strong>`
+          : "No country lens selected.";
+      }
+
+      function selectCultureCountry() {
+        const country = cultureContext?.getByValue?.(culturePickerSearch.value);
+        if (!country) return;
+        if (activeCulture()?.slug === country.slug) {
+          cultureContext?.clear();
+        } else {
+          cultureContext?.setActive(country.slug);
+        }
+        closeCulturePicker();
       }
 
       function openCulturePicker() {
-        if (culturePickerSearch) culturePickerSearch.value = "";
+        if (culturePickerSearch) {
+          culturePickerSearch.value = activeCulture()?.label || "";
+          culturePickerSearch.select();
+        }
         renderCulturePicker();
         culturePicker.classList.add("is-open");
         culturePicker.setAttribute("aria-hidden", "false");
@@ -5099,19 +5054,17 @@
         .forEach((button) =>
           button.addEventListener("click", closeCulturePicker),
         );
-      culturePickerList.addEventListener("click", (event) => {
-        const option = event.target.closest("[data-culture]");
-        if (!option) return;
-        const slug = option.dataset.culture;
-        // Tap active category again to turn lens off
-        if (activeCulture()?.slug === slug) {
-          cultureContext?.clear();
-        } else {
-          cultureContext?.setActive(slug);
+      culturePickerSearch?.addEventListener("change", selectCultureCountry);
+      culturePickerSearch?.addEventListener("input", () => {
+        if (cultureContext?.getByValue?.(culturePickerSearch.value)) {
+          selectCultureCountry();
         }
-        closeCulturePicker();
       });
-      culturePickerSearch?.addEventListener("input", renderCulturePicker);
+      culturePickerSearch?.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        selectCultureCountry();
+      });
       document.addEventListener("keydown", (event) => {
         if (
           event.key === "Escape" &&

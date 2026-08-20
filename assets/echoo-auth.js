@@ -9,6 +9,7 @@
   const VALID_TONES = new Set(["direct", "detailed"]);
   const AUTH_STORAGE_KEY = "echoo.auth.session";
   const PUBLIC_PAGES = new Set([
+    "index.html",
     "auth.html",
     "privacy.html",
     "terms.html",
