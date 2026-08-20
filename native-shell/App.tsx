@@ -32,9 +32,10 @@ type RoutePlan = {
  */
 // Expo Go needs a usable app destination even before a developer adds a local
 // LAN override. The environment value still wins for local device testing.
-const ECHOO_WEB_URL =
+const ECHOO_WEB_BASE_URL =
   process.env.EXPO_PUBLIC_ECHOO_WEB_URL?.trim() ||
-  "https://echoocity.com/events.html";
+  "https://echoocity.com/index.html";
+const ECHOO_WEB_URL = new URL("index.html", ECHOO_WEB_BASE_URL).toString();
 
 const MOBILE_CHROME_SCRIPT = `
   (function () {
