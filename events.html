@@ -124,8 +124,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         border: 1px solid rgba(248, 245, 239, 0.12);
         background: rgba(248, 245, 239, 0.04);
@@ -511,11 +511,11 @@
       .culture-picker-sheet {
         position: relative;
         width: min(100%, 430px);
-        max-height: min(52svh, 390px);
+        max-height: min(82svh, 700px);
         display: flex;
         flex-direction: column;
-        gap: 13px;
-        padding: 10px 22px calc(17px + env(safe-area-inset-bottom));
+        gap: 12px;
+        padding: 10px 22px calc(15px + env(safe-area-inset-bottom));
         overflow: hidden;
         border: 1px solid rgba(248, 245, 239, 0.12);
         border-bottom: 0;
@@ -566,16 +566,20 @@
       }
       .culture-picker-close {
         display: grid;
-        width: 31px;
-        height: 31px;
-        flex: 0 0 31px;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
         place-items: center;
         padding: 0 0 2px;
         color: var(--muted);
         border: 0;
         border-radius: 50%;
         background: rgba(248, 245, 239, 0.07);
-        font-size: 23px;
+        font-size: 24px;
+      }
+      .culture-picker-close:focus-visible {
+        outline: 2px solid var(--peach);
+        outline-offset: 2px;
       }
       .culture-picker-search {
         display: flex;
@@ -613,9 +617,97 @@
       .culture-picker-search input::placeholder {
         color: var(--muted);
       }
+      .culture-country-list {
+        flex: 1 1 auto;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        padding: 1px;
+        scrollbar-width: none;
+      }
+      .culture-country-list::-webkit-scrollbar {
+        display: none;
+      }
+      .culture-country-group {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: 12px 12px 4px;
+        color: var(--muted);
+        background: #181817;
+        font-size: 10px;
+        font-weight: 760;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .culture-country-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 54px;
+        padding: 0 12px;
+        color: var(--ink);
+        border: 0;
+        border-radius: 14px;
+        background: transparent;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 620;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.14s ease;
+      }
+      .culture-country-option:active {
+        background: rgba(247, 213, 178, 0.14);
+      }
+      .culture-country-option.is-highlighted,
+      .culture-country-option:focus-visible {
+        background: rgba(248, 245, 239, 0.06);
+        outline: none;
+      }
+      .culture-country-option.is-active {
+        color: var(--peach);
+        font-weight: 720;
+      }
+      .culture-country-name {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .culture-country-code {
+        flex: 0 0 auto;
+        min-width: 26px;
+        padding: 2px 5px;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: rgba(248, 245, 239, 0.035);
+        font-size: 10px;
+        font-weight: 720;
+        letter-spacing: 0.06em;
+        text-align: center;
+      }
+      .culture-country-check {
+        flex: 0 0 18px;
+        color: var(--peach);
+        font-size: 13px;
+        font-weight: 800;
+        text-align: center;
+        visibility: hidden;
+      }
+      .culture-country-option.is-active .culture-country-check {
+        visibility: visible;
+      }
       .culture-picker-selection {
-        min-height: 18px;
-        margin: -4px 2px 0;
+        min-height: 16px;
+        margin: -2px 2px 0;
         color: var(--muted);
         font-size: 11px;
         line-height: 1.4;
@@ -643,14 +735,19 @@
         font-weight: 750;
       }
       .culture-picker-empty {
-        grid-column: 1 / -1;
-        margin: 5px 0;
+        margin: 14px 2px;
         color: var(--muted);
         font-size: 12px;
         line-height: 1.45;
       }
       body.culture-picker-open {
         overflow: hidden;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .culture-picker-sheet,
+        .culture-picker-backdrop {
+          transition: none;
+        }
       }
 
       /* Search Bar */
@@ -1106,17 +1203,19 @@
         display: none;
       }
 
-      /* Location Card */
+      /* Location Card — compact listing row (cover left, details right) */
       .location-card {
-        flex: 0 0 226px;
-        height: 300px;
+        flex: 0 0 min(330px, calc(100vw - 56px));
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
+        min-height: 128px;
         position: relative;
         appearance: none;
         padding: 0;
         color: inherit;
         font: inherit;
         text-align: left;
-        border-radius: 24px;
+        border-radius: 20px;
         overflow: hidden;
         background: #151515;
         border: 1px solid var(--line);
@@ -1136,62 +1235,84 @@
       }
 
       .location-card-img {
+        grid-column: 1;
+        grid-row: 1;
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
       }
       .location-card .place-visual-fallback {
-        position: absolute;
-        inset: 0;
+        grid-column: 1;
+        grid-row: 1;
+        position: static;
+        inset: auto;
+        width: 100%;
+        height: 100%;
       }
 
       .location-card-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          to top,
-          rgba(5, 5, 5, 0.95) 0%,
-          rgba(5, 5, 5, 0.35) 55%,
-          transparent 100%
-        );
-        padding: 16px;
+        grid-column: 2;
+        grid-row: 1;
+        position: static;
+        inset: auto;
+        background: none;
+        padding: 14px 15px;
         display: flex;
         flex-direction: column;
-        justify-content: flex-end;
+        justify-content: center;
         gap: 3px;
+        min-width: 0;
       }
 
       .location-card-title {
-        font-size: 17px;
-        font-weight: 760;
+        font-size: 15px;
+        font-weight: 740;
         color: var(--ink);
         line-height: 1.25;
-        white-space: nowrap;
+        letter-spacing: -0.015em;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
       }
 
       .location-card-meta {
+        font-size: 10px;
+        font-weight: 740;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: rgba(247, 213, 178, 0.82);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .location-card-place {
         font-size: 12px;
         font-weight: 600;
-        color: rgba(248, 245, 239, 0.7);
+        color: rgba(248, 245, 239, 0.68);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .location-card-rating {
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 650;
         color: var(--ink);
-        display: flex;
+        display: inline;
         align-items: center;
         gap: 4px;
-        margin-top: 2px;
       }
 
       .location-card-distance {
-        color: rgba(248, 245, 239, 0.72);
+        color: rgba(248, 245, 239, 0.55);
         font-size: 11px;
-        font-weight: 650;
+        font-weight: 640;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .recommendation-grid {
@@ -1209,12 +1330,14 @@
 
       .recommendation-card {
         position: relative;
-        flex: 0 0 218px;
-        aspect-ratio: 0.74;
+        flex: 0 0 min(330px, calc(100vw - 56px));
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
+        min-height: 128px;
         overflow: hidden;
         padding: 0;
         border: 1px solid var(--line);
-        border-radius: 24px;
+        border-radius: 20px;
         background: #151515;
         color: var(--ink);
         cursor: pointer;
@@ -1224,45 +1347,62 @@
       .recommendation-card:active {
         transform: scale(0.98);
       }
-      .recommendation-card img {
+      .recommendation-card img,
+      .recommendation-card .recommendation-card-img {
+        grid-column: 1;
+        grid-row: 1;
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
       }
       .recommendation-card .place-visual-fallback {
-        position: absolute;
-        inset: 0;
+        grid-column: 1;
+        grid-row: 1;
+        position: static;
+        inset: auto;
+        width: 100%;
+        height: 100%;
       }
       .recommendation-card-copy {
-        position: absolute;
-        inset: 0;
+        grid-column: 2;
+        grid-row: 1;
+        position: static;
+        inset: auto;
         display: flex;
+        min-width: 0;
         flex-direction: column;
-        justify-content: flex-end;
+        justify-content: center;
         gap: 3px;
-        padding: 16px;
-        background: linear-gradient(
-          to top,
-          rgba(5, 5, 5, 0.94),
-          rgba(5, 5, 5, 0.16) 62%,
-          transparent
-        );
+        padding: 14px 15px;
+        background: none;
       }
       .recommendation-card-copy strong {
         overflow: hidden;
-        font-size: 16px;
-        line-height: 1.2;
+        font-size: 15px;
+        font-weight: 740;
+        letter-spacing: -0.015em;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .recommendation-card-eyebrow {
+        overflow: hidden;
+        color: rgba(247, 213, 178, 0.82);
+        font-size: 10px;
+        font-weight: 740;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .recommendation-card-copy span {
+      .recommendation-card-place {
         overflow: hidden;
-        color: rgba(248, 245, 239, 0.72);
-        font-size: 11px;
+        color: rgba(248, 245, 239, 0.68);
+        font-size: 12px;
         font-weight: 600;
         text-overflow: ellipsis;
-        text-transform: uppercase;
         white-space: nowrap;
       }
       .discover-refresh {
@@ -1315,27 +1455,30 @@
 
       .discovery-results {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        grid-template-columns: 1fr;
+        gap: 12px;
       }
       .discovery-result {
         position: relative;
-        display: block;
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
         width: 100%;
-        min-height: 0;
-        aspect-ratio: 0.76;
+        min-height: 128px;
         padding: 0;
         color: var(--ink);
         border: 1px solid var(--line);
-        border-radius: 22px;
+        border-radius: 20px;
         overflow: hidden;
         background: #151515;
         text-align: left;
       }
       .discovery-result:active {
-        transform: scale(0.985);
+        transform: scale(0.99);
       }
-      .discovery-result img {
+      .discovery-result img,
+      .discovery-result .discovery-result-img {
+        grid-column: 1;
+        grid-row: 1;
         width: 100%;
         height: 100%;
         border-radius: 0;
@@ -1343,43 +1486,71 @@
         background: #171717;
       }
       .discovery-result .place-visual-fallback {
-        position: absolute;
-        inset: 0;
+        grid-column: 1;
+        grid-row: 1;
+        position: static;
+        inset: auto;
         width: 100%;
         height: 100%;
         border-radius: 0;
       }
       .discovery-result-copy {
-        position: absolute;
-        inset: 0;
+        grid-column: 2;
+        grid-row: 1;
+        position: static;
+        inset: auto;
         display: flex;
         min-width: 0;
         flex-direction: column;
-        justify-content: flex-end;
-        padding: 14px;
-        background: linear-gradient(
-          to top,
-          rgba(5, 5, 5, 0.9),
-          rgba(5, 5, 5, 0.08) 58%,
-          transparent
-        );
+        justify-content: center;
+        gap: 3px;
+        padding: 14px 15px;
+        background: none;
       }
       .discovery-result-copy small {
-        display: none;
-      }
-      .discovery-result-copy strong {
+        display: block;
         overflow: hidden;
-        font-size: 16px;
-        font-weight: 760;
-        letter-spacing: -0.02em;
+        color: rgba(247, 213, 178, 0.82);
+        font-size: 10px;
+        font-weight: 740;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+      .discovery-result-copy strong {
+        overflow: hidden;
+        font-size: 15px;
+        font-weight: 740;
+        letter-spacing: -0.015em;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
       .discovery-result-copy span {
-        display: none;
+        display: block;
+        overflow: hidden;
+        color: rgba(248, 245, 239, 0.68);
+        font-size: 12px;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .discovery-result-index {
         display: none;
+      }
+      @media (max-width: 374px) {
+        .location-card,
+        .recommendation-card,
+        .discovery-result {
+          grid-template-columns: 94px minmax(0, 1fr);
+          min-height: 118px;
+        }
+        .location-card,
+        .recommendation-card {
+          flex-basis: calc(100vw - 48px);
+        }
       }
       .results-pagination {
         display: flex;
@@ -1461,18 +1632,19 @@
         font-weight: 760;
       }
       .discover-loading-grid {
+        grid-column: 1 / -1;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        grid-template-columns: 1fr;
+        gap: 12px;
       }
       .discover-loading-row {
-        display: block;
-        min-height: 0;
-        aspect-ratio: 0.76;
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
+        min-height: 128px;
         padding: 0;
         overflow: hidden;
         border: 1px solid var(--line);
-        border-radius: 22px;
+        border-radius: 20px;
         background: rgba(248, 245, 239, 0.035);
       }
       .discover-loading-thumb,
@@ -1490,12 +1662,21 @@
         animation: skeleton-shimmer 1.35s ease-in-out infinite;
       }
       .discover-loading-thumb {
+        grid-column: 1;
+        grid-row: 1;
         width: 100%;
         height: 100%;
+        min-height: 128px;
         border-radius: 0;
       }
       .discover-loading-copy {
-        display: none;
+        grid-column: 2;
+        grid-row: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px;
       }
       .discover-loading-line {
         height: 10px;
@@ -1748,6 +1929,11 @@
         .surprise-loader::before,
         .surprise-loader::after,
         .discover-refresh.is-refreshing svg {
+          animation: none;
+        }
+        .skeleton-card::after,
+        .discover-loading-thumb,
+        .discover-loading-line {
           animation: none;
         }
         .place-photo {
@@ -2422,7 +2608,7 @@
             <small>Culture Lens</small>
             <h2 id="culture-picker-title">Choose a country.</h2>
             <p>
-              Search or select one country to shape your Discover results.
+              Scroll the list, or search — your lens activates on selection.
             </p>
           </div>
           <button
@@ -2441,13 +2627,30 @@
           ><input
             id="culture-picker-search"
             type="text"
-            list="culture-picker-list"
+            role="combobox"
+            aria-label="Search countries"
+            aria-autocomplete="list"
+            aria-expanded="true"
+            aria-controls="culture-country-list"
             autocomplete="off"
             inputmode="search"
+            enterkeyhint="search"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
             placeholder="Search countries"
         /></label>
-        <datalist id="culture-picker-list"></datalist>
-        <p class="culture-picker-selection" id="culture-picker-selection"></p>
+        <div
+          class="culture-country-list"
+          id="culture-country-list"
+          role="listbox"
+          aria-label="Countries"
+        ></div>
+        <p
+          class="culture-picker-selection"
+          id="culture-picker-selection"
+          aria-live="polite"
+        ></p>
         <div class="culture-picker-footer">
           <button class="culture-clear" id="culture-clear" type="button">
             Turn off Culture Lens · show <strong>local picks</strong>
@@ -2581,7 +2784,7 @@
 
       const cultureLensFab = document.getElementById("culture-lens-fab"),
         culturePicker = document.getElementById("culture-picker"),
-        culturePickerList = document.getElementById("culture-picker-list"),
+        cultureCountryList = document.getElementById("culture-country-list"),
         culturePickerSearch = document.getElementById("culture-picker-search"),
         culturePickerSelection = document.getElementById(
           "culture-picker-selection",
@@ -2738,45 +2941,173 @@
         );
       }
 
-      function renderCulturePicker() {
-        culturePickerList.innerHTML = cultureCountries()
-          .map(
-            (country) =>
-              `<option value="${esc(country.label)}">${esc(country.code || "")}</option>`,
-          )
-          .join("");
-        const selected = activeCulture();
-        culturePickerSelection.innerHTML = selected
-          ? `Active lens: <strong>${esc(selected.label)}</strong>`
-          : "No country lens selected.";
+      // ── Country picker ─────────────────────────────────────────────
+      // Typing only filters. A country becomes the lens exclusively via a
+      // row tap (or Enter on a highlighted row) — one commit per gesture.
+      let cultureCountryRows = [];
+      let cultureFilterFrame = null;
+      let cultureHighlightedSlug = "";
+
+      function normalizeCultureText(value) {
+        return String(value || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9\s]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
       }
 
-      function selectCultureCountry() {
-        const country = cultureContext?.getByValue?.(culturePickerSearch.value);
-        if (!country) return;
-        if (activeCulture()?.slug === country.slug) {
-          cultureContext?.clear();
-        } else {
-          cultureContext?.setActive(country.slug);
+      function buildCultureCountryRows() {
+        cultureCountryRows = cultureCountries().map((country) => ({
+          ...country,
+          key: normalizeCultureText(
+            [
+              country.label,
+              country.localLabel,
+              country.code,
+              ...(country.aliases || []),
+            ].join(" "),
+          ),
+        }));
+      }
+
+      function filteredCultureCountries() {
+        const term = normalizeCultureText(culturePickerSearch?.value || "");
+        if (!term) return cultureCountryRows;
+        return cultureCountryRows.filter((country) =>
+          country.key.includes(term),
+        );
+      }
+
+      function updateCultureSelectionLine(filteredCount) {
+        const selected = activeCulture();
+        culturePickerSelection.innerHTML = selected
+          ? `Active lens: <strong>${esc(selected.label)}</strong> · ${filteredCount} shown`
+          : `${filteredCount} countries · none selected`;
+      }
+
+      function renderCulturePicker() {
+        cultureFilterFrame = null;
+        if (!cultureCountryRows.length) buildCultureCountryRows();
+        const filtered = filteredCultureCountries();
+        const selectedSlug = activeCulture()?.slug || "";
+        let currentLetter = "";
+        let markup = "";
+        for (const country of filtered) {
+          const letter = (country.label[0] || "#").toUpperCase();
+          if (letter !== currentLetter) {
+            currentLetter = letter;
+            markup += `<div class="culture-country-group" aria-hidden="true">${esc(letter)}</div>`;
+          }
+          const isActive = country.slug === selectedSlug;
+          markup += `<div class="culture-country-option${isActive ? " is-active" : ""}" role="option" id="culture-option-${esc(country.slug)}" data-culture="${esc(country.slug)}" aria-selected="${isActive}"><span class="culture-country-name">${esc(country.label)}</span><span class="culture-country-code" aria-hidden="true">${esc(country.code || "")}</span><span class="culture-country-check" aria-hidden="true">✓</span></div>`;
         }
+        cultureCountryList.innerHTML = markup
+          ? markup
+          : `<p class="culture-picker-empty">No country matches that search. Try a name, code, or alias like “USA” or “Britain”.</p>`;
+        if (
+          cultureHighlightedSlug &&
+          !filtered.some((c) => c.slug === cultureHighlightedSlug)
+        )
+          cultureHighlightedSlug = "";
+        if (cultureHighlightedSlug) {
+          cultureCountryList
+            .querySelector(
+              `[data-culture="${CSS.escape(cultureHighlightedSlug)}"]`,
+            )
+            ?.classList.add("is-highlighted");
+        }
+        updateCultureSelectionLine(filtered.length);
+      }
+
+      function applyCultureCountry(slug) {
+        if (!slug) return;
+        cultureContext?.setActive(slug);
         closeCulturePicker();
       }
 
-      function openCulturePicker() {
-        if (culturePickerSearch) {
-          culturePickerSearch.value = activeCulture()?.label || "";
-          culturePickerSearch.select();
+      function cultureHighlightedElement() {
+        return cultureHighlightedSlug
+          ? cultureCountryList.querySelector(
+              `[data-culture="${CSS.escape(cultureHighlightedSlug)}"]`,
+            )
+          : null;
+      }
+
+      function setCultureHighlight(slug, { scroll = false } = {}) {
+        cultureCountryList
+          .querySelectorAll(".is-highlighted")
+          .forEach((row) => row.classList.remove("is-highlighted"));
+        cultureHighlightedSlug = slug || "";
+        const row = cultureHighlightedElement();
+        if (row) {
+          row.classList.add("is-highlighted");
+          if (scroll)
+            row.scrollIntoView({ block: "nearest", behavior: "auto" });
         }
+        if (culturePickerSearch)
+          culturePickerSearch.setAttribute(
+            "aria-activedescendant",
+            row ? row.id : "",
+          );
+      }
+
+      function moveCultureHighlight(direction) {
+        const rows = [...cultureCountryList.querySelectorAll("[data-culture]")];
+        if (!rows.length) return;
+        const currentIndex = rows.findIndex(
+          (row) => row.dataset.culture === cultureHighlightedSlug,
+        );
+        const nextIndex =
+          direction === "down"
+            ? Math.min(rows.length - 1, currentIndex + 1)
+            : Math.max(0, currentIndex <= 0 ? 0 : currentIndex - 1);
+        const next = rows[currentIndex === -1 ? 0 : nextIndex];
+        setCultureHighlight(next?.dataset.culture || "", { scroll: true });
+      }
+
+      function openCulturePicker() {
+        if (culturePickerSearch) culturePickerSearch.value = "";
+        cultureHighlightedSlug = "";
         renderCulturePicker();
         culturePicker.classList.add("is-open");
         culturePicker.setAttribute("aria-hidden", "false");
         document.body.classList.add("culture-picker-open");
-        setTimeout(() => {
-          culturePickerSearch?.focus({ preventScroll: true });
-        }, 180);
+        // Reveal the current lens in the list after the sheet settles.
+        // The search input is intentionally NOT focused: the phone keyboard
+        // must stay closed until the person explicitly taps Search.
+        const selectedSlug = activeCulture()?.slug || "";
+        if (selectedSlug) {
+          setTimeout(() => {
+            if (!culturePicker.classList.contains("is-open")) return;
+            const reduceMotion = window.matchMedia(
+              "(prefers-reduced-motion: reduce)",
+            ).matches;
+            cultureCountryList
+              .querySelector(`[data-culture="${CSS.escape(selectedSlug)}"]`)
+              ?.scrollIntoView({
+                block: "center",
+                behavior: reduceMotion ? "auto" : "smooth",
+              });
+          }, 340);
+        }
+        culturePicker
+          .querySelector(".culture-picker-close")
+          ?.focus({ preventScroll: true });
       }
 
       function closeCulturePicker() {
+        if (cultureFilterFrame) {
+          cancelAnimationFrame(cultureFilterFrame);
+          cultureFilterFrame = null;
+        }
+        if (culturePickerSearch?.value) culturePickerSearch.value = "";
+        if (
+          document.activeElement &&
+          culturePicker.contains(document.activeElement)
+        )
+          document.activeElement.blur();
         culturePicker.classList.remove("is-open");
         culturePicker.setAttribute("aria-hidden", "true");
         document.body.classList.remove("culture-picker-open");
@@ -2910,6 +3241,28 @@
         }
       }
 
+      // Compose an honest, factual one-liner when no description exists.
+      // Only verifiable fields — never invented claims about quality or vibe.
+      function factualPlaceSummary(item, placeCity, placeCategory) {
+        const tags = [
+          ...(Array.isArray(item.good_for)
+            ? item.good_for
+            : Array.isArray(item.bestFor)
+              ? item.bestFor
+              : []),
+          ...(Array.isArray(item.vibe_tags) ? item.vibe_tags : []),
+          ...(Array.isArray(item.tags) ? item.tags : []),
+          ...(Array.isArray(item.activity_tags) ? item.activity_tags : []),
+        ]
+          .map((tag) => String(tag || "").trim())
+          .filter(Boolean)
+          .slice(0, 3);
+        let summary = `${placeCategory} in ${placeCity}`;
+        if (tags.length)
+          summary += ` · known for ${tags.join(", ").toLowerCase()}`;
+        return `${summary}.`;
+      }
+
       function buildFallbackDetail(item) {
         const normalize = (value) =>
           String(value || "")
@@ -2960,7 +3313,13 @@
               }
             : null,
           profile: {
-            summary: normalize(item.description || ""),
+            summary:
+              normalize(item.description || "") ||
+              factualPlaceSummary(
+                item,
+                normalize(item.neighborhood || item.city || city),
+                item.category || "Place",
+              ),
             good_for: item.good_for || item.bestFor || [],
             vibe_tags: item.vibe_tags || item.tags || [],
             activity_tags: item.activity_tags || [],
@@ -3601,9 +3960,12 @@
               rawRating === null || rawRating === undefined || rawRating === ""
                 ? NaN
                 : Number(rawRating);
-            const context = distance ? `${distance} away` : "";
+            const contextParts = [
+              distance ? `${distance} away` : "",
+              Number.isFinite(rating) ? `★ ${rating.toFixed(1)}` : "",
+            ].filter(Boolean);
             const localityLabel = `. ${item.category || "Place"} in ${item.city || city}${distance ? `. ${distance} away` : ""}`;
-            return `<button class="location-card" type="button" data-nearby-index="${index}" aria-label="Open ${esc(item.title || "place")}${esc(localityLabel)}">${placeVisual(item, "location-card-img", item.title || "Local place", { eager: index < 3 })}<span class="location-card-overlay"><strong class="location-card-title">${esc(item.title || "Local pick")}</strong><span class="location-card-meta">${esc(item.category || "Place")} · ${esc(item.city || city)}</span>${context ? `<span class="location-card-distance">${esc(context)}</span>` : ""}${Number.isFinite(rating) ? `<span class="location-card-rating">★ ${rating.toFixed(1)}</span>` : ""}</span></button>`;
+            return `<button class="location-card" type="button" data-nearby-index="${index}" aria-label="Open ${esc(item.title || "place")}${esc(localityLabel)}">${placeVisual(item, "location-card-img", item.title || "Local place", { eager: index < 3 })}<span class="location-card-overlay"><span class="location-card-meta">${esc(item.category || "Place")}</span><strong class="location-card-title">${esc(item.title || "Local pick")}</strong><span class="location-card-place">${esc(item.city || city)}</span>${contextParts.length ? `<span class="location-card-distance">${esc(contextParts.join(" · "))}</span>` : ""}</span></button>`;
           })
           .join("");
         nearbyContainer
@@ -3626,7 +3988,7 @@
         recommendationContainer.innerHTML = list
           .map((item, index) => {
             const context = item.neighborhood || item.city || "GTA";
-            return `<button class="recommendation-card" type="button" data-recommendation-index="${index}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local pick", { eager: index < 3 })}<span class="recommendation-card-copy"><strong>${esc(item.title || "Local pick")}</strong><span>${esc(context)}</span></span></button>`;
+            return `<button class="recommendation-card" type="button" data-recommendation-index="${index}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "recommendation-card-img", item.title || "Local place", { eager: index < 3 })}<span class="recommendation-card-copy"><span class="recommendation-card-eyebrow">${esc(item.category || "Pick")}</span><strong>${esc(item.title || "Local pick")}</strong><span class="recommendation-card-place">${esc(context)}</span></span></button>`;
           })
           .join("");
         recommendationContainer
@@ -3902,7 +4264,8 @@
           ? pageItems
               .map((item, pageIndex) => {
                 const itemIndex = items.indexOf(item);
-                return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}">${placeVisual(item, "discovery-result-img", item.title || "Local place", { eager: pageIndex < 4 })}<span class="discovery-result-copy"><strong>${esc(item.title || "Local pick")}</strong></span></button>`;
+                const placeLabel = item.city || city;
+                return `<button class="discovery-result" type="button" data-result-index="${itemIndex}" aria-label="Open ${esc(item.title || "place")}. ${esc(item.category || "Place")} in ${esc(placeLabel)}">${placeVisual(item, "discovery-result-img", item.title || "Local place", { eager: pageIndex < 4 })}<span class="discovery-result-copy"><small>${esc(item.category || "Place")}</small><strong>${esc(item.title || "Local pick")}</strong><span>${esc(placeLabel)}</span></span></button>`;
               })
               .join("")
           : `<div class="discovery-fallback-note"><strong>${discoveryLoadFailed ? "Places are unavailable right now." : "More local places are on the way."}</strong><span>${discoveryLoadFailed ? "Try this view once more, or choose another category." : "Try another category while Echoo expands this view."}</span>${discoveryLoadFailed ? '<button type="button" data-discover-retry>Try again</button>' : ""}</div>`;
@@ -5054,16 +5417,38 @@
         .forEach((button) =>
           button.addEventListener("click", closeCulturePicker),
         );
-      culturePickerSearch?.addEventListener("change", selectCultureCountry);
-      culturePickerSearch?.addEventListener("input", () => {
-        if (cultureContext?.getByValue?.(culturePickerSearch.value)) {
-          selectCultureCountry();
-        }
+      // Typing filters only — it can never activate a lens.
+      culturePickerSearch?.addEventListener("input", (event) => {
+        if (event.isComposing) return;
+        if (cultureFilterFrame) return;
+        cultureFilterFrame = requestAnimationFrame(() =>
+          renderCulturePicker(),
+        );
       });
       culturePickerSearch?.addEventListener("keydown", (event) => {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        selectCultureCountry();
+        if (event.isComposing) return;
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          moveCultureHighlight("down");
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          moveCultureHighlight("up");
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          const slug =
+            cultureHighlightedSlug ||
+            cultureCountryList.querySelector("[data-culture]")?.dataset
+              ?.culture ||
+            "";
+          applyCultureCountry(slug);
+        }
+      });
+      // One tap → exactly one activation. Tapping the active country keeps
+      // the lens (never toggles it off); the footer button turns it off.
+      cultureCountryList?.addEventListener("click", (event) => {
+        const option = event.target.closest("[data-culture]");
+        if (!option) return;
+        applyCultureCountry(option.dataset.culture || "");
       });
       document.addEventListener("keydown", (event) => {
         if (
