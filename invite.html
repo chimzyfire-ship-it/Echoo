@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080808" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="You have an Echoo invitation." />
+    <meta property="og:title" content="You are invited · Echoo" />
+    <meta
+      property="og:description"
+      content="Open an Echoo invitation and get there when the moment begins."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://echoocity.com/invite.html" />
+    <meta property="og:image" content="https://echoocity.com/assets/optimized/news-music-768.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>You are invited · Echoo</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080808;
+        --panel: #151514;
+        --ink: #f8f5ef;
+        --muted: #aaa29a;
+        --line: rgba(248, 245, 239, 0.14);
+        --peach: #f7d5b2;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; margin: 0; background: var(--bg); color: var(--ink); }
+      body {
+        display: grid;
+        justify-items: center;
+        background:
+          radial-gradient(circle at 82% 4%, rgba(247, 213, 178, 0.11), transparent 17rem),
+          radial-gradient(circle at 7% 78%, rgba(96, 145, 134, 0.1), transparent 18rem),
+          var(--bg);
+        -webkit-font-smoothing: antialiased;
+      }
+      button, a { color: inherit; font: inherit; }
+      button { cursor: pointer; }
+      a { text-decoration: none; }
+      .shell {
+        width: min(100%, 430px);
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        padding: calc(22px + env(safe-area-inset-top)) 22px
+          calc(24px + env(safe-area-inset-bottom));
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .brand img { display: block; width: 112px; height: auto; }
+      .seal {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border: 1px solid rgba(247, 213, 178, 0.35);
+        border-radius: 50%;
+        color: var(--peach);
+        background: rgba(247, 213, 178, 0.045);
+        font-size: 18px;
+      }
+      .intro { margin-bottom: 14px; }
+      .intro small {
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 780;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .intro h1 {
+        margin: 7px 0 0;
+        font-size: clamp(34px, 10vw, 44px);
+        letter-spacing: -0.06em;
+        line-height: 0.95;
+      }
+      .invite-card {
+        position: relative;
+        display: flex;
+        min-height: min(56svh, 510px);
+        flex-direction: column;
+        justify-content: flex-end;
+        overflow: hidden;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: var(--panel);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.36);
+      }
+      .invite-card img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 300ms ease;
+      }
+      .invite-card img.is-ready { opacity: 0.8; }
+      .invite-card::after {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(4, 4, 4, 0.98), rgba(4, 4, 4, 0.18) 76%, rgba(4, 4, 4, 0.06));
+        content: "";
+      }
+      .card-copy {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 9px;
+      }
+      .card-copy small {
+        color: var(--peach);
+        font-size: 10px;
+        font-weight: 780;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+      .card-copy h2 {
+        max-width: 13ch;
+        margin: 0;
+        font-size: clamp(32px, 9vw, 43px);
+        letter-spacing: -0.06em;
+        line-height: 0.94;
+      }
+      .card-copy p {
+        margin: 0;
+        color: rgba(248, 245, 239, 0.74);
+        font-size: 13px;
+        font-weight: 620;
+        line-height: 1.4;
+      }
+      .card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 3px;
+      }
+      .card-meta span {
+        padding: 7px 10px;
+        border: 1px solid rgba(248, 245, 239, 0.18);
+        border-radius: 999px;
+        background: rgba(5, 5, 5, 0.3);
+        color: rgba(248, 245, 239, 0.78);
+        font-size: 10px;
+        font-weight: 680;
+      }
+      .actions { display: grid; gap: 9px; margin-top: 14px; }
+      .primary, .secondary {
+        width: 100%;
+        min-height: 54px;
+        padding: 0 18px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 780;
+      }
+      .primary {
+        border: 0;
+        background: var(--peach);
+        color: #1a1611;
+      }
+      .secondary {
+        border: 1px solid var(--line);
+        background: rgba(248, 245, 239, 0.035);
+        color: var(--ink);
+      }
+      .status {
+        min-height: 18px;
+        margin: 10px 5px 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+        text-align: center;
+      }
+      .error-card {
+        min-height: 360px;
+        display: grid;
+        align-content: center;
+        gap: 10px;
+        padding: 26px;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: rgba(248, 245, 239, 0.035);
+      }
+      .error-card h2 { margin: 0; font-size: 30px; letter-spacing: -0.05em; }
+      .error-card p { margin: 0; color: var(--muted); line-height: 1.5; }
+      [hidden] { display: none !important; }
+      @media (prefers-reduced-motion: reduce) {
+        .invite-card img { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Echoo home">
+          <img src="assets/echoo-wordmark.png" alt="echoo" />
+        </a>
+        <span class="seal" aria-hidden="true">∞</span>
+      </header>
+      <section id="invitation-view" aria-live="polite">
+        <div class="intro">
+          <small>Echoo invitation</small>
+          <h1>A good moment found you.</h1>
+        </div>
+        <article class="invite-card" aria-busy="true">
+          <div class="card-copy">
+            <small>Opening invitation</small>
+            <h2>One second.</h2>
+            <p>Echoo is getting the details.</p>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/echoo-auth.js"></script>
+    <script>
+      (() => {
+        const ANON_KEY = "sb_publishable_4FeunYH-ItDm68Sjg93c_w_s8yMizxH";
+        const API = "https://dlezregdjpdqmooubwvl.supabase.co/functions/v1";
+        const view = document.getElementById("invitation-view");
+        const PENDING_TOKEN_KEY = "echoo_pending_invitation_token";
+        const token = (
+          location.hash.slice(1) ||
+          sessionStorage.getItem(PENDING_TOKEN_KEY) ||
+          ""
+        ).trim();
+        let invitation = null;
+        let destination = null;
+        let profileReady = false;
+
+        const esc = (value) =>
+          String(value || "").replace(/[&<>"']/g, (char) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+          })[char]);
+
+        const apiHeaders = () => ({
+          apikey: ANON_KEY,
+          Authorization: `Bearer ${ANON_KEY}`,
+          "Content-Type": "application/json",
+        });
+
+        function safeImage(value) {
+          const image = String(value || "").trim();
+          return /^https?:\/\//i.test(image) ? image : "";
+        }
+
+        function mapsUrl(item) {
+          const lat = Number(item.latitude);
+          const lng = Number(item.longitude);
+          const target = Number.isFinite(lat) && Number.isFinite(lng)
+            ? `${lat},${lng}`
+            : [item.title, item.address].filter(Boolean).join(" ");
+          return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(target)}&dir_action=navigate`;
+        }
+
+        async function fetchInvitation() {
+          const response = await fetch(`${API}/invitation-resolve`, {
+            method: "POST",
+            headers: apiHeaders(),
+            body: JSON.stringify({ token }),
+          });
+          const json = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(json.error || "Invitation unavailable.");
+          return json.invitation;
+        }
+
+        async function fetchDestination(invite) {
+          if (invite.targetType === "event") {
+            const response = await fetch(
+              `${API}/event-detail?id=${encodeURIComponent(invite.targetId)}`,
+              { headers: apiHeaders() },
+            );
+            const json = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error("This event is no longer available.");
+            const event = json.event || {};
+            return {
+              type: "event",
+              id: event.id || invite.targetId,
+              title: event.title || "Echoo event",
+              category: event.category || "Event",
+              image: event.image_url,
+              address: event.address || event.venue_name || "",
+              place: event.venue_name || event.city || "",
+              city: event.city || "",
+              startsAt: event.starts_at || null,
+              latitude: event.latitude,
+              longitude: event.longitude,
+              detailUrl: `event.html?id=${encodeURIComponent(event.id || invite.targetId)}`,
+            };
+          }
+
+          const response = await fetch(
+            `${API}/place-detail?id=${encodeURIComponent(invite.targetId)}`,
+            { headers: apiHeaders() },
+          );
+          const json = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error("This place is no longer available.");
+          const detail = json.data || {};
+          const place = detail.place || {};
+          const photo = (detail.photos || []).find((item) => item?.url)?.url;
+          return {
+            type: "place",
+            id: place.id || invite.targetId,
+            title: place.name || "Echoo place",
+            category: place.category || "Place",
+            image: photo || place.image_url,
+            address: place.formatted_address || place.address || "",
+            place: place.neighborhood || place.municipality || place.city || "",
+            city: place.municipality || place.city || "",
+            latitude: place.latitude,
+            longitude: place.longitude,
+            detailUrl: `events.html?place=${encodeURIComponent(place.id || invite.targetId)}&name=${encodeURIComponent(place.name || "Place")}`,
+          };
+        }
+
+        function formatDate(value) {
+          if (!value) return "";
+          const date = new Date(value);
+          if (!Number.isFinite(date.getTime())) return "";
+          return date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+        }
+
+        function render() {
+          const image = safeImage(destination.image);
+          const date = formatDate(destination.startsAt);
+          const meta = [date, destination.place || destination.city].filter(Boolean);
+          document.title = `${destination.title} · Echoo invitation`;
+          view.innerHTML = `
+            <div class="intro">
+              <small>${esc(invitation.senderName)} invited you</small>
+              <h1>A good moment found you.</h1>
+            </div>
+            <article class="invite-card" aria-label="Invitation to ${esc(destination.title)}">
+              ${image ? `<img id="invite-image" src="${esc(image)}" alt="" />` : ""}
+              <div class="card-copy">
+                <small>${esc(destination.category)} · Echoo invitation</small>
+                <h2>${esc(destination.title)}</h2>
+                <p>${esc(destination.address || destination.place || "Open in Echoo")}</p>
+                ${meta.length ? `<div class="card-meta">${meta.map((item) => `<span>${esc(item)}</span>`).join("")}</div>` : ""}
+              </div>
+            </article>
+            <div class="actions">
+              <button class="primary" id="route-cta" type="button">${profileReady ? "Take me there" : "Join Echoo · take me there"}</button>
+              <button class="secondary" id="open-echoo" type="button">Open details in Echoo</button>
+            </div>
+            <p class="status" id="invite-status">${profileReady ? "Your Echoo profile is ready." : "Create a profile once. Echoo will continue straight to directions."}</p>`;
+          const imageElement = document.getElementById("invite-image");
+          if (imageElement) {
+            imageElement.onload = () => imageElement.classList.add("is-ready");
+            if (imageElement.complete) imageElement.classList.add("is-ready");
+          }
+          document.getElementById("route-cta").onclick = begin;
+          document.getElementById("open-echoo").onclick = openDetails;
+        }
+
+        function invitationPath(extra = {}) {
+          const next = new URL("invite.html", location.href);
+          next.search = "";
+          next.hash = "";
+          Object.entries(extra).forEach(([key, value]) =>
+            next.searchParams.set(key, value),
+          );
+          next.hash = token;
+          return `${next.pathname.split("/").pop()}${next.search}${next.hash}`;
+        }
+
+        function continuationUrl() {
+          return "invite.html?go=1";
+        }
+
+        function requireProfile(next = continuationUrl()) {
+          if (next === continuationUrl()) {
+            sessionStorage.setItem(PENDING_TOKEN_KEY, token);
+          } else {
+            sessionStorage.removeItem(PENDING_TOKEN_KEY);
+          }
+          window.EchooAuth.redirectToAuth(next, "signup", {
+            intent: "invite",
+            reason: "invitation_profile",
+            caption: "Create your Echoo profile. Your invitation will continue automatically.",
+          });
+        }
+
+        async function begin() {
+          if (!profileReady) {
+            requireProfile();
+            return;
+          }
+          startDirections();
+        }
+
+        function startDirections() {
+          const latitude = Number(destination.latitude);
+          const longitude = Number(destination.longitude);
+          history.replaceState({}, "", invitationPath());
+          sessionStorage.removeItem(PENDING_TOKEN_KEY);
+          if (
+            window.ReactNativeWebView?.postMessage &&
+            Number.isFinite(latitude) &&
+            Number.isFinite(longitude)
+          ) {
+            window.ReactNativeWebView.postMessage(
+              `echoo:route:${JSON.stringify({
+                id: destination.id,
+                name: destination.title,
+                address: destination.address,
+                latitude,
+                longitude,
+              })}`,
+            );
+            return;
+          }
+          window.location.assign(mapsUrl(destination));
+        }
+
+        function openDetails() {
+          if (profileReady) {
+            sessionStorage.removeItem(PENDING_TOKEN_KEY);
+            window.location.assign(destination.detailUrl);
+            return;
+          }
+          requireProfile(destination.detailUrl);
+        }
+
+        function renderError(message) {
+          view.innerHTML = `<div class="error-card"><small>Echoo invitation</small><h2>This moment moved on.</h2><p>${esc(message || "Ask the sender for a fresh invitation.")}</p><a class="secondary" href="index.html" style="display:grid;place-items:center;">Open Echoo</a></div>`;
+        }
+
+        async function boot() {
+          if (!/^[A-Za-z0-9_-]{43}$/.test(token)) {
+            renderError("This invitation link is incomplete.");
+            return;
+          }
+          try {
+            invitation = await fetchInvitation();
+            destination = await fetchDestination(invitation);
+            const access = await window.EchooAuth.loadOnboardingProfile();
+            profileReady = Boolean(access?.ok);
+            render();
+            if (new URLSearchParams(location.search).get("go") === "1") {
+              if (profileReady) startDirections();
+              else requireProfile();
+            }
+          } catch (error) {
+            renderError(error.message);
+          }
+        }
+
+        boot();
+      })();
+    </script>
+  </body>
+</html>

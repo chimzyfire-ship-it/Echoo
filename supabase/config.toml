@@ -442,6 +442,14 @@ verify_jwt = false
 [functions.quick-plan]
 verify_jwt = false
 
+# Invitation creation verifies the caller manually so publishable-key clients
+# can use the same endpoint. Resolution is public and validates an opaque token.
+[functions.invitation-create]
+verify_jwt = false
+
+[functions.invitation-resolve]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

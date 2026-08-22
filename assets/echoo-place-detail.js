@@ -19,6 +19,12 @@
       .trim();
   }
 
+  function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      cleanText(value),
+    );
+  }
+
   function listFrom(value) {
     const raw = Array.isArray(value)
       ? value
@@ -440,6 +446,7 @@
     const uberHref = uberLinkFor(place);
     const pulseItems = pulseItemsFor(detail);
     const quickPlanMessage = `Make me a quick plan around ${title || "this place"}.`;
+    const invitationPlaceId = cleanText(place.id || place.place_id);
 
     setTimeout(() => {
       bindGalleryInteractions();
@@ -447,6 +454,7 @@
       bindRouteInteractions();
       bindStayInteractions();
       bindUberInteractions();
+      bindInviteInteractions();
       bindCheckinInteractions();
     }, 0);
 
@@ -621,6 +629,19 @@
             <span class="echoo-linkup-host" data-echoo-linkup-host data-linkup-place-id="${escapeHtml(cleanText(place.id || place.place_id))}" data-linkup-place-name="${escapeHtml(title)}" data-linkup-lat="${escapeHtml(String(routeLatitude))}" data-linkup-lng="${escapeHtml(String(routeLongitude))}" aria-hidden="true"></span>
           </div>
           ${
+            isUuid(invitationPlaceId)
+              ? `<button
+            type="button"
+            class="echoo-place-invite-trigger"
+            data-echoo-invite
+            data-invite-target-id="${escapeHtml(invitationPlaceId)}"
+            data-invite-title="${escapeHtml(title)}"
+            data-invite-meta="${escapeHtml([cleanText(place.category), cleanText(place.municipality || place.city)].filter(Boolean).join(" · "))}"
+            data-invite-image="${escapeHtml(/^(https?:\/\/|\/?assets\/)/i.test(heroImage) ? heroImage : "")}"
+          ><span><small>Echoo invitation</small><strong>Invite someone here</strong></span><span aria-hidden="true">↗</span></button>`
+              : ""
+          }
+          ${
             canRouteInsideEchoo
               ? `
             <button
@@ -794,6 +815,23 @@
     });
   }
 
+  function bindInviteInteractions() {
+    document.querySelectorAll("[data-echoo-invite]").forEach((button) => {
+      button.onclick = () => {
+        window.EchooInvite?.open({
+          targetType: "place",
+          targetId: cleanText(button.getAttribute("data-invite-target-id")),
+          title: cleanText(
+            button.getAttribute("data-invite-title"),
+            "An Echoo place",
+          ),
+          meta: cleanText(button.getAttribute("data-invite-meta")),
+          image: cleanText(button.getAttribute("data-invite-image")),
+        });
+      };
+    });
+  }
+
   // Link Up: surface the "I'm here" check-in affordance when a place detail
   // opens, and tell the EchooLinkUp module what place is in context. The host
   // element is rendered inert (aria-hidden) until the module fills it; the
@@ -823,6 +861,7 @@
     bindRouteInteractions,
     bindStayInteractions,
     bindUberInteractions,
+    bindInviteInteractions,
     bindCheckinInteractions,
     escapeHtml,
     heroImageFor,
