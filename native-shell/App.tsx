@@ -6,6 +6,7 @@ import {
   BackHandler,
   Platform,
   Pressable,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -24,6 +25,12 @@ type RouteDestination = {
 
 type RoutePlan = {
   stops: RouteDestination[];
+};
+
+type SharePayload = {
+  title: string;
+  text: string;
+  url: string;
 };
 
 /**
@@ -299,6 +306,29 @@ function parseRoutePlan(value: string): RoutePlan | null {
   }
 }
 
+function parseSharePayload(value: string): SharePayload | null {
+  try {
+    const payload = JSON.parse(value) as Partial<SharePayload>;
+    const url = new URL(String(payload.url || ""));
+    if (
+      !/^https?:$/.test(url.protocol) ||
+      (url.hostname !== "echoocity.com" &&
+        !url.hostname.endsWith(".echoocity.com"))
+    )
+      return null;
+    return {
+      title: String(payload.title || "Echoo invitation").slice(0, 120),
+      text: String(payload.text || "You have an Echoo invitation.").slice(
+        0,
+        300,
+      ),
+      url: url.toString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 type LinkupMessage = { type: "badge"; count: number } | { type: "open-chat" };
 
 function parseLinkupMessage(value: string): LinkupMessage | null {
@@ -462,6 +492,25 @@ function EchooShell() {
             );
             if (!destination) return;
             startNavigation(destination).catch(() => undefined);
+            return;
+          }
+          if (message.startsWith("echoo:share:")) {
+            const payload = parseSharePayload(
+              message.slice("echoo:share:".length),
+            );
+            if (!payload) return;
+            Share.share(
+              Platform.OS === "ios"
+                ? {
+                    title: payload.title,
+                    message: payload.text,
+                    url: payload.url,
+                  }
+                : {
+                    title: payload.title,
+                    message: `${payload.text}\n${payload.url}`,
+                  },
+            ).catch(() => undefined);
             return;
           }
           if (message.startsWith("echoo:linkup:")) {

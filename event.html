@@ -232,6 +232,7 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="assets/echoo-invite.css" />
     <link rel="stylesheet" href="assets/echoo-live-stays.css" />
     <link rel="stylesheet" href="assets/page-loader.css" />
     <script>
@@ -253,6 +254,7 @@
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/echoo-auth.js"></script>
+    <script src="assets/echoo-invite.js"></script>
     <script src="assets/echoo-live-stays.js"></script>
     <script>
       const CONFIG = {
@@ -501,6 +503,7 @@
                 <p>${escapeHtml(event.venue_name || "Venue TBA")}${event.address ? ` · ${escapeHtml(event.address)}` : ""}</p>
                 <div class="meta"><span>${Number(event.latitude).toFixed(4)}, ${Number(event.longitude).toFixed(4)}</span><span>Canada-first verified location</span></div>
                 ${Number.isFinite(Number(event.latitude)) && Number.isFinite(Number(event.longitude)) ? `<button id="event-route" class="event-route" type="button">Take me there <span aria-hidden="true">↗</span></button>` : ""}
+                <button id="event-invite" class="event-route" type="button">Invite someone <span aria-hidden="true">↗</span></button>
               </div>
               <div class="panel">
                 <h2 style="margin-top:0;">Before or after this</h2>
@@ -541,6 +544,15 @@
         document
           .getElementById("event-route")
           ?.addEventListener("click", () => takeMeThere(event));
+        document.getElementById("event-invite")?.addEventListener("click", () =>
+          window.EchooInvite?.open({
+            targetType: "event",
+            targetId: event.id,
+            title: event.title,
+            meta: [starts, event.venue_name || event.city].filter(Boolean).join(" · "),
+            image: eventImage,
+          }),
+        );
         loadRelated(event);
         loadStays(event);
       }
