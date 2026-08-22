@@ -1203,19 +1203,20 @@
         display: none;
       }
 
-      /* Location Card — compact listing row (cover left, details right) */
+      /* Location Card — big hero cover (Near you rail) */
       .location-card {
-        flex: 0 0 min(330px, calc(100vw - 56px));
-        display: grid;
-        grid-template-columns: 112px minmax(0, 1fr);
-        min-height: 128px;
+        flex: 0 0 min(255px, calc(100vw - 72px));
         position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        min-height: 292px;
         appearance: none;
-        padding: 0;
+        padding: 17px;
         color: inherit;
         font: inherit;
         text-align: left;
-        border-radius: 20px;
+        border-radius: 22px;
         overflow: hidden;
         background: #151515;
         border: 1px solid var(--line);
@@ -1225,7 +1226,7 @@
       }
 
       .location-card:active {
-        transform: scale(0.97);
+        transform: scale(0.985);
       }
       .location-card:focus-visible,
       .recommendation-card:focus-visible,
@@ -1234,64 +1235,78 @@
         outline-offset: 3px;
       }
 
+      .location-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(5, 5, 5, 0.96),
+          rgba(5, 5, 5, 0.2) 72%,
+          transparent
+        );
+        pointer-events: none;
+      }
+
       .location-card-img {
-        grid-column: 1;
-        grid-row: 1;
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
+        opacity: 0.8;
       }
       .location-card .place-visual-fallback {
-        grid-column: 1;
-        grid-row: 1;
-        position: static;
-        inset: auto;
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
+        opacity: 0.8;
       }
 
       .location-card-overlay {
-        grid-column: 2;
-        grid-row: 1;
-        position: static;
-        inset: auto;
+        position: relative;
+        z-index: 1;
         background: none;
-        padding: 14px 15px;
+        padding: 0;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        gap: 3px;
+        justify-content: flex-end;
+        gap: 0;
         min-width: 0;
       }
 
       .location-card-title {
-        font-size: 15px;
+        max-width: 15ch;
+        font-size: 22px;
         font-weight: 740;
         color: var(--ink);
-        line-height: 1.25;
-        letter-spacing: -0.015em;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
 
       .location-card-meta {
+        margin-bottom: 8px;
         font-size: 10px;
-        font-weight: 740;
-        letter-spacing: 0.09em;
+        font-weight: 760;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: rgba(247, 213, 178, 0.82);
+        color: var(--peach);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
       .location-card-place {
-        font-size: 12px;
-        font-weight: 600;
-        color: rgba(248, 245, 239, 0.68);
+        margin-top: 8px;
+        font-size: 11px;
+        font-weight: 620;
+        color: rgba(248, 245, 239, 0.73);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -1307,6 +1322,7 @@
       }
 
       .location-card-distance {
+        margin-top: 4px;
         color: rgba(248, 245, 239, 0.55);
         font-size: 11px;
         font-weight: 640;
@@ -1317,7 +1333,7 @@
 
       .recommendation-grid {
         display: flex;
-        gap: 16px;
+        gap: 12px;
         overflow-x: auto;
         margin: 0 -24px;
         padding: 0 24px 8px;
@@ -1328,80 +1344,96 @@
         display: none;
       }
 
+      /* Recommendation Card — big hero cover (Recommended rail) */
       .recommendation-card {
         position: relative;
-        flex: 0 0 min(330px, calc(100vw - 56px));
-        display: grid;
-        grid-template-columns: 112px minmax(0, 1fr);
-        min-height: 128px;
+        flex: 0 0 min(255px, calc(100vw - 72px));
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        min-height: 292px;
         overflow: hidden;
-        padding: 0;
+        padding: 17px;
         border: 1px solid var(--line);
-        border-radius: 20px;
+        border-radius: 22px;
         background: #151515;
         color: var(--ink);
         cursor: pointer;
         text-align: left;
+        scroll-snap-align: start;
       }
 
       .recommendation-card:active {
-        transform: scale(0.98);
+        transform: scale(0.985);
+      }
+      .recommendation-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(5, 5, 5, 0.96),
+          rgba(5, 5, 5, 0.2) 72%,
+          transparent
+        );
+        pointer-events: none;
       }
       .recommendation-card img,
       .recommendation-card .recommendation-card-img {
-        grid-column: 1;
-        grid-row: 1;
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
+        opacity: 0.8;
       }
       .recommendation-card .place-visual-fallback {
-        grid-column: 1;
-        grid-row: 1;
-        position: static;
-        inset: auto;
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
+        opacity: 0.8;
       }
       .recommendation-card-copy {
-        grid-column: 2;
-        grid-row: 1;
-        position: static;
-        inset: auto;
+        position: relative;
+        z-index: 1;
         display: flex;
         min-width: 0;
         flex-direction: column;
-        justify-content: center;
-        gap: 3px;
-        padding: 14px 15px;
+        justify-content: flex-end;
+        gap: 0;
+        padding: 0;
         background: none;
       }
       .recommendation-card-copy strong {
+        max-width: 15ch;
         overflow: hidden;
-        font-size: 15px;
+        font-size: 22px;
         font-weight: 740;
-        letter-spacing: -0.015em;
-        line-height: 1.25;
+        letter-spacing: -0.035em;
+        line-height: 1.02;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
       }
       .recommendation-card-eyebrow {
+        margin-bottom: 8px;
         overflow: hidden;
-        color: rgba(247, 213, 178, 0.82);
+        color: var(--peach);
         font-size: 10px;
-        font-weight: 740;
-        letter-spacing: 0.09em;
+        font-weight: 760;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .recommendation-card-place {
+        margin-top: 8px;
         overflow: hidden;
-        color: rgba(248, 245, 239, 0.68);
-        font-size: 12px;
-        font-weight: 600;
+        color: rgba(248, 245, 239, 0.73);
+        font-size: 11px;
+        font-weight: 620;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
@@ -1538,86 +1570,14 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      /* Lead result: full-bleed hero card */
-      .discovery-results > .discovery-result:first-child {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        gap: 0;
-        min-height: 292px;
-        padding: 17px;
-        border-radius: 22px;
-        background: #151515;
-      }
-      .discovery-results > .discovery-result:first-child::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          to top,
-          rgba(5, 5, 5, 0.96),
-          rgba(5, 5, 5, 0.2) 72%,
-          transparent
-        );
-        pointer-events: none;
-      }
-      .discovery-results > .discovery-result:first-child img,
-      .discovery-results > .discovery-result:first-child .discovery-result-img,
-      .discovery-results
-        > .discovery-result:first-child
-        .place-visual-fallback {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        border-radius: 0;
-        opacity: 0.8;
-      }
-      .discovery-results > .discovery-result:first-child .discovery-result-copy {
-        position: relative;
-        z-index: 1;
-        padding: 0;
-        justify-content: flex-end;
-        gap: 0;
-      }
-      .discovery-results
-        > .discovery-result:first-child
-        .discovery-result-copy
-        small {
-        margin-bottom: 8px;
-        font-size: 10px;
-        letter-spacing: 0.08em;
-        white-space: normal;
-      }
-      .discovery-results
-        > .discovery-result:first-child
-        .discovery-result-copy
-        strong {
-        max-width: 15ch;
-        font-size: 22px;
-        letter-spacing: -0.035em;
-        line-height: 1.02;
-        white-space: normal;
-        text-overflow: unset;
-      }
-      .discovery-results
-        > .discovery-result:first-child
-        .discovery-result-copy
-        span {
-        margin-top: 8px;
-        color: rgba(248, 245, 239, 0.73);
-        font-size: 11px;
-        font-weight: 620;
-        white-space: normal;
-      }
       .discovery-result-index {
         display: none;
       }
       @media (max-width: 374px) {
         .location-card,
         .recommendation-card {
-          grid-template-columns: 94px minmax(0, 1fr);
-          min-height: 118px;
+          flex-basis: min(230px, calc(100vw - 64px));
+          min-height: 260px;
         }
         .discovery-result {
           grid-template-columns: 84px minmax(0, 1fr);
@@ -1628,21 +1588,6 @@
         .discovery-result .place-visual-fallback {
           width: 84px;
           height: 88px;
-        }
-        .discovery-results > .discovery-result:first-child {
-          min-height: 260px;
-        }
-        .discovery-results > .discovery-result:first-child img,
-        .discovery-results > .discovery-result:first-child .discovery-result-img,
-        .discovery-results
-          > .discovery-result:first-child
-          .place-visual-fallback {
-          width: 100%;
-          height: 100%;
-        }
-        .location-card,
-        .recommendation-card {
-          flex-basis: calc(100vw - 48px);
         }
       }
       .results-pagination {
