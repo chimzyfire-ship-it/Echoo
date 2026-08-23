@@ -251,7 +251,7 @@
 
         function safeImage(value) {
           const image = String(value || "").trim();
-          return /^https?:\/\//i.test(image) ? image : "";
+          return /^(https?:\/\/|\/?assets\/)/i.test(image) ? image : "";
         }
 
         function mapsUrl(item) {
@@ -296,6 +296,23 @@
               latitude: event.latitude,
               longitude: event.longitude,
               detailUrl: `event.html?id=${encodeURIComponent(event.id || invite.targetId)}`,
+            };
+          }
+
+          if (invite.snapshot) {
+            const place = invite.snapshot;
+            return {
+              type: "place",
+              id: "",
+              title: place.title || "Echoo place",
+              category: place.category || "Place",
+              image: "assets/optimized/news-music-768.jpg",
+              address: place.address || "",
+              place: place.city || "",
+              city: place.city || "",
+              latitude: place.latitude,
+              longitude: place.longitude,
+              detailUrl: `events.html?query=${encodeURIComponent(place.title || "place")}`,
             };
           }
 

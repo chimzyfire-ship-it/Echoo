@@ -3,7 +3,11 @@ import {
   getSupabaseAdmin,
   jsonResponse,
 } from "../_shared/location.ts";
-import { sha256Hex, targetIsPublished } from "../_shared/invitations.ts";
+import {
+  placeInvitationSnapshot,
+  sha256Hex,
+  targetIsPublished,
+} from "../_shared/invitations.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS")
@@ -23,7 +27,7 @@ Deno.serve(async (req) => {
     const tokenHash = await sha256Hex(rawToken);
     const result = await supabase
       .from("echoo_invitations")
-      .select("id,sender_name,target_type,target_id,expires_at")
+      .select("id,sender_name,target_type,target_id,target_snapshot,expires_at")
       .eq("token_hash", tokenHash)
       .is("revoked_at", null)
       .gt("expires_at", new Date().toISOString())
@@ -31,12 +35,16 @@ Deno.serve(async (req) => {
     if (result.error) throw result.error;
     if (!result.data) return jsonResponse({ error: "Invitation unavailable." }, 404);
 
+    const snapshot = placeInvitationSnapshot(result.data.target_snapshot);
     if (
-      !(await targetIsPublished(
-        supabase,
-        result.data.target_type,
-        result.data.target_id,
-      ))
+      (result.data.target_id &&
+        !(await targetIsPublished(
+          supabase,
+          result.data.target_type,
+          result.data.target_id,
+        ))) ||
+      (!result.data.target_id &&
+        (result.data.target_type !== "place" || !snapshot))
     ) {
       return jsonResponse({ error: "Invitation unavailable." }, 404);
     }
@@ -48,6 +56,7 @@ Deno.serve(async (req) => {
           senderName: result.data.sender_name,
           targetType: result.data.target_type,
           targetId: result.data.target_id,
+          snapshot,
           expiresAt: result.data.expires_at,
         },
       }),

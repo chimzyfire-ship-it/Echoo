@@ -2,6 +2,15 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 export type InvitationTargetType = "event" | "place";
 
+export type PlaceInvitationSnapshot = {
+  title: string;
+  category: string;
+  address: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+};
+
 export function bearerToken(req: Request) {
   return (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
 }
@@ -14,6 +23,41 @@ export function isUuid(value: unknown): value is string {
 
 export function isTargetType(value: unknown): value is InvitationTargetType {
   return value === "event" || value === "place";
+}
+
+function cleanText(value: unknown, maxLength: number) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+export function placeInvitationSnapshot(
+  value: unknown,
+): PlaceInvitationSnapshot | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const candidate = value as Record<string, unknown>;
+  const title = cleanText(candidate.title, 160);
+  const latitude = Number(candidate.latitude);
+  const longitude = Number(candidate.longitude);
+  if (
+    !title ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  )
+    return null;
+  return {
+    title,
+    category: cleanText(candidate.category, 80) || "Place",
+    address: cleanText(candidate.address, 240),
+    city: cleanText(candidate.city, 100),
+    latitude,
+    longitude,
+  };
 }
 
 export async function sha256Hex(value: string) {
