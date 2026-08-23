@@ -484,6 +484,48 @@
 .echoo-place-btn-primary:hover,
 .echoo-place-btn-secondary:hover { color: #fff; }
 
+.echoo-place-invite-trigger {
+  display: flex;
+  width: 100%;
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--echoo-detail-line);
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+}
+
+.echoo-place-invite-trigger > span:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.echoo-place-invite-trigger small {
+  color: var(--echoo-detail-accent);
+  font-size: 9px;
+  font-weight: 760;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.echoo-place-invite-trigger strong {
+  font-size: 13px;
+  font-weight: 730;
+}
+
+.echoo-place-invite-trigger > span:last-child {
+  color: var(--echoo-detail-accent);
+  font-size: 16px;
+}
+
+.echoo-place-invite-trigger:hover,
+.echoo-place-invite-trigger:focus-visible { color: var(--echoo-detail-accent); }
+
 .echoo-place-stay-trigger {
   display: flex;
   width: 100%;

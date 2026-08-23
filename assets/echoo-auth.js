@@ -14,6 +14,7 @@
     "privacy.html",
     "terms.html",
     "waitlist.html",
+    "invite.html",
     "checkin.html",
     "admin-locations.html",
     "event-ops.html",
