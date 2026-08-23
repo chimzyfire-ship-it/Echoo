@@ -7,6 +7,7 @@ import {
   bearerToken,
   isTargetType,
   isUuid,
+  placeInvitationSnapshot,
   randomToken,
   sha256Hex,
   targetIsPublished,
@@ -29,11 +30,22 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Sign in to create an invitation." }, 401);
 
     const body = await req.json().catch(() => ({}));
-    if (!isTargetType(body.targetType) || !isUuid(body.targetId)) {
+    if (!isTargetType(body.targetType)) {
+      return jsonResponse({ error: "A valid event or place is required." }, 422);
+    }
+    const targetId = isUuid(body.targetId) ? body.targetId : null;
+    const snapshot =
+      body.targetType === "place" && !targetId
+        ? placeInvitationSnapshot(body.target)
+        : null;
+    if ((body.targetType === "event" && !targetId) || (!targetId && !snapshot)) {
       return jsonResponse({ error: "A valid event or place is required." }, 422);
     }
 
-    if (!(await targetIsPublished(supabase, body.targetType, body.targetId))) {
+    if (
+      targetId &&
+      !(await targetIsPublished(supabase, body.targetType, targetId))
+    ) {
       return jsonResponse({ error: "This destination cannot be shared." }, 404);
     }
 
@@ -75,7 +87,8 @@ Deno.serve(async (req) => {
         created_by: auth.data.user.id,
         sender_name: senderName || "Someone",
         target_type: body.targetType,
-        target_id: body.targetId,
+        target_id: targetId,
+        target_snapshot: snapshot || {},
         expires_at: expiresAt,
       })
       .select("id")

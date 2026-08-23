@@ -191,6 +191,7 @@
         body: JSON.stringify({
           targetType: target.targetType,
           targetId: target.targetId,
+          target: target.snapshot || undefined,
         }),
       });
       const json = await response.json().catch(() => ({}));

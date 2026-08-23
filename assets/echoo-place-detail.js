@@ -470,8 +470,20 @@
             <div class="echoo-place-hero-fallback" aria-hidden="true"></div>
           `
           }
-          <div class="echoo-place-hero-shade"></div>
-          <div class="echoo-place-hero-copy">
+           <div class="echoo-place-hero-shade"></div>
+          <button
+            type="button"
+            class="echoo-place-invite-link"
+            data-echoo-invite
+            data-invite-target-id="${escapeHtml(invitationPlaceId)}"
+            data-invite-title="${escapeHtml(title)}"
+            data-invite-category="${escapeHtml(cleanText(place.category, "Place"))}"
+            data-invite-address="${escapeHtml(address)}"
+            data-invite-city="${escapeHtml(cleanText(place.municipality || place.city))}"
+            data-invite-latitude="${escapeHtml(String(routeLatitude))}"
+            data-invite-longitude="${escapeHtml(String(routeLongitude))}"
+          >Invite someone <span aria-hidden="true">↗</span></button>
+           <div class="echoo-place-hero-copy">
             <h1>${escapeHtml(title)}</h1>
             ${address ? `<p class="echoo-place-hero-address">${escapeHtml(address)}</p>` : ""}
           </div>
@@ -628,19 +640,6 @@
             ><span>Quick plan</span><span aria-hidden="true">→</span></button>
             <span class="echoo-linkup-host" data-echoo-linkup-host data-linkup-place-id="${escapeHtml(cleanText(place.id || place.place_id))}" data-linkup-place-name="${escapeHtml(title)}" data-linkup-lat="${escapeHtml(String(routeLatitude))}" data-linkup-lng="${escapeHtml(String(routeLongitude))}" aria-hidden="true"></span>
           </div>
-          ${
-            isUuid(invitationPlaceId)
-              ? `<button
-            type="button"
-            class="echoo-place-invite-trigger"
-            data-echoo-invite
-            data-invite-target-id="${escapeHtml(invitationPlaceId)}"
-            data-invite-title="${escapeHtml(title)}"
-            data-invite-meta="${escapeHtml([cleanText(place.category), cleanText(place.municipality || place.city)].filter(Boolean).join(" · "))}"
-            data-invite-image="${escapeHtml(/^(https?:\/\/|\/?assets\/)/i.test(heroImage) ? heroImage : "")}"
-          ><span><small>Echoo invitation</small><strong>Invite someone here</strong></span><span aria-hidden="true">↗</span></button>`
-              : ""
-          }
           ${
             canRouteInsideEchoo
               ? `
@@ -818,6 +817,8 @@
   function bindInviteInteractions() {
     document.querySelectorAll("[data-echoo-invite]").forEach((button) => {
       button.onclick = () => {
+        const category = cleanText(button.getAttribute("data-invite-category"));
+        const city = cleanText(button.getAttribute("data-invite-city"));
         window.EchooInvite?.open({
           targetType: "place",
           targetId: cleanText(button.getAttribute("data-invite-target-id")),
@@ -825,8 +826,17 @@
             button.getAttribute("data-invite-title"),
             "An Echoo place",
           ),
-          meta: cleanText(button.getAttribute("data-invite-meta")),
-          image: cleanText(button.getAttribute("data-invite-image")),
+          meta: [category, city].filter(Boolean).join(" · "),
+          image:
+            document.getElementById("echoo-place-main-hero-img")?.src || "",
+          snapshot: {
+            title: cleanText(button.getAttribute("data-invite-title")),
+            category: cleanText(button.getAttribute("data-invite-category")),
+            address: cleanText(button.getAttribute("data-invite-address")),
+            city: cleanText(button.getAttribute("data-invite-city")),
+            latitude: Number(button.getAttribute("data-invite-latitude")),
+            longitude: Number(button.getAttribute("data-invite-longitude")),
+          },
         });
       };
     });
