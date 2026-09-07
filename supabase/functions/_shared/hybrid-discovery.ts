@@ -13,12 +13,12 @@ export const DISCOVERY_INTENTS = {
   food: {
     id: "food",
     label: "Food",
-    providerQuery: "restaurants cafes bakeries and food",
+    providerQuery: "restaurants dining and food",
   },
-  comedy: {
-    id: "comedy",
-    label: "Comedy",
-    providerQuery: "comedy clubs and live comedy",
+  cocktails: {
+    id: "cocktails",
+    label: "Cocktails & Lounges",
+    providerQuery: "cocktail bars speakeasies and lounges",
   },
   music: {
     id: "music",
@@ -29,6 +29,36 @@ export const DISCOVERY_INTENTS = {
     id: "nightlife",
     label: "Nightlife",
     providerQuery: "nightlife bars lounges and clubs",
+  },
+  comedy: {
+    id: "comedy",
+    label: "Comedy",
+    providerQuery: "comedy clubs and live comedy",
+  },
+  sports: {
+    id: "sports",
+    label: "Sports & Games",
+    providerQuery: "sports bars arcade bars and social gaming lounges",
+  },
+  art: {
+    id: "art",
+    label: "Art & Exhibits",
+    providerQuery: "art galleries immersive art exhibitions and museum shows",
+  },
+  "late-night": {
+    id: "late-night",
+    label: "Late Night Bites",
+    providerQuery: "late night food dining and after hours restaurants",
+  },
+  cafes: {
+    id: "cafes",
+    label: "Cafes & Matcha",
+    providerQuery: "specialty coffee cafes matcha and bakeries",
+  },
+  markets: {
+    id: "markets",
+    label: "Pop-ups & Markets",
+    providerQuery: "night markets artisan markets pop-ups and festivals",
   },
   events: {
     id: "events",
@@ -74,9 +104,49 @@ export function resolveDiscoveryIntent(
     return DISCOVERY_INTENTS.discover;
   }
   if (
+    discoveryTermPattern("cocktails?|speakeas(?:y|ies)|mixology|rooftop bar").test(
+      text,
+    )
+  ) {
+    return DISCOVERY_INTENTS.cocktails;
+  }
+  if (
     discoveryTermPattern(
-      "restaurants?|food|dining|eat|brunch|bakery|cafes?|coffee",
+      "late night|after hours|24 hour|late bites|late dining",
     ).test(text)
+  ) {
+    return DISCOVERY_INTENTS["late-night"];
+  }
+  if (
+    discoveryTermPattern("cafes?|coffee|matcha|espresso|baker(?:y|ies)|pastr(?:y|ies)").test(
+      text,
+    )
+  ) {
+    return DISCOVERY_INTENTS.cafes;
+  }
+  if (
+    discoveryTermPattern(
+      "sports? bar|sports? lounge|arcades?|gaming lounge|bowling|watch party",
+    ).test(text)
+  ) {
+    return DISCOVERY_INTENTS.sports;
+  }
+  if (
+    discoveryTermPattern(
+      "art galler(?:y|ies)|immersive art|exhibitions?|art exhibits?",
+    ).test(text)
+  ) {
+    return DISCOVERY_INTENTS.art;
+  }
+  if (
+    discoveryTermPattern("markets?|flea market|pop[ -]?ups?|night market").test(
+      text,
+    )
+  ) {
+    return DISCOVERY_INTENTS.markets;
+  }
+  if (
+    discoveryTermPattern("restaurants?|food|dining|eat|brunch").test(text)
   ) {
     return DISCOVERY_INTENTS.food;
   }
@@ -92,7 +162,7 @@ export function resolveDiscoveryIntent(
   }
   if (
     discoveryTermPattern(
-      "nightlife|bars?|pubs?|lounges?|clubs?|late night",
+      "nightlife|bars?|pubs?|lounges?|clubs?|dancing",
     ).test(text)
   ) {
     return DISCOVERY_INTENTS.nightlife;

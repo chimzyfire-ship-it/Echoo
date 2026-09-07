@@ -42,16 +42,104 @@ import { cachePlace } from '@/src/services/place-cache';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
 
-const CATEGORIES: Array<{ key: string; label: string; isRoute?: boolean; route?: string }> = [
-  { key: 'discover', label: 'Discover' },
-  { key: 'tickets', label: 'Tickets', isRoute: true, route: '/tickets' },
-  { key: 'cinema', label: 'Cinema', isRoute: true, route: '/cinema' },
-  { key: 'food', label: 'Food' },
-  { key: 'comedy', label: 'Comedy' },
-  { key: 'music', label: 'Live music' },
-  { key: 'nightlife', label: 'Nightlife' },
-  { key: 'events', label: 'Events' },
-  { key: 'tourism', label: 'Tourism' },
+const CATEGORIES: Array<{
+  key: string;
+  label: string;
+  isRoute?: boolean;
+  route?: string;
+  headline?: string;
+  subhead?: string;
+}> = [
+  {
+    key: 'discover',
+    label: 'Discover',
+    headline: 'Worth going out for',
+    subhead: 'Curated spots around',
+  },
+  {
+    key: 'tickets',
+    label: 'Tickets',
+    isRoute: true,
+    route: '/tickets',
+  },
+  {
+    key: 'cinema',
+    label: 'Cinema',
+    isRoute: true,
+    route: '/cinema',
+  },
+  {
+    key: 'food',
+    label: 'Food',
+    headline: 'Tables worth leaving for',
+    subhead: 'Bistros, chef spots & dining in',
+  },
+  {
+    key: 'cocktails',
+    label: 'Cocktails',
+    headline: 'Cocktails & Speakeasies',
+    subhead: 'Mixology, hidden doors & lounges in',
+  },
+  {
+    key: 'music',
+    label: 'Live music',
+    headline: 'Live Sound & Concerts',
+    subhead: 'Jazz, stages & vinyl listening bars in',
+  },
+  {
+    key: 'nightlife',
+    label: 'Nightlife',
+    headline: 'After-Dark & Clubs',
+    subhead: 'DJ sets, dance floors & energy in',
+  },
+  {
+    key: 'comedy',
+    label: 'Comedy',
+    headline: 'Stand-up & Laughs',
+    subhead: 'Comedy clubs & showcases in',
+  },
+  {
+    key: 'sports',
+    label: 'Sports',
+    headline: 'Game Day & Arcades',
+    subhead: 'Sports lounges, big screens & gaming in',
+  },
+  {
+    key: 'art',
+    label: 'Art & Exhibits',
+    headline: 'Creative Spaces & Galleries',
+    subhead: 'Exhibits, immersive art & museums in',
+  },
+  {
+    key: 'late-night',
+    label: 'Late night',
+    headline: 'Late-Night Bites',
+    subhead: 'Open late, comfort food & 2 AM spots in',
+  },
+  {
+    key: 'cafes',
+    label: 'Cafes & Matcha',
+    headline: 'Artisan Coffee & Day Vibes',
+    subhead: 'Roasters, matcha studios & bakeries in',
+  },
+  {
+    key: 'markets',
+    label: 'Pop-ups',
+    headline: 'Pop-ups & Markets',
+    subhead: 'Night markets, artisan makers & drops in',
+  },
+  {
+    key: 'events',
+    label: 'Events',
+    headline: 'Festivals & Gatherings',
+    subhead: 'What is happening around',
+  },
+  {
+    key: 'tourism',
+    label: 'Tourism',
+    headline: 'Landmarks & Attractions',
+    subhead: 'Iconic city stops in',
+  },
 ];
 
 export default function DiscoverScreen() {
@@ -128,6 +216,22 @@ export default function DiscoverScreen() {
   const featureWidth = Math.min(width - 66, 440);
   const isSearch = Boolean(deferredSearch);
   const mainCards = discovery.data?.all.items ?? [];
+  const currentCategory = CATEGORIES.find((c) => c.key === intent);
+  const featureTitle = currentCategory?.headline || 'Worth going out for';
+  const featureSub = currentCategory?.subhead
+    ? `${currentCategory.subhead} ${discovery.data?.location.label || location.label}`
+    : `Around ${discovery.data?.location.label || location.label}`;
+
+  const mainTitle = isSearch
+    ? `Results for “${deferredSearch}”`
+    : intent === 'discover'
+    ? 'Keep wandering'
+    : `More in ${currentCategory?.label || 'this vibe'}`;
+  const mainSub = isSearch
+    ? location.label
+    : intent === 'discover'
+    ? 'More places. More possibilities.'
+    : `Curated picks across ${location.label}`;
 
   return (
     <View style={styles.screen}>
@@ -221,15 +325,15 @@ export default function DiscoverScreen() {
           <>
             {!isSearch && discovery.data?.nearby.items.length ? (
               <View style={styles.section}>
-                <View style={styles.featureHead}><View style={{ flex: 1, gap: 4 }}><Text style={styles.sectionTitle}>Worth going out for</Text><Text style={styles.sectionSub}>Around {discovery.data.location.label}</Text></View></View>
+                <View style={styles.featureHead}><View style={{ flex: 1, gap: 4 }}><Text style={styles.sectionTitle}>{featureTitle}</Text><Text style={styles.sectionSub}>{featureSub}</Text></View></View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={featureWidth + 14} decelerationRate="fast" contentContainerStyle={styles.featureRail}>
                   {discovery.data.nearby.items.map((place) => <View key={place.id} style={{ width: featureWidth }}><EditorialPlaceCard place={place} featured onPress={() => openPlace(place)} /></View>)}
                 </ScrollView>
               </View>
             ) : null}
 
-            {/* Live Show Drops & Tickets Rail */}
-            {!isSearch && ticketsQuery.data?.length ? (
+            {/* Live Show Drops & Tickets Rail - shown on main discover */}
+            {!isSearch && intent === 'discover' && ticketsQuery.data?.length ? (
               <View style={styles.section}>
                 <View style={styles.featureHead}>
                   <View style={{ flex: 1, gap: 2 }}>
@@ -289,8 +393,8 @@ export default function DiscoverScreen() {
               </View>
             ) : null}
 
-            {/* Cinema Room & Movie Trailers Rail */}
-            {!isSearch && cinemaMovies.length ? (
+            {/* Cinema Room & Movie Trailers Rail - shown on main discover */}
+            {!isSearch && intent === 'discover' && cinemaMovies.length ? (
               <View style={styles.section}>
                 <View style={styles.featureHead}>
                   <View style={{ flex: 1, gap: 2 }}>
@@ -349,11 +453,11 @@ export default function DiscoverScreen() {
               <DiscoverySection title="Picked for you" subtitle="Your next good find" cards={discovery.data.recommended.items} onOpen={openPlace} />
             ) : null}
             <DiscoverySection
-              title={isSearch ? `Results for “${deferredSearch}”` : 'Keep wandering'}
-              subtitle={isSearch ? location.label : 'More places. More possibilities.'}
+              title={mainTitle}
+              subtitle={mainSub}
               cards={mainCards}
               onOpen={openPlace}
-              emptyBody={isSearch ? 'Try a clearer place, vibe, or neighborhood.' : 'Change your area or pull to refresh.'}
+              emptyBody={isSearch ? 'Try a clearer place, vibe, or neighborhood.' : `No places found for ${currentCategory?.label.toLowerCase() || 'this vibe'} in this area yet. Try changing municipality or clearing your culture lens.`}
             />
           </>
         )}
