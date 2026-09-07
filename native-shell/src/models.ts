@@ -1,9 +1,15 @@
 export type DiscoveryIntent =
   | 'discover'
   | 'food'
-  | 'comedy'
+  | 'cocktails'
   | 'music'
   | 'nightlife'
+  | 'comedy'
+  | 'sports'
+  | 'art'
+  | 'late-night'
+  | 'cafes'
+  | 'markets'
   | 'events'
   | 'tourism'
   | 'search';
