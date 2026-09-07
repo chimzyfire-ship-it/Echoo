@@ -23,7 +23,8 @@ import {
   Outfit_700Bold,
   Outfit_800ExtraBold,
 } from '@expo-google-fonts/outfit';
-import { ScreenLoading } from '@/src/components/screen-state';
+import { ScreenLoading, ScreenMessage } from '@/src/components/screen-state';
+import { PrimaryButton } from '@/src/components/primary-button';
 import { AuthProvider, useAuth } from '@/src/providers/auth-provider';
 import { CultureProvider } from '@/src/providers/culture-provider';
 import { LocationProvider } from '@/src/providers/location-provider';
@@ -31,7 +32,7 @@ import { SurpriseProvider } from '@/src/providers/surprise-provider';
 import { Colors } from '@/src/theme/tokens';
 
 function AppNavigator() {
-  const { ready, user, profile, profileError } = useAuth();
+  const { ready, user, profile, profileError, refreshProfile, signOut } = useAuth();
   const router = useRouter();
   const segments = useSegments();
   const rootSegment = segments[0] ?? '';
@@ -45,14 +46,8 @@ function AppNavigator() {
   useEffect(() => {
     if (!ready) return;
 
-    // When the user is already authenticated with completed onboarding:
-    // If they are on the initial landing screen (index) or auth screen, route directly to the main app tabs.
-    if (user && profile?.completedAt) {
-      if (rootSegment === '' || rootSegment === 'index' || rootSegment === 'auth') {
-        router.replace('/(tabs)');
-      }
-      return;
-    }
+    // Restored members may stay on the landing page and use Surprise directly.
+    if (user && profile?.completedAt) return;
 
     // If user is authenticated but hasn't finished onboarding:
     if (user && !profile?.completedAt && !profileError) {
@@ -63,7 +58,7 @@ function AppNavigator() {
     }
 
     // If unauthenticated user tries to navigate into member routes:
-    if (!user && memberRoute) {
+    if (!user && (memberRoute || rootSegment === 'onboarding')) {
       router.replace('/');
     }
   }, [memberRoute, profile?.completedAt, profileError, ready, rootSegment, router, user]);
@@ -74,6 +69,19 @@ function AppNavigator() {
         <ScreenLoading label="Opening Echoo." />
       </View>
     );
+  }
+
+  if (profileError) {
+    return <View style={styles.loading}>
+      <ScreenMessage title="Could not open your profile" body={profileError} action={<>
+        <PrimaryButton label="Try again" onPress={() => { void refreshProfile().catch(() => {}); }} />
+        <PrimaryButton label="Sign out" variant="quiet" onPress={() => { void signOut().catch(() => {}); }} />
+      </>} />
+    </View>;
+  }
+
+  if ((memberRoute && (!user || !profile?.completedAt)) || (rootSegment === 'onboarding' && !user)) {
+    return <View style={styles.loading}><ScreenLoading label="Opening Echoo." /></View>;
   }
 
   return (

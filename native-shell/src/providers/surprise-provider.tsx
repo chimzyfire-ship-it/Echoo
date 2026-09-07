@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { SurpriseOverlay } from '@/src/components/surprise/surprise-overlay';
 import { useAuth } from '@/src/providers/auth-provider';
@@ -29,7 +29,7 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 
 export function SurpriseProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, profile, profileError } = useAuth();
+  const { ready, user, profile, profileError } = useAuth();
   const { active: culture } = useCulture();
   const { location } = useEchooLocation();
 
@@ -41,8 +41,8 @@ export function SurpriseProvider({ children }: { children: React.ReactNode }) {
   const activeRef = useRef(false);
   const readyResolveRef = useRef<(() => void) | null>(null);
   const rollResolveRef = useRef<(() => void) | null>(null);
-  const latest = useRef({ user, profile, profileError, culture, location, router });
-  latest.current = { user, profile, profileError, culture, location, router };
+  const latest = useRef({ ready, user, profile, profileError, culture, location, router });
+  latest.current = { ready, user, profile, profileError, culture, location, router };
 
   const cancel = useCallback(() => {
     generationRef.current += 1;
@@ -53,6 +53,10 @@ export function SurpriseProvider({ children }: { children: React.ReactNode }) {
     rollResolveRef.current = null;
     setPhase('idle');
   }, []);
+
+  useEffect(() => {
+    if (!user || !profile?.completedAt || profileError) cancel();
+  }, [user?.id, profile?.completedAt, profileError, cancel]);
 
   const handleRollStart = useCallback(() => {
     readyResolveRef.current?.();
@@ -69,14 +73,15 @@ export function SurpriseProvider({ children }: { children: React.ReactNode }) {
 
   const start = useCallback(() => {
     const current = latest.current;
-    if (activeRef.current) return;
+    if (activeRef.current || !current.ready) return;
 
     // Same guard rails as the root navigator: members only, onboarded members only.
     if (!current.user) {
       current.router.push('/auth');
       return;
     }
-    if (!current.profile?.completedAt && !current.profileError) {
+    if (current.profileError) return;
+    if (!current.profile?.completedAt) {
       current.router.push('/onboarding');
       return;
     }

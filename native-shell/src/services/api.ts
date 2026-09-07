@@ -145,6 +145,7 @@ export async function getDiscovery(
     location: EchooLocation;
     cultureSlug?: string;
     preferenceFeatureSlugs?: string[];
+    cursor?: string;
   },
   signal?: AbortSignal
 ): Promise<DiscoveryFeed> {
@@ -162,6 +163,7 @@ export async function getDiscovery(
       preferenceFeatureSlugs: input.preferenceFeatureSlugs ?? [],
       includeLiveFallback: true,
       limit: 20,
+      cursor: input.cursor,
     },
     signal,
   });

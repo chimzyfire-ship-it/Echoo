@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowUpRight, MapPin, Star } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { DiscoveryCard } from '@/src/models';
+import { placeSummary } from '@/src/services/place-summary';
 import { Colors, Fonts } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
 
@@ -38,6 +39,7 @@ export function EditorialPlaceCard({ place, onPress, featured = false }: {
             <View style={styles.heroCopy}>
               <Text style={styles.heroCategory}>{category}</Text>
               <Text style={styles.heroTitle} numberOfLines={3}>{place.title}</Text>
+              <Text style={styles.heroMeta} numberOfLines={2}>{placeSummary(place)}</Text>
               <View style={styles.heroBottom}>
                 <View style={styles.location}><MapPin size={13} color="#e4d8cb" /><Text style={styles.heroMeta}>{location}</Text></View>
                 <View style={styles.arrow}><ArrowUpRight size={20} color="#211e19" /></View>
@@ -53,6 +55,7 @@ export function EditorialPlaceCard({ place, onPress, featured = false }: {
         <View style={styles.copy}>
           <Text style={styles.category} numberOfLines={1}>{category}</Text>
           <Text style={styles.title} numberOfLines={2}>{place.title}</Text>
+          <Text style={styles.meta} numberOfLines={2}>{placeSummary(place)}</Text>
           <Text style={styles.meta} numberOfLines={1}>{location}{place.startsAt ? ' · Event' : ''}</Text>
         </View>
       ) : null}

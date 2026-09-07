@@ -2,6 +2,7 @@ import { CalendarDays, MapPin, Star } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { DiscoveryCard } from '@/src/models';
+import { placeSummary } from '@/src/services/place-summary';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
 
@@ -58,11 +59,9 @@ export function PlaceCard({ place, onPress, variant = 'grid' }: PlaceCardProps) 
             {place.title}
           </Text>
 
-          {place.description ? (
             <Text style={styles.featuredDescription} numberOfLines={2}>
-              {place.description}
+              {placeSummary(place)}
             </Text>
-          ) : null}
 
           <View style={styles.locationRow}>
             <MapPin size={12} color="rgba(248, 245, 239, 0.55)" />
@@ -109,6 +108,7 @@ export function PlaceCard({ place, onPress, variant = 'grid' }: PlaceCardProps) 
         <Text style={styles.gridTitle} numberOfLines={2}>
           {place.title}
         </Text>
+        <Text style={styles.featuredDescription} numberOfLines={2}>{placeSummary(place)}</Text>
 
         <View style={styles.locationRow}>
           <MapPin size={11} color="rgba(248, 245, 239, 0.55)" />

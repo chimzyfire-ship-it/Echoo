@@ -11,6 +11,7 @@ import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenLoading, ScreenMessage } from '@/src/components/screen-state';
 import { getPlaceDetail, getQuickPlan } from '@/src/services/api';
 import { getCachedPlace } from '@/src/services/place-cache';
+import { placeSummary } from '@/src/services/place-summary';
 import { checkIn } from '@/src/services/linkup';
 import { Colors, Fonts } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
@@ -118,9 +119,14 @@ export default function PlaceDetailScreen() {
   const hoursToday = (data?.hours ?? []).find(
     (row) => Number(row.day_of_week) === new Date().getDay()
   );
-  const rawDescription = text(place.description) || cached?.description || '';
-  const normalizeCopy = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const description = normalizeCopy(rawDescription) === normalizeCopy(address) ? '' : rawDescription;
+  const description = placeSummary({
+    ...cached,
+    title: name,
+    description: text(place.description) || cached?.description,
+    category: text(place.category) || cached?.category,
+    city: text(place.city) || cached?.city,
+    address,
+  }, data?.pulse?.items);
   const heroPhoto = selectedPhoto && photos.includes(selectedPhoto) ? selectedPhoto : photos[0];
 
   return (
