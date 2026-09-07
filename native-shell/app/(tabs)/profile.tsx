@@ -90,7 +90,14 @@ export default function ProfileScreen() {
               {tickets.data ? `${tickets.data.length} confirmed order${tickets.data.length === 1 ? '' : 's'}` : 'Loading orders…'}
             </Text>
           </View>
-          <Ticket size={22} color={Colors.peach} />
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/tickets')}
+            style={styles.ticketsHubBtn}
+          >
+            <Text style={styles.ticketsHubText}>Tickets Hub</Text>
+            <ChevronRight size={13} color={Colors.peach} />
+          </Pressable>
         </View>
 
         {tickets.isLoading ? (
@@ -106,7 +113,12 @@ export default function ProfileScreen() {
         ) : tickets.data?.length ? (
           <View style={styles.ticketList}>
             {tickets.data.map((ticket) => (
-              <View key={ticket.id} style={styles.ticketCard}>
+              <Pressable
+                key={ticket.id}
+                accessibilityRole="button"
+                onPress={() => router.push('/tickets')}
+                style={styles.ticketCard}
+              >
                 {ticket.imageUrl ? (
                   <Image source={{ uri: ticket.imageUrl }} style={{ width: 58, height: 58, borderRadius: 12 }} resizeMode="cover" />
                 ) : (
@@ -127,7 +139,8 @@ export default function ProfileScreen() {
                     {ticket.tierName ? ` · ${ticket.tierName}` : ''}
                   </Text>
                 </View>
-              </View>
+                <ChevronRight size={16} color={Colors.textMuted} />
+              </Pressable>
             ))}
           </View>
         ) : (
@@ -193,6 +206,22 @@ const styles = StyleSheet.create({
   sectionHeadCopy: { gap: 4 },
   sectionTitle: { color: Colors.ink, fontFamily: Fonts.display, fontSize: 25, letterSpacing: -0.5 },
   sectionSub: { color: '#a5ab99', fontFamily: Fonts.ui, fontSize: 12 },
+  ticketsHubBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(231, 201, 142, 0.3)',
+    backgroundColor: 'rgba(231, 201, 142, 0.08)',
+  },
+  ticketsHubText: {
+    fontFamily: Fonts.uiMedium,
+    fontSize: 12,
+    color: Colors.peach,
+  },
   pendingNote: { color: '#b4b6ac', fontFamily: Fonts.ui, fontSize: 13 },
   ticketList: { gap: 12 },
   ticketCard: { flexDirection: 'row', gap: 14, borderRadius: 16, backgroundColor: '#292d24', padding: 16 },

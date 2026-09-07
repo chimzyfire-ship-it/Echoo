@@ -1,8 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { useDeferredValue, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MapPin, Search, SlidersHorizontal, X } from 'lucide-react-native';
+import * as Linking from 'expo-linking';
 import {
+  ChevronRight,
+  Film,
+  MapPin,
+  Play,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
+  Ticket as TicketIcon,
+  X,
+} from 'lucide-react-native';
+import {
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -20,16 +33,19 @@ import { LocationPicker } from '@/src/components/location-picker';
 import { EditorialPlaceCard } from '@/src/components/editorial-place-card';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenLoading, ScreenMessage } from '@/src/components/screen-state';
-import type { DiscoveryCard, DiscoveryIntent } from '@/src/models';
+import type { DiscoveryCard, DiscoveryIntent, MovieItem } from '@/src/models';
 import { useCulture } from '@/src/providers/culture-provider';
 import { useEchooLocation } from '@/src/providers/location-provider';
-import { getDiscovery } from '@/src/services/api';
+import { getDiscovery, getMoviesFeed, getTicketsForSale } from '@/src/services/api';
 import { cultureQueryForIntent } from '@/src/services/culture';
 import { cachePlace } from '@/src/services/place-cache';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
+import { triggerHaptic } from '@/src/utils/haptics';
 
-const CATEGORIES: Array<{ key: DiscoveryIntent; label: string }> = [
+const CATEGORIES: Array<{ key: string; label: string; isRoute?: boolean; route?: string }> = [
   { key: 'discover', label: 'Discover' },
+  { key: 'tickets', label: 'Tickets', isRoute: true, route: '/tickets' },
+  { key: 'cinema', label: 'Cinema', isRoute: true, route: '/cinema' },
   { key: 'food', label: 'Food' },
   { key: 'comedy', label: 'Comedy' },
   { key: 'music', label: 'Live music' },
@@ -54,8 +70,15 @@ export default function DiscoverScreen() {
   useEffect(() => {
     if (!CATEGORIES.some((category) => category.key === incomingIntent)) return;
     setSearch('');
-    setIntent(incomingIntent as DiscoveryIntent);
-  }, [incomingIntent]);
+    if (incomingIntent === 'tickets') {
+      router.push('/tickets');
+    } else if (incomingIntent === 'cinema') {
+      router.push('/cinema');
+    } else {
+      setIntent(incomingIntent as DiscoveryIntent);
+    }
+  }, [incomingIntent, router]);
+
   const discovery = useQuery({
     queryKey: [
       'discover',
@@ -77,6 +100,24 @@ export default function DiscoverScreen() {
         signal
       ),
   });
+
+  const ticketsQuery = useQuery({
+    queryKey: ['discover-tickets-for-sale', location.city],
+    queryFn: ({ signal }) => getTicketsForSale(location.city, signal),
+    staleTime: 120_000,
+  });
+
+  const cinemaQuery = useQuery({
+    queryKey: ['discover-cinema-feed'],
+    queryFn: ({ signal }) => getMoviesFeed(signal),
+    staleTime: 120_000,
+  });
+
+  const cinemaMovies: MovieItem[] = [
+    ...(cinemaQuery.data?.now_playing?.movies ?? []),
+    ...(cinemaQuery.data?.date_night?.movies ?? []),
+    ...(cinemaQuery.data?.trending?.movies ?? []),
+  ].filter((m) => Boolean(m.poster_url));
 
   function openPlace(place: DiscoveryCard) {
     cachePlace(place);
@@ -136,17 +177,30 @@ export default function DiscoverScreen() {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-          {CATEGORIES.map((category) => (
-            <Pressable
-              key={category.key}
-              accessibilityRole="button"
-              accessibilityState={{ selected: !isSearch && intent === category.key }}
-              onPress={() => { setSearch(''); setIntent(category.key); }}
-              style={[styles.categoryTab, !isSearch && intent === category.key && styles.categoryTabActive]}
-            >
-              <Text style={[styles.categoryLabel, !isSearch && intent === category.key && styles.categoryLabelActive]}>{category.label}</Text>
-            </Pressable>
-          ))}
+          {CATEGORIES.map((category) => {
+            const isSelected = !isSearch && intent === category.key;
+            return (
+              <Pressable
+                key={category.key}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                onPress={() => {
+                  if (category.isRoute && category.route) {
+                    void triggerHaptic.light();
+                    router.push(category.route as any);
+                    return;
+                  }
+                  setSearch('');
+                  setIntent(category.key as DiscoveryIntent);
+                }}
+                style={[styles.categoryTab, isSelected && styles.categoryTabActive]}
+              >
+                <Text style={[styles.categoryLabel, isSelected && styles.categoryLabelActive]}>
+                  {category.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </ScrollView>
 
         {discovery.isLoading ? (
@@ -173,6 +227,124 @@ export default function DiscoverScreen() {
                 </ScrollView>
               </View>
             ) : null}
+
+            {/* Live Show Drops & Tickets Rail */}
+            {!isSearch && ticketsQuery.data?.length ? (
+              <View style={styles.section}>
+                <View style={styles.featureHead}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.sectionTitle}>Live show drops</Text>
+                    <Text style={styles.sectionSub}>Priority booking around {location.label}</Text>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push('/tickets')}
+                    style={styles.seeAllLink}
+                  >
+                    <Text style={styles.seeAllText}>All tickets</Text>
+                    <ChevronRight size={14} color={Colors.peach} />
+                  </Pressable>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featureRail}>
+                  {ticketsQuery.data.slice(0, 6).map((ticket) => (
+                    <Pressable
+                      key={ticket.id}
+                      accessibilityRole="button"
+                      onPress={() => {
+                        void triggerHaptic.light();
+                        if (ticket.detailUrl) void Linking.openURL(ticket.detailUrl);
+                        else router.push('/tickets');
+                      }}
+                      style={({ pressed }) => [styles.ticketDropCard, pressed && styles.pressed]}
+                    >
+                      <View style={styles.ticketDropArt}>
+                        {ticket.imageUrl ? (
+                          <Image source={{ uri: ticket.imageUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                        ) : (
+                          <View style={[StyleSheet.absoluteFill, { backgroundColor: '#282622' }]} />
+                        )}
+                        <LinearGradient
+                          colors={['transparent', 'rgba(10,9,8,0.85)']}
+                          locations={[0.2, 1]}
+                          style={StyleSheet.absoluteFill}
+                        />
+                        <View style={styles.ticketDropBadge}>
+                          <Text style={styles.ticketDropBadgeText}>{ticket.statusLabel || 'Selling now'}</Text>
+                        </View>
+                        <View style={styles.ticketPriceBadge}>
+                          <Text style={styles.ticketPriceBadgeText}>{ticket.priceLabel}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.ticketDropCopy}>
+                        <Text style={styles.ticketDropTitle} numberOfLines={1}>
+                          {ticket.title}
+                        </Text>
+                        <Text style={styles.ticketDropMeta} numberOfLines={1}>
+                          {ticket.subtitle || ticket.city}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+
+            {/* Cinema Room & Movie Trailers Rail */}
+            {!isSearch && cinemaMovies.length ? (
+              <View style={styles.section}>
+                <View style={styles.featureHead}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.sectionTitle}>Cinema room</Text>
+                    <Text style={styles.sectionSub}>Trailers worth planning a night around</Text>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push('/cinema')}
+                    style={styles.seeAllLink}
+                  >
+                    <Text style={styles.seeAllText}>Cinema room</Text>
+                    <ChevronRight size={14} color={Colors.peach} />
+                  </Pressable>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featureRail}>
+                  {cinemaMovies.slice(0, 6).map((movie) => (
+                    <Pressable
+                      key={movie.tmdb_id || movie.title}
+                      accessibilityRole="button"
+                      onPress={() => {
+                        void triggerHaptic.light();
+                        router.push('/cinema');
+                      }}
+                      style={({ pressed }) => [styles.cinemaCard, pressed && styles.pressed]}
+                    >
+                      <View style={styles.cinemaArt}>
+                        {movie.poster_url ? (
+                          <Image source={{ uri: movie.poster_url }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                        ) : (
+                          <View style={[StyleSheet.absoluteFill, { backgroundColor: '#262420' }]} />
+                        )}
+                        <View style={styles.cinemaPlayGlyph}>
+                          <Play size={11} color={Colors.ink} fill={Colors.ink} />
+                        </View>
+                        {movie.vote_average ? (
+                          <View style={styles.cinemaRatingBadge}>
+                            <Star size={9} color="#f5cf7e" fill="#f5cf7e" />
+                            <Text style={styles.cinemaRatingText}>{movie.vote_average.toFixed(1)}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={styles.cinemaTitle} numberOfLines={1}>
+                        {movie.title}
+                      </Text>
+                      <Text style={styles.cinemaMeta} numberOfLines={1}>
+                        {[movie.year, movie.genres?.[0]].filter(Boolean).join(' · ')}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+
             {!isSearch && discovery.data?.recommended.items.length ? (
               <DiscoverySection title="Picked for you" subtitle="Your next good find" cards={discovery.data.recommended.items} onOpen={openPlace} />
             ) : null}
@@ -370,5 +542,135 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(248, 245, 239, 0.08)',
     backgroundColor: 'rgba(248, 245, 239, 0.035)',
     padding: Spacing.md,
+  },
+  seeAllLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 34,
+    paddingHorizontal: 10,
+    borderRadius: 17,
+    backgroundColor: 'rgba(247, 213, 178, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(247, 213, 178, 0.2)',
+  },
+  seeAllText: {
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 11,
+    color: Colors.peach,
+  },
+  ticketDropCard: {
+    width: 220,
+    borderRadius: 18,
+    backgroundColor: 'rgba(248, 245, 239, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(248, 245, 239, 0.09)',
+    overflow: 'hidden',
+  },
+  ticketDropArt: {
+    height: 125,
+    position: 'relative',
+    backgroundColor: '#262420',
+  },
+  ticketDropBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: 'rgba(10, 9, 8, 0.65)',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  ticketDropBadgeText: {
+    color: Colors.ink,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 9,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  ticketPriceBadge: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(247, 213, 178, 0.9)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  ticketPriceBadgeText: {
+    color: Colors.inkDark,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  ticketDropCopy: {
+    padding: 12,
+    gap: 4,
+  },
+  ticketDropTitle: {
+    color: Colors.ink,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 14,
+  },
+  ticketDropMeta: {
+    color: Colors.textMuted,
+    fontFamily: Fonts.ui,
+    fontSize: 12,
+  },
+  cinemaCard: {
+    width: 128,
+    gap: 6,
+  },
+  cinemaArt: {
+    height: 180,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#262420',
+    borderWidth: 1,
+    borderColor: 'rgba(248, 245, 239, 0.08)',
+    position: 'relative',
+  },
+  cinemaPlayGlyph: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(10, 9, 8, 0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cinemaRatingBadge: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(10, 9, 8, 0.72)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  cinemaRatingText: {
+    color: '#f5cf7e',
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  cinemaTitle: {
+    color: Colors.ink,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 13,
+  },
+  cinemaMeta: {
+    color: Colors.textMuted,
+    fontFamily: Fonts.ui,
+    fontSize: 11,
+  },
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.985 }],
   },
 });

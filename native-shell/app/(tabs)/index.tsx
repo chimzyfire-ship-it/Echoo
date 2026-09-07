@@ -1,7 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ArrowUpRight, CalendarDays, ChevronRight, MapPin } from 'lucide-react-native';
+import {
+  ArrowUpRight,
+  CalendarDays,
+  ChevronRight,
+  Film,
+  MapPin,
+  Sparkles,
+  Ticket as TicketIcon,
+} from 'lucide-react-native';
 import type { ImageSourcePropType } from 'react-native';
 import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -234,6 +242,34 @@ export default function HomeScreen() {
             />
           </View>
 
+          {/* Quick Hub Row for Tickets & Cinema */}
+          <View style={styles.quickAccessRow}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                void triggerHaptic.light();
+                router.push('/tickets');
+              }}
+              style={({ pressed }) => [styles.quickAccessCard, pressed && styles.pressed]}
+            >
+              <TicketIcon size={15} color={Colors.peach} />
+              <Text style={styles.quickAccessCardText}>Tickets & Passes</Text>
+              <ArrowUpRight size={13} color={Colors.peachLight} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                void triggerHaptic.light();
+                router.push('/cinema');
+              }}
+              style={({ pressed }) => [styles.quickAccessCard, pressed && styles.pressed]}
+            >
+              <Film size={15} color={Colors.peach} />
+              <Text style={styles.quickAccessCardText}>Cinema Room</Text>
+              <ArrowUpRight size={13} color={Colors.peachLight} />
+            </Pressable>
+          </View>
+
           {/* Featured Place Section matching Inspi */}
           <View style={styles.recommendationSection}>
             <View style={styles.sectionHead}>
@@ -276,16 +312,30 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Upcoming Event Pass */}
-          {nextTicket ? (
-            <View style={styles.eveningSection}>
-              <Text style={styles.sectionEyebrow}>YOUR EVENING</Text>
+          {/* Upcoming Event Pass or Ticket Hub */}
+          <View style={styles.eveningSection}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionEyebrow}>YOUR EVENING & PASSES</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  void triggerHaptic.light();
+                  router.push('/tickets');
+                }}
+                style={styles.quickHubLink}
+              >
+                <Text style={styles.quickHubText}>Tickets Hub</Text>
+                <ChevronRight size={13} color={Colors.peach} />
+              </Pressable>
+            </View>
+
+            {nextTicket ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Open your pass for ${nextTicket.eventTitle || 'your Echoo event'}`}
                 onPress={() => {
                   void triggerHaptic.light();
-                  router.push('/(tabs)/profile');
+                  router.push('/tickets');
                 }}
                 style={({ pressed }) => [styles.ticketRow, pressed && styles.ticketPressed]}
               >
@@ -303,8 +353,30 @@ export default function HomeScreen() {
                 </View>
                 <ChevronRight size={18} color={Colors.textMuted} />
               </Pressable>
-            </View>
-          ) : null}
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  void triggerHaptic.light();
+                  router.push('/tickets');
+                }}
+                style={({ pressed }) => [styles.ticketRow, pressed && styles.ticketPressed]}
+              >
+                <View style={styles.ticketIcon}>
+                  <TicketIcon size={18} color={Colors.peach} />
+                </View>
+                <View style={styles.ticketCopy}>
+                  <Text style={styles.ticketTitle} numberOfLines={1}>
+                    Live Show Drops & Passes
+                  </Text>
+                  <Text style={styles.ticketMeta} numberOfLines={1}>
+                    Priority event allocations & your order passes
+                  </Text>
+                </View>
+                <ChevronRight size={18} color={Colors.textMuted} />
+              </Pressable>
+            )}
+          </View>
         </ScrollView>
       </LinearGradient>
     </ImageBackground>
@@ -499,5 +571,51 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontFamily: Fonts.ui,
     fontSize: 12,
+  },
+  quickAccessRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: -4,
+  },
+  quickAccessCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 46,
+    borderRadius: 16,
+    backgroundColor: 'rgba(248, 245, 239, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(248, 245, 239, 0.09)',
+    paddingHorizontal: 14,
+  },
+  quickAccessCardText: {
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 12,
+    color: Colors.ink,
+    flex: 1,
+    marginLeft: 8,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  quickHubLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(247, 213, 178, 0.08)',
+  },
+  quickHubText: {
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 11,
+    color: Colors.peach,
+  },
+  pressed: {
+    opacity: 0.75,
   },
 });
