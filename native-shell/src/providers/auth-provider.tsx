@@ -24,8 +24,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<EchooProfile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const activeUserId = useRef<string | null>(null);
+  const generation = useRef(0);
+  const mounted = useRef(false);
 
   async function hydrateProfile(nextSession: Session | null) {
+    const request = ++generation.current;
     const user = nextSession?.user ?? null;
     activeUserId.current = user?.id ?? null;
     if (!user) {
@@ -37,19 +40,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const nextProfile = await loadProfile(user);
-      if (activeUserId.current === user.id) {
+      if (mounted.current && generation.current === request) {
         setProfile(nextProfile);
         setProfileError(null);
       }
+      if (!mounted.current || generation.current !== request) throw new Error('Authentication changed. Please try again.');
       return nextProfile;
     } catch (error) {
-      if (activeUserId.current === user.id) {
+      if (mounted.current && generation.current === request) {
         setProfile(null);
         setProfileError(error instanceof Error ? error.message : 'Echoo could not load this profile.');
       }
-      return null;
+      throw error;
     } finally {
-      if (activeUserId.current === user.id) setReady(true);
+      if (mounted.current && generation.current === request) setReady(true);
     }
   }
 
@@ -57,44 +61,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Always read the freshest session from Supabase: closures rendered before
     // a sign-in would otherwise hydrate against the pre-login (null) session
     // and wrongly route completed members back into onboarding.
-    const { data } = await supabase.auth.getSession();
+    const userId = activeUserId.current;
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (!mounted.current || activeUserId.current !== userId || !data.session || data.session.user.id !== userId) {
+      throw new Error('Authentication changed. Please try again.');
+    }
+    setSession(data.session);
     return hydrateProfile(data.session ?? null);
   }
 
   async function signOut() {
-    await supabase.auth.signOut({ scope: 'local' });
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    if (error) throw error;
+    generation.current += 1;
+    activeUserId.current = null;
     setSession(null);
     setProfile(null);
     setProfileError(null);
+    setReady(true);
   }
 
   useEffect(() => {
-    let mounted = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      void hydrateProfile(data.session);
-    });
-
+    mounted.current = true;
+    let initialized = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted) return;
+      if (!mounted.current) return;
       setSession(nextSession);
+      const userId = nextSession?.user.id ?? null;
+      // Token refreshes must not blank the UI or re-run onboarding hydration.
+      if (initialized && activeUserId.current === userId) return;
+      initialized = true;
+      activeUserId.current = userId;
+      generation.current += 1;
+      setProfile(null);
+      setProfileError(null);
       setReady(false);
-      void hydrateProfile(nextSession);
+      clearTimeout(timer);
+      const scheduledGeneration = generation.current;
+      // Supabase holds its auth lock during callbacks. Defer authenticated I/O.
+      timer = setTimeout(() => {
+        if (generation.current !== scheduledGeneration) return;
+        void hydrateProfile(nextSession).catch(() => {});
+      }, 0);
     });
 
     return () => {
-      mounted = false;
+      mounted.current = false;
+      generation.current += 1;
+      clearTimeout(timer);
       data.subscription.unsubscribe();
     };
   }, []);
 
   useEffect(() => {
+    if (AppState.currentState === 'active') supabase.auth.startAutoRefresh();
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') supabase.auth.startAutoRefresh();
       else supabase.auth.stopAutoRefresh();
     });
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      supabase.auth.stopAutoRefresh();
+    };
   }, []);
 
   return (

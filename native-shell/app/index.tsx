@@ -1,10 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight } from 'lucide-react-native';
-import React, { useEffect } from 'react';
-import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import React from 'react';
+import { ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { BrandMark } from '@/src/components/brand-mark';
+import { LandingAuth } from '@/src/components/landing-auth';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useSurprise } from '@/src/providers/surprise-provider';
 import { Colors, Fonts } from '@/src/theme/tokens';
@@ -46,23 +47,18 @@ function LandingAction({ label, onPress, variant = 'primary' }: LandingActionPro
 
 export default function LandingScreen() {
   const router = useRouter();
+  const { auth, mode } = useLocalSearchParams<{ auth?: string; mode?: string }>();
   const { height } = useWindowDimensions();
   const { user, profile, ready } = useAuth();
   const surprise = useSurprise();
 
-  // If user is already authenticated and has completed onboarding, automatically navigate to the Home tab
-  useEffect(() => {
-    if (ready && user && profile?.completedAt) {
-      router.replace('/(tabs)');
-    }
-  }, [ready, user, profile?.completedAt, router]);
-
   function handleSignInPress() {
+    if (!ready) return;
     if (user) {
       router.replace(profile?.completedAt ? '/(tabs)' : '/onboarding');
       return;
     }
-    router.push('/auth');
+    router.setParams({ auth: 'open' });
   }
 
   return (
@@ -81,11 +77,14 @@ export default function LandingScreen() {
         locations={[0, 0.35, 0.72, 0.98]}
         style={styles.overlay}
       >
+        <KeyboardAvoidingView style={styles.scroll} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           style={styles.scroll}
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={[styles.content, { minHeight: Math.max(height, 700) }]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           {/* Centered Brand Mark at Top */}
           <View style={styles.topBar}>
@@ -107,7 +106,16 @@ export default function LandingScreen() {
 
             <View style={styles.actions}>
               <LandingAction label="Surprise me" onPress={surprise.start} />
-              <LandingAction label={user ? 'Open Echoo' : 'Sign in'} onPress={handleSignInPress} variant="secondary" />
+              {user ? (
+                <LandingAction label="Open Echoo" onPress={handleSignInPress} variant="secondary" />
+              ) : (
+                <LandingAuth
+                  open={auth === 'open'}
+                  initialMode={mode === 'signup' ? 'signup' : 'signin'}
+                  onOpen={handleSignInPress}
+                  onClose={() => router.setParams({ auth: '', mode: '' })}
+                />
+              )}
             </View>
           </View>
 
@@ -122,6 +130,7 @@ export default function LandingScreen() {
             </Text>
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </LinearGradient>
     </ImageBackground>
   );

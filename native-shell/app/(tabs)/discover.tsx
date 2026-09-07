@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useDeferredValue, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
@@ -33,7 +33,7 @@ import { LocationPicker } from '@/src/components/location-picker';
 import { EditorialPlaceCard } from '@/src/components/editorial-place-card';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenLoading, ScreenMessage } from '@/src/components/screen-state';
-import type { DiscoveryCard, DiscoveryIntent, MovieItem } from '@/src/models';
+import type { DiscoveryCard, DiscoveryFeed, DiscoveryIntent, MovieItem } from '@/src/models';
 import { useCulture } from '@/src/providers/culture-provider';
 import { useEchooLocation } from '@/src/providers/location-provider';
 import { getDiscovery, getMoviesFeed, getTicketsForSale } from '@/src/services/api';
@@ -167,23 +167,30 @@ export default function DiscoverScreen() {
     }
   }, [incomingIntent, router]);
 
-  const discovery = useQuery({
+  const discovery = useInfiniteQuery({
     queryKey: [
       'discover',
       activeIntent,
+      intent,
       deferredSearch,
       location.city,
       location.latitude,
       location.longitude,
       culture?.slug ?? '',
     ],
-    queryFn: ({ signal }) =>
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage: DiscoveryFeed, _pages, _lastParam, pageParams) => {
+      const cursor = lastPage.all.nextCursor;
+      return lastPage.all.hasMore && cursor && !pageParams.includes(cursor) ? cursor : undefined;
+    },
+    queryFn: ({ signal, pageParam }) =>
       getDiscovery(
         {
           intent: activeIntent,
           query: cultureQueryForIntent(intent, deferredSearch, culture),
           location,
           cultureSlug: culture?.slug,
+          cursor: pageParam,
         },
         signal
       ),
@@ -215,12 +222,19 @@ export default function DiscoverScreen() {
   const { width } = useWindowDimensions();
   const featureWidth = Math.min(width - 66, 440);
   const isSearch = Boolean(deferredSearch);
-  const mainCards = discovery.data?.all.items ?? [];
+  const feed = discovery.data?.pages[0];
+  const seen = new Set<string>();
+  const mainCards = (discovery.data?.pages.flatMap((page) => page.all.items) ?? []).filter((place) => {
+    const key = `${place.type}:${place.canonicalId || place.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   const currentCategory = CATEGORIES.find((c) => c.key === intent);
   const featureTitle = currentCategory?.headline || 'Worth going out for';
   const featureSub = currentCategory?.subhead
-    ? `${currentCategory.subhead} ${discovery.data?.location.label || location.label}`
-    : `Around ${discovery.data?.location.label || location.label}`;
+    ? `${currentCategory.subhead} ${feed?.location.label || location.label}`
+    : `Around ${feed?.location.label || location.label}`;
 
   const mainTitle = isSearch
     ? `Results for “${deferredSearch}”`
@@ -309,13 +323,13 @@ export default function DiscoverScreen() {
 
         {discovery.isLoading ? (
           <ScreenLoading label="Finding what is good nearby." />
-        ) : discovery.isError ? (
+        ) : discovery.isError && !feed ? (
           <ScreenMessage
             title="Discover could not load"
             body={discovery.error instanceof Error ? discovery.error.message : 'Try again in a moment.'}
             action={<PrimaryButton label="Try again" onPress={() => discovery.refetch()} />}
           />
-        ) : discovery.data?.supported === false ? (
+        ) : feed?.supported === false ? (
           <ScreenMessage
             title="Echoo is GTA-only right now"
             body="Choose a supported GTA municipality to see live discovery."
@@ -323,11 +337,11 @@ export default function DiscoverScreen() {
           />
         ) : (
           <>
-            {!isSearch && discovery.data?.nearby.items.length ? (
+            {!isSearch && feed?.nearby.items.length ? (
               <View style={styles.section}>
                 <View style={styles.featureHead}><View style={{ flex: 1, gap: 4 }}><Text style={styles.sectionTitle}>{featureTitle}</Text><Text style={styles.sectionSub}>{featureSub}</Text></View></View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={featureWidth + 14} decelerationRate="fast" contentContainerStyle={styles.featureRail}>
-                  {discovery.data.nearby.items.map((place) => <View key={place.id} style={{ width: featureWidth }}><EditorialPlaceCard place={place} featured onPress={() => openPlace(place)} /></View>)}
+                  {feed.nearby.items.map((place) => <View key={place.id} style={{ width: featureWidth }}><EditorialPlaceCard place={place} featured onPress={() => openPlace(place)} /></View>)}
                 </ScrollView>
               </View>
             ) : null}
@@ -449,8 +463,8 @@ export default function DiscoverScreen() {
               </View>
             ) : null}
 
-            {!isSearch && discovery.data?.recommended.items.length ? (
-              <DiscoverySection title="Picked for you" subtitle="Your next good find" cards={discovery.data.recommended.items} onOpen={openPlace} />
+            {!isSearch && feed?.recommended.items.length ? (
+              <DiscoverySection title="Picked for you" subtitle="Your next good find" cards={feed.recommended.items} onOpen={openPlace} />
             ) : null}
             <DiscoverySection
               title={mainTitle}
@@ -459,6 +473,14 @@ export default function DiscoverScreen() {
               onOpen={openPlace}
               emptyBody={isSearch ? 'Try a clearer place, vibe, or neighborhood.' : `No places found for ${currentCategory?.label.toLowerCase() || 'this vibe'} in this area yet. Try changing municipality or clearing your culture lens.`}
             />
+            {discovery.isError ? <Text style={styles.empty}>{discovery.isFetchNextPageError ? 'More places could not load. Your current results are still here.' : 'Could not refresh places. Your current results are still here.'}</Text> : null}
+            {discovery.hasNextPage ? <PrimaryButton
+              label={discovery.isFetchNextPageError ? 'Try loading more again' : 'Load more places'}
+              variant="secondary"
+              loading={discovery.isFetchingNextPage}
+              disabled={discovery.isFetching}
+              onPress={() => { if (!discovery.isFetching) void discovery.fetchNextPage(); }}
+            /> : null}
           </>
         )}
       </ScrollView>
