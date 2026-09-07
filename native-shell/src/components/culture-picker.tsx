@@ -2,10 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Check, Search, X } from 'lucide-react-native';
 
-import { PrimaryButton } from '@/src/components/primary-button';
-import { useCulture } from '@/src/providers/culture-provider';
-import { COUNTRIES } from '@/src/services/culture';
-import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
+import { PrimaryButton } from './primary-button';
+import { useCulture } from '../providers/culture-provider';
+import { COUNTRIES } from '../services/culture';
+import { Colors, Fonts, Spacing } from '../theme/tokens';
 
 const normalize = (value: string) =>
   value
