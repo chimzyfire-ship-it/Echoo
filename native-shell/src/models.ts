@@ -121,6 +121,56 @@ export interface Ticket {
   imageUrl: string | null;
 }
 
+export interface TicketSaleItem {
+  id: string;
+  type: string;
+  title: string;
+  subtitle: string;
+  city: string;
+  imageUrl: string;
+  statusLabel: string;
+  actionLabel: string;
+  detailUrl: string;
+  source: string;
+  startsAt: string | null;
+  priceLabel: string;
+  category: string;
+}
+
+export interface MovieItem {
+  tmdb_id: number;
+  title: string;
+  overview: string;
+  curated_copy?: string | null;
+  curated_mood?: string | null;
+  poster_url?: string | null;
+  backdrop_url?: string | null;
+  trailer_youtube_id?: string | null;
+  has_trailer?: boolean;
+  release_date?: string | null;
+  year?: string | null;
+  vote_average?: number | null;
+  vote_count?: number;
+  genres?: string[];
+  runtime_minutes?: number | null;
+  certification?: string | null;
+  status?: string;
+  is_date_night_pick?: boolean;
+}
+
+export interface CinemaRail {
+  label: string;
+  eyebrow: string;
+  movies: MovieItem[];
+}
+
+export interface CinemaRails {
+  now_playing?: CinemaRail;
+  upcoming?: CinemaRail;
+  trending?: CinemaRail;
+  date_night?: CinemaRail;
+}
+
 export interface EchooProfile {
   userId: string;
   username: string;

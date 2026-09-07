@@ -35,7 +35,12 @@ function AppNavigator() {
   const router = useRouter();
   const segments = useSegments();
   const rootSegment = segments[0] ?? '';
-  const memberRoute = rootSegment === '(tabs)' || rootSegment === 'place' || rootSegment === 'planner';
+  const memberRoute =
+    rootSegment === '(tabs)' ||
+    rootSegment === 'place' ||
+    rootSegment === 'planner' ||
+    rootSegment === 'tickets' ||
+    rootSegment === 'cinema';
 
   useEffect(() => {
     if (!ready) return;
@@ -85,6 +90,8 @@ function AppNavigator() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="place/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="planner" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="tickets" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+      <Stack.Screen name="cinema" options={{ presentation: 'card', animation: 'slide_from_right' }} />
     </Stack>
   );
 }

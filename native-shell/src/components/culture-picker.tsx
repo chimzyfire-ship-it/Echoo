@@ -68,7 +68,7 @@ export function CulturePicker({ visible, onClose }: { visible: boolean; onClose:
         {active ? (
           <View style={styles.activeRow}>
             <View style={styles.activeCopy}>
-              <Text style={styles.activeLabel}>Lens on · {active.label}</Text>
+              <Text style={styles.activeLabel}>{active.flag} Lens on · {active.label}</Text>
               <Text style={styles.activeSub}>Discovery is shaped around {active.label} culture right now.</Text>
             </View>
             <PrimaryButton label="Turn off" variant="secondary" fullWidth={false} onPress={clear} />
@@ -90,8 +90,12 @@ export function CulturePicker({ visible, onClose }: { visible: boolean; onClose:
                 onPress={() => choose(item.slug)}
                 style={({ pressed }) => [styles.row, selected && styles.rowSelected, pressed && styles.pressed]}
               >
+                <Text style={styles.rowFlag}>{item.flag}</Text>
                 <Text style={[styles.rowLabel, selected && styles.rowLabelSelected]}>{item.label}</Text>
-                {selected ? <Check size={17} color={Colors.peach} /> : <Text style={styles.rowCode}>{item.code}</Text>}
+                <View style={styles.rowMeta}>
+                  <Text style={styles.rowCode}>{item.code}</Text>
+                  {selected ? <Check size={16} color={Colors.peach} /> : null}
+                </View>
               </Pressable>
             );
           }}
@@ -216,6 +220,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.peachBorder,
     backgroundColor: Colors.peachSubtle,
   },
+  rowFlag: {
+    fontSize: 20,
+    lineHeight: 24,
+    marginRight: 2,
+  },
   rowLabel: {
     color: Colors.ink,
     fontFamily: Fonts.uiSemiBold,
@@ -226,11 +235,20 @@ const styles = StyleSheet.create({
   rowLabelSelected: {
     color: Colors.peach,
   },
+  rowMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   rowCode: {
     color: Colors.textMuted,
     fontFamily: Fonts.uiSemiBold,
     fontSize: 12,
     fontWeight: '600',
+    backgroundColor: 'rgba(248, 245, 239, 0.05)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   empty: {
     color: Colors.textSecondary,
