@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
-  ArrowUpRight,
   CalendarDays,
   ChevronRight,
   Film,
@@ -209,7 +208,6 @@ export default function HomeScreen() {
                 {greetingForNow()}
                 {displayName ? `,\n${displayName}.` : '.'}
               </Text>
-              <Text style={styles.prompt}>A little less routine. A little more city.</Text>
             </View>
           </View>
 
@@ -217,25 +215,21 @@ export default function HomeScreen() {
           <View style={styles.moods}>
             <MoodAction
               label="Go out"
-              detail="Nightlife nearby"
               imageSource={require('@/assets/moods/go-out.jpg')}
               onPress={() => openDiscover('nightlife')}
             />
             <MoodAction
               label="See a show"
-              detail="Shows and events"
               imageSource={require('@/assets/moods/watch.png')}
               onPress={() => openDiscover('events')}
             />
             <MoodAction
               label="Eat"
-              detail="A table worth leaving for"
               imageSource={require('@/assets/moods/eat.png')}
               onPress={() => openDiscover('food')}
             />
             <MoodAction
               label="Surprise me"
-              detail="One good answer"
               imageSource={require('@/assets/moods/surprise.jpg')}
               accent
               onPress={surprise.start}
@@ -254,7 +248,6 @@ export default function HomeScreen() {
             >
               <TicketIcon size={15} color={Colors.peach} />
               <Text style={styles.quickAccessCardText}>Tickets & Passes</Text>
-              <ArrowUpRight size={13} color={Colors.peachLight} />
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -266,14 +259,12 @@ export default function HomeScreen() {
             >
               <Film size={15} color={Colors.peach} />
               <Text style={styles.quickAccessCardText}>Cinema Room</Text>
-              <ArrowUpRight size={13} color={Colors.peachLight} />
             </Pressable>
           </View>
 
           {/* Featured Place Section matching Inspi */}
           <View style={styles.recommendationSection}>
             <View style={styles.sectionHead}>
-              <Text style={styles.sectionEyebrow}>A GOOD MOVE RIGHT NOW</Text>
               <Text style={styles.sectionTitle}>
                 {timeContext().label === 'tonight' ? 'Tonight, made personal.' : 'One place to start.'}
               </Text>
@@ -385,13 +376,11 @@ export default function HomeScreen() {
 
 function MoodAction({
   label,
-  detail,
   imageSource,
   accent = false,
   onPress,
 }: {
   label: string;
-  detail: string;
   imageSource: ImageSourcePropType;
   accent?: boolean;
   onPress: () => void;
@@ -412,10 +401,8 @@ function MoodAction({
     >
       <Image source={imageSource} style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} resizeMode="cover" />
       <LinearGradient colors={['rgba(15,14,12,0.04)', 'rgba(15,14,12,0.9)']} locations={[0.12, 1]} style={StyleSheet.absoluteFill} />
-      <View style={styles.moodTop}><ArrowUpRight size={18} color={accent ? Colors.peach : Colors.ink} /></View>
       <View style={styles.moodCopy}>
         <Text style={[styles.moodLabel, accent && styles.moodLabelAccent]}>{label}</Text>
-        <Text style={styles.moodDetail}>{detail}</Text>
       </View>
     </Pressable>
   );
@@ -450,13 +437,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
     lineHeight: 37,
   },
-  prompt: {
-    color: 'rgba(248, 245, 239, 0.82)',
-    fontFamily: Fonts.ui,
-    fontSize: 15,
-    fontWeight: '400',
-    letterSpacing: -0.15,
-  },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 20 },
   homeLocation: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
   homeLocationText: { fontFamily: Fonts.uiMedium, color: Colors.peachLight, fontSize: 12, flexShrink: 1 },
@@ -464,11 +444,9 @@ const styles = StyleSheet.create({
   moodAction: { width: '47%', flexGrow: 1, minHeight: 140, overflow: 'hidden', borderRadius: 22, borderCurve: 'continuous', justifyContent: 'flex-end', backgroundColor: '#34302b' },
   moodActionAccent: { borderWidth: 1, borderColor: '#c5a77d' },
   moodActionPressed: { opacity: 0.82, transform: [{ scale: 0.985 }] },
-  moodTop: { position: 'absolute', top: 13, right: 13, backgroundColor: 'rgba(20,19,16,0.5)', width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  moodCopy: { padding: 16, paddingTop: 44, gap: 4 },
+  moodCopy: { padding: 16 },
   moodLabel: { fontFamily: Fonts.display, color: Colors.ink, fontSize: 23, lineHeight: 27, letterSpacing: -0.5 },
   moodLabelAccent: { color: Colors.peachLight },
-  moodDetail: { fontFamily: Fonts.ui, color: '#e1d9cf', fontSize: 12, lineHeight: 17 },
   recommendationSection: {
     gap: 14,
   },
@@ -581,7 +559,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
     minHeight: 46,
     borderRadius: 16,
     backgroundColor: 'rgba(248, 245, 239, 0.04)',
@@ -593,8 +571,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.uiSemiBold,
     fontSize: 12,
     color: Colors.ink,
-    flex: 1,
-    marginLeft: 8,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
