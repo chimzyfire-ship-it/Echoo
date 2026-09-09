@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowUpRight, MapPin, Star } from 'lucide-react-native';
+import { MapPin, Star } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { DiscoveryCard } from '@/src/models';
 import { placeSummary } from '@/src/services/place-summary';
@@ -28,8 +28,12 @@ export function EditorialPlaceCard({ place, onPress, featured = false }: {
             onError={() => setFailedUrl(url)} />
         ) : (
           <LinearGradient colors={['#615447', '#302d29']} style={styles.fallback}>
-            <MapPin size={32} strokeWidth={1} color={Colors.peach} />
-            <Text style={styles.fallbackText}>{place.city}</Text>
+            {!featured ? (
+              <>
+                <MapPin size={32} strokeWidth={1} color={Colors.peach} />
+                <Text style={styles.fallbackText}>{place.city}</Text>
+              </>
+            ) : null}
           </LinearGradient>
         )}
         {featured ? (
@@ -42,7 +46,6 @@ export function EditorialPlaceCard({ place, onPress, featured = false }: {
               <Text style={styles.heroMeta} numberOfLines={2}>{placeSummary(place)}</Text>
               <View style={styles.heroBottom}>
                 <View style={styles.location}><MapPin size={13} color="#e4d8cb" /><Text style={styles.heroMeta}>{location}</Text></View>
-                <View style={styles.arrow}><ArrowUpRight size={20} color="#211e19" /></View>
               </View>
             </View>
           </>
@@ -79,7 +82,6 @@ const styles = StyleSheet.create({
   heroBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   location: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
   heroMeta: { fontFamily: Fonts.ui, fontSize: 13, color: '#e4d8cb', flexShrink: 1 },
-  arrow: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#f1ddbf', alignItems: 'center', justifyContent: 'center' },
   rating: { position: 'absolute', top: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 20, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: 'rgba(20,19,16,0.86)' },
   ratingText: { fontFamily: Fonts.uiSemiBold, fontSize: 11, color: '#fffaf3' },
 });

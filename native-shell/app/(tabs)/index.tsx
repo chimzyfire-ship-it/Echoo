@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
-  CalendarDays,
   ChevronRight,
   Film,
   MapPin,
@@ -14,12 +13,12 @@ import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View }
 
 import { BrandMark } from '@/src/components/brand-mark';
 import { EditorialPlaceCard } from '@/src/components/editorial-place-card';
-import type { DiscoveryCard, DiscoveryFeed, EchooProfile, Ticket } from '@/src/models';
+import type { DiscoveryCard, DiscoveryFeed, EchooProfile } from '@/src/models';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useCulture } from '@/src/providers/culture-provider';
 import { useEchooLocation } from '@/src/providers/location-provider';
 import { useSurprise } from '@/src/providers/surprise-provider';
-import { getDiscovery, getMyTickets } from '@/src/services/api';
+import { getDiscovery } from '@/src/services/api';
 import { cachePlace } from '@/src/services/place-cache';
 import { surpriseScore, timeContext } from '@/src/services/surprise';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
@@ -90,34 +89,6 @@ function pickRecommendation(feed: DiscoveryFeed | undefined, profile: EchooProfi
   })[0];
 }
 
-function ticketTimeLabel(ticket: Ticket) {
-  if (!ticket.startsAt) return ticket.city || 'Date to be confirmed';
-  const date = new Date(ticket.startsAt);
-  if (!Number.isFinite(date.getTime())) return ticket.city || 'Date to be confirmed';
-  return new Intl.DateTimeFormat('en-CA', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
-}
-
-function upcomingTicket(tickets: Ticket[] | undefined) {
-  if (!tickets?.length) return null;
-  const now = Date.now();
-  return (
-    tickets
-      .filter((ticket) => ticket.status.toLowerCase() !== 'cancelled')
-      .sort((left, right) => {
-        const leftTime = left.startsAt ? new Date(left.startsAt).getTime() : Number.MAX_SAFE_INTEGER;
-        const rightTime = right.startsAt ? new Date(right.startsAt).getTime() : Number.MAX_SAFE_INTEGER;
-        return leftTime - rightTime;
-      })
-      .find((ticket) => !ticket.startsAt || new Date(ticket.startsAt).getTime() >= now) ?? null
-  );
-}
-
 export default function HomeScreen() {
   const router = useRouter();
   const { user, profile } = useAuth();
@@ -133,7 +104,6 @@ export default function HomeScreen() {
     ...(profile?.motivations ?? []),
   ].join('|');
   const recommendationQuery = homeQuery(profile, culture?.label);
-  const ticketEmail = profile?.email || user?.email || '';
 
   const discovery = useQuery({
     queryKey: [
@@ -157,15 +127,7 @@ export default function HomeScreen() {
       ),
   });
 
-  const tickets = useQuery({
-    queryKey: ['my-tickets', ticketEmail],
-    enabled: Boolean(ticketEmail),
-    queryFn: ({ signal }) => getMyTickets(ticketEmail, signal),
-    staleTime: 60_000,
-  });
-
   const recommendation = pickRecommendation(discovery.data, profile);
-  const nextTicket = upcomingTicket(tickets.data);
   const displayName = profile?.displayName?.trim().split(/\s+/)[0] || '';
 
   function openDiscover(intent: BrowseIntent) {
@@ -300,72 +262,6 @@ export default function HomeScreen() {
                   <ChevronRight size={16} color={Colors.background} />
                 </Pressable>
               </View>
-            )}
-          </View>
-
-          {/* Upcoming Event Pass or Ticket Hub */}
-          <View style={styles.eveningSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionEyebrow}>YOUR EVENING & PASSES</Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  void triggerHaptic.light();
-                  router.push('/tickets');
-                }}
-                style={styles.quickHubLink}
-              >
-                <Text style={styles.quickHubText}>Tickets Hub</Text>
-                <ChevronRight size={13} color={Colors.peach} />
-              </Pressable>
-            </View>
-
-            {nextTicket ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Open your pass for ${nextTicket.eventTitle || 'your Echoo event'}`}
-                onPress={() => {
-                  void triggerHaptic.light();
-                  router.push('/tickets');
-                }}
-                style={({ pressed }) => [styles.ticketRow, pressed && styles.ticketPressed]}
-              >
-                <View style={styles.ticketIcon}>
-                  <CalendarDays size={18} color={Colors.peach} />
-                </View>
-                <View style={styles.ticketCopy}>
-                  <Text style={styles.ticketTitle} numberOfLines={1}>
-                    {nextTicket.eventTitle || 'Echoo event'}
-                  </Text>
-                  <Text style={styles.ticketMeta} numberOfLines={1}>
-                    {ticketTimeLabel(nextTicket)}
-                    {nextTicket.venueName ? ` · ${nextTicket.venueName}` : ''}
-                  </Text>
-                </View>
-                <ChevronRight size={18} color={Colors.textMuted} />
-              </Pressable>
-            ) : (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  void triggerHaptic.light();
-                  router.push('/tickets');
-                }}
-                style={({ pressed }) => [styles.ticketRow, pressed && styles.ticketPressed]}
-              >
-                <View style={styles.ticketIcon}>
-                  <TicketIcon size={18} color={Colors.peach} />
-                </View>
-                <View style={styles.ticketCopy}>
-                  <Text style={styles.ticketTitle} numberOfLines={1}>
-                    Live Show Drops & Passes
-                  </Text>
-                  <Text style={styles.ticketMeta} numberOfLines={1}>
-                    Priority event allocations & your order passes
-                  </Text>
-                </View>
-                <ChevronRight size={18} color={Colors.textMuted} />
-              </Pressable>
             )}
           </View>
         </ScrollView>
@@ -508,48 +404,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  eveningSection: {
-    gap: 12,
-  },
-  ticketRow: {
-    minHeight: 74,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.10)',
-    backgroundColor: 'rgba(24, 22, 21, 0.85)',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  ticketPressed: {
-    opacity: 0.72,
-  },
-  ticketIcon: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: Colors.peachSubtle,
-  },
-  ticketCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  ticketTitle: {
-    color: Colors.ink,
-    fontFamily: Fonts.uiSemiBold,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  ticketMeta: {
-    color: Colors.textMuted,
-    fontFamily: Fonts.ui,
-    fontSize: 12,
-  },
   quickAccessRow: {
     flexDirection: 'row',
     gap: 10,
@@ -571,25 +425,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.uiSemiBold,
     fontSize: 12,
     color: Colors.ink,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  quickHubLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(247, 213, 178, 0.08)',
-  },
-  quickHubText: {
-    fontFamily: Fonts.uiSemiBold,
-    fontSize: 11,
-    color: Colors.peach,
   },
   pressed: {
     opacity: 0.75,
