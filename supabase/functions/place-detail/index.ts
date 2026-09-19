@@ -5,6 +5,7 @@ import {
   logLocationEvent,
   sha256Hex,
 } from "../_shared/location.ts";
+import { findNearbyParking } from "../_shared/parking.ts";
 
 const GOOGLE_PHOTO_LIMIT = 6;
 const GOOGLE_LOOKUPS_PER_MINUTE = 12;
@@ -452,8 +453,11 @@ async function loadLiveGooglePhotos(
       },
     },
   );
-  if (!response.ok)
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    console.warn("Google Places photo fetch failed:", response.status, errorBody);
     return { photos: [], status: "provider_error", clientKey: rate.clientKey };
+  }
   const payload = await response.json();
   const photos = await Promise.all(
     (payload.photos || [])
@@ -536,6 +540,7 @@ Deno.serve(async (req) => {
       relatedEvents,
       alternatives,
       pulseFacts,
+      parking,
     ] = await Promise.all([
       supabase
         .from("place_profiles")
@@ -595,6 +600,13 @@ Deno.serve(async (req) => {
         .order("confidence_score", { ascending: false })
         .order("observed_at", { ascending: false })
         .limit(6),
+      findNearbyParking(
+        supabase,
+        Number(place.latitude),
+        Number(place.longitude),
+        2000,
+        4,
+      ),
     ]);
 
     for (const result of [
@@ -680,6 +692,7 @@ Deno.serve(async (req) => {
           photos: displayPhotos,
           relatedEvents: relatedEvents.data || [],
           alternatives: nearbyAlternatives,
+          parking: parking || [],
           pulse: {
             items: pulse,
             policy: "evidence_first_v1",
