@@ -104,6 +104,85 @@
     return `${distance.toFixed(distance < 10 ? 1 : 0)} km away`;
   }
 
+  const TORONTO_GREEN_P = [
+    { carparkNumber: "52", name: "Green P Carpark 52", address: "40 Richmond St W", latitude: 43.6514, longitude: -79.3813, capacity: 245, facilityType: "underground", rateSummary: "$3.50 / 30 mins · Night Max $9" },
+    { carparkNumber: "36", name: "Green P Carpark 36 (Nathan Phillips Sq)", address: "110 Queen St W", latitude: 43.6525, longitude: -79.3835, capacity: 2024, facilityType: "underground", rateSummary: "$3.50 / 30 mins · Night Max $9" },
+    { carparkNumber: "68", name: "Green P Carpark 68", address: "111 Peter St", latitude: 43.6477, longitude: -79.3916, capacity: 184, facilityType: "garage", rateSummary: "$4.00 / 30 mins · Night Max $12" },
+    { carparkNumber: "260", name: "Green P Carpark 260 (TIFF Lightbox)", address: "25 Mercer St", latitude: 43.6468, longitude: -79.3888, capacity: 110, facilityType: "underground", rateSummary: "$4.00 / 30 mins · Night Max $12" },
+    { carparkNumber: "235", name: "Green P Carpark 235", address: "85 Mercer St", latitude: 43.6465, longitude: -79.3905, capacity: 140, facilityType: "underground", rateSummary: "$4.00 / 30 mins · Night Max $12" },
+    { carparkNumber: "204", name: "Green P Carpark 204", address: "106 Spadina Ave", latitude: 43.6482, longitude: -79.3965, capacity: 95, facilityType: "surface", rateSummary: "$3.50 / 30 mins · Night Max $9" },
+    { carparkNumber: "122", name: "Green P Carpark 122", address: "461 King St W", latitude: 43.6449, longitude: -79.3989, capacity: 155, facilityType: "surface", rateSummary: "$4.00 / 30 mins · Night Max $12" },
+    { carparkNumber: "26", name: "Green P Carpark 26", address: "33 Soho St", latitude: 43.6508, longitude: -79.3941, capacity: 160, facilityType: "surface", rateSummary: "$3.00 / 30 mins · Night Max $8" },
+    { carparkNumber: "59", name: "Green P Carpark 59 (OCAD / AGO)", address: "73 McCaul St", latitude: 43.6534, longitude: -79.3912, capacity: 210, facilityType: "underground", rateSummary: "$3.25 / 30 mins · Night Max $8" },
+    { carparkNumber: "217", name: "Green P Carpark 217", address: "121 St. Patrick St", latitude: 43.6528, longitude: -79.3891, capacity: 130, facilityType: "surface", rateSummary: "$3.25 / 30 mins · Night Max $8.50" },
+    { carparkNumber: "70", name: "Green P Carpark 70 (Opera House)", address: "360 University Ave", latitude: 43.6517, longitude: -79.3871, capacity: 280, facilityType: "underground", rateSummary: "$3.50 / 30 mins · Night Max $9" },
+    { carparkNumber: "64", name: "Green P Carpark 64 (Union Station)", address: "31 A Station St", latitude: 43.6448, longitude: -79.3839, capacity: 640, facilityType: "garage", rateSummary: "$4.25 / 30 mins · Night Max $12" },
+    { carparkNumber: "236", name: "Green P Carpark 236", address: "45 The Esplanade", latitude: 43.6471, longitude: -79.3752, capacity: 512, facilityType: "garage", rateSummary: "$3.75 / 30 mins · Night Max $10" },
+    { carparkNumber: "43", name: "Green P Carpark 43 (St. Lawrence)", address: "2 Church St", latitude: 43.6487, longitude: -79.3736, capacity: 2011, facilityType: "garage", rateSummary: "$3.25 / 30 mins · Night Max $9" },
+    { carparkNumber: "13", name: "Green P Carpark 13 (Yonge & Dundas)", address: "250 Victoria St", latitude: 43.656, longitude: -79.3792, capacity: 450, facilityType: "garage", rateSummary: "$3.50 / 30 mins · Night Max $10" },
+    { carparkNumber: "215", name: "Green P Carpark 215", address: "34 Elm St", latitude: 43.6571, longitude: -79.3838, capacity: 175, facilityType: "surface", rateSummary: "$3.50 / 30 mins · Night Max $9" },
+    { carparkNumber: "29", name: "Green P Carpark 29 (Kensington)", address: "20 St. Andrew St", latitude: 43.6542, longitude: -79.4005, capacity: 420, facilityType: "garage", rateSummary: "$2.75 / 30 mins · Night Max $7" },
+    { carparkNumber: "221", name: "Green P Carpark 221", address: "15 Dennison Ave", latitude: 43.6526, longitude: -79.4035, capacity: 88, facilityType: "surface", rateSummary: "$2.50 / 30 mins · Night Max $6" },
+    { carparkNumber: "130", name: "Green P Carpark 130 (Ossington)", address: "106 Ossington Ave", latitude: 43.6478, longitude: -79.4198, capacity: 72, facilityType: "surface", rateSummary: "$2.75 / 30 mins · Night Max $7" },
+    { carparkNumber: "191", name: "Green P Carpark 191 (Bellwoods)", address: "164 Bellwoods Ave", latitude: 43.6504, longitude: -79.4128, capacity: 55, facilityType: "surface", rateSummary: "$2.50 / 30 mins · Night Max $6" },
+    { carparkNumber: "144", name: "Green P Carpark 144 (West Queen West)", address: "1100 Queen St W", latitude: 43.6436, longitude: -79.4215, capacity: 64, facilityType: "surface", rateSummary: "$2.75 / 30 mins · Night Max $7" },
+    { carparkNumber: "142", name: "Green P Carpark 142 (Parkdale)", address: "1325 Queen St W", latitude: 43.6397, longitude: -79.4352, capacity: 82, facilityType: "surface", rateSummary: "$2.25 / 30 mins · Night Max $5" },
+    { carparkNumber: "256", name: "Green P Carpark 256 (Distillery)", address: "37 Parliament St", latitude: 43.6508, longitude: -79.3592, capacity: 350, facilityType: "surface", rateSummary: "$3.50 / 30 mins · Night Max $10" },
+    { carparkNumber: "84", name: "Green P Carpark 84 (Corktown)", address: "512 King St E", latitude: 43.654, longitude: -79.3582, capacity: 90, facilityType: "surface", rateSummary: "$2.75 / 30 mins · Night Max $6" },
+    { carparkNumber: "1", name: "Green P Carpark 1 (Yonge & Bloor)", address: "20 Charles St E", latitude: 43.6687, longitude: -79.3854, capacity: 480, facilityType: "garage", rateSummary: "$3.75 / 30 mins · Night Max $10" },
+    { carparkNumber: "2", name: "Green P Carpark 2 (Yorkville)", address: "74 Yorkville Ave", latitude: 43.6706, longitude: -79.3907, capacity: 290, facilityType: "garage", rateSummary: "$4.25 / 30 mins · Night Max $12" },
+    { carparkNumber: "65", name: "Green P Carpark 65 (ROM / Bloor)", address: "15 Bedford Rd", latitude: 43.6698, longitude: -79.3968, capacity: 250, facilityType: "garage", rateSummary: "$4.00 / 30 mins · Night Max $10" },
+    { carparkNumber: "15", name: "Green P Carpark 15 (Wellesley)", address: "15 Wellesley St E", latitude: 43.6653, longitude: -79.3837, capacity: 312, facilityType: "underground", rateSummary: "$3.00 / 30 mins · Night Max $8" },
+    { carparkNumber: "208", name: "Green P Carpark 208 (Annex)", address: "184 Harbord St", latitude: 43.6608, longitude: -79.4082, capacity: 65, facilityType: "surface", rateSummary: "$2.50 / 30 mins · Night Max $6" },
+    { carparkNumber: "180", name: "Green P Carpark 180 (Harbourfront)", address: "100 Cooper St", latitude: 43.6432, longitude: -79.3734, capacity: 320, facilityType: "surface", rateSummary: "$4.00 / 30 mins · Night Max $14" },
+    { carparkNumber: "200", name: "Green P Carpark 200 (Queens Quay)", address: "200 Queens Quay W", latitude: 43.6391, longitude: -79.3831, capacity: 410, facilityType: "underground", rateSummary: "$4.00 / 30 mins · Night Max $14" },
+    { carparkNumber: "230", name: "Green P Carpark 230 (High Park)", address: "2196 Bloor St W", latitude: 43.6511, longitude: -79.4751, capacity: 120, facilityType: "surface", rateSummary: "$2.25 / 30 mins · Night Max $5" },
+    { carparkNumber: "28", name: "Green P Carpark 28 (Humber Bay)", address: "15 Marine Parade Dr", latitude: 43.6264, longitude: -79.4795, capacity: 180, facilityType: "surface", rateSummary: "$2.00 / 30 mins · Night Max $5" },
+    { carparkNumber: "111", name: "Green P Carpark 111 (Midtown)", address: "30 Alvin Ave", latitude: 43.6888, longitude: -79.3934, capacity: 140, facilityType: "garage", rateSummary: "$3.00 / 30 mins · Night Max $7" },
+    { carparkNumber: "227", name: "Green P Carpark 227 (Wychwood)", address: "125 Burnside Dr", latitude: 43.6795, longitude: -79.423, capacity: 60, facilityType: "surface", rateSummary: "$2.00 / 30 mins · Night Max $5" },
+  ];
+
+  function haversineMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c);
+  }
+
+  function resolveNearbyParking(detail = {}) {
+    if (Array.isArray(detail?.parking) && detail.parking.length > 0) {
+      return detail.parking;
+    }
+    const place = detail?.place || {};
+    const lat = Number(place.latitude);
+    const lng = Number(place.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return [];
+
+    const candidates = TORONTO_GREEN_P.map((item) => {
+      const dist = haversineMeters(lat, lng, item.latitude, item.longitude);
+      const walkMin = Math.max(1, Math.round(dist / 80));
+      return {
+        ...item,
+        distanceMeters: dist,
+        walkingMinutes: walkMin,
+        googleMapsUrl: `https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}`,
+        appleMapsUrl: `https://maps.apple.com/?daddr=${item.latitude},${item.longitude}`,
+      };
+    })
+      .filter((item) => item.distanceMeters <= 2000)
+      .sort((a, b) => a.distanceMeters - b.distanceMeters);
+
+    return candidates.slice(0, 3);
+  }
+
   // Resolves the member's location once per page load when a place view opens
   // without a usable fix, then persists it through the session-scoped location
   // platform so every later distance renders instantly.
@@ -447,6 +526,8 @@
     const pulseItems = pulseItemsFor(detail);
     const quickPlanMessage = `Make me a quick plan around ${title || "this place"}.`;
     const invitationPlaceId = cleanText(place.id || place.place_id);
+    const parkingList = resolveNearbyParking(detail);
+    const primaryParking = parkingList[0] || null;
 
     setTimeout(() => {
       bindGalleryInteractions();
@@ -454,6 +535,7 @@
       bindRouteInteractions();
       bindStayInteractions();
       bindUberInteractions();
+      bindParkingInteractions();
       bindInviteInteractions();
       bindCheckinInteractions();
     }, 0);
@@ -598,6 +680,80 @@
               <button type="button" class="echoo-uber-button" data-echoo-uber-href="${escapeHtml(uberHref)}" aria-label="Open Uber for ${escapeHtml(title || "this place")}">
                 <span>Open</span><svg aria-hidden="true" viewBox="0 0 16 16" focusable="false"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5"/></svg>
               </button>
+            </section>
+          `
+              : ""
+          }
+
+          ${
+            primaryParking
+              ? `
+            <section class="echoo-place-section echoo-parking-section" aria-label="Nearby Parking">
+              <div class="echoo-parking-header">
+                <div class="echoo-parking-header-title">
+                  <span class="echoo-parking-badge" aria-hidden="true">P</span>
+                  <div>
+                    <p class="echoo-place-eyebrow">Nearby Parking</p>
+                    <span class="echoo-parking-provider">Toronto Green P</span>
+                  </div>
+                </div>
+                <span class="echoo-parking-meta-tag">${escapeHtml(primaryParking.walkingMinutes)} min walk</span>
+              </div>
+
+              <div class="echoo-parking-card">
+                <div class="echoo-parking-card-body">
+                  <div class="echoo-parking-main-info">
+                    <strong class="echoo-parking-name">${escapeHtml(primaryParking.name)}</strong>
+                    <p class="echoo-parking-address">${escapeHtml(primaryParking.address)} · <span class="echoo-parking-dist">${escapeHtml(primaryParking.distanceMeters < 1000 ? `${primaryParking.distanceMeters} m` : `${(primaryParking.distanceMeters / 1000).toFixed(1)} km`)} away</span></p>
+                  </div>
+                  ${
+                    primaryParking.rateSummary
+                      ? `<div class="echoo-parking-rate-pill">${escapeHtml(primaryParking.rateSummary)}</div>`
+                      : ""
+                  }
+                </div>
+
+                <div class="echoo-parking-actions">
+                  <button
+                    type="button"
+                    class="echoo-parking-btn"
+                    data-parking-nav
+                    data-parking-apple="${escapeHtml(primaryParking.appleMapsUrl)}"
+                    data-parking-google="${escapeHtml(primaryParking.googleMapsUrl)}"
+                    data-parking-lat="${escapeHtml(String(primaryParking.latitude))}"
+                    data-parking-lng="${escapeHtml(String(primaryParking.longitude))}"
+                    data-parking-name="${escapeHtml(primaryParking.name)}"
+                    aria-label="Directions to ${escapeHtml(primaryParking.name)}"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    <span>Directions to Parking</span>
+                  </button>
+                </div>
+
+                ${
+                  parkingList.length > 1
+                    ? `
+                  <div class="echoo-parking-alternatives">
+                    <span class="echoo-parking-alt-title">More spots nearby</span>
+                    ${parkingList
+                      .slice(1, 3)
+                      .map(
+                        (alt) => `
+                      <div class="echoo-parking-alt-row">
+                        <div class="echoo-parking-alt-info">
+                          <span class="echoo-parking-alt-name">${escapeHtml(alt.name)}</span>
+                          <span class="echoo-parking-alt-sub">${escapeHtml(alt.distanceMeters < 1000 ? `${alt.distanceMeters}m` : `${(alt.distanceMeters / 1000).toFixed(1)}km`)} · ${escapeHtml(alt.walkingMinutes)}m walk${alt.rateSummary ? ` · ${escapeHtml(alt.rateSummary.split("·")[0].trim())}` : ""}</span>
+                        </div>
+                        <a href="${escapeHtml(alt.appleMapsUrl)}" target="_blank" rel="noopener noreferrer" class="echoo-parking-alt-link">Map ↗</a>
+                      </div>
+                    `,
+                      )
+                      .join("")}
+                  </div>
+                `
+                    : ""
+                }
+              </div>
             </section>
           `
               : ""
@@ -865,12 +1021,29 @@
     });
   }
 
+  function bindParkingInteractions() {
+    document.querySelectorAll("[data-parking-nav]").forEach((button) => {
+      button.onclick = () => {
+        const apple = button.getAttribute("data-parking-apple");
+        const google = button.getAttribute("data-parking-google");
+        const isAppleDevice = /(Mac|iPhone|iPod|iPad)/i.test(
+          navigator.userAgent || "",
+        );
+        const targetUrl = isAppleDevice ? apple || google : google || apple;
+        if (targetUrl) {
+          window.open(targetUrl, "_blank", "noopener,noreferrer");
+        }
+      };
+    });
+  }
+
   window.EchooPlaceDetail = {
     bindGalleryInteractions,
     bindQuickPlanInteractions,
     bindRouteInteractions,
     bindStayInteractions,
     bindUberInteractions,
+    bindParkingInteractions,
     bindInviteInteractions,
     bindCheckinInteractions,
     escapeHtml,
@@ -879,6 +1052,7 @@
     pulseItemsFor,
     renderPlaceDetail,
     renderUnavailablePlaceDetail,
+    resolveNearbyParking,
     verifiedPhotos,
   };
 })();
