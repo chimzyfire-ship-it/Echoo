@@ -18,7 +18,7 @@ import {
   type PickedImage,
   uploadProfilePhoto,
 } from '@/src/services/auth';
-import { GTA_MUNICIPALITIES } from '@/src/services/location';
+import { searchGtaMunicipalities } from '@/src/services/location';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
 
 const toggle = (values: string[], value: string) =>
@@ -326,9 +326,7 @@ export default function OnboardingScreen() {
   const photoUri = photo?.uri || profile?.photoUrl || null;
   const current = OB_STEPS[step];
   const isLast = step === OB_STEPS.length - 1;
-  const filteredCities = GTA_MUNICIPALITIES.filter((city) =>
-    city.name.toLowerCase().includes(citySearch.trim().toLowerCase())
-  );
+  const filteredCities = searchGtaMunicipalities(citySearch);
 
   return (
     <ScrollView

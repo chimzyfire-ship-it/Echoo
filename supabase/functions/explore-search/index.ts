@@ -1,9 +1,11 @@
+import { providerFailure, type ProviderFailure } from "../_shared/provider-status.ts";
+import { specificSearchTerm, discoveryUnderstanding } from "../_shared/planning-intent.ts";
 import {
   CORS_HEADERS,
   clampRadiusMeters,
-  GTA_REGION,
   getSupabaseAdmin,
-  isInsideGtaBounds,
+  resolveOntarioGps,
+  ONTARIO_REGION,
   jsonResponse,
   normalizeCityName,
   readLocationCache,
@@ -47,6 +49,7 @@ type OwnedResult = Record<string, any>;
 type LiveSearchResponse = {
   results: Array<Record<string, any>>;
   nextPageToken: string | null;
+  failure?: ProviderFailure;
 };
 
 function stringArray(value: unknown, max = 8) {
@@ -58,36 +61,6 @@ function stringArray(value: unknown, max = 8) {
         .filter(Boolean),
     ),
   ].slice(0, max);
-}
-
-async function resolveGpsCity(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
-  lat: number,
-  lng: number,
-) {
-  // A municipality is a legal boundary, not the closest city centre. The
-  // fallback deliberately remains GTA-wide until the official polygon resolver
-  // can name a municipality with confidence.
-  try {
-    const { data, error } = await supabase.rpc("resolve_gta_municipality", {
-      p_lat: lat,
-      p_lng: lng,
-    });
-    if (error) throw error;
-    const match = (Array.isArray(data) ? data[0] : null) as {
-      municipality?: string;
-    } | null;
-    const municipality = normalizeCityName(match?.municipality);
-    if (municipality?.coverageLevel === "municipality") {
-      return { ...municipality, resolution: "boundary" as const };
-    }
-  } catch (error) {
-    console.warn(
-      "Explore municipality resolver unavailable:",
-      cleanDiscoveryText((error as Error)?.message, 160),
-    );
-  }
-  return { ...GTA_REGION, resolution: "gta_fallback" as const };
 }
 
 function asBoolean(value: unknown, fallback: boolean) {
@@ -243,29 +216,7 @@ function normalizedLiveQuery(query: string, category: string | null) {
 // broad intents to the catalogue's canonical category word instead of asking
 // it to match an entire sentence such as "food dinner date night".
 function ownedInventoryQuery(query: string) {
-  const text = normalizedLiveQuery(query, null).toLowerCase();
-  // “Trending” is a browse mode, not a literal venue name. Leaving it as a
-  // text predicate would hide the whole owned catalogue unless a place happened
-  // to contain the word “popular” in its title or description.
-  if (discoveryTermPattern("trending|popular|things to do").test(text))
-    return "";
-  if (
-    discoveryTermPattern(
-      "restaurant|food|dining|eat|brunch|lunch|dinner|tasting|bakery",
-    ).test(text)
-  )
-    return "restaurant";
-  if (discoveryTermPattern("cafe|coffee|espresso").test(text)) return "cafe";
-  if (discoveryTermPattern("bar|pub|nightlife|lounge").test(text)) return "bar";
-  if (discoveryTermPattern("park|nature|trail|outdoor|walk").test(text))
-    return "park";
-  if (
-    discoveryTermPattern("museum|gallery|tourism|landmark|attraction").test(
-      text,
-    )
-  )
-    return "museum";
-  return text;
+  return specificSearchTerm(normalizedLiveQuery(query, null));
 }
 
 function metersBetween(
@@ -521,8 +472,8 @@ function liveType(query: string, category: string | null) {
   if (discoveryTermPattern("bars?|pubs?").test(normalized)) return "bar";
   if (discoveryTermPattern("parks?|trails?").test(normalized)) return "park";
   if (discoveryTermPattern("libraries?").test(normalized)) return "library";
-  if (discoveryTermPattern("museums?|galleries?").test(normalized))
-    return "museum";
+  if (discoveryTermPattern("galler(?:y|ies)").test(normalized)) return "art_gallery";
+  if (discoveryTermPattern("museums?").test(normalized)) return "museum";
   return null;
 }
 
@@ -539,7 +490,8 @@ async function googleLiveSearch(input: {
   const key =
     Deno.env.get("GOOGLE_PLACES_API_KEY") ||
     Deno.env.get("GOOGLE_MAPS_API_KEY");
-  if (!key || !input.query) return { results: [], nextPageToken: null };
+  if (!key) return { results: [], nextPageToken: null, failure: "not_configured" };
+  if (!input.query) return { results: [], nextPageToken: null };
   const body: Record<string, unknown> = {
     textQuery: `${normalizedLiveQuery(input.query, input.category)} in ${input.city || "Greater Toronto Area"}, Ontario`,
     pageSize: Math.min(Math.max(input.limit, 1), 20),
@@ -575,7 +527,7 @@ async function googleLiveSearch(input: {
           "Content-Type": "application/json",
           "X-Goog-Api-Key": key,
           "X-Goog-FieldMask":
-            "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.googleMapsUri,places.photos,places.rating,places.userRatingCount",
+            "places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.types,places.googleMapsUri,places.photos,places.rating,places.userRatingCount",
         },
         body: JSON.stringify(body),
       },
@@ -586,15 +538,19 @@ async function googleLiveSearch(input: {
       "Explore Google fallback timed out:",
       cleanDiscoveryText((error as Error)?.message, 160),
     );
-    return { results: [], nextPageToken: null };
+    return { results: [], nextPageToken: null, failure: "timeout" };
   }
   if (!response.ok) {
-    console.warn("Explore Google fallback failed:", await response.text());
-    return { results: [], nextPageToken: null };
+    const failure = await providerFailure(response);
+    console.warn("Explore Google fallback failed", { status: response.status, failure });
+    return { results: [], nextPageToken: null, failure };
   }
   const data = await response.json();
   const results = await Promise.all(
-    (data.places || []).map(async (place: any) => {
+    (data.places || []).filter((place: any) => {
+      const component = (type: string) => place.addressComponents?.find((item: any) => item.types?.includes(type));
+      return component('country')?.shortText === 'CA' && component('administrative_area_level_1')?.shortText === 'ON';
+    }).map(async (place: any) => {
       const latitude = optionalDiscoveryNumber(place.location?.latitude);
       const longitude = optionalDiscoveryNumber(place.location?.longitude);
       const photoName = cleanDiscoveryText(place.photos?.[0]?.name, 500);
@@ -637,7 +593,7 @@ async function googleLiveSearch(input: {
           "place",
         description: cleanDiscoveryText(place.formattedAddress, 300),
         address: cleanDiscoveryText(place.formattedAddress, 300),
-        city: input.city,
+        city: place.addressComponents?.find((item: any) => item.types?.includes('locality'))?.longText || input.city,
         latitude,
         longitude,
         distanceMeters: metersBetween(
@@ -654,7 +610,7 @@ async function googleLiveSearch(input: {
               authors: photoAuthors,
             }
           : null,
-        features: [],
+        features: (place.types || []).map((type: string) => type.replaceAll("_", " ")),
         community:
           ratingAverage === undefined
             ? null
@@ -931,7 +887,7 @@ async function v2ExploreResponse(input: {
   const sqlQuery = intent.id === "search" ? inventoryQuery || query : null;
   const cacheKey = await sha256Hex(
     JSON.stringify({
-      v: 5,
+      v: 6,
       intent: intent.id,
       query: sqlQuery?.toLowerCase() || null,
       city: cityFilter,
@@ -1014,6 +970,7 @@ async function v2ExploreResponse(input: {
   let nearby: Record<string, any>[] = [];
   let recommended: Record<string, any>[] = [];
   let liveCount = 0;
+  let liveSearchFailure: ProviderFailure | undefined;
 
   if (isInitialPage) {
     const primaryCards = primaryRows.slice(0, 24).map(ownedCard);
@@ -1039,12 +996,13 @@ async function v2ExploreResponse(input: {
       hydrateOwnedCardPhotos(req, supabase, ownedCurated),
     ]);
     liveCount = live.results.length;
+    liveSearchFailure = (live as LiveSearchResponse).failure;
     const hydratedByKey = new Map(
       hydratedOwned.map((card) => [cardIdentityKey(card), card]),
     );
     const hydrated = (card: Record<string, any>) =>
       hydratedByKey.get(cardIdentityKey(card)) || card;
-    allCards = allCards.map(hydrated);
+    allCards = uniqueDiscoveryResults([...allCards.map(hydrated), ...live.results]);
     const nearbyCandidates = [
       ...localNearbyCards.map(hydrated),
       ...live.results,
@@ -1096,20 +1054,21 @@ async function v2ExploreResponse(input: {
     intent: { id: intent.id, label: intent.label },
     location: {
       mode: locationMode,
-      label: locationLabel,
+      label: hasCoordinates && city.name !== 'Ontario' ? `Near you in ${city.name}` : locationLabel,
       city: city.name,
       province: "Ontario",
       radiusMeters: hasCoordinates ? radiusMeters : null,
       resolution:
         city.resolution || (hasCoordinates ? "gta_fallback" : "manual_city"),
-      scope: cityFilter ? "municipality" : "gta_region",
+      scope: cityFilter ? "municipality" : hasCoordinates ? "ontario_nearby" : "gta_region",
     },
     nearby: v2Lane(nearby),
     recommended: v2Lane(recommended),
-    all: v2Lane(allCards, nextCursor),
+    all: v2Lane(allCards.map(presentV2Card), nextCursor),
     meta: {
       ownedResultCount: allRows.length,
       liveCuratedResultCount: liveCount,
+      liveSearch: liveSearchFailure ? { status: "unavailable", reason: liveSearchFailure } : { status: isInitialPage && includeLiveFallback ? "available" : "not_requested" },
       registeredResultCount: allCards.filter(
         (item: any) => item.placement?.sponsored,
       ).length,
@@ -1137,7 +1096,7 @@ Deno.serve(async (req) => {
       });
     }
     const apiVersion = Number(get("version")) === 2 ? 2 : 1;
-    const query = cleanDiscoveryText(get("query"), 120);
+    const query = cleanDiscoveryText(get("query"), 240);
     // Keep typo tolerance consistent across Echoo inventory and live places.
     // Without this, "resturants" reached Google correctly but missed Echoo's
     // own search index entirely.
@@ -1146,21 +1105,28 @@ Deno.serve(async (req) => {
     const intent = resolveDiscoveryIntent(get("intent"), searchQuery);
     const lat = optionalDiscoveryNumber(get("lat"));
     const lng = optionalDiscoveryNumber(get("lng"));
+    if ((get('lat') != null && get('lat') !== '' && lat === undefined) ||
+        (get('lng') != null && get('lng') !== '' && lng === undefined)) {
+      return jsonResponse({ error: 'Coordinates must be finite numbers' }, 422);
+    }
     if ((lat === undefined) !== (lng === undefined))
       return jsonResponse(
         { error: "lat and lng must be provided together" },
         422,
       );
+    const gpsContext = lat !== undefined && lng !== undefined
+      ? await resolveOntarioGps(supabase, lat, lng)
+      : undefined;
     if (
       lat !== undefined &&
       lng !== undefined &&
-      !isInsideGtaBounds(lat, lng)
+      !gpsContext
     ) {
       if (apiVersion === 2) {
         return jsonResponse({
           version: 2,
           supported: false,
-          reason: "outside_gta",
+          reason: "outside_ontario",
           location: null,
           nearby: v2Lane([]),
           recommended: v2Lane([]),
@@ -1170,7 +1136,7 @@ Deno.serve(async (req) => {
       return jsonResponse(
         {
           supported: false,
-          reason: "outside_gta",
+          reason: "outside_ontario",
           results: [],
           nextCursor: null,
         },
@@ -1181,7 +1147,7 @@ Deno.serve(async (req) => {
     const suppliedCity = cleanDiscoveryText(get("city"), 80);
     const city =
       lat !== undefined && lng !== undefined
-        ? await resolveGpsCity(supabase, lat, lng)
+        ? { ...ONTARIO_REGION, name: gpsContext?.municipality || 'Ontario', resolution: 'province_verified' }
         : normalizeCityName(suppliedCity || "GTA");
     if (!city) {
       if (apiVersion === 2) {
@@ -1267,7 +1233,7 @@ Deno.serve(async (req) => {
         : null;
     if (apiVersion === 2) {
       return jsonResponse(
-        await v2ExploreResponse({
+        { ...await v2ExploreResponse({
           req,
           supabase,
           query: searchQuery,
@@ -1285,12 +1251,12 @@ Deno.serve(async (req) => {
           limit,
           cursor,
           includeLiveFallback: asBoolean(get("includeLiveFallback"), true),
-        }),
+        }), understanding: intent.id === "search" ? discoveryUnderstanding(searchQuery) : undefined },
       );
     }
     const cacheKey = await sha256Hex(
       JSON.stringify({
-        v: 4,
+        v: 5,
         query: searchQuery.toLowerCase(),
         inventoryQuery,
         city: cityFilter,
@@ -1394,7 +1360,7 @@ Deno.serve(async (req) => {
       locationResolution:
         (city as { resolution?: string }).resolution ||
         (lat === undefined ? "manual_city" : "gta_fallback"),
-      searchScope: cityFilter ? "municipality" : "gta_region",
+      searchScope: cityFilter ? "municipality" : lat !== undefined ? "ontario_nearby" : "gta_region",
       results: visualResults,
       ownedResultCount: page.length,
       registeredResultCount: ownedCards.filter(

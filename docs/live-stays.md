@@ -59,3 +59,42 @@ The UI checks the destination's time zone, not the user's device time.
 Both are already used by the existing Google Places photo path. Keep the
 Google key server-side, restrict it to the Places API, and set a Google Cloud
 budget alert before broadening the feature beyond the launch region.
+
+
+## Native place cards and detail
+
+Home and Discover cards with coordinates offer **Stay nearby**. This opens the
+place detail with the **Make a night of it** hotel section expanded. A regular
+place-detail visit shows an **Explore nearby hotels** entry. No hotel lookup
+runs while scrolling the feed or until the section is opened.
+
+The native client requests up to three hotels within 2.5 km and widens once to
+5 km only after an empty successful response. It retains the selected venue's
+coordinates, sorts by straight-line distance, validates links, and removes
+invalid and duplicate records. Provider failures show a retry and a Google Maps
+hotel search centred on the venue. They do not substitute seed hotels.
+
+Hotel cards preserve photo attribution and show provider review scores, not
+hotel star classifications. **Visit hotel website** opens the provider-supplied
+HTTPS property website; if unavailable, **View hotel on Maps** uses its Google
+place ID. Neither action claims a booking, available room, or nightly rate.
+There is no Booking.com affiliate integration or commission assumption.
+
+### Cost and rollout
+
+This implementation reuses the existing Google Places endpoint and its billing,
+rate limiting and cache. It is not an unlimited, zero-cost hotel inventory API.
+Booking.com's Demand API requires managed affiliate approval; public Overpass
+instances should not be treated as an unlimited production backend. A later
+provider-free inventory path would need a maintained, licensed hotel dataset
+with verified property links and rights to its photos, hosted in our database.
+
+Validation on 2026-09-19: native type checking and 13 focused tests passed.
+A browser component harness with test hotel data passed at 375 px and landscape,
+including expanded cards, no horizontal overflow, empty results and retry states.
+These visual checks do not verify production hotel availability.
+A production request near PAI Toronto returned HTTP 503 with
+`Live stay search is unavailable right now.` The function emits that message
+when its Google request fails. Inspect the `live-stays` provider failure log in
+Supabase and resolve the returned Google status before claiming live hotel-card
+availability. This change does not alter production secrets or billing.

@@ -1,22 +1,29 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Link2, LogOut, Radio, Search } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Eye, EyeOff, Link2, LogOut, MapPin, Radio, Search, Timer, X } from 'lucide-react-native';
+import { Image, KeyboardAvoidingView, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenLoading, ScreenMessage } from '@/src/components/screen-state';
+import type { DiscoveryCard } from '@/src/models';
 import { useAuth } from '@/src/providers/auth-provider';
+import { useEchooLocation } from '@/src/providers/location-provider';
 import {
+  checkIn,
   checkOut,
   endMatch,
   loadLinkUpSnapshot,
   respondToMatch,
-  type LinkUpPendingMatch,
+  setPresenceVisibility,
 } from '@/src/services/linkup';
+import { getDiscovery } from '@/src/services/api';
+import { cachePlace } from '@/src/services/place-cache';
 import { supabase } from '@/src/services/supabase';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
+import { announce } from '@/src/services/notification-events';
 
 const initials = (name: string) =>
   name
@@ -27,12 +34,32 @@ const initials = (name: string) =>
     .join('')
     .toUpperCase();
 
+function remainingLabel(expiresAt: string, now: number) {
+  const ms = new Date(expiresAt).getTime() - now;
+  if (!Number.isFinite(ms)) return null;
+  if (ms <= 0) return 'expired';
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) return 'under a minute left';
+  if (minutes < 60) return `${minutes}m left`;
+  return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}m left`;
+}
+
+const HOW_IT_WORKS = [
+  { title: 'Pick your spot', body: 'Find the place you are at right now.' },
+  { title: 'Check in', body: 'A few hours of presence. No background tracking.' },
+  { title: 'Make it mutual', body: 'When you both say yes, a private chat opens.' },
+];
+
 export default function LinkUpScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
   const [openConversation, setOpenConversation] = useState<{ conversationId: string; title: string; expiresAt: string } | null>(null);
+  const [now, setNow] = useState(Date.now);
 
   const snapshot = useQuery({
     queryKey: ['linkup-snapshot', user?.id],
@@ -41,13 +68,38 @@ export default function LinkUpScreen() {
     refetchInterval: 30_000,
   });
 
+  // Drives every visible countdown without a per-second render.
+  useInterval(() => setNow(Date.now()), 20_000);
+
   async function runAction(action: () => Promise<unknown>) {
+    if (busy) return;
+    setBusy(true);
     setActionError(null);
     try {
       await action();
       await snapshot.refetch();
     } catch (error) {
       setActionError(error instanceof Error ? error.message : 'Link Up action failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function checkInAt(place: DiscoveryCard) {
+    if (checkingIn) return;
+    setCheckingIn(true);
+    setActionError(null);
+    try {
+      await checkIn(place.canonicalId || place.id);
+      cachePlace(place);
+      void triggerHaptic.success();
+      setPickerOpen(false);
+      announce({ title: 'You’re checked in', body: `${place.title}. Enjoy your time here.`, userId: user?.id });
+      await snapshot.refetch();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Check-in failed.');
+    } finally {
+      setCheckingIn(false);
     }
   }
 
@@ -119,12 +171,20 @@ export default function LinkUpScreen() {
           title="Link Up is paused"
           body="You won't be matched while paused. Your active conversations are unaffected."
           icon={<Link2 size={28} color={Colors.peach} />}
+          action={
+            <PrimaryButton
+              label="Resume Link Up"
+              onPress={() => void runAction(() => setPresenceVisibility(user.id, 'active'))}
+              loading={busy}
+            />
+          }
         />
       </View>
     );
   }
 
   const hasActivity = data.pending.length || data.waiting.length || data.conversations.length;
+  const presenceRemaining = data.presence ? remainingLabel(data.presence.expiresAt, now) : null;
 
   return (
     <ScrollView
@@ -135,43 +195,108 @@ export default function LinkUpScreen() {
     >
       <View style={styles.topCopy}>
         <Text style={styles.kicker}>LINK UP</Text>
-        <Text style={styles.title}>Meet the right people, here.</Text>
-        <Text style={styles.body}>
-          Check in at a place to match with one other member there. Presence is explicit and never derived from background location.
-        </Text>
+        <Text style={styles.title}>Good company, right here.</Text>
       </View>
 
       {data.presence ? (
-        <View style={styles.presenceCard}>
-          <View style={styles.presenceDot} />
-          <View style={styles.presenceCopy}>
-            <Text style={styles.presenceTitle}>
-              {data.ghost ? 'Ghosting' : 'Presence active'} · {data.presence.placeName ?? 'your spot'}
-            </Text>
-            <Text style={styles.presenceSub}>
-              {data.ghost ? 'Hidden from new matches.' : 'Scanning for the right person here.'}
+        <>
+          <View style={styles.presenceCard}>
+            <View style={styles.presenceDot} />
+            <View style={styles.presenceCopy}>
+              <Text style={styles.presenceTitle} numberOfLines={1}>
+                {data.presence.placeName ?? 'Your spot'}
+              </Text>
+              <Text style={styles.presenceSub}>
+                {data.ghost ? 'Ghost on · hidden from new matches' : 'Scanning for the right person here'}
+                {presenceRemaining && presenceRemaining !== 'expired' ? ` · ${presenceRemaining}` : ''}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Leave this place"
+              disabled={busy}
+              accessibilityState={{ disabled: busy }}
+              onPress={() => {
+                void triggerHaptic.medium();
+                void runAction(async () => { await checkOut(); announce({ title: 'You’re checked out', body: 'Your presence here has ended. See you at the next spot.', userId: user.id }); });
+              }}
+              style={styles.leaveButton}
+            >
+              <LogOut size={15} color={Colors.peach} />
+              <Text style={styles.leaveText}>Leave</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.presenceTools}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={data.ghost ? 'Turn ghost mode off' : 'Go ghost — stay checked in but hidden from new matches'}
+              disabled={busy}
+              accessibilityState={{ disabled: busy, selected: data.ghost }}
+              onPress={() => {
+                void triggerHaptic.light();
+                void runAction(() => setPresenceVisibility(user.id, data.ghost ? 'active' : 'ghost'));
+              }}
+              style={[styles.toolButton, data.ghost && styles.toolButtonActive]}
+            >
+              {data.ghost ? <Eye size={14} color={Colors.background} /> : <EyeOff size={14} color={Colors.peach} />}
+              <Text style={[styles.toolText, data.ghost && styles.toolTextActive]}>{data.ghost ? 'Ghost on' : 'Go ghost'}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Extend your presence here"
+              disabled={busy}
+              accessibilityState={{ disabled: busy }}
+              onPress={() => void runAction(() => checkIn(data.presence!.placeId))}
+              style={styles.toolButton}
+            >
+              <Timer size={14} color={Colors.peach} />
+              <Text style={styles.toolText}>Stay longer</Text>
+            </Pressable>
+          </View>
+        </>
+      ) : (
+        <View style={styles.startCard}>
+          <View style={styles.startIntro}>
+            <View style={styles.startEyebrow}>
+              <MapPin size={15} color={Colors.peach} />
+              <Text style={styles.startEyebrowText}>SAME PLACE. SHARED TASTE.</Text>
+            </View>
+            <Text style={styles.startTitle}>Already out? Start here.</Text>
+            <Text style={styles.startBody}>
+              Check in to meet someone here who shares your taste. One introduction at a time.
             </Text>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Leave this place"
-            onPress={() => {
-              void triggerHaptic.medium();
-              void runAction(checkOut);
-            }}
-            style={styles.leaveButton}
-          >
-            <LogOut size={15} color={Colors.peach} />
-            <Text style={styles.leaveText}>Leave</Text>
-          </Pressable>
+
+          <View style={styles.steps}>
+            {HOW_IT_WORKS.map((step, index) => (
+              <View key={step.title} style={styles.stepRow}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>{index + 1}</Text>
+                </View>
+                <View style={styles.stepCopy}>
+                  <Text style={styles.stepTitle}>{step.title}</Text>
+                  <Text style={styles.stepBody}>{step.body}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.startActions}>
+            <PrimaryButton
+              label="Find my spot"
+              onPress={() => {
+                setActionError(null);
+                setPickerOpen(true);
+              }}
+            />
+            <PrimaryButton
+              label="Browse Discover instead"
+              variant="quiet"
+              onPress={() => router.push('/(tabs)/discover')}
+            />
+          </View>
         </View>
-      ) : (
-        <ScreenMessage
-          title="Ready when you are"
-          body="Find a place nearby, check in when you arrive, and meet people who match your vibe."
-          icon={<Search size={26} color={Colors.peach} />}
-          action={<PrimaryButton label="Find a place" onPress={() => router.push('/(tabs)/discover')} />}
-        />
       )}
 
       {data.pending.length ? (
@@ -188,6 +313,7 @@ export default function LinkUpScreen() {
                   <PrimaryButton
                     label="Link up"
                     fullWidth={false}
+                    loading={busy}
                     onPress={() => {
                       void triggerHaptic.success();
                       void runAction(() => respondToMatch(match.matchId, 'accepted'));
@@ -197,6 +323,7 @@ export default function LinkUpScreen() {
                     label="Not now"
                     variant="secondary"
                     fullWidth={false}
+                    disabled={busy}
                     onPress={() => void runAction(() => respondToMatch(match.matchId, 'declined'))}
                   />
                 </>
@@ -228,7 +355,11 @@ export default function LinkUpScreen() {
               key={conversation.conversationId}
               name={conversation.peer.displayName}
               photoUrl={conversation.peer.photoUrl}
-              meta="Ephemeral chat · tap to open"
+              meta={
+                remainingLabel(conversation.expiresAt, now)
+                  ? `Private chat · ${remainingLabel(conversation.expiresAt, now)}`
+                  : 'Chat expired'
+              }
               onPress={() =>
                 setOpenConversation({
                   conversationId: conversation.conversationId,
@@ -241,6 +372,7 @@ export default function LinkUpScreen() {
                   label="End"
                   variant="danger"
                   fullWidth={false}
+                  disabled={busy}
                   onPress={() => void runAction(() => endMatch(conversation.matchId))}
                 />
               }
@@ -252,12 +384,20 @@ export default function LinkUpScreen() {
       {data.presence && !hasActivity ? (
         <Text style={styles.scanningNote}>
           {data.ghost
-            ? "Ghosting — you're checked in but hidden from new matches."
-            : "Scanning for the right people here — we'll surface a match the moment there's one."}
+            ? 'Ghosting — you are checked in but hidden from new matches. Turn ghost off to be introduced.'
+            : 'Scanning for the right people here — we will surface a match the moment there is one.'}
         </Text>
       ) : null}
 
       {actionError ? <Text style={styles.actionError}>{actionError}</Text> : null}
+
+      <PlacePickerModal
+        visible={pickerOpen}
+        checkingIn={checkingIn}
+        error={actionError}
+        onClose={() => setPickerOpen(false)}
+        onPick={(place) => void checkInAt(place)}
+      />
 
       {openConversation ? (
         <ConversationModal
@@ -270,6 +410,15 @@ export default function LinkUpScreen() {
       ) : null}
     </ScrollView>
   );
+}
+
+function useInterval(callback: () => void, ms: number) {
+  const saved = useRef(callback);
+  saved.current = callback;
+  useEffect(() => {
+    const id = setInterval(() => saved.current(), ms);
+    return () => clearInterval(id);
+  }, [ms]);
 }
 
 function MatchSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -301,36 +450,152 @@ function PeerCard({
   onPress?: () => void;
 }) {
   return (
-    <Pressable
-      accessibilityRole={onPress ? 'button' : undefined}
-      onPress={onPress}
-      disabled={!onPress}
-      style={({ pressed }) => [styles.peerCard, onPress && styles.peerCardTappable, pressed && styles.pressed]}
-    >
-      {photoUrl ? (
-        <Image source={{ uri: photoUrl }} style={styles.peerAvatar} />
-      ) : (
-        <View style={styles.peerAvatarFallback}>
-          <Text style={styles.peerAvatarInitials}>{initials(name)}</Text>
+    <View style={styles.peerCard}>
+      <View style={styles.peerProfile}>
+        {photoUrl ? (
+          <Image source={{ uri: photoUrl }} style={styles.peerAvatar} />
+        ) : (
+          <View style={styles.peerAvatarFallback}>
+            <Text style={styles.peerAvatarInitials}>{initials(name)}</Text>
+          </View>
+        )}
+        <View style={styles.peerBody}>
+          <View style={styles.peerRow}>
+            <Text style={styles.peerName} numberOfLines={1}>
+              {name}
+            </Text>
+            {badge ? <Text style={styles.peerBadge}>{badge}</Text> : null}
+          </View>
+          {bio ? (
+            <Text style={styles.peerBio} numberOfLines={2}>
+              {bio}
+            </Text>
+          ) : null}
+          <Text style={styles.peerMeta}>{meta}</Text>
         </View>
-      )}
-      <View style={styles.peerBody}>
-        <View style={styles.peerRow}>
-          <Text style={styles.peerName} numberOfLines={1}>
-            {name}
-          </Text>
-          {badge ? <Text style={styles.peerBadge}>{badge}</Text> : null}
-        </View>
-        {bio ? (
-          <Text style={styles.peerBio} numberOfLines={2}>
-            {bio}
-          </Text>
-        ) : null}
-        <Text style={styles.peerMeta}>{meta}</Text>
-        {actions ? <View style={styles.peerActions}>{actions}</View> : null}
       </View>
-      {trailingAction}
-    </Pressable>
+      {actions || onPress || trailingAction ? (
+        <View style={styles.peerActions}>
+          {actions}
+          {onPress ? <PrimaryButton label="Open chat" onPress={onPress} fullWidth={false} /> : null}
+          {trailingAction}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function PlacePickerModal({
+  visible,
+  checkingIn,
+  error,
+  onClose,
+  onPick,
+}: {
+  visible: boolean;
+  checkingIn: boolean;
+  error: string | null;
+  onClose: () => void;
+  onPick: (place: DiscoveryCard) => void;
+}) {
+  const { location } = useEchooLocation();
+  const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search.trim());
+
+  const discovery = useQuery({
+    queryKey: ['linkup-places', deferredSearch, location.city, location.latitude, location.longitude],
+    enabled: visible,
+    queryFn: ({ signal }) =>
+      getDiscovery(
+        {
+          intent: deferredSearch ? 'search' : 'discover',
+          query: deferredSearch || 'discover',
+          location,
+        },
+        signal,
+      ),
+    staleTime: 60_000,
+  });
+
+  const places: DiscoveryCard[] = [];
+  const feed = discovery.data;
+  if (feed) {
+    const seen = new Set<string>();
+    for (const place of [...feed.nearby.items, ...feed.recommended.items, ...feed.all.items]) {
+      const key = place.canonicalId || place.id;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      places.push(place);
+      if (places.length >= 24) break;
+    }
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={styles.pickerScreen}>
+        <View style={styles.pickerHeader}>
+          <View style={styles.pickerHeaderCopy}>
+            <Text style={styles.pickerTitle}>Where are you?</Text>
+            <Text style={styles.pickerSub}>Check in to be introduced to one member here.</Text>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close place picker" onPress={onClose} style={styles.pickerClose}>
+            <X size={18} color={Colors.ink} />
+          </Pressable>
+        </View>
+
+        <View style={styles.searchBox}>
+          <Search size={17} color={Colors.textMuted} />
+          <TextInput
+            value={search}
+            accessibilityLabel="Search places"
+            onChangeText={setSearch}
+            placeholder="Search places, food, music..."
+            placeholderTextColor={Colors.textMuted}
+            returnKeyType="search"
+            style={styles.searchInput}
+          />
+        </View>
+
+        {error ? <Text selectable accessibilityRole="alert" style={styles.pickerError}>{error}</Text> : null}
+
+        {discovery.isLoading ? (
+          <Text style={styles.pickerNote}>Finding places nearby.</Text>
+        ) : discovery.isError ? (
+          <Text style={styles.pickerNote}>
+            {discovery.error instanceof Error ? discovery.error.message : 'Could not load places. Try again.'}
+          </Text>
+        ) : places.length ? (
+          <ScrollView style={styles.pickerList} contentContainerStyle={styles.pickerListContent} keyboardShouldPersistTaps="handled">
+            {places.map((place) => (
+              <Pressable
+                key={place.canonicalId || place.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Check in at ${place.title}`}
+                onPress={() => onPick(place)}
+                style={({ pressed }) => [styles.placeRow, pressed && styles.pressed]}
+                disabled={checkingIn}
+              >
+                <View style={styles.placeRowIcon}>
+                  <MapPin size={15} color={Colors.peach} />
+                </View>
+                <View style={styles.placeRowCopy}>
+                  <Text style={styles.placeRowTitle} numberOfLines={1}>
+                    {place.title}
+                  </Text>
+                  <Text style={styles.placeRowMeta} numberOfLines={1}>
+                    {place.city}
+                    {place.community?.isHot ? ' · Live tonight' : ''}
+                  </Text>
+                </View>
+                <Text style={styles.placeRowAction}>{checkingIn ? '…' : 'Check in'}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={styles.pickerNote}>No verified places matched. Try a different search.</Text>
+        )}
+      </View>
+    </Modal>
   );
 }
 
@@ -344,21 +609,26 @@ function ConversationModal({
   onClose: () => void;
 }) {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(Date.now);
+  const listRef = useRef<ScrollView>(null);
   const writable = new Date(conversation.expiresAt).getTime() > Date.now();
 
-  async function loadHistory() {
+  useInterval(() => setNow(Date.now()), 20_000);
+
+  async function loadHistory(silent = false) {
     try {
-      const { data } = await supabase
+      const { data: row } = await supabase
         .from('linkup_conversations')
         .select('id, expires_at')
         .eq('id', conversation.conversationId)
         .maybeSingle();
-      if (!data) throw new Error('This conversation has ended.');
+      if (!row) throw new Error('This conversation has ended.');
       const { data: rows, error: historyError } = await supabase
         .from('linkup_messages')
         .select('id, sender_id, body, created_at')
@@ -367,27 +637,36 @@ function ConversationModal({
         .limit(100);
       if (historyError) throw historyError;
       setMessages(
-        (rows ?? []).map((row) => ({
-          id: row.id,
-          senderId: row.sender_id,
-          body: row.body,
-          createdAt: row.created_at,
-        }))
+        (rows ?? []).map((message) => ({
+          id: message.id,
+          senderId: message.sender_id,
+          body: message.body,
+          createdAt: message.created_at,
+        })),
       );
+      setError(null);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Could not load chat.');
+      if (!silent) setError(loadError instanceof Error ? loadError.message : 'Could not load chat.');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   useEffect(() => {
     void loadHistory();
+    // Keep both sides current without realtime: a light poll while open.
+    const interval = setInterval(() => void loadHistory(true), 5_000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation.conversationId]);
+
+  useEffect(() => {
+    if (messages.length) listRef.current?.scrollToEnd({ animated: false });
+  }, [messages.length]);
 
   async function send() {
     const body = draft.trim();
-    if (!body || body.length > 1000 || !user) return;
+    if (!body || body.length > 1000 || !user || sending || new Date(conversation.expiresAt).getTime() <= Date.now()) return;
     setSending(true);
     setError(null);
     try {
@@ -398,7 +677,7 @@ function ConversationModal({
       });
       if (insertError) throw insertError;
       setDraft('');
-      await loadHistory();
+      await loadHistory(true);
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : 'Could not send that message.');
     } finally {
@@ -406,17 +685,24 @@ function ConversationModal({
     }
   }
 
+  const remaining = remainingLabel(conversation.expiresAt, now);
+
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.chatScreen}>
+      <KeyboardAvoidingView style={styles.chatScreen} behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.chatHeader}>
-          <View>
+          <View style={styles.chatHeaderCopy}>
             <Text style={styles.chatTitle}>{conversation.title}</Text>
-            <Text style={styles.chatSub}>Ephemeral chat · text only</Text>
+            <Text style={styles.chatSub}>
+              {remaining && remaining !== 'expired' ? `Private · ${remaining}` : 'Private · chat expired'}
+            </Text>
           </View>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close chat" onPress={onClose} style={styles.pickerClose}>
+            <X size={18} color={Colors.ink} />
+          </Pressable>
         </View>
 
-        <ScrollView style={styles.chatScroll} contentContainerStyle={styles.chatList}>
+        <ScrollView ref={listRef} style={styles.chatScroll} contentContainerStyle={styles.chatList} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
           {loading ? (
             <Text style={styles.chatEmpty}>Loading messages.</Text>
           ) : messages.length ? (
@@ -436,10 +722,11 @@ function ConversationModal({
         {error ? <Text style={styles.chatError}>{error}</Text> : null}
 
         {writable ? (
-          <View style={styles.composer}>
+          <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
             <View style={styles.composerBox}>
               <TextInput
                 value={draft}
+                accessibilityLabel="Message"
                 onChangeText={setDraft}
                 placeholder="Message…"
                 placeholderTextColor={Colors.textMuted}
@@ -450,12 +737,12 @@ function ConversationModal({
                 onSubmitEditing={send}
               />
             </View>
-            <PrimaryButton label="Send" onPress={send} loading={sending} fullWidth={false} />
+            <PrimaryButton label="Send" onPress={send} loading={sending} disabled={!draft.trim()} fullWidth={false} />
           </View>
         ) : (
           <Text style={styles.chatExpired}>This conversation expired and is read-only.</Text>
         )}
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -469,11 +756,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     padding: Spacing.lg,
     paddingBottom: 36,
-    gap: Spacing.xl,
+    gap: Spacing.lg,
   },
   topCopy: {
-    gap: 4,
+    gap: 6,
     marginTop: 4,
+    marginBottom: 4,
   },
   kicker: {
     color: 'rgba(248, 245, 239, 0.45)',
@@ -486,17 +774,96 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.ink,
     fontFamily: Fonts.display,
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '600',
-    letterSpacing: -0.7,
-    lineHeight: 33,
+    letterSpacing: -0.6,
+    lineHeight: 29,
   },
-  body: {
-    color: 'rgba(248, 245, 239, 0.72)',
+  startCard: {
+    gap: Spacing.xl,
+    borderRadius: 22,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    padding: Spacing.xl,
+  },
+  startIntro: {
+    gap: Spacing.sm,
+  },
+  startEyebrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  startEyebrowText: {
+    color: Colors.peach,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 10,
+    letterSpacing: 1,
+  },
+  startActions: {
+    gap: 2,
+  },
+  startTitle: {
+    color: Colors.ink,
+    fontFamily: Fonts.display,
+    fontSize: 21,
+    lineHeight: 27,
+    fontWeight: '600',
+    letterSpacing: -0.4,
+  },
+  startBody: {
+    color: Colors.textSecondary,
     fontFamily: Fonts.ui,
     fontSize: 14,
     lineHeight: 21,
-    maxWidth: 330,
+    marginTop: -2,
+  },
+  steps: {
+    gap: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    alignItems: 'flex-start',
+  },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.peachSubtle,
+    marginTop: 1,
+  },
+  stepNumberText: {
+    color: Colors.peach,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  stepCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  stepTitle: {
+    color: Colors.ink,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  stepBody: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.ui,
+    fontSize: 13,
+    lineHeight: 18,
   },
   presenceCard: {
     flexDirection: 'row',
@@ -517,12 +884,13 @@ const styles = StyleSheet.create({
   },
   presenceCopy: {
     flex: 1,
+    minWidth: 0,
     gap: 2,
   },
   presenceTitle: {
     color: Colors.ink,
     fontFamily: Fonts.uiSemiBold,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   presenceSub: {
@@ -532,6 +900,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   leaveButton: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
@@ -547,44 +916,76 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  presenceTools: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: -Spacing.sm + 2,
+  },
+  toolButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 12,
+    minHeight: 44,
+  },
+  toolButtonActive: {
+    borderColor: Colors.peach,
+    backgroundColor: Colors.peach,
+  },
+  toolText: {
+    color: Colors.peach,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  toolTextActive: {
+    color: Colors.background,
+  },
   section: {
     gap: Spacing.md,
+    marginTop: 4,
   },
   sectionTitle: {
     color: Colors.ink,
     fontFamily: Fonts.display,
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '600',
-    letterSpacing: -0.4,
+    letterSpacing: -0.35,
   },
   matchList: {
     gap: Spacing.sm,
   },
   peerCard: {
-    flexDirection: 'row',
-    gap: Spacing.md,
+    gap: Spacing.lg,
     borderRadius: 20,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.10)',
-    backgroundColor: 'rgba(24, 22, 21, 0.85)',
-    padding: Spacing.md,
+    borderColor: Colors.border,
+    backgroundColor: Colors.card,
+    padding: Spacing.lg,
   },
-  peerCardTappable: {
-    borderColor: 'rgba(248, 245, 239, 0.16)',
+  peerProfile: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.md,
   },
   pressed: {
     opacity: 0.78,
   },
   peerAvatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
   },
   peerAvatarFallback: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.surfaceElevated,
@@ -598,7 +999,7 @@ const styles = StyleSheet.create({
   peerBody: {
     flex: 1,
     minWidth: 0,
-    gap: 3,
+    gap: 5,
   },
   peerRow: {
     flexDirection: 'row',
@@ -620,20 +1021,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   peerBio: {
-    color: 'rgba(248, 245, 239, 0.72)',
+    color: Colors.textSecondary,
     fontFamily: Fonts.ui,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 14,
+    lineHeight: 20,
   },
   peerMeta: {
     color: Colors.textMuted,
     fontFamily: Fonts.ui,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 17,
   },
   peerActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.sm,
-    marginTop: 6,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
   scanningNote: {
     color: Colors.textSecondary,
@@ -652,16 +1057,146 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
   },
+  pickerScreen: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    paddingTop: Spacing['2xl'],
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    gap: Spacing.md,
+  },
+  pickerHeaderCopy: {
+    flex: 1,
+    gap: 6,
+  },
+  pickerTitle: {
+    color: Colors.ink,
+    fontFamily: Fonts.display,
+    fontSize: 21,
+    fontWeight: '600',
+    letterSpacing: -0.5,
+  },
+  pickerSub: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.ui,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  pickerClose: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surfaceElevated,
+  },
+  searchBox: {
+    marginHorizontal: Spacing.lg,
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 15,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 14,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 48,
+    color: Colors.ink,
+    fontFamily: Fonts.ui,
+    fontSize: 15,
+    paddingVertical: 0,
+  },
+  pickerList: {
+    marginTop: Spacing.md,
+  },
+  pickerListContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: 32,
+    gap: Spacing.sm,
+  },
+  pickerNote: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.ui,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    padding: Spacing.xl,
+  },
+  pickerError: {
+    color: '#FFAAA0',
+    fontFamily: Fonts.ui,
+    fontSize: 13,
+    lineHeight: 19,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+  },
+  placeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    borderRadius: 16,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    padding: Spacing.md,
+  },
+  placeRowIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.peachSubtle,
+  },
+  placeRowCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  placeRowTitle: {
+    color: Colors.ink,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  placeRowMeta: {
+    color: Colors.textMuted,
+    fontFamily: Fonts.ui,
+    fontSize: 11,
+  },
+  placeRowAction: {
+    color: Colors.peach,
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   chatScreen: {
     flex: 1,
     backgroundColor: Colors.background,
   },
   chatHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing['2xl'],
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(248, 245, 239, 0.08)',
+    gap: Spacing.md,
+  },
+  chatHeaderCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   chatTitle: {
     color: Colors.ink,
@@ -733,13 +1268,17 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   composer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: 'rgba(248, 245, 239, 0.08)',
     gap: Spacing.sm,
   },
   composerBox: {
+    flex: 1,
+    minWidth: 0,
     minHeight: 48,
     borderRadius: 16,
     borderWidth: 1,

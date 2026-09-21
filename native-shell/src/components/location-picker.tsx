@@ -1,53 +1,75 @@
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Crosshair, X } from 'lucide-react-native';
 
-import { GTA_MUNICIPALITIES } from '@/src/services/location';
+import { MUNICIPALITY_GROUPS, searchMunicipalities } from '@/src/services/location';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
 import { useEchooLocation } from '@/src/providers/location-provider';
 
 export function LocationPicker({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { location, chooseMunicipality, isResolving, useDeviceLocation, error } = useEchooLocation();
+  const [search, setSearch] = useState('');
+  const matches = new Set(searchMunicipalities(search));
 
   async function handleDeviceLocation() {
     try {
-      await useDeviceLocation();
-      onClose();
+      if (await useDeviceLocation()) onClose();
     } catch {
       // The provider exposes a clear, actionable error in this sheet.
     }
   }
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} onShow={() => setSearch('')}>
       <View style={styles.screen}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.eyebrow}>WHERE ARE YOU?</Text>
-            <Text style={styles.title}>Set your Echoo area</Text>
+            <Text style={styles.title}>Location</Text>
+            <Text style={styles.deviceBody}>Current: {location.label}</Text>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Close location picker" onPress={onClose} style={styles.close}>
             <X size={20} color={Colors.ink} />
           </Pressable>
         </View>
 
-        <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+        <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+          <View style={styles.searchRow}>
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              accessibilityLabel="Search Ontario cities, GTA municipalities or regions"
+              placeholder="Search city or region"
+              placeholderTextColor={Colors.textMuted}
+              autoCorrect={false}
+              autoCapitalize="none"
+              returnKeyType="search"
+              style={styles.searchInput}
+            />
+            {search ? <Pressable accessibilityRole="button" accessibilityLabel="Clear municipality search" onPress={() => setSearch('')} style={styles.close}><X size={18} color={Colors.ink} /></Pressable> : null}
+          </View>
           <Pressable
             accessibilityRole="button"
+            accessibilityState={{ disabled: isResolving, busy: isResolving }}
+            accessibilityHint="Shares your coordinates with location providers for this session."
             onPress={handleDeviceLocation}
             disabled={isResolving}
             style={({ pressed }) => [styles.deviceRow, pressed && styles.pressed, isResolving && styles.disabled]}
           >
             {isResolving ? <ActivityIndicator color={Colors.peach} /> : <Crosshair size={20} color={Colors.peach} />}
             <View style={styles.deviceCopy}>
-              <Text style={styles.deviceTitle}>Use my location</Text>
-              <Text style={styles.deviceBody}>Precise location stays only in this app session.</Text>
+              <Text style={styles.deviceTitle}>{isResolving ? 'Finding your location...' : 'Use my location'}</Text>
             </View>
           </Pressable>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Text style={styles.deviceBody}>GPS is shared with location providers for this session.</Text>
+          {error ? <Text selectable accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
 
-          <Text style={styles.sectionTitle}>25 GTA municipalities</Text>
-          <View style={styles.cityList}>
-            {GTA_MUNICIPALITIES.map((municipality) => {
+          {!matches.size ? <Text style={styles.deviceBody}>No matching selections. Try a city or region name, or use your location in Ontario.</Text> : null}
+          {MUNICIPALITY_GROUPS.map(({ region, municipalities }) => {
+            const visibleMunicipalities = municipalities.filter((municipality) => matches.has(municipality));
+            if (!visibleMunicipalities.length) return null;
+            return <View key={region} style={styles.cityList}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>{region === 'Other Ontario cities' ? region : `GTA / ${region}`}</Text>
+            {visibleMunicipalities.map((municipality) => {
               const selected = location.mode === 'manual' && location.city === municipality.name;
               return (
                 <Pressable
@@ -55,17 +77,17 @@ export function LocationPicker({ visible, onClose }: { visible: boolean; onClose
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   onPress={() => {
-                    chooseMunicipality(municipality.name);
-                    onClose();
+                    if (chooseMunicipality(municipality.name)) onClose();
                   }}
                   style={({ pressed }) => [styles.city, selected && styles.citySelected, pressed && styles.pressed]}
                 >
                   <Text style={[styles.cityName, selected && styles.cityNameSelected]}>{municipality.name}</Text>
-                  <Text style={styles.region}>{municipality.region}</Text>
+                  {selected ? <Text style={styles.region}>Selected</Text> : null}
                 </Pressable>
               );
             })}
-          </View>
+          </View>;
+          })}
         </ScrollView>
       </View>
     </Modal>
@@ -82,50 +104,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing['2xl'],
-    paddingBottom: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(248, 245, 239, 0.08)',
-  },
-  eyebrow: {
-    color: 'rgba(248, 245, 239, 0.45)',
-    fontFamily: Fonts.uiSemiBold,
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
   },
   title: {
     color: Colors.ink,
     fontFamily: Fonts.display,
-    fontSize: 25,
+    fontSize: 22,
     fontWeight: '600',
     letterSpacing: -0.7,
     marginTop: 4,
   },
   close: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 20,
-    backgroundColor: Colors.surfaceElevated,
   },
   content: {
     padding: Spacing.lg,
     paddingBottom: 48,
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   deviceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    borderRadius: 20,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: Colors.peachBorder,
-    backgroundColor: Colors.peachSubtle,
-    padding: Spacing.lg,
+    minHeight: 48,
+    paddingVertical: Spacing.sm,
   },
   deviceCopy: {
     flex: 1,
@@ -158,25 +167,39 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   cityList: {
-    gap: 8,
+    gap: 0,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 48,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 16,
+    backgroundColor: Colors.surfaceElevated,
+    color: Colors.ink,
+    fontFamily: Fonts.ui,
+    fontSize: 15,
   },
   city: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: 16,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.10)',
-    backgroundColor: 'rgba(24, 22, 20, 0.82)',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
+    minHeight: 48,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(248, 245, 239, 0.10)',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 10,
   },
   citySelected: {
-    borderColor: Colors.peachBorder,
     backgroundColor: Colors.peachSubtle,
   },
   cityName: {
+    flex: 1,
+    marginRight: Spacing.sm,
     color: Colors.ink,
     fontFamily: Fonts.uiSemiBold,
     fontSize: 15,

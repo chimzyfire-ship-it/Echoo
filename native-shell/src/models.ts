@@ -66,6 +66,8 @@ export interface DiscoveryLane {
 }
 
 export interface DiscoveryFeed {
+  liveSearch?: { status: string; reason?: string };
+  understanding?: { searchTerm: string; notices: string[]; canPlan: boolean };
   supported: boolean;
   reason?: string;
   location: EchooLocation;
@@ -86,6 +88,11 @@ export interface PlaceDetail {
   pulse: { items: Array<{ label: string; value: string }> } | null;
 }
 
+export interface QuickPlanCostEstimate {
+  min: number;
+  max: number;
+}
+
 export interface QuickPlanStop {
   id: string;
   name: string;
@@ -95,14 +102,39 @@ export interface QuickPlanStop {
   longitude: number;
   imageUrl: string;
   time: string;
+  arrivalAt?: string;
+  durationMinutes?: number;
   travelMinutes: number;
   reason: string;
   priceLabel: string;
   availability: string;
   isAnchor: boolean;
+  /** Evidence-tiered per-person cost window. null = no price evidence; zero = genuinely free. */
+  costEstimate?: QuickPlanCostEstimate | null;
+  /** Raw price band from the place record, when one exists. */
+  priceBand?: string | null;
+}
+
+export interface QuickPlanBudgetEstimate {
+  min: number;
+  max: number;
+  currency: string;
+  perPerson: boolean;
+  knownCount: number;
+  unknownCount: number;
 }
 
 export interface QuickPlan {
+  planId?: string;
+  travelMode?: string;
+  travelVerified?: boolean;
+  startsAt?: string;
+  timezone?: string;
+  generatedAt?: string;
+  city?: string;
+  mood?: string;
+  totalDurationMinutes?: number;
+  alternativesExhausted?: boolean;
   title: string;
   subtitle: string;
   stopCount: number;
@@ -113,6 +145,8 @@ export interface QuickPlan {
   totalTravelMinutes: number;
   availabilityNote: string;
   stops: QuickPlanStop[];
+  /** Summed per-person estimate across priced stops. null = nothing priced. */
+  budgetEstimate?: QuickPlanBudgetEstimate | null;
 }
 
 export interface Ticket {

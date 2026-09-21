@@ -4,15 +4,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowUpRight, Clock, MapPin, Navigation, Sparkles, X } from 'lucide-react-native';
+import { ArrowUpRight, Clock, MapPin, Navigation, X } from 'lucide-react-native';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { NearbyStays } from '@/src/components/nearby-stays';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenLoading, ScreenMessage } from '@/src/components/screen-state';
-import { getPlaceDetail, getQuickPlan } from '@/src/services/api';
+import { getPlaceDetail, type QuickPlanProfileInput } from '@/src/services/api';
+import { OutingChoices } from '@/src/components/outing-choices';
+import { defaultOutingChoices, generateOuting } from '@/src/services/outing';
 import { getCachedPlace } from '@/src/services/place-cache';
 import { placeSummary } from '@/src/services/place-summary';
 import { checkIn } from '@/src/services/linkup';
+import { useAuth } from '@/src/providers/auth-provider';
+import { useEchooLocation } from '@/src/providers/location-provider';
+import type { DiscoveryCard } from '@/src/models';
 import { Colors, Fonts } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
 
@@ -25,12 +31,27 @@ function openMaps(uri: string) {
 export default function PlaceDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { profile, user } = useAuth();
+  const { location } = useEchooLocation();
   const [selectedPhoto, setSelectedPhoto] = useState<string>();
   const [failedPhoto, setFailedPhoto] = useState<string>();
-  const { id: rawId } = useLocalSearchParams<{ id?: string | string[] }>();
+  const [choices, setChoices] = useState(defaultOutingChoices);
+  const [settingUpOuting, setSettingUpOuting] = useState(false);
+  const { id: rawId, section } = useLocalSearchParams<{ id?: string | string[]; section?: string }>();
   const routeId = Array.isArray(rawId) ? rawId[0] ?? '' : rawId ?? '';
   const cached = getCachedPlace(routeId);
   const canonicalId = cached?.canonicalId || routeId;
+  // Onboarding taste plus the active location — never invented spending
+  // history, never a stale city.
+  const quickPlanProfile: QuickPlanProfileInput = {
+    interests: profile?.interests ?? [],
+    eventStyles: profile?.eventStyles ?? [],
+    audiences: profile?.audiences ?? [],
+    motivations: profile?.motivations ?? [],
+    budget: profile?.budget ?? '$',
+    energy: profile?.energy ?? 'chill',
+    city: location.city,
+  };
 
   const detail = useQuery({
     queryKey: ['place-detail', canonicalId],
@@ -45,12 +66,45 @@ export default function PlaceDetailScreen() {
 
   const quickPlan = useMutation({
     mutationFn: () => {
-      if (!cached) throw new Error('Open this place from Discover to build a plan around it.');
-      return getQuickPlan({
-        anchor: cached,
-        stopCount: 2,
-        budgetStyle: 'balanced',
-      });
+      // Tapped from Discover: the cached card carries the verified cover and
+      // canonical id. Direct-linked: rebuild the anchor from the loaded
+      // detail instead of demanding the user arrive via Discover.
+      if (cached) return generateOuting({ anchor: cached, stopCount: choices.stopCount, profile: quickPlanProfile }, choices, user?.id);
+      const place = (detail.data?.place as Record<string, unknown> | undefined) ?? {};
+      const name = text(place.name);
+       const remoteLatitude = Number(place.latitude ?? place.lat ?? NaN);
+       const remoteLongitude = Number(place.longitude ?? place.lng ?? NaN);
+      const photoUrl = (detail.data?.photos ?? [])
+        .map((photo) => text(photo.image_url))
+        .find(Boolean);
+      if (
+        !canonicalId ||
+        !name ||
+        !Number.isFinite(remoteLatitude) ||
+        !Number.isFinite(remoteLongitude)
+      ) {
+        throw new Error('This place needs a name and location before Echoo can plan around it.');
+      }
+      const anchor: DiscoveryCard = {
+        id: canonicalId,
+        canonicalId: null,
+        source: 'echoo',
+        type: 'place',
+        title: name,
+        category: text(place.category) || 'place',
+        description: '',
+        city: text(place.city) || text(place.municipality) || location.city,
+        address: text(place.formatted_address) || text(place.address) || null,
+        latitude: remoteLatitude,
+        longitude: remoteLongitude,
+        distanceMeters: null,
+        startsAt: null,
+        image: photoUrl ? { url: photoUrl, alt: name } : null,
+        features: [],
+        community: null,
+        placement: null,
+      };
+      return generateOuting({ anchor, stopCount: choices.stopCount, profile: quickPlanProfile }, choices, user?.id);
     },
     onSuccess: (plan) => {
       void triggerHaptic.success();
@@ -68,6 +122,16 @@ export default function PlaceDetailScreen() {
       router.push('/(tabs)/link-up');
     },
   });
+
+  if (settingUpOuting) return <ScrollView style={styles.root} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 24, paddingBottom: Math.max(insets.bottom, 24), gap: 24 }}>
+    <Pressable accessibilityRole="button" onPress={() => setSettingUpOuting(false)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={styles.dockSubtitle}>Back to place</Text></Pressable>
+    <Text style={styles.title}>Plan an outing</Text>
+    <Text style={styles.dockSubtitle}>Keep {cached?.title || text((detail.data?.place as Record<string, unknown> | undefined)?.name) || 'this place'} in your day. Choose what comes with it.</Text>
+    <OutingChoices value={choices} onChange={setChoices} disabled={quickPlan.isPending} />
+    <Text style={styles.note}>Spending preferences guide nearby picks, not guaranteed prices. Your chosen place stays even if its price differs. Missing prices and hours are always marked.</Text>
+    {quickPlan.isError ? <Text selectable style={styles.dockError}>{quickPlan.error instanceof Error ? quickPlan.error.message : 'Could not create an outing.'}</Text> : null}
+    <PrimaryButton label={quickPlan.isPending ? 'Finding your outing...' : `Plan ${choices.stopCount} places`} onPress={() => quickPlan.mutate()} disabled={quickPlan.isPending} />
+  </ScrollView>;
 
   if (detail.isLoading && !cached) {
     return (
@@ -93,8 +157,8 @@ export default function PlaceDetailScreen() {
   const place = (data?.place as Record<string, unknown> | undefined) ?? {};
   const name = text(place.name) || cached?.title || 'This place';
   const address = text(place.formatted_address) || text(place.address) || cached?.address || cached?.city || '';
-  const remoteLatitude = Number(place.latitude ?? place.lat);
-  const remoteLongitude = Number(place.longitude ?? place.lng);
+  const remoteLatitude = Number(place.latitude ?? place.lat ?? NaN);
+  const remoteLongitude = Number(place.longitude ?? place.lng ?? NaN);
   const latitude = Number.isFinite(remoteLatitude)
     ? remoteLatitude
     : typeof cached?.latitude === 'number'
@@ -156,6 +220,7 @@ export default function PlaceDetailScreen() {
       </ScrollView> : null}
 
       <View style={styles.body}>
+        {hasCoords && section === 'stays' ? <NearbyStays key={`${latitude}:${longitude}:open`} latitude={latitude} longitude={longitude} destinationName={name} initiallyOpen /> : null}
         <Text style={styles.sectionLabel}>THE ESSENTIALS</Text>
         <View style={styles.metaRow}>
           {address ? (
@@ -201,6 +266,8 @@ export default function PlaceDetailScreen() {
           </View>
         ) : null}
 
+        {hasCoords && section !== 'stays' ? <NearbyStays key={`${latitude}:${longitude}`} latitude={latitude} longitude={longitude} destinationName={name} /> : null}
+
         <Text style={styles.sectionLabel}>GET THERE & CONNECT</Text>
         <View style={styles.actions}>
           {hasCoords ? (
@@ -244,11 +311,13 @@ export default function PlaceDetailScreen() {
       </View>
     </ScrollView>
     <View style={[styles.dock, { paddingBottom: Math.max(insets.bottom, 14) }]}>
-      
-        {quickPlan.isError ? (
-          <Text style={styles.error}>{quickPlan.error instanceof Error ? quickPlan.error.message : 'Quick Plan failed.'}</Text>
-        ) : null}
-      <PrimaryButton label="Plan around this place" onPress={() => quickPlan.mutate()} loading={quickPlan.isPending} icon={<Sparkles size={17} color={Colors.inkDark} />} />
+      {quickPlan.isError ? (
+        <Text style={styles.dockError}>{quickPlan.error instanceof Error ? quickPlan.error.message : 'Quick Plan failed.'}</Text>
+      ) : null}
+      <PrimaryButton label="Plan an outing" onPress={() => {
+        setChoices({ ...defaultOutingChoices, budgetStyle: profile?.budget === '$$$' ? 'elevated' : profile?.budget === '$$' ? 'balanced' : 'value', mood: profile?.energy === 'hype' || profile?.energy === 'curious' ? profile.energy : 'chill' });
+        setSettingUpOuting(true);
+      }} />
     </View>
     </View>
   );
@@ -290,6 +359,14 @@ const styles = StyleSheet.create({
   error: { color: '#a1362b', fontFamily: Fonts.ui, fontSize: 13, lineHeight: 19, padding: 12, borderRadius: 12, backgroundColor: '#f6dcd5' },
   note: { color: '#a4a79b', fontFamily: Fonts.ui, fontSize: 11, lineHeight: 17 },
   dock: { paddingTop: 15, paddingHorizontal: 24, backgroundColor: '#1d1e1b', borderTopWidth: 1, borderTopColor: 'rgba(240,236,227,0.10)', gap: 12 },
+  stopPicker: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  stopPickerLabel: { fontFamily: Fonts.uiSemiBold, color: '#b8a78d', fontSize: 10, letterSpacing: 1.6, marginRight: 2 },
+  stopChip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(240,236,227,0.16)', backgroundColor: 'rgba(240,236,227,0.05)' },
+  stopChipActive: { borderColor: '#e5c79b', backgroundColor: 'rgba(229,199,155,0.14)' },
+  stopChipPressed: { opacity: 0.75 },
+  stopChipText: { fontFamily: Fonts.uiMedium, fontSize: 12, color: '#c1c0b7' },
+  stopChipTextActive: { fontFamily: Fonts.uiSemiBold, color: '#ead2ae' },
+  dockError: { color: '#e8a79a', fontFamily: Fonts.ui, fontSize: 12, lineHeight: 17 },
   dockCopy: { gap: 3 },
   dockTitle: { fontFamily: Fonts.display, fontSize: 18, color: '#f2e9d9' },
   dockSubtitle: { fontFamily: Fonts.ui, fontSize: 11, color: '#c1c2b5' },

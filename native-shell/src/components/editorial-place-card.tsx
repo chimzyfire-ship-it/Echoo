@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { cachePlace } from '@/src/services/place-cache';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowUpRight, MapPin, Star } from 'lucide-react-native';
+import { ChevronRight, MapPin, Star } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { DiscoveryCard } from '@/src/models';
 import { placeSummary } from '@/src/services/place-summary';
@@ -11,6 +13,8 @@ import { triggerHaptic } from '@/src/utils/haptics';
 export function EditorialPlaceCard({ place, onPress, featured = false }: {
   place: DiscoveryCard; onPress: () => void; featured?: boolean;
 }) {
+  const router = useRouter();
+  const hasCoordinates = typeof place.latitude === 'number' && Number.isFinite(place.latitude) && typeof place.longitude === 'number' && Number.isFinite(place.longitude);
   const [failedUrl, setFailedUrl] = useState<string>();
   const url = place.image?.url;
   const category = place.category.replace(/[_-]+/g, ' ');
@@ -19,6 +23,7 @@ export function EditorialPlaceCard({ place, onPress, featured = false }: {
     ? `${Math.round(distance)} m away` : `${(distance / 1000).toFixed(1)} km away`;
   const rating = place.community?.ratingAverage;
   return (
+    <View style={styles.card}>
     <Pressable accessibilityRole="button" accessibilityLabel={`Open ${place.title}`}
       onPress={() => { void triggerHaptic.light(); onPress(); }}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
@@ -28,8 +33,12 @@ export function EditorialPlaceCard({ place, onPress, featured = false }: {
             onError={() => setFailedUrl(url)} />
         ) : (
           <LinearGradient colors={['#615447', '#302d29']} style={styles.fallback}>
-            <MapPin size={32} strokeWidth={1} color={Colors.peach} />
-            <Text style={styles.fallbackText}>{place.city}</Text>
+            {!featured ? (
+              <>
+                <MapPin size={32} strokeWidth={1} color={Colors.peach} />
+                <Text style={styles.fallbackText}>{place.city}</Text>
+              </>
+            ) : null}
           </LinearGradient>
         )}
         {featured ? (
@@ -42,7 +51,6 @@ export function EditorialPlaceCard({ place, onPress, featured = false }: {
               <Text style={styles.heroMeta} numberOfLines={2}>{placeSummary(place)}</Text>
               <View style={styles.heroBottom}>
                 <View style={styles.location}><MapPin size={13} color="#e4d8cb" /><Text style={styles.heroMeta}>{location}</Text></View>
-                <View style={styles.arrow}><ArrowUpRight size={20} color="#211e19" /></View>
               </View>
             </View>
           </>
@@ -60,10 +68,20 @@ export function EditorialPlaceCard({ place, onPress, featured = false }: {
         </View>
       ) : null}
     </Pressable>
+    {hasCoordinates ? <Pressable accessibilityRole="button" accessibilityLabel={`Find hotels near ${place.title}`} onPress={() => {
+      void triggerHaptic.light();
+      cachePlace(place);
+      router.push({ pathname: '/place/[id]', params: { id: place.canonicalId || place.id, section: 'stays' } });
+    }} style={({ pressed }) => [styles.stayEntry, pressed && styles.pressed]}>
+      <Text style={styles.stayLabel}>Stay nearby</Text><ChevronRight size={13} color={Colors.peach} />
+    </Pressable> : null}
+    </View>
   );
 }
 const styles = StyleSheet.create({
   card: { flex: 1, minWidth: 0 },
+  stayEntry: { flexDirection: 'row', gap: 6, alignItems: 'center', minHeight: 48, marginTop: 8, paddingHorizontal: 10, borderRadius: 12, borderWidth: 1, borderColor: Colors.peachBorder, backgroundColor: Colors.peachSubtle },
+  stayLabel: { flex: 1, fontFamily: Fonts.uiMedium, fontSize: 12, color: Colors.peachLight },
   pressed: { opacity: 0.8, transform: [{ scale: 0.985 }] },
   media: { aspectRatio: 0.92, borderRadius: 19, borderCurve: 'continuous', overflow: 'hidden', backgroundColor: '#34302b' },
   hero: { aspectRatio: 1.12, borderRadius: 25 },
@@ -79,7 +97,6 @@ const styles = StyleSheet.create({
   heroBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   location: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
   heroMeta: { fontFamily: Fonts.ui, fontSize: 13, color: '#e4d8cb', flexShrink: 1 },
-  arrow: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#f1ddbf', alignItems: 'center', justifyContent: 'center' },
   rating: { position: 'absolute', top: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 20, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: 'rgba(20,19,16,0.86)' },
   ratingText: { fontFamily: Fonts.uiSemiBold, fontSize: 11, color: '#fffaf3' },
 });

@@ -5,6 +5,7 @@ import React from 'react';
 import { ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { BrandMark } from '@/src/components/brand-mark';
+import { LegalLinks } from '@/src/components/legal-links';
 import { LandingAuth } from '@/src/components/landing-auth';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useSurprise } from '@/src/providers/surprise-provider';
@@ -49,7 +50,7 @@ export default function LandingScreen() {
   const router = useRouter();
   const { auth, mode } = useLocalSearchParams<{ auth?: string; mode?: string }>();
   const { height } = useWindowDimensions();
-  const { user, profile, ready } = useAuth();
+  const { user, profile, ready, authFlow } = useAuth();
   const surprise = useSurprise();
 
   function handleSignInPress() {
@@ -106,7 +107,7 @@ export default function LandingScreen() {
 
             <View style={styles.actions}>
               <LandingAction label="Surprise me" onPress={surprise.start} />
-              {user ? (
+              {user && !authFlow ? (
                 <LandingAction label="Open Echoo" onPress={handleSignInPress} variant="secondary" />
               ) : (
                 <LandingAuth
@@ -121,10 +122,7 @@ export default function LandingScreen() {
 
           {/* Legal Footer matching IMG_0562 */}
           <View style={styles.footerWrap}>
-            <View style={styles.legalLinks}>
-              <Text style={styles.legalLink}>Privacy</Text>
-              <Text style={styles.legalLink}>Terms</Text>
-            </View>
+            <LegalLinks />
             <Text style={styles.copyright}>
               Copyright © 2026 Idris Oyejobi. All rights reserved.
             </Text>

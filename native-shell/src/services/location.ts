@@ -42,8 +42,60 @@ export const GTA_MUNICIPALITIES: GtaMunicipality[] = municipalitySeeds.map(([nam
   region,
 }));
 
+export const GTA_MUNICIPALITY_GROUPS = ['Toronto', 'Durham', 'York', 'Peel', 'Halton'].map((region) => ({
+  region,
+  municipalities: GTA_MUNICIPALITIES.filter((municipality) => municipality.region === region),
+}));
+
+// Curated Ontario cities, not the complete provincial municipality directory.
+export const ONTARIO_CITIES: GtaMunicipality[] = [
+  ['Barrie', 44.3894, -79.6903],
+  ['Guelph', 43.5448, -80.2482],
+  ['Hamilton', 43.2557, -79.8711],
+  ['Kingston', 44.2312, -76.486],
+  ['Kitchener', 43.4516, -80.4925],
+  ['London', 42.9849, -81.2453],
+  ['Niagara Falls', 43.0896, -79.0849],
+  ['Ottawa', 45.4215, -75.6972],
+  ['Thunder Bay', 48.3809, -89.2477],
+  ['Waterloo', 43.4643, -80.5204],
+  ['Windsor', 42.3149, -83.0364],
+].map(([name, latitude, longitude]) => ({ name: String(name), latitude: Number(latitude), longitude: Number(longitude), region: 'Other Ontario cities' }));
+
+export const SELECTABLE_MUNICIPALITIES = [...GTA_MUNICIPALITIES, ...ONTARIO_CITIES];
+export const MUNICIPALITY_GROUPS = [...GTA_MUNICIPALITY_GROUPS, { region: 'Other Ontario cities', municipalities: ONTARIO_CITIES }];
+const normalize = (value: string) => value.toLowerCase().replace(/[.]/g, '').replace(/[-\s]+/g, ' ').trim();
+const searchIndex = SELECTABLE_MUNICIPALITIES.map((municipality) => ({
+  municipality,
+  text: normalize(`${municipality.name} ${municipality.region} ${municipality.region === 'Other Ontario cities' ? 'Ontario' : 'GTA Region Ontario'}`),
+}));
+
+export function searchMunicipalities(query: string): GtaMunicipality[] {
+  const terms = normalize(query).split(' ').filter(Boolean);
+  return searchIndex.filter(({ text }) => terms.every((term) => text.includes(term))).map(({ municipality }) => municipality);
+}
+
+export function searchGtaMunicipalities(query: string): GtaMunicipality[] {
+  const normalize = (value: string) => value.toLowerCase().replace(/[-\s]+/g, ' ').trim();
+  const terms = normalize(query).split(' ').filter(Boolean);
+  return GTA_MUNICIPALITIES.filter(({ name, region }) => {
+    const searchable = normalize(`${name} ${region === 'Toronto' ? region : `${region} Region`}`);
+    return terms.every((term) => searchable.includes(term));
+  });
+}
+
+export function manualMunicipalityLocation(city: string): EchooLocation | null {
+  const municipality = SELECTABLE_MUNICIPALITIES.find((item) => normalize(item.name) === normalize(city));
+  return municipality ? { mode: 'manual', city: municipality.name, label: municipality.name } : null;
+}
+
 export const DEFAULT_LOCATION: EchooLocation = {
   mode: 'manual',
   city: 'Toronto',
   label: 'Toronto',
 };
+
+export function unsupportedLocationMessage(location: EchooLocation, reason?: string): string {
+  if (reason === 'outside_ontario') return 'This location is outside Ontario discovery coverage.';
+  return `The discovery service does not currently support ${location.label}. Your selection is saved, but listings cannot load until service coverage is available.`;
+}

@@ -26,7 +26,7 @@ test('discovery API forwards cursor and filters and maps lane pagination', async
     URL,
     fetch: async (_url, options) => {
       body = JSON.parse(options.body);
-      return { ok: true, json: async () => ({ all: { items: [], pagination: { nextCursor: 'next', hasMore: true } } }) };
+      return { ok: true, json: async () => ({ all: { items: [], pagination: { nextCursor: 'next', hasMore: true } }, nearby: { items: [], pagination: { nextCursor: null, hasMore: false } }, recommended: { items: [], pagination: { nextCursor: null, hasMore: false } } }) };
     },
   });
   const feed = await getDiscovery({ intent: 'cafes', query: 'coffee', cultureSlug: 'culture', cursor: 'current', location: { city: 'Toronto', label: 'Toronto', mode: 'gps', latitude: 43, longitude: -79 } });
@@ -51,6 +51,7 @@ test('Discover forwards page cursors and stops on exhausted or repeated cursors'
     '@tanstack/react-query': { useInfiniteQuery: (value) => { options = value; throw stop; } },
     '@/src/providers/location-provider': { useEchooLocation: () => ({ location: { city: 'Toronto' } }) },
     '@/src/providers/culture-provider': { useCulture: () => ({ active: { slug: 'culture' } }) },
+    '@/src/services/discover-categories': load('../src/services/discover-categories.ts', {}),
     '@/src/services/culture': { cultureQueryForIntent: () => 'culture query' },
     '@/src/services/api': { getDiscovery: async (value) => { request = value; } },
     '@/src/theme/tokens': { Colors: {}, Fonts: {}, Spacing: {} },
@@ -63,4 +64,39 @@ test('Discover forwards page cursors and stops on exhausted or repeated cursors'
   assert.equal(options.getNextPageParam({ all: { hasMore: true, nextCursor: 'next' } }, [], undefined, [undefined]), 'next');
   assert.equal(options.getNextPageParam({ all: { hasMore: true, nextCursor: 'next' } }, [], 'next', [undefined, 'next']), undefined);
   assert.equal(options.getNextPageParam({ all: { hasMore: false, nextCursor: null } }, [], undefined, [undefined]), undefined);
+});
+
+test('activity pills use specific search requests and typed searches take priority', () => {
+  const { DISCOVER_CATEGORIES, discoveryCategoryRequest } = load('../src/services/discover-categories.ts', {});
+  const activities = DISCOVER_CATEGORIES.filter((category) => category.query);
+  assert.equal(activities.length, 14);
+  assert.equal(new Set(DISCOVER_CATEGORIES.map((category) => category.key)).size, DISCOVER_CATEGORIES.length);
+  for (const category of activities) {
+    const request = discoveryCategoryRequest(category.key);
+    assert.equal(request.intent, 'search');
+    assert.equal(request.query, category.query);
+    assert.equal(discoveryCategoryRequest(category.key, '  sushi  ').query, 'sushi');
+  }
+  assert.equal(discoveryCategoryRequest('food').intent, 'food');
+  assert.equal(discoveryCategoryRequest('unknown').intent, 'discover');
+});
+
+test('activity matching rejects unrelated cards and accepts provider category evidence', () => {
+  const { DISCOVER_CATEGORIES, matchesDiscoveryCategory } = load('../src/services/discover-categories.ts', {});
+  const card = { title: 'Local spot', category: 'restaurant', description: 'Dinner downtown', features: [] };
+  for (const category of DISCOVER_CATEGORIES.filter((item) => item.query)) {
+    assert.equal(matchesDiscoveryCategory(card, category.key), false, category.key);
+    assert.equal(matchesDiscoveryCategory({ ...card, category: category.query.replaceAll(' ', '_') }, category.key), true, category.key);
+  }
+  assert.equal(matchesDiscoveryCategory({ ...card, title: 'Boulder House' }, 'climbing'), true);
+  assert.equal(matchesDiscoveryCategory({ ...card, features: ['ice_skating'] }, 'skating'), true);
+});
+
+
+test('activity matching does not confuse similar words with activities', () => {
+  const { matchesDiscoveryCategory } = load('../src/services/discover-categories.ts', {});
+  const card = { title: 'Local spot', category: 'restaurant', description: '', features: [] };
+  assert.equal(matchesDiscoveryCategory({ ...card, title: 'Spacious dining' }, 'wellness'), false);
+  assert.equal(matchesDiscoveryCategory({ ...card, title: 'Skin care' }, 'skiing'), false);
+  assert.equal(matchesDiscoveryCategory({ ...card, title: 'Parking garage' }, 'parks'), false);
 });

@@ -1,9 +1,9 @@
+import { CompanionEntry } from '@/src/components/companion-entry';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
-  ArrowUpRight,
-  CalendarDays,
   ChevronRight,
   Film,
   MapPin,
@@ -14,13 +14,16 @@ import type { ImageSourcePropType } from 'react-native';
 import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BrandMark } from '@/src/components/brand-mark';
+import { nextEditorial, HOME_INVITATIONS } from '@/src/content/editorial';
+import { LocationPicker } from '@/src/components/location-picker';
+import { unsupportedLocationMessage } from '@/src/services/location';
 import { EditorialPlaceCard } from '@/src/components/editorial-place-card';
-import type { DiscoveryCard, DiscoveryFeed, EchooProfile, Ticket } from '@/src/models';
+import type { DiscoveryCard, DiscoveryFeed, EchooProfile } from '@/src/models';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useCulture } from '@/src/providers/culture-provider';
 import { useEchooLocation } from '@/src/providers/location-provider';
 import { useSurprise } from '@/src/providers/surprise-provider';
-import { getDiscovery, getMyTickets } from '@/src/services/api';
+import { getDiscovery } from '@/src/services/api';
 import { cachePlace } from '@/src/services/place-cache';
 import { surpriseScore, timeContext } from '@/src/services/surprise';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
@@ -91,38 +94,12 @@ function pickRecommendation(feed: DiscoveryFeed | undefined, profile: EchooProfi
   })[0];
 }
 
-function ticketTimeLabel(ticket: Ticket) {
-  if (!ticket.startsAt) return ticket.city || 'Date to be confirmed';
-  const date = new Date(ticket.startsAt);
-  if (!Number.isFinite(date.getTime())) return ticket.city || 'Date to be confirmed';
-  return new Intl.DateTimeFormat('en-CA', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
-}
-
-function upcomingTicket(tickets: Ticket[] | undefined) {
-  if (!tickets?.length) return null;
-  const now = Date.now();
-  return (
-    tickets
-      .filter((ticket) => ticket.status.toLowerCase() !== 'cancelled')
-      .sort((left, right) => {
-        const leftTime = left.startsAt ? new Date(left.startsAt).getTime() : Number.MAX_SAFE_INTEGER;
-        const rightTime = right.startsAt ? new Date(right.startsAt).getTime() : Number.MAX_SAFE_INTEGER;
-        return leftTime - rightTime;
-      })
-      .find((ticket) => !ticket.startsAt || new Date(ticket.startsAt).getTime() >= now) ?? null
-  );
-}
-
 export default function HomeScreen() {
   const router = useRouter();
   const { user, profile } = useAuth();
   const { location } = useEchooLocation();
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [invitation] = useState(() => nextEditorial('home', HOME_INVITATIONS));
   const { active: culture } = useCulture();
   const surprise = useSurprise();
   const profileKey = [
@@ -134,9 +111,9 @@ export default function HomeScreen() {
     ...(profile?.motivations ?? []),
   ].join('|');
   const recommendationQuery = homeQuery(profile, culture?.label);
-  const ticketEmail = profile?.email || user?.email || '';
 
   const discovery = useQuery({
+    staleTime: 0,
     queryKey: [
       'home-recommendation',
       recommendationQuery,
@@ -158,15 +135,7 @@ export default function HomeScreen() {
       ),
   });
 
-  const tickets = useQuery({
-    queryKey: ['my-tickets', ticketEmail],
-    enabled: Boolean(ticketEmail),
-    queryFn: ({ signal }) => getMyTickets(ticketEmail, signal),
-    staleTime: 60_000,
-  });
-
   const recommendation = pickRecommendation(discovery.data, profile);
-  const nextTicket = upcomingTicket(tickets.data);
   const displayName = profile?.displayName?.trim().split(/\s+/)[0] || '';
 
   function openDiscover(intent: BrowseIntent) {
@@ -202,14 +171,14 @@ export default function HomeScreen() {
         >
           {/* Top Brand & Greeting Area matching Inspi */}
           <View style={styles.topSection}>
-            <View style={styles.brandRow}><BrandMark size="small" /><View style={styles.homeLocation}><MapPin size={12} color={Colors.peach} /><Text style={styles.homeLocationText} numberOfLines={1}>{location.city}</Text></View></View>
+            <View style={styles.brandRow}><BrandMark size="small" /><Pressable accessibilityRole="button" accessibilityLabel={`Change location, currently ${location.label}`} onPress={() => setLocationOpen(true)} style={({ pressed }) => [styles.homeLocation, { minHeight: 48, opacity: pressed ? 0.7 : 1 }]}><MapPin size={12} color={Colors.peach} /><Text style={styles.homeLocationText} numberOfLines={1}>{location.city}</Text></Pressable></View>
 
             <View style={styles.greetingWrap}>
               <Text style={styles.greeting}>
                 {greetingForNow()}
                 {displayName ? `,\n${displayName}.` : '.'}
               </Text>
-              <Text style={styles.prompt}>A little less routine. A little more city.</Text>
+              <Text style={{ fontFamily: Fonts.ui, fontSize: 16, lineHeight: 23, color: Colors.textSecondary, marginTop: 12 }}>{invitation}</Text>
             </View>
           </View>
 
@@ -217,25 +186,21 @@ export default function HomeScreen() {
           <View style={styles.moods}>
             <MoodAction
               label="Go out"
-              detail="Nightlife nearby"
               imageSource={require('@/assets/moods/go-out.jpg')}
               onPress={() => openDiscover('nightlife')}
             />
             <MoodAction
               label="See a show"
-              detail="Shows and events"
               imageSource={require('@/assets/moods/watch.png')}
               onPress={() => openDiscover('events')}
             />
             <MoodAction
               label="Eat"
-              detail="A table worth leaving for"
               imageSource={require('@/assets/moods/eat.png')}
               onPress={() => openDiscover('food')}
             />
             <MoodAction
               label="Surprise me"
-              detail="One good answer"
               imageSource={require('@/assets/moods/surprise.jpg')}
               accent
               onPress={surprise.start}
@@ -254,7 +219,6 @@ export default function HomeScreen() {
             >
               <TicketIcon size={15} color={Colors.peach} />
               <Text style={styles.quickAccessCardText}>Tickets & Passes</Text>
-              <ArrowUpRight size={13} color={Colors.peachLight} />
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -266,14 +230,14 @@ export default function HomeScreen() {
             >
               <Film size={15} color={Colors.peach} />
               <Text style={styles.quickAccessCardText}>Cinema Room</Text>
-              <ArrowUpRight size={13} color={Colors.peachLight} />
             </Pressable>
           </View>
+
+          <CompanionEntry />
 
           {/* Featured Place Section matching Inspi */}
           <View style={styles.recommendationSection}>
             <View style={styles.sectionHead}>
-              <Text style={styles.sectionEyebrow}>A GOOD MOVE RIGHT NOW</Text>
               <Text style={styles.sectionTitle}>
                 {timeContext().label === 'tonight' ? 'Tonight, made personal.' : 'One place to start.'}
               </Text>
@@ -293,91 +257,29 @@ export default function HomeScreen() {
             ) : (
               <View style={styles.loadingCard}>
                 <Text style={styles.loadingTitle}>
-                  {discovery.data?.supported === false
-                    ? 'Choose a GTA area to get a recommendation.'
-                    : 'Nothing clear has surfaced yet.'}
+                  {discovery.isError ? 'Discovery could not load'
+                    : discovery.data?.supported === false
+                    ? `Discovery unavailable for ${location.city}`
+                    : `No matching places in ${location.city} yet`}
                 </Text>
                 <Text style={styles.loadingBody}>
-                  Browse the live catalogue and Echoo will keep your active location and culture lens.
+                  {discovery.isError ? discovery.error.message
+                    : discovery.data?.supported === false ? unsupportedLocationMessage(location, discovery.data.reason)
+                    : 'No recommendation was returned for your current filters. Try another search in Discover.'}
                 </Text>
-                <Pressable
+                {discovery.data?.supported !== false ? <Pressable
                   accessibilityRole="button"
                   onPress={() => router.push('/(tabs)/discover')}
                   style={styles.browseButton}
                 >
                   <Text style={styles.browseButtonText}>Open Discover</Text>
                   <ChevronRight size={16} color={Colors.background} />
-                </Pressable>
+                </Pressable> : null}
               </View>
             )}
           </View>
-
-          {/* Upcoming Event Pass or Ticket Hub */}
-          <View style={styles.eveningSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionEyebrow}>YOUR EVENING & PASSES</Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  void triggerHaptic.light();
-                  router.push('/tickets');
-                }}
-                style={styles.quickHubLink}
-              >
-                <Text style={styles.quickHubText}>Tickets Hub</Text>
-                <ChevronRight size={13} color={Colors.peach} />
-              </Pressable>
-            </View>
-
-            {nextTicket ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Open your pass for ${nextTicket.eventTitle || 'your Echoo event'}`}
-                onPress={() => {
-                  void triggerHaptic.light();
-                  router.push('/tickets');
-                }}
-                style={({ pressed }) => [styles.ticketRow, pressed && styles.ticketPressed]}
-              >
-                <View style={styles.ticketIcon}>
-                  <CalendarDays size={18} color={Colors.peach} />
-                </View>
-                <View style={styles.ticketCopy}>
-                  <Text style={styles.ticketTitle} numberOfLines={1}>
-                    {nextTicket.eventTitle || 'Echoo event'}
-                  </Text>
-                  <Text style={styles.ticketMeta} numberOfLines={1}>
-                    {ticketTimeLabel(nextTicket)}
-                    {nextTicket.venueName ? ` · ${nextTicket.venueName}` : ''}
-                  </Text>
-                </View>
-                <ChevronRight size={18} color={Colors.textMuted} />
-              </Pressable>
-            ) : (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  void triggerHaptic.light();
-                  router.push('/tickets');
-                }}
-                style={({ pressed }) => [styles.ticketRow, pressed && styles.ticketPressed]}
-              >
-                <View style={styles.ticketIcon}>
-                  <TicketIcon size={18} color={Colors.peach} />
-                </View>
-                <View style={styles.ticketCopy}>
-                  <Text style={styles.ticketTitle} numberOfLines={1}>
-                    Live Show Drops & Passes
-                  </Text>
-                  <Text style={styles.ticketMeta} numberOfLines={1}>
-                    Priority event allocations & your order passes
-                  </Text>
-                </View>
-                <ChevronRight size={18} color={Colors.textMuted} />
-              </Pressable>
-            )}
-          </View>
         </ScrollView>
+        <LocationPicker visible={locationOpen} onClose={() => setLocationOpen(false)} />
       </LinearGradient>
     </ImageBackground>
   );
@@ -385,13 +287,11 @@ export default function HomeScreen() {
 
 function MoodAction({
   label,
-  detail,
   imageSource,
   accent = false,
   onPress,
 }: {
   label: string;
-  detail: string;
   imageSource: ImageSourcePropType;
   accent?: boolean;
   onPress: () => void;
@@ -412,10 +312,8 @@ function MoodAction({
     >
       <Image source={imageSource} style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} resizeMode="cover" />
       <LinearGradient colors={['rgba(15,14,12,0.04)', 'rgba(15,14,12,0.9)']} locations={[0.12, 1]} style={StyleSheet.absoluteFill} />
-      <View style={styles.moodTop}><ArrowUpRight size={18} color={accent ? Colors.peach : Colors.ink} /></View>
       <View style={styles.moodCopy}>
         <Text style={[styles.moodLabel, accent && styles.moodLabelAccent]}>{label}</Text>
-        <Text style={styles.moodDetail}>{detail}</Text>
       </View>
     </Pressable>
   );
@@ -450,13 +348,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
     lineHeight: 37,
   },
-  prompt: {
-    color: 'rgba(248, 245, 239, 0.82)',
-    fontFamily: Fonts.ui,
-    fontSize: 15,
-    fontWeight: '400',
-    letterSpacing: -0.15,
-  },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 20 },
   homeLocation: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
   homeLocationText: { fontFamily: Fonts.uiMedium, color: Colors.peachLight, fontSize: 12, flexShrink: 1 },
@@ -464,11 +355,9 @@ const styles = StyleSheet.create({
   moodAction: { width: '47%', flexGrow: 1, minHeight: 140, overflow: 'hidden', borderRadius: 22, borderCurve: 'continuous', justifyContent: 'flex-end', backgroundColor: '#34302b' },
   moodActionAccent: { borderWidth: 1, borderColor: '#c5a77d' },
   moodActionPressed: { opacity: 0.82, transform: [{ scale: 0.985 }] },
-  moodTop: { position: 'absolute', top: 13, right: 13, backgroundColor: 'rgba(20,19,16,0.5)', width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  moodCopy: { padding: 16, paddingTop: 44, gap: 4 },
+  moodCopy: { padding: 16 },
   moodLabel: { fontFamily: Fonts.display, color: Colors.ink, fontSize: 23, lineHeight: 27, letterSpacing: -0.5 },
   moodLabelAccent: { color: Colors.peachLight },
-  moodDetail: { fontFamily: Fonts.ui, color: '#e1d9cf', fontSize: 12, lineHeight: 17 },
   recommendationSection: {
     gap: 14,
   },
@@ -530,48 +419,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  eveningSection: {
-    gap: 12,
-  },
-  ticketRow: {
-    minHeight: 74,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.10)',
-    backgroundColor: 'rgba(24, 22, 21, 0.85)',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  ticketPressed: {
-    opacity: 0.72,
-  },
-  ticketIcon: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: Colors.peachSubtle,
-  },
-  ticketCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  ticketTitle: {
-    color: Colors.ink,
-    fontFamily: Fonts.uiSemiBold,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  ticketMeta: {
-    color: Colors.textMuted,
-    fontFamily: Fonts.ui,
-    fontSize: 12,
-  },
   quickAccessRow: {
     flexDirection: 'row',
     gap: 10,
@@ -581,7 +428,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
     minHeight: 46,
     borderRadius: 16,
     backgroundColor: 'rgba(248, 245, 239, 0.04)',
@@ -593,27 +440,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.uiSemiBold,
     fontSize: 12,
     color: Colors.ink,
-    flex: 1,
-    marginLeft: 8,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  quickHubLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(247, 213, 178, 0.08)',
-  },
-  quickHubText: {
-    fontFamily: Fonts.uiSemiBold,
-    fontSize: 11,
-    color: Colors.peach,
   },
   pressed: {
     opacity: 0.75,
