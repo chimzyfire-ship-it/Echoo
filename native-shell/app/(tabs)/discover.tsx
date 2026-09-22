@@ -1,13 +1,14 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useDeferredValue, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import {
   ChevronRight,
+  ChevronDown,
+  Check,
   Film,
   MapPin,
   Play,
-  Search,
   SlidersHorizontal,
   Sparkles,
   Star,
@@ -21,12 +22,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
+import { DiscoverSearch } from '@/src/components/discover-search';
 import { CultureFab } from '@/src/components/culture-fab';
 import { CulturePicker } from '@/src/components/culture-picker';
 import { LocationPicker } from '@/src/components/location-picker';
@@ -37,110 +38,13 @@ import type { DiscoveryCard, DiscoveryFeed, DiscoveryIntent, MovieItem } from '@
 import { useCulture } from '@/src/providers/culture-provider';
 import { useEchooLocation } from '@/src/providers/location-provider';
 import { getDiscovery, getMoviesFeed, getTicketsForSale } from '@/src/services/api';
-import { cultureQueryForIntent } from '@/src/services/culture';
+import { DISCOVER_CATEGORIES as CATEGORIES, discoveryCategoryRequest, matchesDiscoveryCategory } from '@/src/services/discover-categories';
+import { cultureQueryFor, cultureQueryForIntent } from '@/src/services/culture';
 import { cachePlace } from '@/src/services/place-cache';
+import { unsupportedLocationMessage } from '@/src/services/location';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
 
-const CATEGORIES: Array<{
-  key: string;
-  label: string;
-  isRoute?: boolean;
-  route?: string;
-  headline?: string;
-  subhead?: string;
-}> = [
-  {
-    key: 'discover',
-    label: 'Discover',
-    headline: 'Worth going out for',
-    subhead: 'Curated spots around',
-  },
-  {
-    key: 'tickets',
-    label: 'Tickets',
-    isRoute: true,
-    route: '/tickets',
-  },
-  {
-    key: 'cinema',
-    label: 'Cinema',
-    isRoute: true,
-    route: '/cinema',
-  },
-  {
-    key: 'food',
-    label: 'Food',
-    headline: 'Tables worth leaving for',
-    subhead: 'Bistros, chef spots & dining in',
-  },
-  {
-    key: 'cocktails',
-    label: 'Cocktails',
-    headline: 'Cocktails & Speakeasies',
-    subhead: 'Mixology, hidden doors & lounges in',
-  },
-  {
-    key: 'music',
-    label: 'Live music',
-    headline: 'Live Sound & Concerts',
-    subhead: 'Jazz, stages & vinyl listening bars in',
-  },
-  {
-    key: 'nightlife',
-    label: 'Nightlife',
-    headline: 'After-Dark & Clubs',
-    subhead: 'DJ sets, dance floors & energy in',
-  },
-  {
-    key: 'comedy',
-    label: 'Comedy',
-    headline: 'Stand-up & Laughs',
-    subhead: 'Comedy clubs & showcases in',
-  },
-  {
-    key: 'sports',
-    label: 'Sports',
-    headline: 'Game Day & Arcades',
-    subhead: 'Sports lounges, big screens & gaming in',
-  },
-  {
-    key: 'art',
-    label: 'Art & Exhibits',
-    headline: 'Creative Spaces & Galleries',
-    subhead: 'Exhibits, immersive art & museums in',
-  },
-  {
-    key: 'late-night',
-    label: 'Late night',
-    headline: 'Late-Night Bites',
-    subhead: 'Open late, comfort food & 2 AM spots in',
-  },
-  {
-    key: 'cafes',
-    label: 'Cafes & Matcha',
-    headline: 'Artisan Coffee & Day Vibes',
-    subhead: 'Roasters, matcha studios & bakeries in',
-  },
-  {
-    key: 'markets',
-    label: 'Pop-ups',
-    headline: 'Pop-ups & Markets',
-    subhead: 'Night markets, artisan makers & drops in',
-  },
-  {
-    key: 'events',
-    label: 'Events',
-    headline: 'Festivals & Gatherings',
-    subhead: 'What is happening around',
-  },
-  {
-    key: 'tourism',
-    label: 'Tourism',
-    headline: 'Landmarks & Attractions',
-    subhead: 'Iconic city stops in',
-  },
-];
 
 export default function DiscoverScreen() {
   const router = useRouter();
@@ -148,16 +52,23 @@ export default function DiscoverScreen() {
   const { location } = useEchooLocation();
   const { active: culture } = useCulture();
   const [search, setSearch] = useState('');
-  const [intent, setIntent] = useState<DiscoveryIntent>('discover');
+  const [intent, setIntent] = useState('discover');
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [cultureOpen, setCultureOpen] = useState(false);
-  const deferredSearch = useDeferredValue(search.trim());
-  const activeIntent: DiscoveryIntent = deferredSearch ? 'search' : intent;
+  const [deferredSearch, setDeferredSearch] = useState('');
+  useEffect(() => {
+    const timer=setTimeout(() => setDeferredSearch(search.trim()), search.trim() ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [search]);
+  const categoryRequest = discoveryCategoryRequest(intent, deferredSearch);
+  const activeIntent = categoryRequest.intent;
   const incomingIntent = Array.isArray(requestedIntent) ? requestedIntent[0] : requestedIntent;
 
   useEffect(() => {
     if (!CATEGORIES.some((category) => category.key === incomingIntent)) return;
     setSearch('');
+    setDeferredSearch('');
     if (incomingIntent === 'tickets') {
       router.push('/tickets');
     } else if (incomingIntent === 'cinema') {
@@ -168,6 +79,7 @@ export default function DiscoverScreen() {
   }, [incomingIntent, router]);
 
   const discovery = useInfiniteQuery({
+    staleTime: 0,
     queryKey: [
       'discover',
       activeIntent,
@@ -187,9 +99,11 @@ export default function DiscoverScreen() {
       getDiscovery(
         {
           intent: activeIntent,
-          query: cultureQueryForIntent(intent, deferredSearch, culture),
+          query: deferredSearch || (categoryRequest.query
+            ? cultureQueryFor(categoryRequest.query, culture)
+            : cultureQueryForIntent(categoryRequest.intent, '', culture)),
           location,
-          cultureSlug: culture?.slug,
+          cultureSlug: deferredSearch ? undefined : culture?.slug,
           cursor: pageParam,
         },
         signal
@@ -226,10 +140,12 @@ export default function DiscoverScreen() {
   const seen = new Set<string>();
   const mainCards = (discovery.data?.pages.flatMap((page) => page.all.items) ?? []).filter((place) => {
     const key = `${place.type}:${place.canonicalId || place.id}`;
-    if (seen.has(key)) return false;
+    if (seen.has(key) || (!isSearch && !matchesDiscoveryCategory(place, intent))) return false;
     seen.add(key);
     return true;
   });
+  const nearbyCards = feed?.nearby.items.filter((place) => isSearch || matchesDiscoveryCategory(place, intent)) ?? [];
+  const recommendedCards = feed?.recommended.items.filter((place) => isSearch || matchesDiscoveryCategory(place, intent)) ?? [];
   const currentCategory = CATEGORIES.find((c) => c.key === intent);
   const featureTitle = currentCategory?.headline || 'Worth going out for';
   const featureSub = currentCategory?.subhead
@@ -258,7 +174,7 @@ export default function DiscoverScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.filterRow}>
-          <Pressable accessibilityRole="button" onPress={() => setLocationOpen(true)} style={styles.locationButton}>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Change location, currently ${location.label}`} onPress={() => setLocationOpen(true)} style={styles.locationButton}>
             <MapPin size={15} color={Colors.peach} />
             <Text style={styles.locationText} numberOfLines={1}>{location.label}</Text>
             <SlidersHorizontal size={14} color={Colors.textSecondary} />
@@ -273,28 +189,28 @@ export default function DiscoverScreen() {
 
         <View style={styles.topCopy}>
           <Text style={styles.kicker}>DISCOVER</Text>
-          <Text style={styles.title}>{culture ? `${culture.label} culture, tonight.` : 'Your next good find.'}</Text>
+          <Text style={styles.title}>{culture ? `Discover ${culture.label} culture.` : 'Your next good find.'}</Text>
         </View>
 
-        <View style={styles.searchBox}>
-          <Search size={18} color={Colors.textMuted} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            accessibilityLabel="Search places, food, or music"
-            placeholder="A place, a craving, a mood…"
-            placeholderTextColor={Colors.textMuted}
-            returnKeyType="search"
-            style={styles.searchInput}
-          />
-          {search ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="Clear search" style={styles.clearSearch} onPress={() => setSearch('')}>
-              <X size={18} color={Colors.textSecondary} />
-            </Pressable>
-          ) : null}
-        </View>
+        <DiscoverSearch value={search} city={location.city} onSearch={setSearch} />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+        {isSearch ? <View style={{ gap: 8 }}>
+          {culture ? <Text style={{ fontFamily: Fonts.ui, color: Colors.textSecondary, fontSize: 13 }}>Your search takes priority over the {culture.label} lens.</Text> : null}
+          {discovery.data?.pages[0]?.understanding?.notices.map((notice) => <Text key={notice} style={{ fontFamily: Fonts.ui, color: Colors.textSecondary, fontSize: 13, lineHeight: 19 }}>{notice}</Text>)}
+        </View> : null}
+        <View style={styles.activityPicker}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Activities: ${isSearch || intent === 'discover' ? 'All activities' : currentCategory?.label}. ${categoriesExpanded ? 'Collapse' : 'Show all'} filters`}
+            accessibilityState={{ expanded: categoriesExpanded }}
+            onPress={() => { void triggerHaptic.light(); setCategoriesExpanded((value) => !value); }}
+            style={({ pressed }) => [styles.activityToggle, pressed && styles.pressed]}
+          >
+            <SlidersHorizontal size={16} color={Colors.peach} />
+            <Text style={styles.activityLabel}>{isSearch || intent === 'discover' ? 'All activities' : currentCategory?.label}</Text>
+            <ChevronDown size={17} color={Colors.peach} style={{ transform: [{ rotate: categoriesExpanded ? '180deg' : '0deg' }] }} />
+          </Pressable>
+        {categoriesExpanded ? <View style={styles.filters}>
           {CATEGORIES.map((category) => {
             const isSelected = !isSearch && intent === category.key;
             return (
@@ -303,23 +219,22 @@ export default function DiscoverScreen() {
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
                 onPress={() => {
-                  if (category.isRoute && category.route) {
-                    void triggerHaptic.light();
-                    router.push(category.route as any);
-                    return;
-                  }
+                  void triggerHaptic.light();
                   setSearch('');
-                  setIntent(category.key as DiscoveryIntent);
+                  setDeferredSearch('');
+                  setIntent(isSelected ? 'discover' : category.key);
                 }}
-                style={[styles.categoryTab, isSelected && styles.categoryTabActive]}
+                style={({ pressed }) => [styles.categoryTab, isSelected && styles.categoryTabActive, pressed && styles.pressed]}
               >
                 <Text style={[styles.categoryLabel, isSelected && styles.categoryLabelActive]}>
-                  {category.label}
+                  {category.key === 'discover' ? 'All' : category.label}
                 </Text>
+                {isSelected ? <Check size={14} color={Colors.inkDark} /> : null}
               </Pressable>
             );
           })}
-        </ScrollView>
+        </View> : null}
+        </View>
 
         {discovery.isLoading ? (
           <ScreenLoading label="Finding what is good nearby." />
@@ -331,17 +246,16 @@ export default function DiscoverScreen() {
           />
         ) : feed?.supported === false ? (
           <ScreenMessage
-            title="Echoo is GTA-only right now"
-            body="Choose a supported GTA municipality to see live discovery."
-            action={<PrimaryButton label="Choose an area" onPress={() => setLocationOpen(true)} />}
+            title={`Discovery unavailable for ${location.city}`}
+            body={unsupportedLocationMessage(location, feed.reason)}
           />
         ) : (
           <>
-            {!isSearch && feed?.nearby.items.length ? (
+            {!isSearch && nearbyCards.length ? (
               <View style={styles.section}>
                 <View style={styles.featureHead}><View style={{ flex: 1, gap: 4 }}><Text style={styles.sectionTitle}>{featureTitle}</Text><Text style={styles.sectionSub}>{featureSub}</Text></View></View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={featureWidth + 14} decelerationRate="fast" contentContainerStyle={styles.featureRail}>
-                  {feed.nearby.items.map((place) => <View key={place.id} style={{ width: featureWidth }}><EditorialPlaceCard place={place} featured onPress={() => openPlace(place)} /></View>)}
+                  {nearbyCards.map((place) => <View key={place.id} style={{ width: featureWidth }}><EditorialPlaceCard place={place} featured onPress={() => openPlace(place)} /></View>)}
                 </ScrollView>
               </View>
             ) : null}
@@ -463,15 +377,17 @@ export default function DiscoverScreen() {
               </View>
             ) : null}
 
-            {!isSearch && feed?.recommended.items.length ? (
-              <DiscoverySection title="Picked for you" subtitle="Your next good find" cards={feed.recommended.items} onOpen={openPlace} />
+            {!isSearch && recommendedCards.length ? (
+              <DiscoverySection title="Picked for you" subtitle="Your next good find" cards={recommendedCards} onOpen={openPlace} />
             ) : null}
             <DiscoverySection
               title={mainTitle}
               subtitle={mainSub}
               cards={mainCards}
               onOpen={openPlace}
-              emptyBody={isSearch ? 'Try a clearer place, vibe, or neighborhood.' : `No places found for ${currentCategory?.label.toLowerCase() || 'this vibe'} in this area yet. Try changing municipality or clearing your culture lens.`}
+              emptyBody={feed?.liveSearch?.status === "unavailable"
+                ? `Live place search is unavailable right now, and Echoo’s saved listings have no matching results in ${location.label}. Pull down to try again.`
+                : `No matching places found in ${location.label}${isSearch ? ` for "${deferredSearch}"` : ""}. Try another search or change your city.`}
             />
             {discovery.isError ? <Text style={styles.empty}>{discovery.isFetchNextPageError ? 'More places could not load. Your current results are still here.' : 'Could not refresh places. Your current results are still here.'}</Text> : null}
             {discovery.hasNextPage ? <PrimaryButton
@@ -568,11 +484,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     minHeight: 44,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.14)',
-    backgroundColor: 'rgba(248, 245, 239, 0.035)',
-    paddingHorizontal: 12,
+    paddingHorizontal: 0,
   },
   filterRow: {
     flexDirection: 'row',
@@ -623,11 +535,14 @@ const styles = StyleSheet.create({
   },
   clearSearch: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   heroCell: { width: '100%', marginBottom: 2 },
-  filters: { gap: 22, paddingBottom: 2 },
-  categoryTab: { minHeight: 44, justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  categoryTabActive: { borderBottomColor: Colors.peach },
-  categoryLabel: { fontFamily: Fonts.uiMedium, fontSize: 14, color: '#b9b3a9' },
-  categoryLabelActive: { color: Colors.peachLight, fontFamily: Fonts.uiSemiBold },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 2 },
+  activityPicker: { gap: 12 },
+  activityToggle: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: Colors.peachBorder, backgroundColor: Colors.glassPill, maxWidth: '100%' },
+  activityLabel: { fontFamily: Fonts.uiMedium, fontSize: 14, color: Colors.peach, flexShrink: 1 },
+  categoryTab: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingHorizontal: 13, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: Colors.borderLight, backgroundColor: Colors.glassPill },
+  categoryTabActive: { borderColor: Colors.peach, backgroundColor: Colors.peach },
+  categoryLabel: { fontFamily: Fonts.uiMedium, fontSize: 14, color: Colors.textPrimary },
+  categoryLabelActive: { color: Colors.inkDark, fontFamily: Fonts.uiSemiBold },
   section: {
     marginTop: 6,
     gap: 18,

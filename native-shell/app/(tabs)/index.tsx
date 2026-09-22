@@ -1,4 +1,6 @@
+import { CompanionEntry } from '@/src/components/companion-entry';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -12,6 +14,8 @@ import type { ImageSourcePropType } from 'react-native';
 import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BrandMark } from '@/src/components/brand-mark';
+import { LocationPicker } from '@/src/components/location-picker';
+import { unsupportedLocationMessage } from '@/src/services/location';
 import { EditorialPlaceCard } from '@/src/components/editorial-place-card';
 import type { DiscoveryCard, DiscoveryFeed, EchooProfile } from '@/src/models';
 import { useAuth } from '@/src/providers/auth-provider';
@@ -93,6 +97,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user, profile } = useAuth();
   const { location } = useEchooLocation();
+  const [locationOpen, setLocationOpen] = useState(false);
   const { active: culture } = useCulture();
   const surprise = useSurprise();
   const profileKey = [
@@ -106,6 +111,7 @@ export default function HomeScreen() {
   const recommendationQuery = homeQuery(profile, culture?.label);
 
   const discovery = useQuery({
+    staleTime: 0,
     queryKey: [
       'home-recommendation',
       recommendationQuery,
@@ -163,13 +169,14 @@ export default function HomeScreen() {
         >
           {/* Top Brand & Greeting Area matching Inspi */}
           <View style={styles.topSection}>
-            <View style={styles.brandRow}><BrandMark size="small" /><View style={styles.homeLocation}><MapPin size={12} color={Colors.peach} /><Text style={styles.homeLocationText} numberOfLines={1}>{location.city}</Text></View></View>
+            <View style={styles.brandRow}><BrandMark size="small" /><Pressable accessibilityRole="button" accessibilityLabel={`Change location, currently ${location.label}`} onPress={() => setLocationOpen(true)} style={({ pressed }) => [styles.homeLocation, { minHeight: 48, opacity: pressed ? 0.7 : 1 }]}><MapPin size={12} color={Colors.peach} /><Text style={styles.homeLocationText} numberOfLines={1}>{location.city}</Text></Pressable></View>
 
             <View style={styles.greetingWrap}>
               <Text style={styles.greeting}>
                 {greetingForNow()}
                 {displayName ? `,\n${displayName}.` : '.'}
               </Text>
+
             </View>
           </View>
 
@@ -224,6 +231,8 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
+          <CompanionEntry />
+
           {/* Featured Place Section matching Inspi */}
           <View style={styles.recommendationSection}>
             <View style={styles.sectionHead}>
@@ -246,25 +255,29 @@ export default function HomeScreen() {
             ) : (
               <View style={styles.loadingCard}>
                 <Text style={styles.loadingTitle}>
-                  {discovery.data?.supported === false
-                    ? 'Choose a GTA area to get a recommendation.'
-                    : 'Nothing clear has surfaced yet.'}
+                  {discovery.isError ? 'Discovery could not load'
+                    : discovery.data?.supported === false
+                    ? `Discovery unavailable for ${location.city}`
+                    : `No matching places in ${location.city} yet`}
                 </Text>
                 <Text style={styles.loadingBody}>
-                  Browse the live catalogue and Echoo will keep your active location and culture lens.
+                  {discovery.isError ? discovery.error.message
+                    : discovery.data?.supported === false ? unsupportedLocationMessage(location, discovery.data.reason)
+                    : 'No recommendation was returned for your current filters. Try another search in Discover.'}
                 </Text>
-                <Pressable
+                {discovery.data?.supported !== false ? <Pressable
                   accessibilityRole="button"
                   onPress={() => router.push('/(tabs)/discover')}
                   style={styles.browseButton}
                 >
                   <Text style={styles.browseButtonText}>Open Discover</Text>
                   <ChevronRight size={16} color={Colors.background} />
-                </Pressable>
+                </Pressable> : null}
               </View>
             )}
           </View>
         </ScrollView>
+        <LocationPicker visible={locationOpen} onClose={() => setLocationOpen(false)} />
       </LinearGradient>
     </ImageBackground>
   );

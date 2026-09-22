@@ -1,3 +1,4 @@
+import { disablePlanningNotifications } from '@/src/services/planning-notifications';
 import type { Session, User } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
@@ -8,6 +9,9 @@ import { supabase } from '@/src/services/supabase';
 
 type AuthContextValue = {
   ready: boolean;
+  authFlow: boolean;
+  beginAuthFlow: () => void;
+  endAuthFlow: () => void;
   session: Session | null;
   user: User | null;
   profile: EchooProfile | null;
@@ -19,6 +23,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [authFlow, setAuthFlow] = useState(false);
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<EchooProfile | null>(null);
@@ -72,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signOut() {
+    await disablePlanningNotifications();
     const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) throw error;
     generation.current += 1;
@@ -131,6 +137,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         ready,
+        authFlow,
+        beginAuthFlow: () => setAuthFlow(true),
+        endAuthFlow: () => setAuthFlow(false),
         session,
         user: session?.user ?? null,
         profile,

@@ -182,3 +182,13 @@ export async function respondToMatch(matchId: string, response: 'accepted' | 'de
 export async function endMatch(matchId: string) {
   return callLinkUp<{ ok: boolean }>('linkup-match', { action: 'end', matchId });
 }
+
+// 'active' resumes matching; 'ghost' keeps presence but hides it from new
+// matches. 'paused'/'opted_out' are only set through onboarding/account flows.
+export async function setPresenceVisibility(userId: string, mode: 'active' | 'ghost') {
+  const { error } = await supabase
+    .from('user_onboarding_profiles')
+    .update({ linkup_status: mode })
+    .eq('user_id', userId);
+  if (error) throw new Error('Could not update your Link Up visibility.');
+}

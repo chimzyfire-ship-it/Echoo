@@ -389,8 +389,10 @@ export function cultureQueryForIntent(
   search: string,
   country: CultureCountry | null,
 ): string {
-  const base = search || intent;
-  return cultureQueryFor(base, country);
+  // A typed request wins over a saved cultural preference. Browsing can still
+  // use the explicitly selected lens.
+  if (search.trim()) return search.trim();
+  return cultureQueryFor(intent, country);
 }
 
 const STORAGE_KEY = 'echoo_culture_lens_v1';

@@ -105,6 +105,11 @@ export async function readCompanionMemory(input: {
   state: CompanionMemoryState;
 }): Promise<CompanionMemoryContext> {
   const userId = await userIdFromRequest(input.supabase, input.req);
+  // Legacy callers share the new consent boundary. Anonymous session keys must
+  // never grant access to stored conversation data through the service role.
+  if (!userId) return {available:false,reason:'no_user',memories:[],safetyConstraints:[],visibleCards:[]};
+  const {data:preferences,error:consentError} = await input.supabase.from('planning_preferences').select('memory_enabled').eq('user_id',userId).maybeSingle();
+  if (consentError || !preferences?.memory_enabled) return {available:false,reason:'memory_disabled',memories:[],safetyConstraints:[],visibleCards:[]};
   const sessionKey = safeSessionKey(input.sessionKey, userId);
   if (!userId && !sessionKey) {
     return {

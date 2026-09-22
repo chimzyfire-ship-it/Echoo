@@ -476,3 +476,14 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# Companion validates the member session with auth.getUser inside the handler.
+[functions.companion-plan]
+verify_jwt = false
+
+# Scheduler-only endpoint; requires the private x-planning-cron-secret header.
+[functions.planning-notifications]
+verify_jwt = false
+
+[functions.app-notifications]
+verify_jwt = false

@@ -8,10 +8,12 @@ import type {
   MovieItem,
   PlaceDetail,
   QuickPlan,
+  QuickPlanStop,
   Ticket,
   TicketSaleItem,
 } from '@/src/models';
 import { echooConfig, supabase } from '@/src/services/supabase';
+import { manualMunicipalityLocation } from '@/src/services/location';
 
 export class EchooApiError extends Error {
   constructor(
@@ -26,11 +28,12 @@ export class EchooApiError extends Error {
 
 const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 const numberOrNull = (value: unknown) => {
+  if (value === null || value === undefined || value === '' || typeof value === 'boolean') return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-async function edgeRequest<T>(
+export async function edgeRequest<T>(
   name: string,
   options: { method?: 'GET' | 'POST'; body?: unknown; query?: Record<string, string>; signal?: AbortSignal } = {}
 ): Promise<T> {
@@ -149,17 +152,20 @@ export async function getDiscovery(
   },
   signal?: AbortSignal
 ): Promise<DiscoveryFeed> {
+  const isGps = input.location.mode === 'gps';
+  const manual = isGps ? null : manualMunicipalityLocation(input.location.city);
+  if (!isGps && !manual) throw new EchooApiError('Select a listed city, not a region heading.', 422, 'invalid_city');
   const payload = await edgeRequest<Record<string, unknown>>('explore-search', {
     body: {
       version: 2,
       intent: input.intent,
       query: input.query,
       cultureSlug: input.cultureSlug || undefined,
-      city: input.location.city,
-      lat: input.location.latitude,
-      lng: input.location.longitude,
+      city: manual?.city ?? input.location.city,
+      lat: isGps ? input.location.latitude : undefined,
+      lng: isGps ? input.location.longitude : undefined,
       radiusMeters:
-        input.location.latitude !== undefined && input.location.longitude !== undefined ? 100000 : undefined,
+        isGps && input.location.latitude !== undefined && input.location.longitude !== undefined ? 100000 : undefined,
       preferenceFeatureSlugs: input.preferenceFeatureSlugs ?? [],
       includeLiveFallback: true,
       limit: 20,
@@ -167,6 +173,10 @@ export async function getDiscovery(
     },
     signal,
   });
+
+  if (!payload || (payload.supported !== false && (!payload.all || !payload.nearby || !payload.recommended))) {
+    throw new EchooApiError('Discovery is unavailable. The service returned an incompatible response. Please try again later.', 503, 'incompatible_discovery');
+  }
 
   const rawLocation =
     payload.location && typeof payload.location === 'object'
@@ -178,11 +188,12 @@ export async function getDiscovery(
       : {};
 
   return {
+    understanding: payload.understanding as DiscoveryFeed["understanding"],
+    liveSearch: (payload.meta as { liveSearch?: DiscoveryFeed["liveSearch"] } | undefined)?.liveSearch,
     supported: payload.supported !== false,
     reason: text(payload.reason) || undefined,
     location: {
-      mode:
-        rawLocation.mode === 'gps' || rawLocation.mode === 'municipality' ? 'gps' : input.location.mode,
+      mode: input.location.mode,
       city: text(rawLocation.city) || input.location.city,
       label: text(rawLocation.label) || input.location.label,
       latitude: input.location.latitude,
@@ -230,18 +241,94 @@ export async function getPlaceDetail(id: string, signal?: AbortSignal): Promise<
   return response.data;
 }
 
+export type QuickPlanStopCount = 1 | 2 | 3;
+export type QuickPlanBudgetStyle = 'value' | 'balanced' | 'elevated';
+
+export interface QuickPlanProfileInput {
+  interests?: string[];
+  eventStyles?: string[];
+  audiences?: string[];
+  motivations?: string[];
+  budget?: string;
+  energy?: string;
+  city?: string;
+}
+
+const budgetStyleFromProfile = (budget?: string): QuickPlanBudgetStyle => {
+  if (budget === '$') return 'value';
+  if (budget === '$$$') return 'elevated';
+  return 'balanced';
+};
+
+// Guard the rendered plan the same way the backend does: real named stops with
+// coordinates, no duplicates, nothing outside 1–3 stops.
+export function normalizeQuickPlan(plan: QuickPlan, anchorId: string): QuickPlan {
+  const seen = new Set<string>();
+  const stops = (Array.isArray(plan?.stops) ? plan.stops : [])
+    .filter(
+      (stop): stop is QuickPlanStop =>
+        Boolean(stop) &&
+        typeof stop.id === 'string' &&
+        stop.id.length > 0 &&
+        typeof stop.name === 'string' &&
+        stop.name.trim().length > 0 &&
+        Number.isFinite(stop.latitude) &&
+        Math.abs(stop.latitude) <= 90 &&
+        Number.isFinite(stop.longitude) && Math.abs(stop.longitude) <= 180
+    )
+    .filter((stop) => {
+      if (seen.has(stop.id)) return false;
+      seen.add(stop.id);
+      return true;
+    })
+    .slice(0, 3);
+  // The server may promote a live anchor into canonical inventory and respond
+  // with its permanent UUID; treat the server's anchor id as authoritative.
+  const sentAnchorId = anchorId;
+  const serverAnchorId = typeof plan?.anchorId === 'string' ? plan.anchorId : '';
+  const effectiveAnchorId = stops.some((stop) => stop.id === sentAnchorId) ? sentAnchorId : serverAnchorId;
+  if (!stops.length || !effectiveAnchorId || !stops.some((stop) => stop.id === effectiveAnchorId)) {
+    throw new EchooApiError('Echoo returned a plan with no usable stops. Try again in a moment.', 502);
+  }
+  const knownCosts = stops.flatMap((stop) => {
+    const cost = stop.costEstimate;
+    return cost && Number.isFinite(cost.min) && Number.isFinite(cost.max) && cost.min >= 0 && cost.max >= cost.min ? [cost] : [];
+  });
+  return {
+    ...plan,
+    anchorId: effectiveAnchorId,
+    stops: stops.map((stop) => ({ ...stop, isAnchor: stop.id === effectiveAnchorId })),
+    stopCount: stops.length,
+    budgetEstimate: knownCosts.length ? {
+      min: knownCosts.reduce((sum, cost) => sum + cost.min, 0),
+      max: knownCosts.reduce((sum, cost) => sum + cost.max, 0),
+      currency: 'CAD', perPerson: true, knownCount: knownCosts.length, unknownCount: stops.length - knownCosts.length,
+    } : null,
+  };
+}
+
 export async function getQuickPlan(
-  input: { anchor: DiscoveryCard; stopCount: 2 | 3; budgetStyle: 'value' | 'balanced' | 'elevated' },
+  input: {
+    anchor: DiscoveryCard;
+    stopCount: QuickPlanStopCount;
+    budgetStyle?: QuickPlanBudgetStyle;
+    profile?: QuickPlanProfileInput;
+    mood?: string;
+    anchorPosition?: number;
+    rotationKey?: string;
+    recentPlaceIds?: string[];
+  },
   signal?: AbortSignal
 ): Promise<QuickPlan> {
-  const { anchor } = input;
-  if (anchor.latitude === null || anchor.longitude === null) {
+  const { anchor, profile } = input;
+  if (!Number.isFinite(anchor.latitude) || !Number.isFinite(anchor.longitude)) {
     throw new EchooApiError('This place needs precise location data before Echoo can plan around it.', 422);
   }
+  const anchorId = anchor.canonicalId || anchor.id;
   const response = await edgeRequest<{ plan: QuickPlan }>('quick-plan', {
     body: {
       anchor: {
-        id: anchor.canonicalId || anchor.id,
+        id: anchorId,
         name: anchor.title,
         category: anchor.category,
         city: anchor.city,
@@ -251,11 +338,33 @@ export async function getQuickPlan(
         imageUrl: anchor.image?.url,
       },
       stopCount: input.stopCount,
-      budgetStyle: input.budgetStyle,
+      budgetStyle: input.budgetStyle ?? budgetStyleFromProfile(profile?.budget),
+      mood: input.mood,
+      anchorPosition: input.anchorPosition,
+      rotationKey: input.rotationKey,
+      recentPlaceIds: input.recentPlaceIds?.slice(-30),
+      // Onboarding taste, not invented history. A completed member profile
+      // still wins server-side; this carries guest preferences.
+      profile: profile
+        ? {
+            interests: profile.interests ?? [],
+            eventStyles: profile.eventStyles ?? [],
+            audiences: profile.audiences ?? [],
+            motivations: profile.motivations ?? [],
+            budget: profile.budget ?? '$',
+            energy: profile.energy ?? 'chill',
+            city: profile.city,
+          }
+        : undefined,
+      // Device clock, sanity-clamped server-side.
+      now: new Date().toISOString(),
     },
     signal,
   });
-  return response.plan;
+  if (!response?.plan || !Array.isArray(response.plan.stops)) {
+    throw new EchooApiError('Echoo returned a plan Echoo could not read. Try again in a moment.', 502);
+  }
+  return normalizeQuickPlan(response.plan, anchorId);
 }
 
 export async function askCompanion(

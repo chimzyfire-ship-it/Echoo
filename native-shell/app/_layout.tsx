@@ -1,3 +1,5 @@
+import { PlanningNotificationRouter } from '@/src/components/planning-notification-router';
+import { NotificationProvider } from '@/src/providers/notification-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -32,7 +34,7 @@ import { SurpriseProvider } from '@/src/providers/surprise-provider';
 import { Colors } from '@/src/theme/tokens';
 
 function AppNavigator() {
-  const { ready, user, profile, profileError, refreshProfile, signOut } = useAuth();
+  const { ready, authFlow, user, profile, profileError, refreshProfile, signOut } = useAuth();
   const router = useRouter();
   const segments = useSegments();
   const rootSegment = segments[0] ?? '';
@@ -40,11 +42,15 @@ function AppNavigator() {
     rootSegment === '(tabs)' ||
     rootSegment === 'place' ||
     rootSegment === 'planner' ||
+    rootSegment === 'planning-memory' ||
+    rootSegment === 'notifications' ||
+    rootSegment === 'plan-map' ||
+    rootSegment === 'weekend' ||
     rootSegment === 'tickets' ||
     rootSegment === 'cinema';
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || authFlow) return;
 
     // Restored members may stay on the landing page and use Surprise directly.
     if (user && profile?.completedAt) return;
@@ -61,9 +67,9 @@ function AppNavigator() {
     if (!user && (memberRoute || rootSegment === 'onboarding')) {
       router.replace('/');
     }
-  }, [memberRoute, profile?.completedAt, profileError, ready, rootSegment, router, user]);
+  }, [authFlow, memberRoute, profile?.completedAt, profileError, ready, rootSegment, router, user]);
 
-  if (!ready) {
+  if (!ready && !authFlow) {
     return (
       <View style={styles.loading}>
         <ScreenLoading label="Opening Echoo." />
@@ -71,7 +77,7 @@ function AppNavigator() {
     );
   }
 
-  if (profileError) {
+  if (profileError && !authFlow) {
     return <View style={styles.loading}>
       <ScreenMessage title="Could not open your profile" body={profileError} action={<>
         <PrimaryButton label="Try again" onPress={() => { void refreshProfile().catch(() => {}); }} />
@@ -80,7 +86,7 @@ function AppNavigator() {
     </View>;
   }
 
-  if ((memberRoute && (!user || !profile?.completedAt)) || (rootSegment === 'onboarding' && !user)) {
+  if (!authFlow && ((memberRoute && (!user || !profile?.completedAt)) || (rootSegment === 'onboarding' && !user))) {
     return <View style={styles.loading}><ScreenLoading label="Opening Echoo." /></View>;
   }
 
@@ -98,6 +104,10 @@ function AppNavigator() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="place/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="planner" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="planning-memory" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="notifications" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="plan-map" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="weekend" />
       <Stack.Screen name="tickets" options={{ presentation: 'card', animation: 'slide_from_right' }} />
       <Stack.Screen name="cinema" options={{ presentation: 'card', animation: 'slide_from_right' }} />
     </Stack>
@@ -150,7 +160,10 @@ export default function RootLayout() {
               <CultureProvider>
                 <StatusBar style="light" />
                 <SurpriseProvider>
-                  <AppNavigator />
+                  <NotificationProvider>
+                    <PlanningNotificationRouter />
+                    <AppNavigator />
+                  </NotificationProvider>
                 </SurpriseProvider>
               </CultureProvider>
             </LocationProvider>

@@ -26,8 +26,8 @@ export const ONTARIO_REGION: SupportedCity = {
 
 /**
  * Echoo's launch area is the 25 municipal search scopes in the Greater Toronto
- * Area: Toronto plus Durham, York, Peel, and Halton. Ontario remains an
- * expansion jurisdiction, not a default discovery location.
+ * Area: Toronto plus Durham, York, Peel, and Halton. Discovery also accepts
+ * the curated Ontario registry below; GTA ingestion remains separately scoped.
  */
 export const GTA_REGION: SupportedCity = {
   name: "Greater Toronto Area",
@@ -482,9 +482,10 @@ export const GTA_MUNICIPALITIES: SupportedCity[] = LEGACY_CANADA_CITIES
   .filter((city) => GTA_MUNICIPALITY_NAMES.has(city.name))
   .map((city) => ({ ...city, coverageLevel: "municipality" as const }));
 
-// Backwards-compatible export for existing consumers. It now deliberately
-// resolves to GTA-25 only; no consumer feature may opt into the old list.
+// Existing ingestion consumers remain GTA-scoped; discovery normalizes Ontario.
 export const SUPPORTED_CANADA_CITIES = GTA_MUNICIPALITIES;
+
+export const ONTARIO_MUNICIPALITIES = LEGACY_CANADA_CITIES.filter((city) => city.province === 'ON');
 
 export const GTA_BOUNDS = {
   // A fast, conservative preflight only. The database boundary resolver is
@@ -656,7 +657,8 @@ export function nearestSupportedCity(
 
 export function normalizeCityName(input?: string | null): SupportedCity | null {
   if (!input) return null;
-  const normalized = input.trim().toLowerCase();
+  const normalize = (value: string) => value.toLowerCase().replace(/[.]/g, '').replace(/[-\s]+/g, ' ').trim();
+  const normalized = normalize(input);
   if (
     normalized === "gta" ||
     normalized === "greater toronto" ||
@@ -665,12 +667,37 @@ export function normalizeCityName(input?: string | null): SupportedCity | null {
     return GTA_REGION;
   }
   return (
-    GTA_MUNICIPALITIES.find(
+    ONTARIO_MUNICIPALITIES.find(
       (city) =>
-        city.name.toLowerCase() === normalized ||
-        city.aliases?.some((alias) => alias.toLowerCase() === normalized),
+        normalize(city.name) === normalized ||
+        city.aliases?.some((alias) => normalize(alias) === normalized),
     ) || null
   );
+}
+
+// A bounding rectangle is only a preflight: it includes Quebec and the US.
+// Exact GTA polygons remain useful without a geocoding key. Elsewhere require
+// a provider-confirmed Canadian/Ontario administrative address, never a centroid.
+export async function resolveOntarioGps(supabase: SupabaseAdmin, lat: number, lng: number) {
+  if (!isInsideOntarioBounds(lat, lng)) return null;
+  if (isInsideGtaBounds(lat, lng)) {
+    const { data, error } = await supabase.rpc('resolve_gta_municipality', { p_lat: lat, p_lng: lng });
+    if (!error && data?.[0]?.municipality) {
+      return { municipality: data[0].municipality as string, regionalMunicipality: data[0].regional_municipality as string | null };
+    }
+  }
+  const key = Deno.env.get('GOOGLE_GEOCODING_API_KEY') || Deno.env.get('GOOGLE_MAPS_API_KEY');
+  if (!key) throw new Error('GPS province verification is unavailable. Choose a listed city instead.');
+  const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${encodeURIComponent(key)}`, { signal: AbortSignal.timeout(5000) });
+  if (!response.ok) throw new Error('GPS province verification failed. Choose a listed city instead.');
+  const payload = await response.json();
+  if (payload.status === 'ZERO_RESULTS') return null;
+  if (payload.status !== 'OK') throw new Error('GPS province verification failed. Choose a listed city instead.');
+  const components = payload.results?.[0]?.address_components || [];
+  const component = (type: string) => components.find((item: any) => item.types?.includes(type));
+  if (component('country')?.short_name !== 'CA' || component('administrative_area_level_1')?.short_name !== 'ON') return null;
+  const name = component('administrative_area_level_3')?.long_name || component('locality')?.long_name;
+  return { municipality: normalizeCityName(name)?.name || name || null, regionalMunicipality: null };
 }
 
 export function clampRadiusMeters(value: unknown): number {

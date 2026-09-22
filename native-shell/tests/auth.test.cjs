@@ -118,6 +118,7 @@ test('auth restoration defers profile I/O, ignores stale loads and keeps token r
   const hooks = [], effects = [], pending = [];
   let cursor = 0, context, listener, session;
   const { AuthProvider } = load('../src/providers/auth-provider.tsx', {
+    '@/src/services/planning-notifications': { disablePlanningNotifications: async () => {} },
     react: {
       createContext: () => ({ Provider: 'auth' }),
       useState: (initial) => {

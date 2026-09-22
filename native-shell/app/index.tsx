@@ -5,6 +5,7 @@ import React from 'react';
 import { ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { BrandMark } from '@/src/components/brand-mark';
+import { LegalLinks } from '@/src/components/legal-links';
 import { LandingAuth } from '@/src/components/landing-auth';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useSurprise } from '@/src/providers/surprise-provider';
@@ -48,8 +49,9 @@ function LandingAction({ label, onPress, variant = 'primary' }: LandingActionPro
 export default function LandingScreen() {
   const router = useRouter();
   const { auth, mode } = useLocalSearchParams<{ auth?: string; mode?: string }>();
-  const { height } = useWindowDimensions();
-  const { user, profile, ready } = useAuth();
+  const { height, width } = useWindowDimensions();
+  const headlineSize = Math.min(50, (width - 48) / 6.9);
+  const { user, profile, ready, authFlow } = useAuth();
   const surprise = useSurprise();
 
   function handleSignInPress() {
@@ -89,25 +91,26 @@ export default function LandingScreen() {
           {/* Centered Brand Mark at Top */}
           <View style={styles.topBar}>
             <BrandMark size="large" />
+            <Text style={styles.wordmark}>Echoocity</Text>
           </View>
 
           {/* Hero Typography and CTA Buttons matching IMG_0562 */}
           <View style={styles.hero}>
             <View style={styles.heroCopy}>
-              <Text style={styles.kicker}>THE GTA · TONIGHT</Text>
-              <Text style={styles.headline}>
-                {"Don't waste\nthe "}
-                <Text style={styles.headlineAccent}>night.</Text>
+              <Text style={styles.kicker}>TORONTO & BEYOND</Text>
+              <Text style={[styles.headline, { fontSize: headlineSize, lineHeight: headlineSize * 1.08 }]}>
+                {"Find your kind\nof "}
+                <Text style={styles.headlineAccent}>out there.</Text>
               </Text>
               <Text style={styles.description}>
-                Tables, sets, and spots the city actually loves — before the group chat decides.
+                Local favourites. Fresh-air escapes. Plans that feel like you — whenever you’re ready.
               </Text>
             </View>
 
             <View style={styles.actions}>
               <LandingAction label="Surprise me" onPress={surprise.start} />
-              {user ? (
-                <LandingAction label="Open Echoo" onPress={handleSignInPress} variant="secondary" />
+              {user && !authFlow ? (
+                <LandingAction label="Explore Echoocity" onPress={handleSignInPress} variant="secondary" />
               ) : (
                 <LandingAuth
                   open={auth === 'open'}
@@ -121,10 +124,7 @@ export default function LandingScreen() {
 
           {/* Legal Footer matching IMG_0562 */}
           <View style={styles.footerWrap}>
-            <View style={styles.legalLinks}>
-              <Text style={styles.legalLink}>Privacy</Text>
-              <Text style={styles.legalLink}>Terms</Text>
-            </View>
+            <LegalLinks />
             <Text style={styles.copyright}>
               Copyright © 2026 Idris Oyejobi. All rights reserved.
             </Text>
@@ -158,6 +158,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
+    gap: 12,
+  },
+  wordmark: {
+    fontFamily: Fonts.displayRegular,
+    color: Colors.peach,
+    fontSize: 25,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(247, 213, 178, 0.24)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 16,
   },
   hero: {
     flex: 1,

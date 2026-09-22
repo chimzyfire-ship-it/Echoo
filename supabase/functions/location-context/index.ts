@@ -1,7 +1,7 @@
 import {
   CORS_HEADERS,
   GTA_REGION,
-  isInsideGtaBounds,
+  resolveOntarioGps,
   jsonResponse,
   normalizeCityName,
   getSupabaseAdmin,
@@ -41,6 +41,13 @@ Deno.serve(async (req) => {
     const lng = optionalNumber(body.lng ?? url.searchParams.get("lng"));
     const suppliedCity = clean(body.city ?? url.searchParams.get("city"));
 
+    const rawLat = body.lat ?? url.searchParams.get('lat');
+    const rawLng = body.lng ?? url.searchParams.get('lng');
+    if ((rawLat != null && rawLat !== '' && lat === undefined) ||
+        (rawLng != null && rawLng !== '' && lng === undefined)) {
+      return jsonResponse({ error: 'Coordinates must be finite numbers' }, 422);
+    }
+
     if ((lat === undefined) !== (lng === undefined)) {
       return jsonResponse({ error: "lat and lng must be provided together" }, 422);
     }
@@ -51,12 +58,12 @@ Deno.serve(async (req) => {
         return jsonResponse({
           supported: false,
           reason: "unsupported_municipality",
-          message: "Choose one of Echoo's 25 GTA municipalities.",
+          message: "Choose a listed Ontario city or GTA municipality.",
         });
       }
       return jsonResponse({
         supported: true,
-        scope: "gta",
+        scope: "ontario",
         mode: city.coverageLevel === "municipality" ? "manual_city" : "gta_fallback",
         municipality: city.coverageLevel === "municipality" ? city.name : null,
         regionalMunicipality: null,
@@ -67,55 +74,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!isInsideGtaBounds(lat, lng)) {
+    const resolved = await resolveOntarioGps(getSupabaseAdmin(), lat, lng);
+    if (!resolved) {
       return jsonResponse({
         supported: false,
-        reason: "outside_gta",
-        message: "Echoo is currently live across the Greater Toronto Area.",
+        reason: "outside_ontario",
+        message: "Choose a location in Ontario.",
         fallback: GTA_REGION,
       });
     }
 
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase.rpc("resolve_gta_municipality", {
-      p_lat: lat,
-      p_lng: lng,
-    });
-    if (error) throw error;
-    const resolved = Array.isArray(data) ? data[0] : null;
-    const { count: boundaryCount, error: boundaryCountError } = await supabase
-      .from("gta_municipality_boundaries")
-      .select("id", { count: "exact", head: true });
-    if (boundaryCountError) throw boundaryCountError;
-    if (!resolved?.municipality && Number(boundaryCount || 0) >= 25) {
-      return jsonResponse({
-        supported: false,
-        reason: "outside_gta",
-        message: "Echoo is currently live across the Greater Toronto Area.",
-        fallback: GTA_REGION,
-      });
-    }
     const accuracyMeters = optionalNumber(
       body.accuracyMeters ?? url.searchParams.get("accuracyMeters"),
     );
 
-    // Never assign a municipality from a centroid. Until all 25 official
-    // boundaries are loaded, exact coordinates can still power distance ranking
-    // but the UI stays GTA-wide rather than mislabelling the user.
     return jsonResponse({
       supported: true,
-      scope: "gta",
+      scope: "ontario",
       mode: "gps_precise",
       municipality: resolved?.municipality || null,
-      regionalMunicipality: resolved?.regional_municipality || null,
+      regionalMunicipality: resolved.regionalMunicipality,
       label: resolved?.municipality
         ? `Near you in ${resolved.municipality}`
-        : "Near you in the GTA",
-      timezone: resolved?.timezone || "America/Toronto",
+        : "Near you in Ontario",
       accuracyMeters: accuracyMeters === undefined
         ? null
         : Math.max(0, Math.round(accuracyMeters)),
-      boundaryResolved: Boolean(resolved?.municipality),
     });
   } catch (error) {
     return jsonResponse(

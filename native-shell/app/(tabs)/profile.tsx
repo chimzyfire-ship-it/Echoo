@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tabs, useRouter } from 'expo-router';
 import { ChevronRight, LogOut, Ticket, Pencil, RefreshCw } from 'lucide-react-native';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/src/components/primary-button';
+import { CityScoreSection } from '@/src/components/city-score-section';
 import { useAuth } from '@/src/providers/auth-provider';
 import { getMyTickets } from '@/src/services/api';
 import { Colors, Fonts } from '@/src/theme/tokens';
@@ -82,6 +83,15 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
+      <Pressable accessibilityRole="button" onPress={() => router.push('/planning-memory')} style={styles.accountRow}>
+        <Pencil size={18} color={Colors.peach}/><Text style={styles.accountLabel}>Planning memory & saved routes</Text><ChevronRight size={18} color={Colors.peach}/>
+      </Pressable>
+
+      <CityScoreSection key={user?.id || 'guest'} userId={user?.id} />
+      <Pressable accessibilityRole="button" onPress={() => router.push('/notifications')} style={styles.accountRow}>
+        <Text style={styles.accountLabel}>Notifications</Text><ChevronRight size={18} color={Colors.peach}/>
+      </Pressable>
+
       <View style={styles.section}>
         <View style={styles.sectionHead}>
           <View style={styles.sectionHeadCopy}>
@@ -159,7 +169,7 @@ export default function ProfileScreen() {
         <Pressable accessibilityRole="button" onPress={() => { void refreshProfile().then(() => queryClient.invalidateQueries({ queryKey: ['my-tickets'] })); }} style={({ pressed }) => [styles.accountRow, pressed && styles.pressed]}>
           <RefreshCw size={17} color="#bdbeb4" /><Text style={styles.accountLabel}>Refresh profile</Text><ChevronRight size={16} color="#858a7b" />
         </Pressable>
-        <Pressable accessibilityRole="button" onPress={() => { void signOut().then(() => router.replace('/')); }} style={({ pressed }) => [styles.accountRow, pressed && styles.pressed]}>
+        <Pressable accessibilityRole="button" onPress={() => { void signOut().then(() => router.replace('/')).catch(error => Alert.alert('Could not sign out', error instanceof Error ? error.message : 'Please try again.')); }} style={({ pressed }) => [styles.accountRow, pressed && styles.pressed]}>
           <LogOut size={17} color="#d4a296" /><Text style={[styles.accountLabel, { color: '#d4a296' }]}>Sign out</Text><ChevronRight size={16} color="#858a7b" />
         </Pressable>
       </View>

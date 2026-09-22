@@ -8,6 +8,7 @@ import {
   clampDiscoveryLimit,
   cleanDiscoveryText,
 } from "../_shared/hybrid-discovery.ts";
+import { googleSuggestions } from './google.ts';
 
 type SuggestionsPayload = { query?: unknown; city?: unknown; limit?: unknown };
 
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
         suggestions: [],
       });
     }
-    if (!query) return jsonResponse({ supported: true, suggestions: [] });
+    if (query.length < 2) return jsonResponse({ supported: true, suggestions: [] });
 
     const supabase = getSupabaseAdmin();
     const limit = clampDiscoveryLimit(
@@ -47,24 +48,30 @@ Deno.serve(async (req) => {
       8,
       20,
     );
-    const { data, error } = await supabase.rpc("discovery_search_suggestions", {
+    const [local, google] = await Promise.all([
+      supabase.rpc("discovery_search_suggestions", {
       p_prefix: query,
       p_city: city.coverageLevel === "municipality" ? city.name : null,
       p_limit: limit,
-    });
-    if (error) throw error;
+      }).abortSignal(AbortSignal.timeout(2500)).then((result) => result, () => ({ data: [], error: true })),
+      googleSuggestions({ query, city, apiKey: Deno.env.get('GOOGLE_PLACES_API_KEY') || Deno.env.get('GOOGLE_MAPS_API_KEY') }),
+    ]);
+    const data = local.data;
+    if (local.error && google.status !== 'available') throw new Error('Suggestions are temporarily unavailable.');
 
     return jsonResponse({
       supported: true,
       query,
       city: city.name,
-      suggestions: (data || []).map((item: any) => ({
+      providerStatus: google.status,
+      suggestions: [...google.suggestions, ...(data || []).map((item: any) => ({
         type: item.suggestion_type,
         value: item.value,
         label: item.label,
         category: item.category || null,
         entityId: item.entity_id || null,
-      })),
+        source: 'echoo',
+      })).filter((item: any) => !google.suggestions.some((place: any) => place.label.toLowerCase() === item.label.toLowerCase()))].slice(0, limit),
     });
   } catch (error) {
     return jsonResponse(
