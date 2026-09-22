@@ -99,11 +99,11 @@ export default function LandingScreen() {
             <View style={styles.heroCopy}>
               <Text style={styles.kicker}>TORONTO & BEYOND</Text>
               <Text style={[styles.headline, { fontSize: headlineSize, lineHeight: headlineSize * 1.08 }]}>
-                {"Find your kind\nof "}
-                <Text style={styles.headlineAccent}>out there.</Text>
+                {"Good places.\n"}
+                <Text style={styles.headlineAccent}>Great days.</Text>
               </Text>
               <Text style={styles.description}>
-                Local favourites. Fresh-air escapes. Plans that feel like you — whenever you’re ready.
+                Discover local favourites, explore somewhere new, and make a plan that feels like you.
               </Text>
             </View>
 
