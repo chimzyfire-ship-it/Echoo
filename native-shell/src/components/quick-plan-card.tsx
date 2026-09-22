@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import type { QuickPlan, QuickPlanStop } from '@/src/models';
 import { formatPlanBudget, formatStopCost } from '@/src/services/plan-format';
+import { MapPin } from 'lucide-react-native';
+import { PlanConnection } from '@/src/components/plan-connection';
 import { Colors, Fonts } from '@/src/theme/tokens';
 
 function PlacePhoto({ place }: { place: QuickPlanStop }) {
   const [failed, setFailed] = useState(false);
   return place.imageUrl && !failed ? <Image source={{ uri: place.imageUrl }} accessibilityLabel={place.name} style={styles.photo} resizeMode="cover" onError={() => setFailed(true)} /> :
-    <View style={styles.fallback}><Text style={styles.fallbackName}>{place.name}</Text><Text style={styles.caption}>A place to discover. Photo not available.</Text></View>;
+    <View style={styles.fallback} accessibilityLabel="Photo unavailable"><MapPin size={28} color={Colors.peach} /></View>;
 }
 
 export function QuickPlanCard({ plan, renderProgress, onPlaceLayout }: { plan: QuickPlan; renderProgress?: (place: QuickPlanStop, index: number) => React.ReactNode; onPlaceLayout?: (id: string, y: number) => void }) {
@@ -22,7 +24,7 @@ export function QuickPlanCard({ plan, renderProgress, onPlaceLayout }: { plan: Q
       <Text style={styles.caption}>CAD per person. Price-band estimates, not quotes. Travel, tax and tips are not included.</Text>
     </View>
     {plan.stops.map((place, index) => <View key={place.id} onLayout={(event) => onPlaceLayout?.(place.id, event.nativeEvent.layout.y)}>
-      {index > 0 ? <View style={styles.connection}><View style={styles.line} /><Text style={styles.connectionText}>Then, about {place.travelMinutes} minutes away</Text><View style={styles.line} /></View> : null}
+      {index > 0 ? <PlanConnection minutes={place.travelMinutes} mode={plan.travelMode} verified={plan.travelVerified} /> : null}
       <View style={styles.place}>
         <PlacePhoto key={place.imageUrl} place={place} />
         <View style={styles.copy}>
@@ -48,7 +50,7 @@ const styles = StyleSheet.create({
   budget: { fontFamily: Fonts.uiSemiBold, color: Colors.peach, fontSize: 16, lineHeight: 23 },
   place: { borderRadius: 22, overflow: 'hidden', backgroundColor: Colors.surfaceElevated },
   photo: { width: '100%', aspectRatio: 1.35, backgroundColor: Colors.surface },
-  fallback: { minHeight: 180, justifyContent: 'center', padding: 28, gap: 12, backgroundColor: Colors.surface },
+  fallback: { minHeight: 180, justifyContent: 'center', alignItems: 'center', padding: 28, gap: 12, backgroundColor: Colors.surface },
   fallbackName: { fontFamily: Fonts.display, color: Colors.textSecondary, fontSize: 28 },
   copy: { padding: 20, gap: 10 }, name: { fontFamily: Fonts.display, color: Colors.ink, fontSize: 26, lineHeight: 32 },
   facts: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, paddingTop: 6 }, fact: { fontFamily: Fonts.uiMedium, color: Colors.ink, fontSize: 14 },

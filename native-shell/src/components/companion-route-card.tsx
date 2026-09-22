@@ -20,6 +20,7 @@ import type { QuickPlan } from "@/src/models";
 import { recordPlanningFeedback } from "@/src/services/planning";
 import { formatPlanBudget, formatStopCost } from "@/src/services/plan-format";
 import { Colors, Fonts } from "@/src/theme/tokens";
+import { PlanConnection } from "@/src/components/plan-connection";
 import { CompanionPlace } from "@/src/components/companion-place";
 import type { CompanionPlace as Place } from "@/src/services/planning";
 
@@ -161,18 +162,7 @@ export function CompanionRouteCard({
       {plan.stops.map((stop, index) => (
         <View key={stop.id}>
           {index > 0 ? (
-            <View style={styles.track}>
-              <View style={styles.dash} />
-              <Text style={styles.trackText}>
-                {stop.travelMinutes} min{" "}
-                {plan.travelMode === "drive"
-                  ? "drive"
-                  : plan.travelMode === "transit"
-                    ? "by transit"
-                    : "walk"}{" "}
-                · {plan.travelVerified ? "route estimate" : "rough estimate"}
-              </Text>
-            </View>
+            <PlanConnection minutes={stop.travelMinutes} mode={plan.travelMode} verified={plan.travelVerified} />
           ) : null}
           <View
             ref={(node) => {

@@ -4,10 +4,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import {
   ChevronRight,
+  ChevronDown,
+  Check,
   Film,
   MapPin,
   Play,
-  Search,
   SlidersHorizontal,
   Sparkles,
   Star,
@@ -21,12 +22,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
+import { DiscoverSearch } from '@/src/components/discover-search';
 import { CultureFab } from '@/src/components/culture-fab';
 import { CulturePicker } from '@/src/components/culture-picker';
 import { LocationPicker } from '@/src/components/location-picker';
@@ -36,7 +37,6 @@ import { ScreenLoading, ScreenMessage } from '@/src/components/screen-state';
 import type { DiscoveryCard, DiscoveryFeed, DiscoveryIntent, MovieItem } from '@/src/models';
 import { useCulture } from '@/src/providers/culture-provider';
 import { useEchooLocation } from '@/src/providers/location-provider';
-import { CompanionEntry } from '@/src/components/companion-entry';
 import { getDiscovery, getMoviesFeed, getTicketsForSale } from '@/src/services/api';
 import { DISCOVER_CATEGORIES as CATEGORIES, discoveryCategoryRequest, matchesDiscoveryCategory } from '@/src/services/discover-categories';
 import { cultureQueryFor, cultureQueryForIntent } from '@/src/services/culture';
@@ -189,36 +189,29 @@ export default function DiscoverScreen() {
 
         <View style={styles.topCopy}>
           <Text style={styles.kicker}>DISCOVER</Text>
-          <Text style={styles.title}>{culture ? `${culture.label} culture, tonight.` : 'Your next good find.'}</Text>
+          <Text style={styles.title}>{culture ? `Discover ${culture.label} culture.` : 'Your next good find.'}</Text>
         </View>
 
-        <View style={styles.searchBox}>
-          <Search size={18} color={Colors.textMuted} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            accessibilityLabel="Search places, food, or music"
-            placeholder="Sushi, a quiet café, something fun…"
-            maxLength={240}
-            placeholderTextColor={Colors.textMuted}
-            returnKeyType="search"
-            style={styles.searchInput}
-          />
-          {search ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="Clear search" style={styles.clearSearch} onPress={() => setSearch('')}>
-              <X size={18} color={Colors.textSecondary} />
-            </Pressable>
-          ) : null}
-        </View>
+        <DiscoverSearch value={search} city={location.city} onSearch={setSearch} />
 
         {isSearch ? <View style={{ gap: 8 }}>
           {culture ? <Text style={{ fontFamily: Fonts.ui, color: Colors.textSecondary, fontSize: 13 }}>Your search takes priority over the {culture.label} lens.</Text> : null}
           {discovery.data?.pages[0]?.understanding?.notices.map((notice) => <Text key={notice} style={{ fontFamily: Fonts.ui, color: Colors.textSecondary, fontSize: 13, lineHeight: 19 }}>{notice}</Text>)}
         </View> : null}
-        <CompanionEntry compact prompt={deferredSearch} />
-
-        <View style={styles.filters}>
-          {(categoriesExpanded ? CATEGORIES : CATEGORIES.filter((category, index) => index < 3 || ['cafes', 'hiking', 'escape-rooms', 'brunch', 'pottery'].includes(category.key) || category.key === intent)).map((category) => {
+        <View style={styles.activityPicker}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Activities: ${isSearch || intent === 'discover' ? 'All activities' : currentCategory?.label}. ${categoriesExpanded ? 'Collapse' : 'Show all'} filters`}
+            accessibilityState={{ expanded: categoriesExpanded }}
+            onPress={() => { void triggerHaptic.light(); setCategoriesExpanded((value) => !value); }}
+            style={({ pressed }) => [styles.activityToggle, pressed && styles.pressed]}
+          >
+            <SlidersHorizontal size={16} color={Colors.peach} />
+            <Text style={styles.activityLabel}>{isSearch || intent === 'discover' ? 'All activities' : currentCategory?.label}</Text>
+            <ChevronDown size={17} color={Colors.peach} style={{ transform: [{ rotate: categoriesExpanded ? '180deg' : '0deg' }] }} />
+          </Pressable>
+        {categoriesExpanded ? <View style={styles.filters}>
+          {CATEGORIES.map((category) => {
             const isSelected = !isSearch && intent === category.key;
             return (
               <Pressable
@@ -229,19 +222,18 @@ export default function DiscoverScreen() {
                   void triggerHaptic.light();
                   setSearch('');
                   setDeferredSearch('');
-                  setIntent(category.key);
+                  setIntent(isSelected ? 'discover' : category.key);
                 }}
                 style={({ pressed }) => [styles.categoryTab, isSelected && styles.categoryTabActive, pressed && styles.pressed]}
               >
                 <Text style={[styles.categoryLabel, isSelected && styles.categoryLabelActive]}>
-                  {category.label}
+                  {category.key === 'discover' ? 'All' : category.label}
                 </Text>
+                {isSelected ? <Check size={14} color={Colors.inkDark} /> : null}
               </Pressable>
             );
           })}
-          <Pressable accessibilityRole="button" accessibilityState={{ expanded: categoriesExpanded }} onPress={() => setCategoriesExpanded((value) => !value)} style={styles.categoryTab}>
-            <Text style={styles.categoryLabel}>{categoriesExpanded ? 'Show fewer' : 'More activities'}</Text>
-          </Pressable>
+        </View> : null}
         </View>
 
         {discovery.isLoading ? (
@@ -544,7 +536,10 @@ const styles = StyleSheet.create({
   clearSearch: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   heroCell: { width: '100%', marginBottom: 2 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 2 },
-  categoryTab: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: Colors.borderLight, backgroundColor: Colors.glassPill },
+  activityPicker: { gap: 12 },
+  activityToggle: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: Colors.peachBorder, backgroundColor: Colors.glassPill, maxWidth: '100%' },
+  activityLabel: { fontFamily: Fonts.uiMedium, fontSize: 14, color: Colors.peach, flexShrink: 1 },
+  categoryTab: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingHorizontal: 13, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: Colors.borderLight, backgroundColor: Colors.glassPill },
   categoryTabActive: { borderColor: Colors.peach, backgroundColor: Colors.peach },
   categoryLabel: { fontFamily: Fonts.uiMedium, fontSize: 14, color: Colors.textPrimary },
   categoryLabelActive: { color: Colors.inkDark, fontFamily: Fonts.uiSemiBold },

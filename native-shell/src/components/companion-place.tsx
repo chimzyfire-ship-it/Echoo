@@ -22,13 +22,12 @@ export function CompanionPlace({ place, index, detail, footer }: {
         {hasPhoto ? (
           <View style={styles.imageWrap}>
             <Image source={{ uri: place.imageUrl }} style={styles.image} resizeMode="cover" accessibilityLabel={`Photo of ${place.name}`} onError={() => setFailedUrl(place.imageUrl)} />
-            <View style={styles.imageBadge}><Text style={styles.imageBadgeText}>{index === undefined ? "A POSSIBILITY" : `STOP 0${index + 1}`}</Text></View>
           </View>
         ) : null}
         <View style={styles.copyRow}>
           {!hasPhoto ? <View style={styles.symbol}><CategoryIcon size={21} color={Colors.peach} /></View> : null}
           <View style={styles.copy}>
-            <Text style={styles.category}>{index !== undefined && !hasPhoto ? `0${index + 1}  /  ` : ""}{place.category.replace(/[_-]+/g, " ")}</Text>
+            <Text style={styles.category}>{index !== undefined ? `0${index + 1}  /  ` : ""}{place.category.replace(/[_-]+/g, " ")}</Text>
             <Text style={[styles.name, !hasPhoto && styles.compactName]}>{place.name}</Text>
             {place.address ? <Text numberOfLines={2} style={styles.address}>{place.address}</Text> : null}
             {detail ? <Text style={styles.detail}>{detail}</Text> : null}
@@ -52,8 +51,6 @@ const styles = StyleSheet.create({
   capsule: { borderRadius: 24, backgroundColor: Colors.peachSubtle, borderColor: Colors.peachBorder },
   imageWrap: { height: 172, backgroundColor: Colors.surfaceElevated },
   image: { width: "100%", height: "100%" },
-  imageBadge: { position: "absolute", left: 12, bottom: 12, backgroundColor: Colors.background, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16 },
-  imageBadgeText: { fontFamily: Fonts.uiSemiBold, color: Colors.peach, fontSize: 11, letterSpacing: 1.2 },
   copyRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   symbol: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.goldSubtle, alignItems: "center", justifyContent: "center" },
   copy: { flex: 1, gap: 6 },
