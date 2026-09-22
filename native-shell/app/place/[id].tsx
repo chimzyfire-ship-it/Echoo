@@ -18,7 +18,7 @@ import { placeSummary } from '@/src/services/place-summary';
 import { checkIn } from '@/src/services/linkup';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useEchooLocation } from '@/src/providers/location-provider';
-import type { DiscoveryCard } from '@/src/models';
+import type { DiscoveryCard, ParkingFacility } from '@/src/models';
 import { Colors, Fonts } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
 
@@ -192,6 +192,7 @@ export default function PlaceDetailScreen() {
     address,
   }, data?.pulse?.items);
   const heroPhoto = selectedPhoto && photos.includes(selectedPhoto) ? selectedPhoto : photos[0];
+  const parkingFacilities = (data?.parking as ParkingFacility[] | undefined) ?? [];
 
   return (
     <View style={styles.root}>
@@ -305,6 +306,103 @@ export default function PlaceDetailScreen() {
           <Text style={styles.error}>{linkUp.error instanceof Error ? linkUp.error.message : 'Link Up check-in failed.'}</Text>
         ) : null}
 
+        {parkingFacilities.length ? (
+          <View style={styles.parkingSection}>
+            <View style={styles.parkingHeader}>
+              <View style={styles.parkingBadge}>
+                <Text style={styles.parkingBadgeText}>P</Text>
+              </View>
+              <View style={styles.parkingHeaderText}>
+                <Text style={styles.sectionLabel}>NEARBY PARKING</Text>
+                <Text style={styles.parkingSubtext}>Toronto Green P</Text>
+              </View>
+              <View style={styles.parkingPill}>
+                <Text style={styles.parkingPillText}>
+                  {parkingFacilities[0].walkingMinutes} min walk
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.parkingCard}>
+              <View style={styles.parkingMain}>
+                <Text style={styles.parkingName}>{parkingFacilities[0].name}</Text>
+                <Text style={styles.parkingAddress}>
+                  {parkingFacilities[0].address} ·{' '}
+                  <Text style={styles.parkingDist}>
+                    {parkingFacilities[0].distanceMeters < 1000
+                      ? `${parkingFacilities[0].distanceMeters} m`
+                      : `${(parkingFacilities[0].distanceMeters / 1000).toFixed(1)} km`}{' '}
+                    away
+                  </Text>
+                </Text>
+              </View>
+
+              {parkingFacilities[0].rateSummary ? (
+                <View style={styles.parkingRateTag}>
+                  <Text style={styles.parkingRateText}>
+                    {parkingFacilities[0].rateSummary}
+                  </Text>
+                </View>
+              ) : null}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Directions to ${parkingFacilities[0].name}`}
+                onPress={() => {
+                  void triggerHaptic.light();
+                  openMaps(
+                    parkingFacilities[0].appleMapsUrl ||
+                      `https://maps.apple.com/?daddr=${parkingFacilities[0].latitude},${parkingFacilities[0].longitude}`
+                  );
+                }}
+                style={({ pressed }) => [
+                  styles.parkingButton,
+                  pressed && styles.parkingButtonPressed,
+                ]}
+              >
+                <Navigation size={15} color="#ead2ae" />
+                <Text style={styles.parkingButtonText}>Directions to Parking</Text>
+              </Pressable>
+
+              {parkingFacilities.length > 1 ? (
+                <View style={styles.parkingAltList}>
+                  <Text style={styles.parkingAltHeader}>MORE SPOTS NEARBY</Text>
+                  {parkingFacilities.slice(1, 3).map((alt) => (
+                    <View key={alt.id} style={styles.parkingAltRow}>
+                      <View style={styles.parkingAltInfo}>
+                        <Text style={styles.parkingAltName} numberOfLines={1}>
+                          {alt.name}
+                        </Text>
+                        <Text style={styles.parkingAltMeta}>
+                          {alt.distanceMeters < 1000
+                            ? `${alt.distanceMeters}m`
+                            : `${(alt.distanceMeters / 1000).toFixed(1)}km`}{' '}
+                          · {alt.walkingMinutes}m walk
+                          {alt.rateSummary ? ` · ${alt.rateSummary.split('·')[0].trim()}` : ''}
+                        </Text>
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Map to ${alt.name}`}
+                        onPress={() => {
+                          void triggerHaptic.light();
+                          openMaps(
+                            alt.appleMapsUrl ||
+                              `https://maps.apple.com/?daddr=${alt.latitude},${alt.longitude}`
+                          );
+                        }}
+                        style={styles.parkingAltLink}
+                      >
+                        <Text style={styles.parkingAltLinkText}>Map ↗</Text>
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
         <Text style={styles.note}>
           Place details and photos from Echoo. Check with the venue for the latest hours.
         </Text>
@@ -358,6 +456,32 @@ const styles = StyleSheet.create({
   actionCell: { flex: 1, minWidth: '44%' },
   error: { color: '#a1362b', fontFamily: Fonts.ui, fontSize: 13, lineHeight: 19, padding: 12, borderRadius: 12, backgroundColor: '#f6dcd5' },
   note: { color: '#a4a79b', fontFamily: Fonts.ui, fontSize: 11, lineHeight: 17 },
+  parkingSection: { gap: 12, marginTop: 4 },
+  parkingHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  parkingBadge: { width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(231,201,142,0.15)', borderWidth: 1, borderColor: 'rgba(231,201,142,0.4)', alignItems: 'center', justifyContent: 'center' },
+  parkingBadgeText: { color: '#ead2ae', fontFamily: Fonts.uiSemiBold, fontSize: 13 },
+  parkingHeaderText: { flex: 1, marginLeft: 10, gap: 2 },
+  parkingSubtext: { color: '#a4a79b', fontFamily: Fonts.ui, fontSize: 11 },
+  parkingPill: { backgroundColor: 'rgba(231,201,142,0.1)', borderWidth: 1, borderColor: 'rgba(231,201,142,0.25)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  parkingPillText: { color: '#ead2ae', fontFamily: Fonts.uiSemiBold, fontSize: 11 },
+  parkingCard: { backgroundColor: 'rgba(243,209,161,0.035)', borderWidth: 1, borderColor: 'rgba(231,201,142,0.25)', borderRadius: 16, padding: 16, gap: 12 },
+  parkingMain: { gap: 4 },
+  parkingName: { color: '#fffaf2', fontFamily: Fonts.display, fontSize: 18, letterSpacing: -0.3 },
+  parkingAddress: { color: '#c1c0b7', fontFamily: Fonts.ui, fontSize: 13, lineHeight: 18 },
+  parkingDist: { color: '#ead2ae', fontFamily: Fonts.uiMedium },
+  parkingRateTag: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  parkingRateText: { color: '#f0ece3', fontFamily: Fonts.uiMedium, fontSize: 11 },
+  parkingButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 42, borderRadius: 10, backgroundColor: 'rgba(231,201,142,0.12)', borderWidth: 1, borderColor: 'rgba(231,201,142,0.4)' },
+  parkingButtonPressed: { backgroundColor: 'rgba(231,201,142,0.22)' },
+  parkingButtonText: { color: '#fffaf2', fontFamily: Fonts.uiSemiBold, fontSize: 13 },
+  parkingAltList: { gap: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(240,236,227,0.1)' },
+  parkingAltHeader: { color: 'rgba(248,245,239,0.5)', fontFamily: Fonts.uiSemiBold, fontSize: 10, letterSpacing: 1 },
+  parkingAltRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  parkingAltInfo: { flex: 1, gap: 2 },
+  parkingAltName: { color: '#f0ece3', fontFamily: Fonts.uiMedium, fontSize: 13 },
+  parkingAltMeta: { color: '#a4a79b', fontFamily: Fonts.ui, fontSize: 11 },
+  parkingAltLink: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(231,201,142,0.08)', borderWidth: 1, borderColor: 'rgba(231,201,142,0.2)' },
+  parkingAltLinkText: { color: '#ead2ae', fontFamily: Fonts.uiSemiBold, fontSize: 11 },
   dock: { paddingTop: 15, paddingHorizontal: 24, backgroundColor: '#1d1e1b', borderTopWidth: 1, borderTopColor: 'rgba(240,236,227,0.10)', gap: 12 },
   stopPicker: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stopPickerLabel: { fontFamily: Fonts.uiSemiBold, color: '#b8a78d', fontSize: 10, letterSpacing: 1.6, marginRight: 2 },

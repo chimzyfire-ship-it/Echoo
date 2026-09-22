@@ -14,7 +14,6 @@ import type { ImageSourcePropType } from 'react-native';
 import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BrandMark } from '@/src/components/brand-mark';
-import { nextEditorial, HOME_INVITATIONS } from '@/src/content/editorial';
 import { LocationPicker } from '@/src/components/location-picker';
 import { unsupportedLocationMessage } from '@/src/services/location';
 import { EditorialPlaceCard } from '@/src/components/editorial-place-card';
@@ -99,7 +98,6 @@ export default function HomeScreen() {
   const { user, profile } = useAuth();
   const { location } = useEchooLocation();
   const [locationOpen, setLocationOpen] = useState(false);
-  const [invitation] = useState(() => nextEditorial('home', HOME_INVITATIONS));
   const { active: culture } = useCulture();
   const surprise = useSurprise();
   const profileKey = [
@@ -178,7 +176,7 @@ export default function HomeScreen() {
                 {greetingForNow()}
                 {displayName ? `,\n${displayName}.` : '.'}
               </Text>
-              <Text style={{ fontFamily: Fonts.ui, fontSize: 16, lineHeight: 23, color: Colors.textSecondary, marginTop: 12 }}>{invitation}</Text>
+
             </View>
           </View>
 

@@ -439,6 +439,216 @@
 .echoo-uber-button:hover,
 .echoo-uber-button:focus-visible { color: #fff; }
 
+.echoo-parking-section {
+  margin: 4px 0 2px;
+}
+
+.echoo-parking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.echoo-parking-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.echoo-parking-badge {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(231, 201, 142, 0.15);
+  border: 1px solid rgba(231, 201, 142, 0.4);
+  color: #E7C98E;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.echoo-parking-provider {
+  font-size: 11px;
+  color: var(--echoo-detail-muted);
+  letter-spacing: 0.02em;
+}
+
+.echoo-parking-meta-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #E7C98E;
+  background: rgba(231, 201, 142, 0.1);
+  border: 1px solid rgba(231, 201, 142, 0.25);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.echoo-parking-card {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(243, 209, 161, 0.035);
+  border: 1px solid rgba(231, 201, 142, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.2s ease;
+}
+
+.echoo-parking-card:hover {
+  border-color: rgba(231, 201, 142, 0.45);
+}
+
+.echoo-parking-card-body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.echoo-parking-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.echoo-parking-name {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.echoo-parking-address {
+  margin: 0;
+  color: var(--echoo-detail-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.echoo-parking-dist {
+  color: #E7C98E;
+  font-weight: 600;
+}
+
+.echoo-parking-rate-pill {
+  align-self: flex-start;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.echoo-parking-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.echoo-parking-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid rgba(231, 201, 142, 0.4);
+  border-radius: 10px;
+  background: rgba(231, 201, 142, 0.12);
+  color: #f8f5ef;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 680;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-decoration: none;
+}
+
+.echoo-parking-btn:hover,
+.echoo-parking-btn:focus-visible {
+  background: rgba(231, 201, 142, 0.22);
+  border-color: rgba(231, 201, 142, 0.6);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.echoo-parking-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: #E7C98E;
+  flex: 0 0 auto;
+}
+
+.echoo-parking-alternatives {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--echoo-detail-line);
+}
+
+.echoo-parking-alt-title {
+  font-size: 10px;
+  font-weight: 750;
+  color: rgba(248, 245, 239, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.echoo-parking-alt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.echoo-parking-alt-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.echoo-parking-alt-name {
+  color: rgba(248, 245, 239, 0.9);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.echoo-parking-alt-sub {
+  color: var(--echoo-detail-muted);
+  font-size: 11px;
+}
+
+.echoo-parking-alt-link {
+  color: #E7C98E;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(231, 201, 142, 0.08);
+  border: 1px solid rgba(231, 201, 142, 0.2);
+  transition: all 0.15s ease;
+}
+
+.echoo-parking-alt-link:hover {
+  color: #fff;
+  background: rgba(231, 201, 142, 0.18);
+  border-color: rgba(231, 201, 142, 0.4);
+}
+
+.echoo-parking-btn:focus-visible,
 .echoo-uber-button:focus-visible,
 .echoo-place-btn-primary:focus-visible,
 .echoo-place-btn-secondary:focus-visible {

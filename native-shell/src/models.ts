@@ -77,6 +77,28 @@ export interface DiscoveryFeed {
   all: DiscoveryLane;
 }
 
+export interface ParkingFacility {
+  id: string;
+  carparkNumber?: string;
+  name: string;
+  operator: string;
+  address: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  distanceMeters: number;
+  walkingMinutes: number;
+  capacity?: number;
+  facilityType: string;
+  rateSummary?: string;
+  rateHalfHour?: number;
+  dayMax?: number;
+  nightMax?: number;
+  paymentMethods: string[];
+  googleMapsUrl: string;
+  appleMapsUrl: string;
+}
+
 export interface PlaceDetail {
   place: Record<string, unknown>;
   profile: Record<string, unknown> | null;
@@ -85,6 +107,7 @@ export interface PlaceDetail {
   photos: Array<Record<string, unknown>>;
   relatedEvents: Array<Record<string, unknown>>;
   alternatives: Array<Record<string, unknown>>;
+  parking?: ParkingFacility[];
   pulse: { items: Array<{ label: string; value: string }> } | null;
 }
 

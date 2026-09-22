@@ -22,7 +22,7 @@ export async function signInWithGoogle(): Promise<'signed-in' | 'cancelled'> {
     // Native crypto guarantees S256 even when Hermes has no Web Crypto subtle API.
     // The verifier lives only for this browser attempt, never in the redirect URL.
     const bytes = await Crypto.getRandomBytesAsync(32);
-    const verifier = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    const verifier = Array.from(bytes, (byte: number) => byte.toString(16).padStart(2, '0')).join('');
     const challenge = (await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, verifier, {
       encoding: Crypto.CryptoEncoding.BASE64,
     })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
