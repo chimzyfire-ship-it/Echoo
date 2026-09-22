@@ -1,90 +1,35 @@
-import { ArrowUpRight, Route } from "lucide-react-native";
-import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Colors, Fonts } from "@/src/theme/tokens";
-import { useState } from "react";
-import { nextEditorial, PLAN_INVITATIONS } from "@/src/content/editorial";
+import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Colors, Fonts } from '@/src/theme/tokens';
+import { triggerHaptic } from '@/src/utils/haptics';
 
-export function CompanionEntry({
-  compact = false,
-  prompt = "",
-}: {
-  compact?: boolean;
-  prompt?: string;
-}) {
+export function CompanionEntry({ compact = false, prompt = '' }: { compact?: boolean; prompt?: string }) {
   const router = useRouter();
-  const [invitation] = useState(() => nextEditorial('plan-invitation', PLAN_INVITATIONS));
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={
-        prompt ? "Plan around this search with Echoo" : "Plan with Echoo"
-      }
-      onPress={() =>
-        router.push({ pathname: "/planner", params: prompt ? { prompt } : {} })
-      }
-      style={({ pressed }) => [
-        styles.root,
-        compact && styles.compact,
-        pressed && { opacity: 0.78 },
-      ]}
+      accessibilityLabel="Make a plan with Echoo"
+      onPress={() => {
+        void triggerHaptic.light();
+        router.push({ pathname: '/planner', params: prompt ? { prompt } : {} });
+      }}
+      style={({ pressed }) => [styles.root, compact && styles.compact, pressed && styles.pressed]}
     >
-      <View style={styles.icon}>
-        <Route size={23} color={Colors.inkDark} />
-      </View>
       <View style={styles.copy}>
-        {!compact ? (
-          <Text style={styles.eyebrow}>A LITTLE HELP GOING OUT</Text>
-        ) : null}
-        <Text style={[styles.title, compact && styles.small]}>
-          {prompt ? "Make a plan of it." : "Plan with Echoo."}
-        </Text>
-        {!compact ? (
-          <Text style={styles.body}>
-            {invitation}
-          </Text>
-        ) : (
-          <Text style={styles.body}>Real places. Your kind of route.</Text>
-        )}
+        <Text style={styles.title}>{prompt ? 'Make a day of it.' : 'A day, your way.'}</Text>
+        {!compact ? <Text style={styles.body}>Tell Echoo what you’re in the mood for.</Text> : null}
       </View>
-      <ArrowUpRight size={22} color={Colors.peach} />
+      <Text style={styles.link}>Make a plan</Text>
     </Pressable>
   );
 }
+
 const styles = StyleSheet.create({
-  root: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    padding: 22,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Colors.peachBorder,
-    backgroundColor: Colors.cardSolid,
-    minHeight: 120,
-  },
-  compact: { padding: 16, minHeight: 84 },
-  icon: {
-    height: 48,
-    width: 48,
-    borderRadius: 16,
-    backgroundColor: Colors.peach,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  copy: { flex: 1, gap: 6 },
-  eyebrow: {
-    fontFamily: Fonts.uiSemiBold,
-    color: Colors.peach,
-    fontSize: 10,
-    letterSpacing: 1.6,
-  },
-  title: { fontFamily: Fonts.display, color: Colors.ink, fontSize: 26 },
-  small: { fontSize: 22 },
-  body: {
-    fontFamily: Fonts.ui,
-    color: Colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  root: { paddingVertical: 22, paddingHorizontal: 4, gap: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: Colors.borderLight },
+  compact: { paddingVertical: 16 },
+  copy: { gap: 7 },
+  title: { fontFamily: Fonts.display, color: Colors.ink, fontSize: 28, lineHeight: 35, letterSpacing: -0.5 },
+  body: { fontFamily: Fonts.ui, color: Colors.textSecondary, fontSize: 14, lineHeight: 21 },
+  link: { alignSelf: 'flex-start', fontFamily: Fonts.uiMedium, color: Colors.peach, fontSize: 14, lineHeight: 21, textDecorationLine: 'underline' },
+  pressed: { opacity: 0.65 },
 });
