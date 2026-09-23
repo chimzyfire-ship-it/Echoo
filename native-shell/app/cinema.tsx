@@ -177,7 +177,7 @@ export default function CinemaScreen() {
       />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 44) + 8 }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 44) + 12 }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Back"

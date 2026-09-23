@@ -30,7 +30,7 @@ export default function PlanMapScreen() {
   } catch {}
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 12) }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 44) + 12 }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close map"

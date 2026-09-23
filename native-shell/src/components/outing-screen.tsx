@@ -96,7 +96,7 @@ export function OutingScreen({ initial, userId }: { initial?: string; userId?: s
   const started = outing && Object.keys(outing.progress).length > 0;
   const currentIndex = outing?.plan.stops.findIndex((place) => !['completed', 'skipped'].includes(outing.progress[place.id]?.status || 'planned')) ?? -1;
   const changedChoices = outing && JSON.stringify(choices) !== JSON.stringify(outing.choices);
-  return <ScrollView ref={scroll} style={styles.screen} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 16), paddingBottom: Math.max(insets.bottom, 24) + 24 }]}>
+  return <ScrollView ref={scroll} style={styles.screen} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12, paddingBottom: Math.max(insets.bottom, 24) + 24 }]}>
     <Pressable accessibilityRole="button" onPress={() => router.back()} style={({ pressed }) => [{ minHeight: 48, justifyContent: 'center', opacity: pressed ? 0.6 : 1 }]}><Text style={styles.status}>Close outing</Text></Pressable>
     {!ready ? <Text style={styles.body}>Opening your outing...</Text> : !outing ? <View style={styles.section}>
       <Text style={styles.title}>Your next outing starts with a place.</Text><Text style={styles.body}>No saved outing for this account. Choose a place in Discover, then make an outing of it.</Text>

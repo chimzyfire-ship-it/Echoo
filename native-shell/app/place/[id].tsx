@@ -209,7 +209,7 @@ export default function PlaceDetailScreen() {
           <LinearGradient colors={['#655a49', '#282b25']} style={styles.heroFallback}><MapPin size={42} strokeWidth={1} color={Colors.peach} /></LinearGradient>
         )}
         <LinearGradient pointerEvents="none" colors={['rgba(15,17,14,0.22)', 'transparent', 'rgba(15,17,14,0.88)']} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
-        <Pressable accessibilityRole="button" accessibilityLabel="Close place details" onPress={() => router.back()} style={styles.closeButton}><X size={21} color={Colors.ink} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close place details" onPress={() => router.back()} style={[styles.closeButton, { top: Math.max(insets.top, 44) + 12 }]}><X size={21} color={Colors.ink} /></Pressable>
         <View style={styles.heroCaption}>
           <Text style={styles.kicker}>{(text(place.category) || cached?.category || 'PLACE').replace(/[_-]+/g, ' ').toUpperCase()}</Text>
           <Text style={styles.title}>{name}</Text>

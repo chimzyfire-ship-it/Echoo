@@ -171,7 +171,7 @@ export default function HomeScreen() {
         >
           {/* Top Brand & Greeting Area matching Inspi */}
           <View style={styles.topSection}>
-            <View style={styles.brandRow}><BrandMark size="small" /><Pressable accessibilityRole="button" accessibilityLabel={`Change location, currently ${location.label}`} onPress={() => setLocationOpen(true)} style={({ pressed }) => [styles.homeLocation, { minHeight: 48, opacity: pressed ? 0.7 : 1 }]}><MapPin size={12} color={Colors.peach} /><Text style={styles.homeLocationText} numberOfLines={1}>{location.city}</Text></Pressable></View>
+            <View style={styles.brandRow}><BrandMark size="small" /><Pressable accessibilityRole="button" accessibilityLabel={`Change location, currently ${location.label}`} onPress={() => setLocationOpen(true)} style={({ pressed }) => [styles.homeLocation, { minHeight: 44, opacity: pressed ? 0.7 : 1 }]}><MapPin size={12} color={Colors.peach} /><Text style={styles.homeLocationText} numberOfLines={1}>{location.city}</Text></Pressable></View>
 
             <View style={styles.greetingWrap}>
               <Text style={styles.greeting}>
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   topSection: {
     gap: 22,
-    marginTop: 4,
+    marginTop: 0,
   },
   greetingWrap: {
     gap: 8,
