@@ -27,6 +27,7 @@ import {
 } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DiscoverSearch } from '@/src/components/discover-search';
 import { CultureFab } from '@/src/components/culture-fab';
 import { CulturePicker } from '@/src/components/culture-picker';
@@ -133,6 +134,7 @@ export default function DiscoverScreen() {
     router.push({ pathname: '/place/[id]', params: { id: place.canonicalId || place.id } });
   }
 
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const featureWidth = Math.min(width - 66, 440);
   const isSearch = Boolean(deferredSearch);
@@ -168,7 +170,7 @@ export default function DiscoverScreen() {
       <LinearGradient pointerEvents="none" colors={['#302c25', '#1d1e1b', '#1d1e1b']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12 }]}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={discovery.isRefetching} onRefresh={discovery.refetch} tintColor={Colors.peach} />}
         showsVerticalScrollIndicator={false}
@@ -295,19 +297,17 @@ export default function DiscoverScreen() {
                         ) : (
                           <View style={[StyleSheet.absoluteFill, { backgroundColor: '#282622' }]} />
                         )}
-                        <LinearGradient
-                          colors={['transparent', 'rgba(10,9,8,0.85)']}
-                          locations={[0.2, 1]}
-                          style={StyleSheet.absoluteFill}
-                        />
-                        <View style={styles.ticketDropBadge}>
-                          <Text style={styles.ticketDropBadgeText}>{ticket.statusLabel || 'Selling now'}</Text>
-                        </View>
-                        <View style={styles.ticketPriceBadge}>
-                          <Text style={styles.ticketPriceBadgeText}>{ticket.priceLabel}</Text>
-                        </View>
                       </View>
                       <View style={styles.ticketDropCopy}>
+                        <View style={styles.ticketDropMetaRow}>
+                          <View style={styles.ticketDropStatusPill}>
+                            <View style={styles.ticketDropStatusDot} />
+                            <Text style={styles.ticketDropStatusText}>{(ticket.statusLabel || 'Selling now').toUpperCase()}</Text>
+                          </View>
+                          {ticket.priceLabel && ticket.priceLabel.toLowerCase() !== 'see tickets' ? (
+                            <Text style={styles.ticketDropPriceText}>{ticket.priceLabel}</Text>
+                          ) : null}
+                        </View>
                         <Text style={styles.ticketDropTitle} numberOfLines={1}>
                           {ticket.title}
                         </Text>
@@ -613,40 +613,46 @@ const styles = StyleSheet.create({
     position: 'relative',
     backgroundColor: '#262420',
   },
-  ticketDropBadge: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    backgroundColor: 'rgba(10, 9, 8, 0.65)',
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+  ticketDropCopy: {
+    padding: 12,
+    gap: 4,
   },
-  ticketDropBadgeText: {
-    color: Colors.ink,
+  ticketDropMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+    marginBottom: 2,
+  },
+  ticketDropStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(247, 213, 178, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(247, 213, 178, 0.25)',
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  ticketDropStatusDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.peach,
+  },
+  ticketDropStatusText: {
+    color: Colors.peachLight,
     fontFamily: Fonts.uiSemiBold,
     fontSize: 9,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
-  ticketPriceBadge: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    backgroundColor: 'rgba(247, 213, 178, 0.9)',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  ticketPriceBadgeText: {
-    color: Colors.inkDark,
+  ticketDropPriceText: {
+    color: Colors.ink,
     fontFamily: Fonts.uiSemiBold,
     fontSize: 11,
     fontWeight: '700',
-  },
-  ticketDropCopy: {
-    padding: 12,
-    gap: 4,
   },
   ticketDropTitle: {
     color: Colors.ink,

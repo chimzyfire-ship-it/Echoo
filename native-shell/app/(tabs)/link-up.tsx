@@ -52,6 +52,7 @@ const HOW_IT_WORKS = [
 
 export default function LinkUpScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -190,7 +191,7 @@ export default function LinkUpScreen() {
     <ScrollView
       style={styles.screenScroll}
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.screen}
+      contentContainerStyle={[styles.screen, { paddingTop: Math.max(insets.top, 44) + 12 }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.topCopy}>

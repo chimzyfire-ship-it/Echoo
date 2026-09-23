@@ -444,17 +444,21 @@
         content: "";
       }
 
+      .sale-meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+
       .sale-status {
-        position: absolute;
-        z-index: 1;
-        top: 9px;
-        left: 9px;
-        padding: 5px 7px;
-        border: 1px solid rgba(248, 245, 239, 0.18);
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 6px;
+        border: 1px solid rgba(247, 213, 178, 0.3);
         border-radius: 999px;
-        background: rgba(5, 5, 5, 0.52);
-        backdrop-filter: blur(8px);
-        color: var(--ink);
+        background: rgba(247, 213, 178, 0.12);
+        color: var(--peach);
         font-size: 8px;
         font-weight: 760;
         letter-spacing: 0.08em;
@@ -985,8 +989,8 @@
               .filter(Boolean)
               .join(" · ");
             return `<a class="sale-card" href="${escapeHtml(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>
-            <span class="sale-art"><img src="${escapeHtml(image)}" alt="" loading="lazy" /><span class="sale-status">${escapeHtml(status)}</span></span>
-            <span class="sale-copy"><strong>${escapeHtml(card.title || "Live event")}</strong><span>${escapeHtml(detail || "Greater Toronto Area")}</span><span class="sale-price">${escapeHtml(card.priceLabel || "See tickets")}</span></span>
+            <span class="sale-art"><img src="${escapeHtml(image)}" alt="" loading="lazy" /></span>
+            <span class="sale-copy"><span class="sale-meta-row"><span class="sale-status">${escapeHtml(status)}</span><span class="sale-price">${escapeHtml(card.priceLabel || "See tickets")}</span></span><strong>${escapeHtml(card.title || "Live event")}</strong><span>${escapeHtml(detail || "Greater Toronto Area")}</span></span>
           </a>`;
           })
           .join("");
