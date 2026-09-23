@@ -34,7 +34,7 @@ export default function NotificationsScreen() {
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not save this change.'); }
     finally { lock.current = false; setBusy(false); }
   }
-  return <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12, paddingBottom: insets.bottom + 32 }]}>
+  return <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 6, paddingBottom: insets.bottom + 32 }]}>
     <View style={styles.header}><Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')} style={styles.back}><ArrowLeftIcon size={22} color={Colors.ink} weight="light" /></Pressable><BrandMark size="small" /></View>
     <View style={styles.intro}><Text style={styles.title}>A word, now{ '\n' }and then.</Text><Text style={styles.body}>The useful things, at the right moment. You choose what gets through.</Text></View>
     {prefs.isPending ? <Text style={styles.body}>Loading your preferences…</Text> : prefs.isError ? <View style={styles.card}><Text style={styles.body}>{prefs.error.message}</Text><Pressable accessibilityRole="button" onPress={() => void prefs.refetch()} style={styles.action}><Text style={styles.actionText}>Try again</Text></Pressable></View> : OPTIONS.map((option) => <View key={option.key} style={styles.card}>

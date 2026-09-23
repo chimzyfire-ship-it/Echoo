@@ -334,7 +334,7 @@ export default function OnboardingScreen() {
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="never"
-      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12, paddingBottom: insets.bottom + 32 }]}
+      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 6, paddingBottom: insets.bottom + 32 }]}
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.topBar}>

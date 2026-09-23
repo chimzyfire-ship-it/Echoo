@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   NativeScrollEvent,
@@ -32,7 +32,7 @@ export function AppleScrollRail({
   indicatorBottomMargin = 0,
   ...scrollViewProps
 }: AppleScrollRailProps) {
-  const scrollX = useRef(new Animated.Value(0)).current;
+  const thumbTranslate = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,41 +71,40 @@ export function AppleScrollRail({
     };
   }, []);
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    {
-      useNativeDriver: true,
-      listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        showIndicator();
-        scrollViewProps.onScroll?.(event);
-      },
-    }
-  );
-
-  const translateX = useMemo(
-    () =>
-      scrollX.interpolate({
-        inputRange: [0, maxScroll],
-        outputRange: [0, MAX_TRANSLATE],
-        extrapolate: 'clamp',
-      }),
-    [scrollX, maxScroll]
-  );
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const progress = maxScroll > 0 ? Math.min(Math.max(0, offsetX / maxScroll), 1) : 0;
+    thumbTranslate.setValue(progress * MAX_TRANSLATE);
+    showIndicator();
+    scrollViewProps.onScroll?.(event);
+  };
 
   return (
     <View style={[styles.wrapper, { marginHorizontal: -bleedMargin }, containerStyle]}>
       <ScrollView
+        {...scrollViewProps}
         horizontal
         showsHorizontalScrollIndicator={false}
         scrollEventThrottle={16}
         onScroll={handleScroll}
-        onScrollBeginDrag={() => showIndicator()}
-        onMomentumScrollEnd={() => showIndicator()}
-        onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
-        onContentSizeChange={(w) => setContentWidth(w)}
+        onScrollBeginDrag={(e) => {
+          showIndicator();
+          scrollViewProps.onScrollBeginDrag?.(e);
+        }}
+        onMomentumScrollEnd={(e) => {
+          showIndicator();
+          scrollViewProps.onMomentumScrollEnd?.(e);
+        }}
+        onLayout={(e) => {
+          setContainerWidth(e.nativeEvent.layout.width);
+          scrollViewProps.onLayout?.(e);
+        }}
+        onContentSizeChange={(w, h) => {
+          setContentWidth(w);
+          scrollViewProps.onContentSizeChange?.(w, h);
+        }}
         contentContainerStyle={[{ paddingHorizontal: bleedMargin }, contentContainerStyle]}
         style={style}
-        {...scrollViewProps}
       >
         {children}
       </ScrollView>
@@ -125,7 +124,7 @@ export function AppleScrollRail({
               style={[
                 styles.indicatorThumb,
                 {
-                  transform: [{ translateX }],
+                  transform: [{ translateX: thumbTranslate }],
                 },
               ]}
             />

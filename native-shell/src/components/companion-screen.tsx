@@ -250,7 +250,7 @@ export function CompanionScreen({
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-      <View style={[styles.nav, { paddingTop: Math.max(insets.top, 44) + 12 }]}>
+      <View style={[styles.nav, { paddingTop: Math.max(insets.top, 44) + 6 }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close planner"

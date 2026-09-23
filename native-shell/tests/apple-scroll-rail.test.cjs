@@ -2,7 +2,6 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 const ts = require('typescript');
 
 test('AppleScrollRail compiles and exports clean modular interface', () => {
@@ -16,6 +15,10 @@ test('AppleScrollRail compiles and exports clean modular interface', () => {
   assert.ok(source.includes('bleedMargin = 22'));
   assert.ok(source.includes('marginHorizontal: -bleedMargin'));
   assert.ok(source.includes('showsHorizontalScrollIndicator={false}'));
+
+  // Verify handleScroll is a plain function, NOT Animated.event (which crashes ScrollView with "Object is not a function")
+  assert.ok(!source.includes('Animated.event('));
+  assert.ok(source.includes('const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {'));
 
   // Transpile to verify TypeScript syntax is valid CommonJS
   const compiled = ts.transpileModule(source, {

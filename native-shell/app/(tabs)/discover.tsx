@@ -171,7 +171,7 @@ export default function DiscoverScreen() {
       <LinearGradient pointerEvents="none" colors={['#302c25', '#1d1e1b', '#1d1e1b']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12 }]}
+        contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 6 }]}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={discovery.isRefetching} onRefresh={discovery.refetch} tintColor={Colors.peach} />}
         showsVerticalScrollIndicator={false}

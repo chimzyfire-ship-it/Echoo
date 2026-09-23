@@ -141,7 +141,7 @@ export default function TicketsScreen() {
         locations={[0, 0.45, 1]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 44) + 12 }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 44) + 6 }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Back"

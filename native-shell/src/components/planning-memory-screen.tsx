@@ -109,7 +109,7 @@ export function PlanningMemoryScreen() {
       contentContainerStyle={[
         styles.content,
         {
-          paddingTop: Math.max(insets.top, 44) + 12,
+          paddingTop: Math.max(insets.top, 44) + 6,
           paddingBottom: Math.max(insets.bottom, 24) + 24,
         },
       ]}

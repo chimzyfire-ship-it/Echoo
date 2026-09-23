@@ -166,7 +166,7 @@ export default function HomeScreen() {
       >
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12 }]}
+          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 6 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Top Brand & Greeting Area matching Inspi */}
