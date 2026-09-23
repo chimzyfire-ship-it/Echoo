@@ -1,3 +1,5 @@
+import { FirstUseWalkthrough, TourTarget } from '@/src/components/first-use/walkthrough';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Tabs } from 'expo-router';
 import { Compass, House, Radio, UserRound } from 'lucide-react-native';
 
@@ -5,8 +7,9 @@ import { BrandMark } from '@/src/components/brand-mark';
 import { Colors, Fonts } from '@/src/theme/tokens';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
   return (
-    <Tabs
+    <FirstUseWalkthrough><Tabs
       screenOptions={{
         headerStyle: { backgroundColor: Colors.background },
         headerShadowVisible: false,
@@ -17,9 +20,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: '#0C0B0A',
           borderTopColor: 'rgba(248, 245, 239, 0.08)',
-          height: 68,
+          height: 60 + Math.max(insets.bottom, 8),
           paddingTop: 7,
-          paddingBottom: 8,
+          paddingBottom: Math.max(insets.bottom, 8),
         },
         tabBarActiveTintColor: '#F8F5EF',
         tabBarInactiveTintColor: 'rgba(248, 245, 239, 0.45)',
@@ -36,7 +39,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           headerShown: false,
-          tabBarIcon: ({ color }) => <House size={21} color={color} strokeWidth={2} />,
+          tabBarIcon: ({ color }) => <TourTarget name="home"><House size={21} color={color} strokeWidth={2} /></TourTarget>,
         }}
       />
       <Tabs.Screen
@@ -44,23 +47,23 @@ export default function TabLayout() {
         options={{
           title: 'Discover',
           headerShown: false,
-          tabBarIcon: ({ color }) => <Compass size={21} color={color} strokeWidth={2} />,
+          tabBarIcon: ({ color }) => <TourTarget name="discover"><Compass size={21} color={color} strokeWidth={2} /></TourTarget>,
         }}
       />
       <Tabs.Screen
         name="link-up"
         options={{
           title: 'Link Up',
-          tabBarIcon: ({ color }) => <Radio size={21} color={color} strokeWidth={2} />,
+          tabBarIcon: ({ color }) => <TourTarget name="link-up"><Radio size={21} color={color} strokeWidth={2} /></TourTarget>,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <UserRound size={21} color={color} strokeWidth={2} />,
+          tabBarIcon: ({ color }) => <TourTarget name="profile"><UserRound size={21} color={color} strokeWidth={2} /></TourTarget>,
         }}
       />
-    </Tabs>
+    </Tabs></FirstUseWalkthrough>
   );
 }

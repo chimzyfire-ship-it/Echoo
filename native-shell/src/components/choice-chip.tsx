@@ -5,16 +5,19 @@ import { triggerHaptic } from '@/src/utils/haptics';
 
 export function ChoiceChip({
   label,
+  emoji,
   selected,
   onPress,
 }: {
   label: string;
+  emoji?: string;
   selected: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={() => {
         void triggerHaptic.selection();
@@ -22,14 +25,21 @@ export function ChoiceChip({
       }}
       style={({ pressed }) => [styles.chip, selected && styles.selected, pressed && styles.pressed]}
     >
+      {emoji ? <Text accessible={false} style={styles.emoji}>{emoji}</Text> : null}
       <Text style={[styles.label, selected && styles.selectedLabel]}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  emoji: { fontSize: 18 },
   chip: {
-    minHeight: 38,
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    maxWidth: '100%',
     justifyContent: 'center',
     borderRadius: 999,
     borderWidth: 1,
@@ -42,6 +52,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(247, 213, 178, 0.15)',
   },
   label: {
+    flexShrink: 1,
     color: 'rgba(248, 245, 239, 0.75)',
     fontFamily: Fonts.uiMedium,
     fontSize: 13,
