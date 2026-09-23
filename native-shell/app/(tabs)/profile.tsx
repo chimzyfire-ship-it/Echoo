@@ -25,7 +25,6 @@ const formatDate = (value: string | null) => {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { user, profile, signOut, refreshProfile } = useAuth();
 
@@ -43,7 +42,7 @@ export default function ProfileScreen() {
     <ScrollView
       style={styles.root}
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12 }]}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.profileCard}>

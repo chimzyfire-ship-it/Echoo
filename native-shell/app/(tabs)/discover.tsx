@@ -28,6 +28,7 @@ import {
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppleScrollRail } from '@/src/components/apple-scroll-rail';
 import { DiscoverSearch } from '@/src/components/discover-search';
 import { CultureFab } from '@/src/components/culture-fab';
 import { CulturePicker } from '@/src/components/culture-picker';
@@ -170,7 +171,7 @@ export default function DiscoverScreen() {
       <LinearGradient pointerEvents="none" colors={['#302c25', '#1d1e1b', '#1d1e1b']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12 }]}
+        contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 6 }]}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={discovery.isRefetching} onRefresh={discovery.refetch} tintColor={Colors.peach} />}
         showsVerticalScrollIndicator={false}
@@ -256,9 +257,9 @@ export default function DiscoverScreen() {
             {!isSearch && nearbyCards.length ? (
               <View style={styles.section}>
                 <View style={styles.featureHead}><View style={{ flex: 1, gap: 4 }}><Text style={styles.sectionTitle}>{featureTitle}</Text><Text style={styles.sectionSub}>{featureSub}</Text></View></View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={featureWidth + 14} decelerationRate="fast" contentContainerStyle={styles.featureRail}>
+                <AppleScrollRail snapToInterval={featureWidth + 14} decelerationRate="fast" contentContainerStyle={styles.featureRail}>
                   {nearbyCards.map((place) => <View key={place.id} style={{ width: featureWidth }}><EditorialPlaceCard place={place} featured onPress={() => openPlace(place)} /></View>)}
-                </ScrollView>
+                </AppleScrollRail>
               </View>
             ) : null}
 
@@ -270,16 +271,8 @@ export default function DiscoverScreen() {
                     <Text style={styles.sectionTitle}>Live show drops</Text>
                     <Text style={styles.sectionSub}>Priority booking around {location.label}</Text>
                   </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => router.push('/tickets')}
-                    style={styles.seeAllLink}
-                  >
-                    <Text style={styles.seeAllText}>All tickets</Text>
-                    <ChevronRight size={14} color={Colors.peach} />
-                  </Pressable>
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featureRail}>
+                <AppleScrollRail contentContainerStyle={styles.featureRail}>
                   {ticketsQuery.data.slice(0, 6).map((ticket) => (
                     <Pressable
                       key={ticket.id}
@@ -317,7 +310,7 @@ export default function DiscoverScreen() {
                       </View>
                     </Pressable>
                   ))}
-                </ScrollView>
+                </AppleScrollRail>
               </View>
             ) : null}
 
@@ -329,16 +322,8 @@ export default function DiscoverScreen() {
                     <Text style={styles.sectionTitle}>Cinema room</Text>
                     <Text style={styles.sectionSub}>Trailers worth planning a night around</Text>
                   </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => router.push('/cinema')}
-                    style={styles.seeAllLink}
-                  >
-                    <Text style={styles.seeAllText}>Cinema room</Text>
-                    <ChevronRight size={14} color={Colors.peach} />
-                  </Pressable>
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featureRail}>
+                <AppleScrollRail contentContainerStyle={styles.featureRail}>
                   {cinemaMovies.slice(0, 6).map((movie) => (
                     <Pressable
                       key={movie.tmdb_id || movie.title}
@@ -373,7 +358,7 @@ export default function DiscoverScreen() {
                       </Text>
                     </Pressable>
                   ))}
-                </ScrollView>
+                </AppleScrollRail>
               </View>
             ) : null}
 

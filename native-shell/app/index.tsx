@@ -85,7 +85,7 @@ export default function LandingScreen() {
         <ScrollView
           style={styles.scroll}
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12, minHeight: Math.max(height, 700) }]}
+          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 6, minHeight: Math.max(height, 700) }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
