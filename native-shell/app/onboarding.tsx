@@ -1,3 +1,5 @@
+import { activityEmojis } from '@/src/components/first-use/activity-emojis';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Camera, Check, ChevronLeft, ChevronRight, ImagePlus, LogOut } from 'lucide-react-native';
@@ -231,6 +233,7 @@ const GENDERS = ['Prefer not to say', 'Female', 'Male', 'Nonbinary', 'Not Listed
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, profile, refreshProfile, signOut } = useAuth();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
@@ -293,7 +296,7 @@ export default function OnboardingScreen() {
   }
 
   async function completeProfile() {
-    if (!user || !draft) return;
+    if (!user || !draft || busy) return;
     const validation = validateStep(0);
     if (validation) {
       setError(validation);
@@ -330,8 +333,8 @@ export default function OnboardingScreen() {
 
   return (
     <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.content}
+      contentInsetAdjustmentBehavior="never"
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 32 }]}
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.topBar}>
@@ -402,6 +405,7 @@ export default function OnboardingScreen() {
                     <ChoiceChip
                       key={option}
                       label={option}
+                      emoji={activityEmojis[option]}
                       selected={draft.interests.includes(option)}
                       onPress={() => setDraft({ ...draft, interests: toggle(draft.interests, option) })}
                     />
@@ -421,6 +425,7 @@ export default function OnboardingScreen() {
               <ChoiceChip
                 key={option}
                 label={option}
+                emoji={activityEmojis[option]}
                 selected={draft[current.key].includes(option)}
                 onPress={() => setDraft({ ...draft, [current.key]: toggle(draft[current.key], option) } as OnboardingDraft)}
               />
@@ -658,6 +663,9 @@ function SelectCard({
 const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
+    width: '100%',
+    maxWidth: 640,
+    alignSelf: 'center',
     backgroundColor: Colors.background,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
@@ -698,10 +706,9 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.ink,
     fontFamily: Fonts.display,
-    fontSize: 28,
-    fontWeight: '600',
-    letterSpacing: -0.7,
-    lineHeight: 33,
+    fontSize: 36,
+    letterSpacing: -1,
+    lineHeight: 44,
   },
   sub: {
     color: 'rgba(248, 245, 239, 0.72)',

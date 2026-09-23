@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>echoo profile</title>
+    <script src="assets/activity-emojis.js"></script>
     <style>
       :root {
         color-scheme: dark;
@@ -1143,6 +1144,7 @@
     <script>
       document.documentElement.classList.add("echoo-page-loading");
     </script>
+    <link rel="stylesheet" href="assets/first-use.css" />
   </head>
   <body data-page="auth">
     <div class="app-shell">
@@ -1948,7 +1950,7 @@
           bucket && typeof bucket.has === "function"
             ? bucket.has(label)
             : false;
-        return `<button type="button" class="chip${isSelected ? " selected" : ""}" data-multi="${escapeHtml(key)}" data-value="${escapeHtml(label)}" aria-pressed="${isSelected ? "true" : "false"}">${escapeHtml(label)}</button>`;
+        return `<button type="button" class="chip${isSelected ? " selected" : ""}" data-multi="${escapeHtml(key)}" data-value="${escapeHtml(label)}" aria-pressed="${isSelected ? "true" : "false"}">${window.EchooActivityEmojis?.[label] ? `<span class="echoo-activity-emoji" aria-hidden="true">${window.EchooActivityEmojis[label]}</span>` : ""}<span>${escapeHtml(label)}</span></button>`;
       }
 
       function renderCustomInput(id, label) {

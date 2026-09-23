@@ -610,6 +610,15 @@
       (state) => {
         if (state.ok) {
           reportAccess("ready");
+          // Optional enhancement: load after verified access, without delaying it.
+          const tourStyle = document.createElement("link");
+          tourStyle.rel = "stylesheet";
+          tourStyle.href = "assets/first-use.css";
+          const tourScript = document.createElement("script");
+          tourScript.src = "assets/first-use.js";
+          tourScript.onload = () => window.EchooFirstUse?.start(state);
+          tourStyle.onload = () => document.head.append(tourScript);
+          document.head.append(tourStyle);
           if (document.readyState === "loading") {
             document.addEventListener(
               "DOMContentLoaded",
