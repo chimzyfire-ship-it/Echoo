@@ -24,6 +24,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/src/components/brand-mark';
 import { PrimaryButton } from '@/src/components/primary-button';
@@ -102,6 +103,7 @@ const FALLBACK_FILMS: MovieItem[] = [
 
 export default function CinemaScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const [selectedMovie, setSelectedMovie] = useState<MovieItem | null>(null);
@@ -175,7 +177,7 @@ export default function CinemaScreen() {
       />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 44) + 8 }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Back"

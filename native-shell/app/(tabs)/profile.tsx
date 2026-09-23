@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tabs, useRouter } from 'expo-router';
 import { ChevronRight, LogOut, Ticket, Pencil, RefreshCw } from 'lucide-react-native';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/src/components/primary-button';
 import { CityScoreSection } from '@/src/components/city-score-section';
@@ -24,6 +25,7 @@ const formatDate = (value: string | null) => {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { user, profile, signOut, refreshProfile } = useAuth();
 
@@ -41,7 +43,7 @@ export default function ProfileScreen() {
     <ScrollView
       style={styles.root}
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12 }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.profileCard}>

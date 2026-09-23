@@ -14,6 +14,7 @@ import type { ImageSourcePropType } from 'react-native';
 import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BrandMark } from '@/src/components/brand-mark';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LocationPicker } from '@/src/components/location-picker';
 import { unsupportedLocationMessage } from '@/src/services/location';
 import { EditorialPlaceCard } from '@/src/components/editorial-place-card';
@@ -95,6 +96,7 @@ function pickRecommendation(feed: DiscoveryFeed | undefined, profile: EchooProfi
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, profile } = useAuth();
   const { location } = useEchooLocation();
   const [locationOpen, setLocationOpen] = useState(false);
@@ -164,7 +166,7 @@ export default function HomeScreen() {
       >
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Top Brand & Greeting Area matching Inspi */}

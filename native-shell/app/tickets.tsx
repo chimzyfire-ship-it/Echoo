@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
-  ArrowUpRight,
   Calendar,
   Check,
   ChevronRight,
@@ -67,6 +67,7 @@ function formatFullDate(value: string | null | undefined): string {
 
 export default function TicketsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, profile } = useAuth();
   const { location } = useEchooLocation();
   const [tab, setTab] = useState<'on_sale' | 'my_passes'>('on_sale');
@@ -140,7 +141,7 @@ export default function TicketsScreen() {
         locations={[0, 0.45, 1]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 44) + 8 }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Back"
@@ -233,19 +234,20 @@ export default function TicketsScreen() {
                     ) : (
                       <View style={[StyleSheet.absoluteFill, { backgroundColor: '#2a2723' }]} />
                     )}
-                    <LinearGradient
-                      colors={['transparent', 'rgba(10,9,8,0.78)']}
-                      locations={[0.3, 1]}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <View style={styles.saleBadge}>
-                      <Text style={styles.saleBadgeText}>{item.statusLabel || 'Selling now'}</Text>
-                    </View>
-                    <View style={styles.salePriceBadge}>
-                      <Text style={styles.salePriceBadgeText}>{item.priceLabel}</Text>
-                    </View>
                   </View>
                   <View style={styles.saleCopy}>
+                    <View style={styles.ticketMetaRow}>
+                      <View style={styles.statusBadge}>
+                        <View style={styles.statusDot} />
+                        <Text style={styles.statusBadgeText}>{(item.statusLabel || 'Selling now').toUpperCase()}</Text>
+                      </View>
+                      {item.priceLabel && item.priceLabel.toLowerCase() !== 'see tickets' ? (
+                        <View style={styles.priceBadge}>
+                          <Text style={styles.priceBadgeText}>{item.priceLabel}</Text>
+                        </View>
+                      ) : null}
+                      <Text style={styles.saleCategory}>{item.category || 'Live Event'}</Text>
+                    </View>
                     <Text style={styles.saleTitle} numberOfLines={2}>
                       {item.title}
                     </Text>
@@ -254,10 +256,9 @@ export default function TicketsScreen() {
                       {item.subtitle ? ` · ${item.subtitle}` : ''}
                     </Text>
                     <View style={styles.saleActionRow}>
-                      <Text style={styles.saleCategory}>{item.category || 'Live Event'}</Text>
+                      <Text style={styles.saleCity}>{item.city || 'Greater Toronto Area'}</Text>
                       <View style={styles.saleGetBtn}>
-                        <Text style={styles.saleGetText}>{item.actionLabel || 'Get tickets'}</Text>
-                        <ArrowUpRight size={13} color={Colors.inkDark} />
+                        <Text style={styles.saleGetText}>{item.actionLabel || 'See tickets'}</Text>
                       </View>
                     </View>
                   </View>
@@ -322,22 +323,20 @@ export default function TicketsScreen() {
                       ) : (
                         <View style={[StyleSheet.absoluteFill, { backgroundColor: '#24221d' }]} />
                       )}
-                      <LinearGradient
-                        colors={['transparent', 'rgba(10,9,8,0.85)']}
-                        locations={[0.25, 1]}
-                        style={StyleSheet.absoluteFill}
-                      />
-                      <View style={styles.passStatusPill}>
-                        <Text style={styles.passStatusText}>CONFIRMED</Text>
-                      </View>
-                      {ticket.tierName ? (
-                        <View style={styles.passTierPill}>
-                          <Text style={styles.passTierText}>{ticket.tierName}</Text>
-                        </View>
-                      ) : null}
                     </View>
 
                     <View style={styles.passBody}>
+                      <View style={styles.ticketMetaRow}>
+                        <View style={styles.statusBadge}>
+                          <View style={styles.statusDot} />
+                          <Text style={styles.statusBadgeText}>{(ticket.status || 'CONFIRMED').toUpperCase()}</Text>
+                        </View>
+                        {ticket.tierName ? (
+                          <View style={styles.priceBadge}>
+                            <Text style={styles.priceBadgeText}>{ticket.tierName}</Text>
+                          </View>
+                        ) : null}
+                      </View>
                       <Text style={styles.passTitle} numberOfLines={2}>
                         {ticket.eventTitle || 'Echoo Event Pass'}
                       </Text>
@@ -501,91 +500,117 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   saleCard: {
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.09)',
-    backgroundColor: 'rgba(248, 245, 239, 0.035)',
+    borderColor: 'rgba(248, 245, 239, 0.10)',
+    backgroundColor: 'rgba(28, 26, 24, 0.85)',
     overflow: 'hidden',
   },
   saleArt: {
-    height: 160,
+    height: 180,
     position: 'relative',
     backgroundColor: '#262420',
   },
-  saleBadge: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: 'rgba(10, 9, 8, 0.65)',
+  saleCopy: {
+    padding: 18,
+    gap: 10,
+  },
+  ticketMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 2,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(247, 213, 178, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(248, 245, 239, 0.18)',
+    borderColor: 'rgba(247, 213, 178, 0.3)',
     borderRadius: 999,
     paddingHorizontal: 9,
-    paddingVertical: 4,
+    paddingVertical: 3,
   },
-  saleBadgeText: {
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: Colors.peach,
+  },
+  statusBadgeText: {
     fontFamily: Fonts.uiSemiBold,
     fontSize: 10,
-    color: Colors.ink,
-    letterSpacing: 0.5,
+    color: Colors.peachLight,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-  salePriceBadge: {
-    position: 'absolute',
-    bottom: 12,
-    right: 12,
-    backgroundColor: 'rgba(247, 213, 178, 0.92)',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+  priceBadge: {
+    backgroundColor: 'rgba(248, 245, 239, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(248, 245, 239, 0.14)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
-  salePriceBadgeText: {
+  priceBadgeText: {
     fontFamily: Fonts.uiSemiBold,
-    fontSize: 12,
-    color: Colors.inkDark,
+    fontSize: 11,
+    color: Colors.ink,
     fontWeight: '700',
   },
-  saleCopy: {
-    padding: 16,
-    gap: 8,
+  saleCategory: {
+    fontFamily: Fonts.uiMedium,
+    fontSize: 12,
+    color: 'rgba(248, 245, 239, 0.55)',
+    marginLeft: 'auto',
   },
   saleTitle: {
     color: Colors.ink,
     fontFamily: Fonts.display,
-    fontSize: 21,
+    fontSize: 22,
     fontWeight: '600',
-    lineHeight: 25,
+    lineHeight: 27,
+    letterSpacing: -0.4,
   },
   saleMeta: {
-    color: 'rgba(248, 245, 239, 0.65)',
+    color: 'rgba(248, 245, 239, 0.72)',
     fontFamily: Fonts.ui,
     fontSize: 13,
+    lineHeight: 18,
   },
   saleActionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 4,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(248, 245, 239, 0.07)',
+    marginTop: 2,
   },
-  saleCategory: {
-    fontFamily: Fonts.uiMedium,
+  saleCity: {
+    fontFamily: Fonts.ui,
     fontSize: 12,
-    color: Colors.peachLight,
+    color: Colors.textMuted,
+    flexShrink: 1,
   },
   saleGetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
     backgroundColor: Colors.peach,
     borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    minHeight: 38,
   },
   saleGetText: {
     fontFamily: Fonts.uiSemiBold,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: Colors.inkDark,
+    letterSpacing: 0.2,
   },
   myPassesWrap: {
     gap: 16,

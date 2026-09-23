@@ -334,7 +334,7 @@ export default function OnboardingScreen() {
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="never"
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 32 }]}
+      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 48) + 16, paddingBottom: insets.bottom + 32 }]}
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.topBar}>
@@ -676,6 +676,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minHeight: 44,
   },
   signOut: {
     width: 40,
@@ -705,7 +706,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: Colors.ink,
-    fontFamily: Fonts.display,
+    fontFamily: Fonts.displayMediumItalic,
     fontSize: 36,
     letterSpacing: -1,
     lineHeight: 44,

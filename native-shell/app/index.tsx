@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight } from 'lucide-react-native';
 import React from 'react';
 import { ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/src/components/brand-mark';
 import { LegalLinks } from '@/src/components/legal-links';
@@ -48,6 +49,7 @@ function LandingAction({ label, onPress, variant = 'primary' }: LandingActionPro
 
 export default function LandingScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { auth, mode } = useLocalSearchParams<{ auth?: string; mode?: string }>();
   const { height, width } = useWindowDimensions();
   const headlineSize = Math.min(50, (width - 48) / 6.9);
@@ -83,7 +85,7 @@ export default function LandingScreen() {
         <ScrollView
           style={styles.scroll}
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.content, { minHeight: Math.max(height, 700) }]}
+          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 12, minHeight: Math.max(height, 700) }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
