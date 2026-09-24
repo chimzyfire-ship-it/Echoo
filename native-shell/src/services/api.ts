@@ -14,6 +14,7 @@ import type {
 } from '@/src/models';
 import { echooConfig, supabase } from '@/src/services/supabase';
 import { manualMunicipalityLocation } from '@/src/services/location';
+import { subscriptionRequired } from './subscription-events';
 
 export class EchooApiError extends Error {
   constructor(
@@ -52,6 +53,7 @@ export async function edgeRequest<T>(
     signal: options.signal,
   });
   const payload = await response.json().catch(() => null);
+  if (response.status === 402 && payload?.code === 'subscription_required') subscriptionRequired();
   if (!response.ok || payload?.error) {
     throw new EchooApiError(
       text(payload?.error) || `Echoo could not complete that request (${response.status}).`,

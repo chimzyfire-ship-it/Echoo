@@ -487,3 +487,12 @@ verify_jwt = false
 
 [functions.app-notifications]
 verify_jwt = false
+
+[functions.subscription-sync]
+verify_jwt = false
+
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+[functions.mobile-account-delete]
+verify_jwt = false

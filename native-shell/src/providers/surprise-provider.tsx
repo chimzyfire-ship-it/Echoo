@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 
 import { SurpriseOverlay } from '@/src/components/surprise/surprise-overlay';
 import { useAuth } from '@/src/providers/auth-provider';
+import { useSubscription } from './subscription-provider';
 import { useCulture } from '@/src/providers/culture-provider';
 import { useEchooLocation } from '@/src/providers/location-provider';
 import { getDiscovery } from '@/src/services/api';
@@ -30,6 +31,7 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 export function SurpriseProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { ready, user, profile, profileError } = useAuth();
+  const { access } = useSubscription();
   const { active: culture } = useCulture();
   const { location } = useEchooLocation();
 
@@ -41,8 +43,8 @@ export function SurpriseProvider({ children }: { children: React.ReactNode }) {
   const activeRef = useRef(false);
   const readyResolveRef = useRef<(() => void) | null>(null);
   const rollResolveRef = useRef<(() => void) | null>(null);
-  const latest = useRef({ ready, user, profile, profileError, culture, location, router });
-  latest.current = { ready, user, profile, profileError, culture, location, router };
+  const latest = useRef({ ready, user, profile, profileError, culture, location, router, access });
+  latest.current = { ready, user, profile, profileError, culture, location, router, access };
 
   const cancel = useCallback(() => {
     generationRef.current += 1;
@@ -55,8 +57,8 @@ export function SurpriseProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user || !profile?.completedAt || profileError) cancel();
-  }, [user?.id, profile?.completedAt, profileError, cancel]);
+    if (!user || !profile?.completedAt || profileError || !access?.active) cancel();
+  }, [user?.id, profile?.completedAt, profileError, cancel, access?.active]);
 
   const handleRollStart = useCallback(() => {
     readyResolveRef.current?.();
@@ -85,6 +87,7 @@ export function SurpriseProvider({ children }: { children: React.ReactNode }) {
       current.router.push('/onboarding');
       return;
     }
+    if (!current.access?.active) { current.router.push('/subscription'); return; }
     const memberProfile = current.profile;
     if (!memberProfile) return;
 
