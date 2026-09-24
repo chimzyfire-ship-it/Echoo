@@ -1,6 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+const { readFileSync, existsSync } = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const ts = require("typescript");
@@ -9,6 +9,7 @@ function loader(overrides = {}, globals = {}) {
   const cache = new Map();
   function load(file) {
     file = path.resolve(__dirname, file);
+    if (!existsSync(file) && existsSync(`${file}.ts`)) file += '.ts';
     if (cache.has(file)) return cache.get(file);
     const exports = {};
     cache.set(file, exports);
@@ -336,6 +337,9 @@ function companionFixture(previous, quickStatus = 200) {
       insert: async () => ({}),
     }),
     rpc: async (name, args) => {
+      if (name === 'mobile_access_for') return { data: { active: true, source: 'founder' } };
+      if (name === 'reserve_mobile_usage') return { data: true };
+      if (name === 'release_mobile_usage') return { data: null };
       if (name === "begin_planning_turn")
         return {
           data: { sessionId: REQUEST, revision: 1, state: previous || {} },

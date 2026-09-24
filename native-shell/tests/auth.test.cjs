@@ -93,6 +93,7 @@ test('Surprise waits for restoration and protects anonymous, incomplete and fail
     'react/jsx-runtime': { jsx: (type, props) => { if (type === 'provider') context = props.value; }, jsxs: (type, props) => { if (type === 'provider') context = props.value; } },
     'expo-router': { useRouter: () => ({ push: (route) => routes.push(route) }) },
     '@/src/providers/auth-provider': { useAuth: () => auth },
+    './subscription-provider': { useSubscription: () => ({ access: { active: auth?.paid !== false } }) },
     '@/src/providers/culture-provider': { useCulture: () => ({ active: null }) },
     '@/src/providers/location-provider': { useEchooLocation: () => ({ location: { city: 'Toronto' } }) },
     '@/src/services/api': { getDiscovery: () => { discovery++; return new Promise(() => {}); } },
@@ -104,13 +105,14 @@ test('Surprise waits for restoration and protects anonymous, incomplete and fail
     { ready: true, user: null },
     { ready: true, user: { id: 'member' }, profile: null },
     { ready: true, user: { id: 'member' }, profileError: 'offline' },
+    { ready: true, user: { id: 'member' }, profile: { completedAt: 'today' }, paid: false },
     { ready: true, user: { id: 'member' }, profile: { completedAt: 'today' } },
   ]) {
     auth = state;
     SurpriseProvider({ children: null });
     context.start();
   }
-  assert.deepEqual(routes, ['/auth', '/onboarding']);
+  assert.deepEqual(routes, ['/auth', '/onboarding', '/subscription']);
   assert.equal(discovery, 1);
 });
 

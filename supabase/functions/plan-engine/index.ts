@@ -663,7 +663,7 @@ function previousWeatherSnapshot(
   const previousWeather = previousPlan?.conversationState?.weather;
   const city = normalizedKnownCity(previousWeather?.city || "");
   const temperatureC = optionalNumber(previousWeather?.temperatureC);
-  if (!city || !Number.isFinite(temperatureC)) return null;
+  if (!city || temperatureC === undefined || !Number.isFinite(temperatureC)) return null;
   return {
     city,
     temperatureC,
@@ -2387,6 +2387,11 @@ async function callGemini(input: {
 }
 
 Deno.serve(async (req) => {
+  const { withMobileAccess } = await import('../_shared/mobile-access.ts');
+  return withMobileAccess(handlePaidPlan, 'routes')(req);
+});
+
+async function handlePaidPlan(req: Request) {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
@@ -2612,4 +2617,4 @@ Deno.serve(async (req) => {
       }),
     );
   }
-});
+}

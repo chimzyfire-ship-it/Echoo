@@ -67,6 +67,9 @@ function stayReason(stay: any, distanceMeters: number, index: number) {
 }
 
 Deno.serve(async (req) => {
+  const { requireMobileAccess } = await import('../_shared/mobile-access.ts');
+  const blocked = await requireMobileAccess(req);
+  if (blocked) return blocked;
   if (req.method === "OPTIONS")
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (req.method !== "GET")

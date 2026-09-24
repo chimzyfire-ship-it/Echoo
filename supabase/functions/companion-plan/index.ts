@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { withMobileAccess } from '../_shared/mobile-access.ts';
 import {
   CORS_HEADERS,
   getSupabaseAdmin,
@@ -291,7 +292,7 @@ export async function handleCompanion(req: Request): Promise<Response> {
         }
         if (!anchorIds.length) anchorIds = [anchorId];
         for (const candidateAnchor of anchorIds) {
-          const response = await handleQuickPlan(
+          const response = await handleMeteredQuickPlan(
             new Request(req.url, {
               method: "POST",
               headers: req.headers,
@@ -513,4 +514,7 @@ export async function handleCompanion(req: Request): Promise<Response> {
   }
 }
 
-Deno.serve(handleCompanion);
+function handleMeteredQuickPlan(req: Request, options: Parameters<typeof handleQuickPlan>[1]) {
+  return withMobileAccess(request => handleQuickPlan(request, options), 'routes')(req);
+}
+Deno.serve(withMobileAccess(handleCompanion, 'concierge'));

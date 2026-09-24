@@ -28,6 +28,7 @@ import {
 import { ScreenLoading, ScreenMessage } from '@/src/components/screen-state';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { AuthProvider, useAuth } from '@/src/providers/auth-provider';
+import { SubscriptionProvider, useSubscription } from '@/src/providers/subscription-provider';
 import { CultureProvider } from '@/src/providers/culture-provider';
 import { LocationProvider } from '@/src/providers/location-provider';
 import { SurpriseProvider } from '@/src/providers/surprise-provider';
@@ -35,6 +36,7 @@ import { Colors } from '@/src/theme/tokens';
 
 function AppNavigator() {
   const { ready, authFlow, user, profile, profileError, refreshProfile, signOut } = useAuth();
+  const subscription = useSubscription();
   const router = useRouter();
   const segments = useSegments();
   const rootSegment = segments[0] ?? '';
@@ -52,8 +54,12 @@ function AppNavigator() {
   useEffect(() => {
     if (!ready || authFlow) return;
 
-    // Restored members may stay on the landing page and use Surprise directly.
-    if (user && profile?.completedAt) return;
+    // Legal/account controls must remain reachable even without a subscription.
+    if (rootSegment === 'legal' || (user && rootSegment === 'account')) return;
+    if (user && profile?.completedAt) {
+      if (subscription.ready && !subscription.error && !subscription.access?.active && rootSegment !== 'subscription') router.replace('/subscription');
+      return;
+    }
 
     // If user is authenticated but hasn't finished onboarding:
     if (user && !profile?.completedAt && !profileError) {
@@ -64,10 +70,10 @@ function AppNavigator() {
     }
 
     // If unauthenticated user tries to navigate into member routes:
-    if (!user && (memberRoute || rootSegment === 'onboarding')) {
+    if (!user && (memberRoute || ['onboarding', 'subscription', 'account'].includes(rootSegment))) {
       router.replace('/');
     }
-  }, [authFlow, memberRoute, profile?.completedAt, profileError, ready, rootSegment, router, user]);
+  }, [authFlow, memberRoute, profile?.completedAt, profileError, ready, rootSegment, router, user, subscription.ready, subscription.error, subscription.access?.active]);
 
   if (!ready && !authFlow) {
     return (
@@ -86,7 +92,14 @@ function AppNavigator() {
     </View>;
   }
 
-  if (!authFlow && ((memberRoute && (!user || !profile?.completedAt)) || (rootSegment === 'onboarding' && !user))) {
+  if (user && profile?.completedAt && rootSegment !== 'legal' && rootSegment !== 'account' && subscription.error) {
+    return <ScreenMessage title="Could not verify access" body={subscription.error} action={<>
+      <PrimaryButton label="Try again" onPress={() => { void subscription.refresh(); }} />
+      <PrimaryButton label="Sign out" variant="quiet" onPress={() => { void signOut(); }} />
+    </>} />;
+  }
+
+  if ((memberRoute && (!user || !profile?.completedAt || !subscription.ready || !subscription.access?.active)) || (rootSegment === 'onboarding' && !user)) {
     return <View style={styles.loading}><ScreenLoading label="Opening Echoo." /></View>;
   }
 
@@ -101,6 +114,9 @@ function AppNavigator() {
       <Stack.Screen name="index" />
       <Stack.Screen name="auth" />
       <Stack.Screen name="onboarding" />
+      <Stack.Screen name="subscription" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="legal" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="account" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="place/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="planner" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
@@ -156,6 +172,7 @@ export default function RootLayout() {
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
+            <SubscriptionProvider>
             <LocationProvider>
               <CultureProvider>
                 <StatusBar style="light" />
@@ -167,6 +184,7 @@ export default function RootLayout() {
                 </SurpriseProvider>
               </CultureProvider>
             </LocationProvider>
+            </SubscriptionProvider>
           </AuthProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

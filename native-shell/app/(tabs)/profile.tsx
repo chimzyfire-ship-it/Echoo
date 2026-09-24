@@ -167,6 +167,9 @@ export default function ProfileScreen() {
 
       <View style={styles.signOutRow}>
         <Text style={styles.sectionLabel}>ACCOUNT</Text>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/account')} style={styles.accountRow}>
+          <Text style={styles.accountLabel}>Subscription, account & help</Text><ChevronRight size={16} color="#858a7b" />
+        </Pressable>
         <Pressable accessibilityRole="button" onPress={() => { void refreshProfile().then(() => queryClient.invalidateQueries({ queryKey: ['my-tickets'] })); }} style={({ pressed }) => [styles.accountRow, pressed && styles.pressed]}>
           <RefreshCw size={17} color="#bdbeb4" /><Text style={styles.accountLabel}>Refresh profile</Text><ChevronRight size={16} color="#858a7b" />
         </Pressable>

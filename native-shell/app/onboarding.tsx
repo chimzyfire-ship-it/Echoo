@@ -12,6 +12,7 @@ import { PrimaryButton } from '@/src/components/primary-button';
 import { TextField } from '@/src/components/text-field';
 import type { ConsentChoice, OnboardingDraft } from '@/src/models';
 import { useAuth } from '@/src/providers/auth-provider';
+import { useSubscription } from '@/src/providers/subscription-provider';
 import {
   defaultOnboardingDraft,
   isValidUsername,
@@ -235,6 +236,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, profile, refreshProfile, signOut } = useAuth();
+  const subscription = useSubscription();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
   const [photo, setPhoto] = useState<PickedImage | null>(null);
@@ -317,7 +319,8 @@ export default function OnboardingScreen() {
       if (!photoUrl) throw new Error('Add a profile photo before finishing.');
       await saveOnboardingProfile(user, draft, photoUrl);
       await refreshProfile();
-      router.replace('/(tabs)');
+      const access = await subscription.refresh();
+      router.replace(access?.active ? '/(tabs)' : '/subscription');
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Echoo could not finish your profile.');
     } finally {
