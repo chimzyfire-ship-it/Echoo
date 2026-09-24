@@ -299,6 +299,9 @@ function sectionsFor(input: { owned: CultureItem[]; live: CultureItem[]; topics:
 }
 
 Deno.serve(async (req) => {
+  const { requireMobileAccess } = await import('../_shared/mobile-access.ts');
+  const blocked = await requireMobileAccess(req);
+  if (blocked) return blocked;
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 

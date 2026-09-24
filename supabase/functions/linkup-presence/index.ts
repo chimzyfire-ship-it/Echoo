@@ -44,6 +44,9 @@ interface PresencePayload {
 }
 
 Deno.serve(async (req) => {
+  const { requireMobileAccess } = await import('../_shared/mobile-access.ts');
+  const blocked = await requireMobileAccess(req);
+  if (blocked) return blocked;
   if (req.method === "OPTIONS")
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (req.method !== "POST")
@@ -172,7 +175,7 @@ Deno.serve(async (req) => {
     if (isGhost) {
       return jsonResponse({
         ok: true,
-        presence: { id: presence.id, expiresAt: presence.expiresAt },
+        presence: { id: presence.id, expiresAt: presence.expires_at },
         ghost: true,
         proposedMatches: 0,
       });

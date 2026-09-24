@@ -406,8 +406,7 @@ async function loadPlaceLane(input: {
     "trail",
     "library",
   ];
-  const placeCity =
-    input.city && input.city !== "Greater Toronto Area" ? input.city : "Markham";
+  const placeCity = input.city || "Markham";
   const rows: any[] = [];
   for (const category of categories) {
     const { data, error } = await input.supabase.rpc("search_ontario_places", {
@@ -469,6 +468,9 @@ async function loadNewsLane(input: {
 }
 
 Deno.serve(async (req) => {
+  const { requireMobileAccess } = await import('../_shared/mobile-access.ts');
+  const blocked = await requireMobileAccess(req);
+  if (blocked) return blocked;
   const startedAt = Date.now();
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -520,7 +522,7 @@ Deno.serve(async (req) => {
       {
         id: "shows-tickets",
         title: hasGps ? `Shows near you` : "GTA shows",
-        label: events.some((event) => event.statusLabel === "Tonight")
+        label: events.some((event: { statusLabel?: string }) => event.statusLabel === "Tonight")
           ? "Tonight"
           : "Selling now",
         cards: events,

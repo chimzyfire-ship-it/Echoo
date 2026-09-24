@@ -97,6 +97,7 @@ export interface LinkupEligibility {
     | "no_onboarding"
     | "underage"
     | "unverified"
+    | "age_unverified"
     | "incomplete_profile"
     | "paused";
   dateOfBirth?: string;
@@ -200,7 +201,7 @@ export function ageBandCompatible(
 // ─────────────────────────────────────────────────────────────────────────
 export const AFFINITY_THRESHOLD = 20; // 0–100; tuned for "only compatible people"
 
-function jaccard(a: string[] | null, b: string[] | null): number {
+function jaccard(a: string[] | null | undefined, b: string[] | null | undefined): number {
   const setA = new Set((a ?? []).map((x) => String(x).toLowerCase().trim()));
   const setB = new Set((b ?? []).map((x) => String(x).toLowerCase().trim()));
   if (setA.size === 0 || setB.size === 0) return 0;
@@ -216,15 +217,15 @@ function sameScalar(a?: string | null, b?: string | null): boolean {
 }
 
 export interface AffinityProfile {
-  interests?: string[];
-  event_styles?: string[];
-  motivations?: string[];
-  audiences?: string[];
-  budget?: string;
-  energy?: string;
-  tone?: string;
-  gender?: string;
-  home_city?: string;
+  interests?: string[] | null;
+  event_styles?: string[] | null;
+  motivations?: string[] | null;
+  audiences?: string[] | null;
+  budget?: string | null;
+  energy?: string | null;
+  tone?: string | null;
+  gender?: string | null;
+  home_city?: string | null;
 }
 
 export function computeAffinity(
