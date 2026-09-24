@@ -66,7 +66,7 @@ export default function SubscriptionScreen() {
   return <View style={styles.root}><ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 24 }]}>
     <View style={styles.top}><Pressable accessibilityRole="button" disabled={!!busy} onPress={() => { void run('restore'); }} style={styles.link}><Text style={styles.restore}>Restore Purchases</Text></Pressable></View>
     <View style={styles.brand} accessibilityRole="image" accessibilityLabel="Echoocity">
-      <Image source={require('@/assets/echoo-brand-symbol.png')} style={styles.symbol} resizeMode="contain" />
+      <Image source={require('@/assets/echoo-brand-symbol.png')} style={styles.symbol} resizeMode="contain" fadeDuration={0} />
       <Text adjustsFontSizeToFit numberOfLines={1} style={styles.wordmark}>echoocity</Text>
     </View>
     <Text style={styles.intro}>{access?.active ? (access.source === 'founder' ? 'Your account has permanent full access. No subscription required.' : 'Your account already has full app access.') : 'A subscription is required to use Echoocity.'}</Text>

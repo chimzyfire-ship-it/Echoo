@@ -150,9 +150,10 @@ export default function HomeScreen() {
 
   return (
     <ImageBackground
-      source={require('@/assets/new-use1.png')}
+      source={require('@/assets/new-use1.jpg')}
       resizeMode="cover"
       style={styles.backgroundImage}
+      fadeDuration={0}
     >
       <LinearGradient
         colors={[
@@ -191,12 +192,12 @@ export default function HomeScreen() {
             />
             <MoodAction
               label="See a show"
-              imageSource={require('@/assets/moods/watch.png')}
+              imageSource={require('@/assets/moods/watch.jpg')}
               onPress={() => openDiscover('events')}
             />
             <MoodAction
               label="Eat"
-              imageSource={require('@/assets/moods/eat.png')}
+              imageSource={require('@/assets/moods/eat.jpg')}
               onPress={() => openDiscover('food')}
             />
             <MoodAction
@@ -310,7 +311,7 @@ function MoodAction({
         pressed && styles.moodActionPressed,
       ]}
     >
-      <Image source={imageSource} style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} resizeMode="cover" />
+      <Image source={imageSource} style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} resizeMode="cover" fadeDuration={0} />
       <LinearGradient colors={['rgba(15,14,12,0.04)', 'rgba(15,14,12,0.9)']} locations={[0.12, 1]} style={StyleSheet.absoluteFill} />
       <View style={styles.moodCopy}>
         <Text style={[styles.moodLabel, accent && styles.moodLabelAccent]}>{label}</Text>

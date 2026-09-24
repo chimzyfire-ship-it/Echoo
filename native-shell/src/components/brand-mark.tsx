@@ -4,6 +4,6 @@ export function BrandMark({ style, size = 'default' }: { style?: StyleProp<ViewS
   const width = size === 'large' ? 64 : size === 'small' ? 40 : 48;
   return <View style={style} accessible accessibilityRole="image" accessibilityLabel="Echoo">
     <Image source={require('@/assets/echoo-brand-symbol.png')} resizeMode="contain"
-      style={{ width, height: width * 620 / 746 }} accessible={false} />
+      style={{ width, height: width * 620 / 746 }} accessible={false} fadeDuration={0} />
   </View>;
 }

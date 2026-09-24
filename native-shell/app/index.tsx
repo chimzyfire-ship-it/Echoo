@@ -67,9 +67,10 @@ export default function LandingScreen() {
 
   return (
     <ImageBackground
-      source={require('../assets/new-use1.png')}
+      source={require('../assets/new-use1.jpg')}
       resizeMode="cover"
       style={styles.background}
+      fadeDuration={0}
     >
       <LinearGradient
         colors={[

@@ -3,6 +3,7 @@ import { NotificationProvider } from '@/src/providers/notification-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Asset } from 'expo-asset';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -158,6 +159,17 @@ export default function RootLayout() {
         },
       })
   );
+
+  useEffect(() => {
+    void Asset.loadAsync([
+      require('@/assets/new-use1.jpg'),
+      require('@/assets/echoo-brand-symbol.png'),
+      require('@/assets/moods/go-out.jpg'),
+      require('@/assets/moods/watch.jpg'),
+      require('@/assets/moods/eat.jpg'),
+      require('@/assets/moods/surprise.jpg'),
+    ]);
+  }, []);
 
   if (!fontsLoaded && !fontError) {
     return (
