@@ -11,7 +11,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.echoo.mobile",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Echoo uses your location to show places near you across the GTA.",
+        "NSLocationWhenInUseUsageDescription": "Echoo uses your location to show nearby places in Ontario and verify arrivals when you request it.",
         "NSPhotoLibraryUsageDescription": "Echoo uses your photo to complete your profile."
       },
       "usesAppleSignIn": true
@@ -28,7 +28,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Echoo uses your location to show places near you across the GTA."
+          "locationWhenInUsePermission": "Echoo uses your location to show nearby places in Ontario and verify arrivals when you request it."
         }
       ],
       [

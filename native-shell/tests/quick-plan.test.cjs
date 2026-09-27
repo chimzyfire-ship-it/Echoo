@@ -11,7 +11,7 @@ function load(relativePath, modules, globals = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const exports = {};
-  vm.runInNewContext(compiled, { exports, require: (name) => modules[name] ?? {}, ...globals });
+  vm.runInNewContext(compiled, { exports, require: (name) => modules[name] ?? (name.endsWith('/request') ? require('./load-request.cjs')(globals) : {}), ...globals });
   return exports;
 }
 

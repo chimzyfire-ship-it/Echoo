@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Linking } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowUpRight, Clock, MapPin, Navigation, X } from 'lucide-react-native';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -25,7 +25,12 @@ import { triggerHaptic } from '@/src/utils/haptics';
 const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 
 function openMaps(uri: string) {
-  void Linking.openURL(uri).catch(() => {});
+  const destination = Platform.OS === 'android' && uri.startsWith('https://maps.apple.com/?daddr=')
+    ? uri.replace('https://maps.apple.com/?daddr=', 'https://www.google.com/maps/dir/?api=1&destination=')
+    : uri;
+  void Linking.openURL(destination).catch(() => {
+    Alert.alert('Could not open directions', 'Please try again or open your maps app.');
+  });
 }
 
 export default function PlaceDetailScreen() {

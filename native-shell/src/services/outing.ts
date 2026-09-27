@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
-import * as Location from 'expo-location';
+import { deviceLocation } from '@/src/services/device-location';
 import type { QuickPlan } from '@/src/models';
 import { getQuickPlan, type QuickPlanBudgetStyle, type QuickPlanProfileInput } from '@/src/services/api';
 import { supabase } from '@/src/services/supabase';
@@ -64,9 +64,7 @@ export async function verifyArrival(userId: string, placeId: string) {
   await requireUser(userId);
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(placeId)) throw new Error('This place cannot be verified in Echoo inventory yet.');
   // Called only by the explicit arrival button. No background tracking.
-  const permission = await Location.requestForegroundPermissionsAsync();
-  if (permission.status !== 'granted') throw new Error('Location permission was not granted. Your place remains planned and no points were added.');
-  const fix = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+  const fix = await deviceLocation({ precise: true });
   await requireUser(userId);
   const { data, error } = await supabase.rpc('verify_outing_arrival', {
     p_place_id: placeId, p_latitude: fix.coords.latitude, p_longitude: fix.coords.longitude,

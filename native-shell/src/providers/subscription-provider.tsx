@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import { useQueryClient } from '@tanstack/react-query';
+import { onlineManager, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './auth-provider';
 import { readMobileAccess, type MobileAccess } from '../services/subscriptions';
 import { onSubscriptionRequired } from '../services/subscription-events';
@@ -13,34 +13,50 @@ export function SubscriptionProvider({ children }: React.PropsWithChildren) {
   const userId = user?.id ?? null;
   const current = useRef(userId); current.current = userId;
   const generation = useRef(0);
+  const inFlight = useRef<{ id: string | null; promise: Promise<MobileAccess | null> } | null>(null);
   const [state, setState] = useState<{ userId: string | null; access: MobileAccess | null; ready: boolean; error: string | null }>({ userId: null, access: null, ready: false, error: null });
-  const refresh = useCallback(async () => {
-    const id = current.current, request = ++generation.current;
-    if (!id) { setState({ userId: null, access: null, ready: true, error: null }); return null; }
-    try {
-      const access = await readMobileAccess();
-      if (current.current === id && generation.current === request) setState({ userId: id, access, ready: true, error: null });
-      return current.current === id ? access : null;
-    } catch (error) {
-      if (current.current === id && generation.current === request) setState({ userId: id, access: null, ready: true, error: error instanceof Error ? error.message : 'Could not check access.' });
-      return null;
-    }
+  const refresh = useCallback(() => {
+    const id = current.current;
+    if (inFlight.current?.id === id) return inFlight.current.promise;
+    const request = ++generation.current;
+    const promise = (async () => {
+      if (!id) { setState({ userId: null, access: null, ready: true, error: null }); return null; }
+      try {
+        const access = await readMobileAccess();
+        if (current.current === id && generation.current === request) setState({ userId: id, access, ready: true, error: null });
+        return current.current === id ? access : null;
+      } catch (error) {
+        if (current.current === id && generation.current === request) setState(previous => {
+          // A transient outage must not eject a member with a still-valid grant.
+          // Access remains server-enforced; explicit 402s clear this state below.
+          const valid = previous.userId === id && previous.access?.active &&
+            (!previous.access.expiresAt || Date.parse(previous.access.expiresAt) > Date.now());
+          return { userId: id, access: valid ? previous.access : null, ready: true, error: valid ? null : error instanceof Error ? error.message : 'Could not check access.' };
+        });
+        return null;
+      }
+    })();
+    inFlight.current = { id, promise };
+    void promise.finally(() => { if (inFlight.current?.promise === promise) inFlight.current = null; });
+    return promise;
   }, []);
   useEffect(() => {
     client.clear();
     void refresh();
-    return () => { generation.current++; };
+    return () => { generation.current++; inFlight.current = null; };
   }, [userId, refresh, client]);
   useEffect(() => {
+    const stopOnline = onlineManager.subscribe(online => { if (online && AppState.currentState === 'active') void refresh(); });
     const listener = AppState.addEventListener('change', value => { if (value === 'active') void refresh(); });
     const timer = setInterval(() => { if (AppState.currentState === 'active') void refresh(); }, 60000);
     const stop = onSubscriptionRequired(() => {
       generation.current++;
+      inFlight.current = null;
       setState({ userId: current.current, access: null, ready: true, error: null });
       client.clear();
       void refresh();
     });
-    return () => { listener.remove(); clearInterval(timer); stop(); };
+    return () => { listener.remove(); clearInterval(timer); stop(); stopOnline(); };
   }, [refresh, client]);
   const sameUser = state.userId === userId;
   // Evaluate expiry at render time too; never rely on a persisted client flag.

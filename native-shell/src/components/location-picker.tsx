@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Crosshair, X } from 'lucide-react-native';
 
 import { MUNICIPALITY_GROUPS, searchMunicipalities } from '@/src/services/location';
@@ -7,7 +7,7 @@ import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
 import { useEchooLocation } from '@/src/providers/location-provider';
 
 export function LocationPicker({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { location, chooseMunicipality, isResolving, useDeviceLocation, error } = useEchooLocation();
+  const { location, chooseMunicipality, isResolving, useDeviceLocation, error, needsSettings } = useEchooLocation();
   const [search, setSearch] = useState('');
   const matches = new Set(searchMunicipalities(search));
 
@@ -62,6 +62,8 @@ export function LocationPicker({ visible, onClose }: { visible: boolean; onClose
           </Pressable>
           <Text style={styles.deviceBody}>GPS is shared with location providers for this session.</Text>
           {error ? <Text selectable accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
+
+          {needsSettings ? <Pressable accessibilityRole="button" onPress={() => { void Linking.openSettings().catch(() => {}); }} style={styles.deviceRow}><Text style={styles.deviceTitle}>Open Settings</Text></Pressable> : null}
 
           {!matches.size ? <Text style={styles.deviceBody}>No matching selections. Try a city or region name, or use your location in Ontario.</Text> : null}
           {MUNICIPALITY_GROUPS.map(({ region, municipalities }) => {
