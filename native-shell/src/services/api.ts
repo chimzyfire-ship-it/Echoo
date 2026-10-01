@@ -15,6 +15,7 @@ import type {
 import { echooConfig, supabase } from '@/src/services/supabase';
 import { manualMunicipalityLocation } from '@/src/services/location';
 import { subscriptionRequired } from './subscription-events';
+import { assertOnline, assertRequestActive, runRequest } from './request';
 
 export class EchooApiError extends Error {
   constructor(
@@ -36,32 +37,38 @@ const numberOrNull = (value: unknown) => {
 
 export async function edgeRequest<T>(
   name: string,
-  options: { method?: 'GET' | 'POST'; body?: unknown; query?: Record<string, string>; signal?: AbortSignal } = {}
+  options: { method?: 'GET' | 'POST'; body?: unknown; query?: Record<string, string>; signal?: AbortSignal; timeoutMs?: number } = {}
 ): Promise<T> {
-  const { data } = await supabase.auth.getSession();
-  const url = new URL(`${echooConfig.supabaseUrl}/functions/v1/${name}`);
-  for (const [key, value] of Object.entries(options.query ?? {})) url.searchParams.set(key, value);
+  return runRequest(async signal => {
+    assertOnline();
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    assertRequestActive(signal);
+    const url = new URL(`${echooConfig.supabaseUrl}/functions/v1/${name}`);
+    for (const [key, value] of Object.entries(options.query ?? {})) url.searchParams.set(key, value);
 
-  const response = await fetch(url.toString(), {
-    method: options.method ?? 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: echooConfig.supabaseAnonKey,
-      Authorization: `Bearer ${data.session?.access_token ?? echooConfig.supabaseAnonKey}`,
-    },
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-    signal: options.signal,
-  });
-  const payload = await response.json().catch(() => null);
-  if (response.status === 402 && payload?.code === 'subscription_required') subscriptionRequired();
-  if (!response.ok || payload?.error) {
-    throw new EchooApiError(
-      text(payload?.error) || `Echoo could not complete that request (${response.status}).`,
-      response.status,
-      text(payload?.code) || undefined
-    );
-  }
-  return payload as T;
+    const response = await fetch(url.toString(), {
+      method: options.method ?? 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: echooConfig.supabaseAnonKey,
+        Authorization: `Bearer ${data.session?.access_token ?? echooConfig.supabaseAnonKey}`,
+      },
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      signal,
+    });
+    const payload = await response.json().catch(() => null);
+    assertRequestActive(signal);
+    if (response.status === 402 && payload?.code === 'subscription_required') subscriptionRequired();
+    if (!response.ok || payload?.error) {
+      throw new EchooApiError(
+        text(payload?.error) || `Echoo could not complete that request (${response.status}).`,
+        response.status,
+        text(payload?.code) || undefined
+      );
+    }
+    return payload as T;
+  }, { signal: options.signal, timeoutMs: options.timeoutMs ?? (['quick-plan', 'plan-engine', 'companion-plan'].includes(name) ? 65000 : 30000) });
 }
 
 function mapCard(value: Record<string, unknown>): DiscoveryCard | null {

@@ -11,7 +11,7 @@ function load(file, modules, globals = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const exports = {};
-  vm.runInNewContext(compiled, { exports, require: (name) => modules[name] ?? {}, Error, URL, setTimeout, clearTimeout, ...globals });
+  vm.runInNewContext(compiled, { exports, require: (name) => modules[name] ?? (name.endsWith('/request') ? require('./load-request.cjs')(globals) : {}), Error, URL, setTimeout, clearTimeout, ...globals });
   return exports;
 }
 
@@ -120,7 +120,9 @@ test('auth restoration defers profile I/O, ignores stale loads and keeps token r
   const hooks = [], effects = [], pending = [];
   let cursor = 0, context, listener, session;
   const { AuthProvider } = load('../src/providers/auth-provider.tsx', {
-    '@/src/services/planning-notifications': { disablePlanningNotifications: async () => {} },
+    '@/src/services/planning-notifications': { disablePlanningNotifications: async () => {}, retryPushCleanup: async () => {} },
+    '@/src/services/local-signout': { signOutOnDevice: async () => { listener('SIGNED_OUT', null); return null; } },
+    '@tanstack/react-query': { focusManager: { subscribe: () => () => {} }, onlineManager: { subscribe: () => () => {}, isOnline: () => true } },
     react: {
       createContext: () => ({ Provider: 'auth' }),
       useState: (initial) => {

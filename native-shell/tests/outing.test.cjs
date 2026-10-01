@@ -13,7 +13,12 @@ function service({ user = 'u1', rpcError = null, accuracy = 12, permission = 'gr
   const modules = {
     '@react-native-async-storage/async-storage': { __esModule: true, default: { getItem: async (k) => storage.get(k) || null, setItem: async (k, v) => storage.set(k, v) } },
     'expo-crypto': { randomUUID: () => `outing-${++uuid}` },
-    'expo-location': { Accuracy: { High: 4 }, requestForegroundPermissionsAsync: async () => { calls.permissions++; return { status: permission }; }, getCurrentPositionAsync: async () => ({ coords: { latitude: 43.65, longitude: -79.38, accuracy }, timestamp: Date.now() }) },
+    '@/src/services/device-location': { deviceLocation: async (options) => {
+      assert.equal(options.precise, true);
+      calls.permissions++;
+      if (permission !== 'granted') throw new Error('Location permission was not granted.');
+      return { coords: { latitude: 43.65, longitude: -79.38, accuracy }, timestamp: Date.now() };
+    } },
     '@/src/services/supabase': { supabase: {
       auth: { getSession: async () => ({ data: { session: activeUser ? { user: { id: activeUser } } : null } }) },
       rpc: async (name, input) => { calls.rpc.push({ name, input }); return { data: { visitId: 'visit', awardedPoints: 10, city: 'Toronto' }, error: rpcError }; },

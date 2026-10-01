@@ -34,6 +34,8 @@ import { CultureProvider } from '@/src/providers/culture-provider';
 import { LocationProvider } from '@/src/providers/location-provider';
 import { SurpriseProvider } from '@/src/providers/surprise-provider';
 import { Colors } from '@/src/theme/tokens';
+import { connectQueryLifecycle } from '@/src/services/query-lifecycle';
+import { retryRead } from '@/src/services/request';
 
 function AppNavigator() {
   const { ready, authFlow, user, profile, profileError, refreshProfile, signOut } = useAuth();
@@ -151,14 +153,20 @@ export default function RootLayout() {
     () =>
       new QueryClient({
         defaultOptions: {
+          mutations: { retry: false, networkMode: 'always' },
           queries: {
-            retry: 1,
+            retry: retryRead,
+            // Offline reads finish with a useful error; don't leave a paused spinner.
+            networkMode: 'always',
             staleTime: 60_000,
             refetchOnReconnect: true,
+            refetchOnWindowFocus: true,
           },
         },
       })
   );
+
+  useEffect(connectQueryLifecycle, []);
 
   useEffect(() => {
     void Asset.loadAsync([
@@ -168,7 +176,7 @@ export default function RootLayout() {
       require('@/assets/moods/watch.jpg'),
       require('@/assets/moods/eat.jpg'),
       require('@/assets/moods/surprise.jpg'),
-    ]);
+    ]).catch(() => {});
   }, []);
 
   if (!fontsLoaded && !fontError) {

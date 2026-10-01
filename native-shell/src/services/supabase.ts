@@ -1,6 +1,7 @@
 import 'react-native-url-polyfill/auto';
 
 import { createClient, processLock } from '@supabase/supabase-js';
+import { fetchWithDeadline } from '@/src/services/request';
 import { sessionStorage } from '@/src/services/session-storage';
 
 const SUPABASE_URL =
@@ -13,13 +14,16 @@ export const echooConfig = {
   supabaseAnonKey: SUPABASE_ANON_KEY,
 };
 
+export const SESSION_STORAGE_KEY = 'echoo.auth.session';
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  global: { fetch: fetchWithDeadline },
   auth: {
     autoRefreshToken: true,
     detectSessionInUrl: false,
     persistSession: true,
     storage: sessionStorage,
-    storageKey: 'echoo.auth.session',
+    storageKey: SESSION_STORAGE_KEY,
     lock: processLock,
   },
 });

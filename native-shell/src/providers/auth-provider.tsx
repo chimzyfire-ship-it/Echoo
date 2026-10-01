@@ -1,6 +1,9 @@
-import { disablePlanningNotifications } from '@/src/services/planning-notifications';
+import { disablePlanningNotifications, retryPushCleanup } from '@/src/services/planning-notifications';
 import type { Session, User } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
+import { focusManager, onlineManager } from '@tanstack/react-query';
+import { assertRequestActive, runRequest } from '@/src/services/request';
+import { revokePreviousSession, signOutOnDevice } from '@/src/services/local-signout';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import type { EchooProfile } from '@/src/models';
@@ -31,9 +34,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const activeUserId = useRef<string | null>(null);
   const generation = useRef(0);
   const mounted = useRef(false);
+  const failed = useRef(false);
+  const sessionRef = useRef<Session | null>(null);
+  const signingOut = useRef<Promise<void> | null>(null);
 
   async function hydrateProfile(nextSession: Session | null) {
     const request = ++generation.current;
+    failed.current = false;
     const user = nextSession?.user ?? null;
     activeUserId.current = user?.id ?? null;
     if (!user) {
@@ -44,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const nextProfile = await loadProfile(user);
+      const nextProfile = await runRequest(signal => loadProfile(user, signal), { timeoutMs: 20000, message: 'Your profile is taking longer to load. Please check your connection and try again.' });
       if (mounted.current && generation.current === request) {
         setProfile(nextProfile);
         setProfileError(null);
@@ -53,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return nextProfile;
     } catch (error) {
       if (mounted.current && generation.current === request) {
+        failed.current = true;
         setProfile(null);
         setProfileError(error instanceof Error ? error.message : 'Echoo could not load this profile.');
       }
@@ -66,35 +74,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Always read the freshest session from Supabase: closures rendered before
     // a sign-in would otherwise hydrate against the pre-login (null) session
     // and wrongly route completed members back into onboarding.
-    const userId = activeUserId.current;
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    if (!mounted.current || activeUserId.current !== userId || !data.session || data.session.user.id !== userId) {
-      throw new Error('Authentication changed. Please try again.');
+    const request = generation.current;
+    failed.current = false;
+    try {
+      const { data, error } = await runRequest(signal => supabase.auth.getSession().then(result => {
+        assertRequestActive(signal);
+        return result;
+      }), { timeoutMs: 20000 });
+      if (error) throw error;
+      if (!mounted.current || generation.current !== request || signingOut.current) return null;
+      sessionRef.current = data.session;
+      setSession(data.session);
+      return await hydrateProfile(data.session ?? null);
+    } catch (error) {
+      if (mounted.current && generation.current === request) {
+        failed.current = true;
+        setProfileError(error instanceof Error ? error.message : 'Could not restore your session. Please try again.');
+        setReady(true);
+      }
+      throw error;
     }
-    setSession(data.session);
-    return hydrateProfile(data.session ?? null);
   }
 
-  async function signOut() {
-    await disablePlanningNotifications();
-    const { error } = await supabase.auth.signOut({ scope: 'local' });
-    if (error) throw error;
-    generation.current += 1;
-    activeUserId.current = null;
-    setSession(null);
-    setProfile(null);
-    setProfileError(null);
-    setReady(true);
+  function signOut() {
+    if (signingOut.current) return signingOut.current;
+    generation.current++;
+    failed.current = false;
+    const notificationCleanup = disablePlanningNotifications(sessionRef.current).catch(() => {});
+    signingOut.current = signOutOnDevice().then(previous => {
+      sessionRef.current = null;
+      activeUserId.current = null;
+      setSession(null);
+      setProfile(null);
+      setProfileError(null);
+      setReady(true);
+      // Neither remote cleanup nor an offline connection holds the user here.
+      if (previous?.access_token) void notificationCleanup.then(() => revokePreviousSession(previous.access_token)).catch(() => {});
+    }).finally(() => { signingOut.current = null; });
+    return signingOut.current;
   }
 
   useEffect(() => {
     mounted.current = true;
     let initialized = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    const startupTimer = setTimeout(() => {
+      if (!mounted.current || initialized || generation.current > 0) return;
+      failed.current = true;
+      setProfileError('Could not restore your session yet. Please check your connection and try again.');
+      setReady(true);
+    }, 20000);
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted.current) return;
+      if (!mounted.current || signingOut.current) return;
+      sessionRef.current = nextSession;
       setSession(nextSession);
+      clearTimeout(startupTimer);
       const userId = nextSession?.user.id ?? null;
       // Token refreshes must not blank the UI or re-run onboarding hydration.
       if (initialized && activeUserId.current === userId) return;
@@ -109,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Supabase holds its auth lock during callbacks. Defer authenticated I/O.
       timer = setTimeout(() => {
         if (generation.current !== scheduledGeneration) return;
+        if (nextSession) void retryPushCleanup(nextSession).catch(() => {});
         void hydrateProfile(nextSession).catch(() => {});
       }, 0);
     });
@@ -117,8 +152,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted.current = false;
       generation.current += 1;
       clearTimeout(timer);
+      clearTimeout(startupTimer);
       data.subscription.unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    const recover = () => {
+      if (sessionRef.current && onlineManager.isOnline() && AppState.currentState === 'active') void retryPushCleanup(sessionRef.current).catch(() => {});
+      if (mounted.current && failed.current && !signingOut.current && AppState.currentState === 'active' && onlineManager.isOnline()) {
+        void refreshProfile().catch(() => {});
+      }
+    };
+    const stopOnline = onlineManager.subscribe(online => { if (online) recover(); });
+    const stopFocus = focusManager.subscribe(focused => { if (focused) recover(); });
+    return () => { stopOnline(); stopFocus(); };
   }, []);
 
   useEffect(() => {

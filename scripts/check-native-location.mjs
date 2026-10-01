@@ -18,6 +18,7 @@ function load(path, imports = {}, globals = {}) {
   vm.runInNewContext(outputText, {
     exports,
     require: (name) => {
+      if (name === './request') return require('./tests/load-request.cjs')();
       assert.ok(name in imports, `Unexpected import: ${name}`);
       return imports[name];
     },
@@ -78,6 +79,7 @@ test('search handles regions, partial names, whitespace and hyphens without addi
 test('Discover keeps manual scopes coordinate-free and preserves Culture/query in both modes', async () => {
   let body;
   const api = load('native-shell/src/services/api.ts', {
+    './subscription-events': { subscriptionRequired: () => {} },
     '@/src/services/location': native,
     '@/src/services/supabase': {
       echooConfig: { supabaseUrl: 'https://example.invalid', supabaseAnonKey: 'test' },
@@ -109,6 +111,7 @@ test('region headings cannot become requests; city switches use fresh coordinate
   const bodies = [];
   let payload = { supported: false, reason: 'unsupported_city' };
   const api = load('native-shell/src/services/api.ts', {
+    './subscription-events': { subscriptionRequired: () => {} },
     '@/src/services/location': native,
     '@/src/services/supabase': {
       echooConfig: { supabaseUrl: 'https://example.invalid', supabaseAnonKey: 'test' },
@@ -156,17 +159,20 @@ test('manual selection wins over late GPS success or failure; valid GPS still wo
       return [initial, (value) => { state[index] = value; }];
     },
     useRef: (current) => ({ current }),
+    useEffect: () => {},
   };
   const provider = load('native-shell/src/providers/location-provider.tsx', {
     react: { ...react, default: react },
-    'expo-location': {
-      getForegroundPermissionsAsync: async () => ({ granted: true }),
-      getCurrentPositionAsync: async () => ({ coords: { latitude: 43.85, longitude: -79.5 } }),
-      Accuracy: { Balanced: 3 },
+    '@react-native-async-storage/async-storage': { __esModule: true, default: { setItem: async () => {} } },
+    'react-native': {},
+    '@/src/services/device-location': {
+      deviceLocation: async () => ({ coords: { latitude: 43.85, longitude: -79.5 } }),
+      bounded: value => value,
+      DeviceLocationError: Error,
     },
     '@/src/services/location': native,
     '@/src/services/api': { resolveLocationContext: () => new Promise((resolve, reject) => { finish = { resolve, reject }; }) },
-  });
+  }, { AbortController });
   const context = provider.LocationProvider({ children: null });
   for (const fail of [false, true]) {
     const pending = context.useDeviceLocation();
@@ -310,6 +316,7 @@ test('location-context and Explore V2 accept Ontario choices and return honest e
   for (const name of ['location-context', 'explore-search']) {
     load(`supabase/functions/${name}/index.ts`, {
       '../_shared/location.ts': shared,
+      '../_shared/mobile-access.ts': { requireMobileAccess: async () => null },
       '../_shared/hybrid-discovery.ts': hybrid,
       '../_shared/planning-intent.ts': load('supabase/functions/_shared/planning-intent.ts'),
       '../_shared/provider-status.ts': load('supabase/functions/_shared/provider-status.ts'),
@@ -328,6 +335,9 @@ test('location-context and Explore V2 accept Ontario choices and return honest e
     assert.equal(calls.at(-1).input.p_city, name);
     assert.equal(calls.at(-1).input.p_culture_slug, 'korean');
     assert.equal(calls.at(-1).input.p_lat, null);
+  }
+  for (const coordinates of [{ lat: true, lng: -79 }, { lat: 91, lng: -79 }, { lat: 43, lng: -181 }, { lat: 43 }]) {
+    assert.equal((await handlers['location-context'](request(coordinates))).status, 422);
   }
   const gps = await (await handlers['explore-search'](request({ version: 2, lat: 45.4215, lng: -75.6972, city: 'Toronto', includeLiveFallback: false }))).json();
   assert.equal(gps.location.city, 'Ottawa');

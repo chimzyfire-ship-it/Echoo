@@ -92,11 +92,12 @@ export const defaultOnboardingDraft = (user: User, profile?: EchooProfile | null
   caslPushConsent: null,
 });
 
-export async function loadProfile(user: User): Promise<EchooProfile | null> {
+export async function loadProfile(user: User, signal?: AbortSignal): Promise<EchooProfile | null> {
   const { data, error } = await supabase
     .from('user_onboarding_profiles')
     .select('*')
     .eq('user_id', user.id)
+    .abortSignal(signal ?? new AbortController().signal)
     .maybeSingle();
 
   if (error) throw error;

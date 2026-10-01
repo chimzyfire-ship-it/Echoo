@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import type { PurchasesPackage } from 'react-native-purchases';
 import { supabase } from './supabase';
 import { edgeRequest } from './api';
+import { assertOnline, runRequest } from './request';
 
 export type SubscriptionPlan = 'city_pass' | 'city_all_access';
 export type MobileAccess = {
@@ -37,7 +38,10 @@ async function storeOperation<T>(operation: (sdk: typeof import('react-native-pu
 }
 
 export async function readMobileAccess(): Promise<MobileAccess> {
-  const { data, error } = await supabase.rpc('my_mobile_access');
+  const { data, error } = await runRequest(signal => {
+    assertOnline();
+    return supabase.rpc('my_mobile_access').abortSignal(signal);
+  }, { timeoutMs: 20000, message: 'Could not check your access yet. Please check your connection and try again.' });
   if (error) throw new Error('Could not verify account access. Please retry.');
   if (!data || typeof data.active !== 'boolean') throw new Error('The access service returned an invalid response.');
   return data;

@@ -16,6 +16,7 @@ type Payload = {
 
 function optionalNumber(value: unknown) {
   if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value !== "number" && typeof value !== "string") return undefined;
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
 }
@@ -48,6 +49,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Coordinates must be finite numbers' }, 422);
     }
 
+    if ((lat !== undefined && Math.abs(lat) > 90) || (lng !== undefined && Math.abs(lng) > 180)) {
+      return jsonResponse({ error: "Coordinates are outside valid ranges" }, 422);
+    }
     if ((lat === undefined) !== (lng === undefined)) {
       return jsonResponse({ error: "lat and lng must be provided together" }, 422);
     }
