@@ -1,4 +1,5 @@
 import { mobileDb, mobileHeaders, mobileJson, mobileUser } from '../_shared/mobile-access.ts';
+import { revokeAppleAccount } from '../_shared/apple-revoke.ts';
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: mobileHeaders });
   if (req.method !== 'POST') return mobileJson({ error: 'Method not allowed' }, 405);
@@ -6,6 +7,16 @@ Deno.serve(async (req) => {
   if (!user) return mobileJson({ error: 'Sign in to delete your account.' }, 401);
   const db = mobileDb();
   try {
+    const appleIdentity = user.identities?.find(identity => identity.provider === 'apple');
+    if (appleIdentity) {
+      const body = await req.json().catch(() => null);
+      const code = body?.appleAuthorizationCode;
+      const subject = appleIdentity.identity_data?.sub;
+      if (typeof code !== 'string' || !code || code.length > 4096 || typeof subject !== 'string') {
+        return mobileJson({ error: 'Confirm your Apple account on your iPhone before deleting it.' }, 400);
+      }
+      await revokeAppleAccount(code, subject);
+    }
     const { data: files, error: listError } = await db.storage.from('profile-photos').list(user.id);
     if (listError) throw listError;
     if (files?.length) {

@@ -7,6 +7,7 @@ import { useSubscription } from '@/src/providers/subscription-provider';
 import { LegalLinks } from '@/src/components/legal-links';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { edgeRequest } from '@/src/services/api';
+import { appleDeletionCode } from '@/src/services/apple-auth';
 import { Colors, Fonts } from '@/src/theme/tokens';
 
 export default function AccountScreen() {
@@ -16,7 +17,15 @@ export default function AccountScreen() {
   const fail = (error: unknown) => Alert.alert('Could not complete action', error instanceof Error ? error.message : 'Please try again.');
   async function deleteAccount() {
     setBusy(true);
-    try { await edgeRequest('mobile-account-delete'); await signOut(); router.replace('/'); }
+    try {
+      let appleAuthorizationCode: string | null = null;
+      if (user?.identities?.some(identity => identity.provider === 'apple')) {
+        appleAuthorizationCode = await appleDeletionCode();
+        if (!appleAuthorizationCode) return;
+      }
+      await edgeRequest('mobile-account-delete', { body: { appleAuthorizationCode }, timeoutMs: 60000 });
+      await signOut(); router.replace('/');
+    }
     catch (error) { fail(error); }
     finally { setBusy(false); }
   }

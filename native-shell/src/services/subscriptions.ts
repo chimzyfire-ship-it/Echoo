@@ -31,6 +31,7 @@ async function storeOperation<T>(operation: (sdk: typeof import('react-native-pu
     const sdk = (await import('react-native-purchases')).default;
     if (!configured) { sdk.configure({ apiKey: apiKey!, appUserID: userId }); configured = true; }
     else if (await sdk.getAppUserID() !== userId) await sdk.logIn(userId);
+    await assertAccount(userId);
     return operation(sdk);
   });
   queue = next;

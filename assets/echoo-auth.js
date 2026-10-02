@@ -194,6 +194,8 @@
     const name =
       clean(row.display_name) ||
       clean(user?.user_metadata?.display_name) ||
+      clean(user?.user_metadata?.full_name) ||
+      clean(user?.user_metadata?.name) ||
       clean(user?.email, "User").split("@")[0];
     const email = clean(row.email) || clean(user?.email);
     const budget = safeBudget(row.budget);
@@ -264,6 +266,8 @@
       display_name:
         clean(profile.name || profile.displayName) ||
         clean(user.user_metadata?.display_name) ||
+        clean(user.user_metadata?.full_name) ||
+        clean(user.user_metadata?.name) ||
         clean(user.email, "User").split("@")[0],
       email: clean(profile.email) || clean(user.email),
       interests,
@@ -367,7 +371,37 @@
   }
 
   async function loadOnboardingProfile() {
-    const { session, error: sessionError } = await getSession();
+    let { session, error: sessionError } = await getSession();
+    if (!session && typeof window !== "undefined" && client) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hasCode = searchParams.has("code");
+      const hasHash = window.location.hash.includes("access_token");
+      if (hasCode || hasHash) {
+        try {
+          if (hasCode && typeof client.auth?.exchangeCodeForSession === "function") {
+            const res = await client.auth.exchangeCodeForSession(searchParams.get("code"));
+            if (res?.data?.session) {
+              session = res.data.session;
+              sessionError = res.error || null;
+            }
+          }
+        } catch (_err) {}
+        if (!session && client.auth?.onAuthStateChange) {
+          session = await new Promise((resolve) => {
+            const sub = client.auth.onAuthStateChange((_ev, s) => {
+              if (s) {
+                sub?.data?.subscription?.unsubscribe?.();
+                resolve(s);
+              }
+            });
+            setTimeout(() => {
+              sub?.data?.subscription?.unsubscribe?.();
+              resolve(null);
+            }, 2500);
+          });
+        }
+      }
+    }
     if (sessionError || !session?.user) {
       return {
         ok: false,

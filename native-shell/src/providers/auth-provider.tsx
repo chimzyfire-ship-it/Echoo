@@ -1,6 +1,7 @@
 import { disablePlanningNotifications, retryPushCleanup } from '@/src/services/planning-notifications';
 import type { Session, User } from '@supabase/supabase-js';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { focusManager, onlineManager } from '@tanstack/react-query';
 import { assertRequestActive, runRequest } from '@/src/services/request';
 import { revokePreviousSession, signOutOnDevice } from '@/src/services/local-signout';
@@ -101,16 +102,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     generation.current++;
     failed.current = false;
     const notificationCleanup = disablePlanningNotifications(sessionRef.current).catch(() => {});
-    signingOut.current = signOutOnDevice().then(previous => {
-      sessionRef.current = null;
-      activeUserId.current = null;
-      setSession(null);
-      setProfile(null);
-      setProfileError(null);
-      setReady(true);
+    signingOut.current = (async () => {
+      let previous: Session | null = null;
+      try {
+        previous = await signOutOnDevice();
+      } catch (err) {
+        console.warn('Sign out warning:', err);
+      } finally {
+        sessionRef.current = null;
+        activeUserId.current = null;
+        setSession(null);
+        setProfile(null);
+        setProfileError(null);
+        setReady(true);
+      }
       // Neither remote cleanup nor an offline connection holds the user here.
       if (previous?.access_token) void notificationCleanup.then(() => revokePreviousSession(previous.access_token)).catch(() => {});
-    }).finally(() => { signingOut.current = null; });
+    })().finally(() => { signingOut.current = null; });
     return signingOut.current;
   }
 
@@ -180,6 +188,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabase.auth.stopAutoRefresh();
     };
   }, []);
+
+  useEffect(() => {
+    const appleSubject = session?.user.identities?.find(identity => identity.provider === 'apple')?.identity_data?.sub;
+    const id = session?.user.id;
+    if (typeof appleSubject !== 'string' || !id || Platform.OS !== 'ios') return;
+    let active = true;
+    const check = async () => {
+      try {
+        const state = await AppleAuthentication.getCredentialStateAsync(appleSubject);
+        if (active && sessionRef.current?.user.id === id &&
+          (state === AppleAuthentication.AppleAuthenticationCredentialState.REVOKED ||
+           state === AppleAuthentication.AppleAuthenticationCredentialState.NOT_FOUND)) await signOut();
+      } catch { /* A network failure or unsupported simulator is not revocation. */ }
+    };
+    void check();
+    const revoked = AppleAuthentication.addRevokeListener(() => { void check(); });
+    const foreground = AppState.addEventListener('change', state => { if (state === 'active') void check(); });
+    return () => { active = false; revoked.remove(); foreground.remove(); };
+  }, [session?.user.id]);
 
   return (
     <AuthContext.Provider

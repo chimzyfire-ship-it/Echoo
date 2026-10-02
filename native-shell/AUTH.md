@@ -12,16 +12,27 @@ inline. A restored, onboarded member can use Surprise or Open Echoo directly.
    This flow does not consume confirmation-link tokens from deep links.
 2. Enable Google in Authentication > Providers and enter the Google **Web
    application** OAuth client ID and secret there, not in Expo environment variables.
-3. In that Google Cloud OAuth client, authorize the Supabase callback:
+3. Enable Apple in Authentication > Providers:
+   - **Services ID (Client ID)**: Your Apple Services ID (e.g. `com.echoo.mobile.web`).
+   - **Secret Key (or Team ID, Key ID, Private Key)**: Generated Apple Developer Auth Key (`.p8`).
+   - **Authorized Client IDs**: Must include `com.echoo.mobile` (the native iOS Bundle Identifier) so native `signInWithIdToken` requests with Apple's identity token pass audience validation.
+4. In Apple Developer Console:
+   - **App ID**: `com.echoo.mobile` with **Sign In with Apple** capability enabled.
+   - **Services ID**: Primary App ID associated with `com.echoo.mobile`.
+   - **Domains & Return URLs**:
+     - Domain: `dlezregdjpdqmooubwvl.supabase.co`
+     - Return URL: `https://dlezregdjpdqmooubwvl.supabase.co/auth/v1/callback`
+   - **Keys**: Register a Sign in with Apple Key, note Key ID, download the `.p8` file.
+5. In the Google Cloud OAuth client, authorize the Supabase callback:
    `https://dlezregdjpdqmooubwvl.supabase.co/auth/v1/callback`.
    Use your own Supabase project host if overriding `EXPO_PUBLIC_SUPABASE_URL`.
-4. In Supabase Authentication > URL Configuration, add exactly `echoo://auth`
+6. In Supabase Authentication > URL Configuration, add exactly `echoo://auth`
    to the redirect allowlist. The app already declares the `echoo` scheme.
-5. While the Google consent screen is in testing, add the intended Google
+7. While the Google consent screen is in testing, add the intended Google
    accounts as test users; publish/verify the consent screen as Google requires.
 
-Provider configuration, mail delivery and live Google consent have not been
-verified against the hosted project. Username login also requires the existing
+Provider configuration, mail delivery, and live Apple/Google credentials have
+not been verified against the hosted project. Username login also requires the existing
 `lookup_email_by_username` RPC; profile loading requires the existing
 `user_onboarding_profiles` table and authenticated RLS policies.
 

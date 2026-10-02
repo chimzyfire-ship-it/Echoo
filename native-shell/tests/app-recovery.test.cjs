@@ -243,6 +243,7 @@ test('startup and profile stalls expose retry, recover on reconnect, and late da
   const profiles = [];
   const request = loadRequest({ setTimeout: (callback, ms) => setTimeout(callback, ms ? 10 : 0) });
   const provider = load('providers/auth-provider.tsx', {
+    'expo-apple-authentication': {},
     react: h.react, 'react/jsx-runtime': h.jsx,
     'react-native': { AppState: { currentState: 'active', addEventListener: () => ({ remove() {} }) } },
     '@tanstack/react-query': { onlineManager: { isOnline: () => true, subscribe: fn => { reconnect = fn; return () => {}; } }, focusManager: { subscribe: () => () => {} } },
@@ -275,3 +276,43 @@ test('startup and profile stalls expose retry, recover on reconnect, and late da
   context = h.render(provider.AuthProvider); assert.equal(context.profile.userId, 'b');
   h.cleanup();
 });
+
+test('signOut clears user and profile, sets ready true, and completes even if signOutOnDevice rejects', async () => {
+  const h = hooks();
+  let listener, session = { user: { id: 'test-user' } };
+  const request = loadRequest({ setTimeout: (callback, ms) => setTimeout(callback, ms ? 10 : 0) });
+  let signOutCalls = 0;
+  const provider = load('providers/auth-provider.tsx', {
+    'expo-apple-authentication': {},
+    react: h.react, 'react/jsx-runtime': h.jsx,
+    'react-native': { AppState: { currentState: 'active', addEventListener: () => ({ remove() {} }) } },
+    '@tanstack/react-query': { onlineManager: { isOnline: () => true, subscribe: () => () => {} }, focusManager: { subscribe: () => () => {} } },
+    '@/src/services/request': request,
+    '@/src/services/local-signout': {
+      signOutOnDevice: async () => {
+        signOutCalls++;
+        throw new Error('simulated storage failure');
+      },
+      revokePreviousSession: async () => {},
+    },
+    '@/src/services/planning-notifications': { retryPushCleanup: async () => {}, disablePlanningNotifications: async () => {} },
+    '@/src/services/auth': { loadProfile: async () => ({ userId: 'test-user', completedAt: 'today' }) },
+    '@/src/services/supabase': { supabase: { auth: { onAuthStateChange: fn => { listener = fn; return { data: { subscription: { unsubscribe() {} } } }; }, getSession: async () => ({ data: { session } }), startAutoRefresh() {}, stopAutoRefresh() {} } } },
+  }, { setTimeout: (callback, ms) => setTimeout(callback, ms ? 10 : 0) });
+  let context = h.render(provider.AuthProvider);
+  listener('SIGNED_IN', session);
+  await new Promise(resolve => setTimeout(resolve, 5));
+  context = h.render(provider.AuthProvider);
+  assert.equal(context.user?.id, 'test-user');
+  assert.equal(context.ready, true);
+
+  await context.signOut();
+  context = h.render(provider.AuthProvider);
+  assert.equal(signOutCalls, 1);
+  assert.equal(context.user, null);
+  assert.equal(context.session, null);
+  assert.equal(context.profile, null);
+  assert.equal(context.ready, true);
+  h.cleanup();
+});
+

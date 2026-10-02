@@ -1,6 +1,9 @@
 import { useRouter } from 'expo-router';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { appleSignInAvailable, signInWithApple } from '@/src/services/apple-auth';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { PrimaryButton } from '@/src/components/primary-button';
 import { TextField } from '@/src/components/text-field';
@@ -19,7 +22,7 @@ export function LandingAuth({ open, initialMode = 'signin', onOpen, onClose }: {
   onClose: () => void;
 }) {
   const router = useRouter();
-  const { refreshProfile } = useAuth();
+  const { refreshProfile, beginAuthFlow, endAuthFlow } = useAuth();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [login, setLogin] = useState('');
   const [username, setUsername] = useState('');
@@ -32,12 +35,41 @@ export function LandingAuth({ open, initialMode = 'signin', onOpen, onClose }: {
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [appleBusy, setAppleBusy] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
+
+  useEffect(() => {
+    let active = true;
+    void appleSignInAvailable().then(available => { if (active) setAppleAvailable(available); });
+    return () => { active = false; };
+  }, []);
+
+  async function appleSignIn() {
+    if (pending.current) return;
+    pending.current = true;
+    resetFeedback();
+    setBusy(true);
+    setAppleBusy(true);
+    beginAuthFlow();
+    try {
+      if (await signInWithApple() === 'cancelled') return;
+      const nextProfile = await refreshProfile();
+      router.replace(nextProfile?.completedAt ? '/(tabs)' : '/onboarding');
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Could not sign in with Apple.');
+    } finally {
+      pending.current = false;
+      setBusy(false);
+      setAppleBusy(false);
+      endAuthFlow();
+    }
+  }
 
   async function googleSignIn() {
     if (pending.current) return;
@@ -172,8 +204,64 @@ export function LandingAuth({ open, initialMode = 'signin', onOpen, onClose }: {
     }
   }
 
+function AppleLogo({ size = 19, color = '#000000' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 170 170">
+      <Path
+        fill={color}
+        d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.6-7.71-11.71-14.02-6.53-10.01-11.75-20.93-15.66-32.76-3.92-11.83-5.88-23.01-5.88-33.53 0-14.15 3.7-25.79 11.11-34.92 7.4-9.13 16.75-13.8 28.04-14.01 4.57 0 9.79 1.19 15.67 3.59 5.88 2.4 9.9 3.69 12.06 3.89 1.74-.2 5.99-1.58 12.74-4.13 6.74-2.55 12.18-3.7 16.31-3.47 12.62.65 22.84 5.33 30.67 14.02-11.09 6.74-16.53 16.1-16.31 28.06.22 9.57 3.81 17.51 10.77 23.82 6.96 6.31 15.23 9.9 24.8 10.77-2.17 6.74-4.89 13.71-8.16 20.91zM119.22 31.95c0-6.96 2.5-13.38 7.51-19.25 5.01-5.88 11.21-9.69 18.6-11.42 0 .87.05 1.74.05 2.61 0 6.74-2.61 13.27-7.83 19.58-5.22 6.31-11.42 9.9-18.6 10.77-.11-.76-.23-1.52-.23-2.29z"
+      />
+    </Svg>
+  );
+}
+
   return (
     <View style={styles.content}>
+      {appleAvailable ? (
+        <View
+          style={styles.appleButtonWrap}
+          pointerEvents={busy ? 'none' : 'auto'}
+          accessibilityState={{ busy, disabled: busy }}
+        >
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+            cornerRadius={28}
+            style={styles.appleButton}
+            onPress={() => { void appleSignIn(); }}
+          />
+          {appleBusy ? (
+            <View style={styles.appleLoadingOverlay} pointerEvents="none">
+              <ActivityIndicator size="small" color="#000000" />
+              <Text style={styles.appleLoadingText}>Connecting to Apple...</Text>
+            </View>
+          ) : null}
+        </View>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Continue with Apple"
+          onPress={() => { void appleSignIn(); }}
+          style={({ pressed }) => [
+            styles.customAppleButton,
+            pressed && styles.actionPressed,
+            busy && styles.buttonDisabled,
+          ]}
+          disabled={busy}
+        >
+          {appleBusy ? (
+            <View style={styles.appleButtonInner}>
+              <ActivityIndicator size="small" color="#000000" />
+              <Text style={styles.customAppleButtonText}>Connecting to Apple...</Text>
+            </View>
+          ) : (
+            <View style={styles.appleButtonInner}>
+              <AppleLogo size={19} color="#000000" />
+              <Text style={styles.customAppleButtonText}>Continue with Apple</Text>
+            </View>
+          )}
+        </Pressable>
+      )}
       <PrimaryButton
         label={googleBusy ? 'Connecting to Google...' : 'Continue with Google'}
         onPress={googleSignIn}
@@ -407,5 +495,56 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 13,
     lineHeight: 19,
+  },
+  appleButtonWrap: {
+    position: 'relative',
+    width: '100%',
+    height: 56,
+  },
+  appleButton: {
+    width: '100%',
+    height: 56,
+  },
+  appleLoadingOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  appleLoadingText: {
+    color: '#000000',
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 15,
+  },
+  customAppleButton: {
+    width: '100%',
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appleButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  customAppleButtonText: {
+    color: '#000000',
+    fontFamily: Fonts.uiSemiBold,
+    fontSize: 17,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+  },
+  actionPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.99 }],
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
