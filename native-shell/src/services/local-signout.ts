@@ -8,7 +8,10 @@ let pending: Promise<Session | null> | null = null;
 export function signOutOnDevice(): Promise<Session | null> {
   if (pending) return pending;
   pending = (async () => {
-    const raw = await sessionStorage.getItem(SESSION_STORAGE_KEY);
+    let raw: string | null = null;
+    try {
+      raw = await sessionStorage.getItem(SESSION_STORAGE_KEY);
+    } catch { /* A corrupt session can still be removed. */ }
     let previous: Session | null = null;
     try { previous = raw ? JSON.parse(raw) : null; } catch { /* A corrupt session can still be removed. */ }
     const resume = interruptSessionRefresh();
@@ -16,11 +19,16 @@ export function signOutOnDevice(): Promise<Session | null> {
       await supabase.auth.stopAutoRefresh();
       // Use the same lock as the SDK: an old refresh must finish before removal,
       // and cannot write the previous session back after the user signs out.
-      await processLock(`lock:${SESSION_STORAGE_KEY}`, 5000, async () => {
-        await sessionStorage.removeItem(SESSION_STORAGE_KEY);
-        await sessionStorage.removeItem(`${SESSION_STORAGE_KEY}-code-verifier`);
-        await sessionStorage.removeItem(`${SESSION_STORAGE_KEY}-user`);
-      });
+      const clearStorage = async () => {
+        await sessionStorage.removeItem(SESSION_STORAGE_KEY).catch(() => {});
+        await sessionStorage.removeItem(`${SESSION_STORAGE_KEY}-code-verifier`).catch(() => {});
+        await sessionStorage.removeItem(`${SESSION_STORAGE_KEY}-user`).catch(() => {});
+      };
+      try {
+        await processLock(`lock:${SESSION_STORAGE_KEY}`, 5000, clearStorage);
+      } catch {
+        await clearStorage();
+      }
       // With storage cleared, the SDK emits SIGNED_OUT without refreshing an
       // expired token or requiring a network call. No private SDK APIs are used.
       const { error } = await supabase.auth.signOut({ scope: 'local' });

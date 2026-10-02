@@ -10,9 +10,11 @@ export async function appleSignInAvailable() {
 
 export async function signInWithApple(): Promise<'signed-in' | 'cancelled'> {
   if (pending) throw new Error('Apple sign-in is already in progress.');
-  if (!await appleSignInAvailable()) throw new Error('Apple sign-in is unavailable on this device. Please use email.');
   pending = true;
   try {
+    if (!await appleSignInAvailable()) {
+      throw new Error('Apple sign-in requires an Echoo installed app or development build (registered to com.echoocity.mobile). In Expo Go, please test with email sign-in.');
+    }
     const bytes = await Crypto.getRandomBytesAsync(32);
     const nonce = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
     const hashedNonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, nonce);
@@ -27,7 +29,7 @@ export async function signInWithApple(): Promise<'signed-in' | 'cancelled'> {
     // Apple sends the name only on first authorization. Never erase a saved name.
     const name = [credential.fullName?.givenName, credential.fullName?.familyName].filter(Boolean).join(' ').trim();
     if (name && !data.user?.user_metadata?.display_name) {
-      await supabase.auth.updateUser({ data: { display_name: name } });
+      await supabase.auth.updateUser({ data: { display_name: name, full_name: name } });
     }
     return 'signed-in';
   } catch (error) {

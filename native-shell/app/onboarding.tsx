@@ -342,7 +342,14 @@ export default function OnboardingScreen() {
     >
       <View style={styles.topBar}>
         <BrandMark />
-        <Pressable accessibilityRole="button" accessibilityLabel="Sign out" onPress={signOut} style={styles.signOut}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Sign out"
+          onPress={() => {
+            void signOut().then(() => router.replace('/')).catch(() => {});
+          }}
+          style={styles.signOut}
+        >
           <LogOut size={17} color={Colors.textSecondary} />
         </Pressable>
       </View>

@@ -15,6 +15,98 @@ function load(file, modules, globals = {}) {
   return exports;
 }
 
+function apple(signInAsync, auth, availability = async () => true) {
+  return load('../src/services/apple-auth.ts', {
+    'expo-apple-authentication': { isAvailableAsync: availability, signInAsync, AppleAuthenticationScope: { FULL_NAME: 0, EMAIL: 1 } },
+    'expo-crypto': {
+      getRandomBytesAsync: async () => crypto.randomBytes(32), CryptoDigestAlgorithm: { SHA256: 'sha256' },
+      digestStringAsync: async (algorithm, value) => crypto.createHash(algorithm).update(value).digest('hex'),
+    },
+    'react-native': { Platform: { OS: 'ios' } }, '@/src/services/supabase': { supabase: { auth } },
+  });
+}
+
+test('Apple exchanges a matching nonce and preserves the first authorization name', async () => {
+  let hashed, saved;
+  const service = apple(async options => {
+    hashed = options.nonce;
+    return { identityToken: 'apple-token', fullName: { givenName: 'Test', familyName: 'Member' } };
+  }, {
+    signInWithIdToken: async options => {
+      assert.equal(options.provider, 'apple'); assert.equal(options.token, 'apple-token');
+      assert.equal(crypto.createHash('sha256').update(options.nonce).digest('hex'), hashed);
+      return { data: { session: {}, user: { user_metadata: {} } } };
+    }, updateUser: async value => { saved = value.data.display_name; },
+  });
+  assert.equal(await service.signInWithApple(), 'signed-in'); assert.equal(saved, 'Test Member');
+});
+
+test('Apple cancellation releases its lock; missing tokens never establish a session', async () => {
+  let calls = 0;
+  const service = apple(async () => {
+    if (++calls === 1) throw { code: 'ERR_REQUEST_CANCELED' };
+    return {};
+  }, { signInWithIdToken: () => assert.fail('must not exchange missing token') });
+  assert.equal(await service.signInWithApple(), 'cancelled');
+  await assert.rejects(service.signInWithApple(), /did not return/);
+});
+
+test('Apple serializes attempts even while availability is pending', async () => {
+  let release;
+  const service = apple(async () => { throw { code: 'ERR_REQUEST_CANCELED' }; }, {},
+    () => new Promise(resolve => { release = resolve; }));
+  const first = service.signInWithApple();
+  await assert.rejects(service.signInWithApple(), /already in progress/);
+  release(true); assert.equal(await first, 'cancelled');
+});
+
+test('Apple returning login does not overwrite an existing name', async () => {
+  const service = apple(async () => ({ identityToken: 'token', fullName: { givenName: 'Apple' } }), {
+    signInWithIdToken: async () => ({ data: { session: {}, user: { user_metadata: { display_name: 'Chosen' } } } }),
+    updateUser: () => assert.fail('must preserve chosen name'),
+  });
+  assert.equal(await service.signInWithApple(), 'signed-in');
+});
+
+test('Apple first authorization populates both display_name and full_name', async () => {
+  let savedData;
+  const service = apple(async () => {
+    return { identityToken: 'apple-token', fullName: { givenName: 'Ada', familyName: 'Lovelace' } };
+  }, {
+    signInWithIdToken: async () => ({ data: { session: {}, user: { user_metadata: {} } } }),
+    updateUser: async ({ data }) => { savedData = data; },
+  });
+  assert.equal(await service.signInWithApple(), 'signed-in');
+  assert.equal(savedData.display_name, 'Ada Lovelace');
+  assert.equal(savedData.full_name, 'Ada Lovelace');
+});
+
+test('defaultOnboardingDraft extracts displayName and username from full_name and handles Apple Private Relay', () => {
+  const { defaultOnboardingDraft, mapProfile } = load('../src/services/auth.ts', {
+    '@/src/services/supabase': { supabase: {} },
+  });
+  const appleUserWithRelay = {
+    id: 'user-123',
+    email: 'k7f9d8s2@privaterelay.appleid.com',
+    user_metadata: { full_name: 'Jane Appleseed' },
+  };
+  const draft = defaultOnboardingDraft(appleUserWithRelay);
+  assert.equal(draft.displayName, 'Jane Appleseed');
+  assert.equal(draft.username, 'janeappleseed');
+
+  const appleUserNoName = {
+    id: 'user-456',
+    email: 'm3x9q1z8@privaterelay.appleid.com',
+    user_metadata: {},
+  };
+  const draftNoName = defaultOnboardingDraft(appleUserNoName);
+  assert.equal(draftNoName.displayName, '');
+  assert.equal(draftNoName.username, '');
+
+  const profile = mapProfile({}, appleUserWithRelay);
+  assert.equal(profile.displayName, 'Jane Appleseed');
+});
+
 test('secure sessions survive adapter recreation, chunk Unicode, serialize writes and remove credentials', async () => {
   const values = new Map();
   let fail = false;

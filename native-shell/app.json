@@ -9,7 +9,7 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.echoo.mobile",
+      "bundleIdentifier": "com.echoocity.mobile",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Echoo uses your location to show nearby places in Ontario and verify arrivals when you request it.",
         "NSPhotoLibraryUsageDescription": "Echoo uses your photo to complete your profile."
@@ -17,7 +17,7 @@
       "usesAppleSignIn": true
     },
     "android": {
-      "package": "com.echoo.mobile",
+      "package": "com.echoocity.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#000000",
         "foregroundImage": "./assets/echoo-adaptive-foreground.png"

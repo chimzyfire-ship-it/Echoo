@@ -33,8 +33,8 @@ export default function SubscriptionScreen() {
       if (currentUser.current !== id) return;
       setPackages(result);
       if (!result.city_pass || !result.city_all_access) setMessage('Some subscriptions are currently unavailable. Please retry or contact support.');
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not load subscriptions.'); }
-    finally { setLoading(false); }
+    } catch (error) { if (currentUser.current === id) setMessage(error instanceof Error ? error.message : 'Could not load subscriptions.'); }
+    finally { if (currentUser.current === id) setLoading(false); }
   }
   useEffect(() => { setPackages({}); void load(); }, [user?.id]);
 
@@ -44,7 +44,7 @@ export default function SubscriptionScreen() {
     locked.current = true; setBusy(action); setMessage('');
     try {
       if (action === 'refresh') {
-        if (purchasesAvailable && access?.source === 'subscription') await syncSubscription();
+        if (purchasesAvailable) await syncSubscription();
       } else if (action === 'restore') await restoreSubscriptions(id);
       else {
         if (access?.active) { Alert.alert('You already have access', 'Manage your existing subscription in store settings. Your account does not need another subscription.'); return; }
@@ -58,7 +58,12 @@ export default function SubscriptionScreen() {
       if (verified?.active) router.replace('/(tabs)');
       else setMessage(action === 'restore' ? 'No active subscription was found for this account. Check the Apple/Google account used for your purchase, or contact support.' : 'Access is not active yet. If you just purchased, wait a moment and tap Check access again. Pending purchases unlock only after store approval.');
     } catch (error) {
+      if (currentUser.current !== id) return;
       if ((error as { userCancelled?: boolean })?.userCancelled) return;
+      if ((error as { code?: string })?.code === '20') {
+        setMessage('Your payment is pending store approval. Access will unlock after approval. You can return here and tap Check access again.');
+        return;
+      }
       setMessage(error instanceof Error ? error.message : 'Could not complete that action. Please try again.');
     } finally { locked.current = false; setBusy(null); }
   }

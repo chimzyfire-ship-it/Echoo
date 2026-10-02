@@ -53,7 +53,12 @@ export const mapProfile = (row: ProfileRow, user: User): EchooProfile => ({
   userId: text(row.user_id) || user.id,
   username: text(row.username),
   displayName:
-    text(row.display_name) || text(user.user_metadata.display_name) || user.email?.split('@')[0] || 'Member',
+    text(row.display_name) ||
+    text(user.user_metadata?.display_name) ||
+    text(user.user_metadata?.full_name) ||
+    text(user.user_metadata?.name) ||
+    user.email?.split('@')[0] ||
+    'Member',
   email: text(row.email) || user.email || '',
   bio: text(row.bio),
   photoUrl: text(row.profile_photo_url) || null,
@@ -72,25 +77,40 @@ export const mapProfile = (row: ProfileRow, user: User): EchooProfile => ({
   linkUpStatus: text(row.linkup_status) || null,
 });
 
-export const defaultOnboardingDraft = (user: User, profile?: EchooProfile | null): OnboardingDraft => ({
-  displayName: profile?.displayName || text(user.user_metadata.display_name) || user.email?.split('@')[0] || '',
-  username: profile?.username || normalizeUsername(user.email?.split('@')[0] || ''),
-  bio: profile?.bio || '',
-  city: profile?.homeCity || 'Toronto',
-  interests: profile?.interests || [],
-  eventStyles: profile?.eventStyles || [],
-  audiences: profile?.audiences || [],
-  motivations: profile?.motivations || [],
-  budget: profile?.budget || '$$',
-  energy: profile?.energy || 'curious',
-  tone: profile?.tone || 'direct',
-  gender: profile?.gender || 'Prefer not to say',
-  dob: profile?.dob || '',
-  nationalities: profile?.nationalities || [],
-  hasPipedaConsent: false,
-  cityIntelConsent: null,
-  caslPushConsent: null,
-});
+export const defaultOnboardingDraft = (user: User, profile?: EchooProfile | null): OnboardingDraft => {
+  const metaName =
+    text(user.user_metadata?.display_name) ||
+    text(user.user_metadata?.full_name) ||
+    text(user.user_metadata?.name);
+  const emailPrefix =
+    user.email && !user.email.endsWith('@privaterelay.appleid.com')
+      ? user.email.split('@')[0]
+      : '';
+  const displayName = profile?.displayName || metaName || emailPrefix || '';
+  const defaultUsername =
+    profile?.username ||
+    normalizeUsername(metaName || emailPrefix || '');
+
+  return {
+    displayName,
+    username: defaultUsername,
+    bio: profile?.bio || '',
+    city: profile?.homeCity || 'Toronto',
+    interests: profile?.interests || [],
+    eventStyles: profile?.eventStyles || [],
+    audiences: profile?.audiences || [],
+    motivations: profile?.motivations || [],
+    budget: profile?.budget || '$$',
+    energy: profile?.energy || 'curious',
+    tone: profile?.tone || 'direct',
+    gender: profile?.gender || 'Prefer not to say',
+    dob: profile?.dob || '',
+    nationalities: profile?.nationalities || [],
+    hasPipedaConsent: false,
+    cityIntelConsent: null,
+    caslPushConsent: null,
+  };
+};
 
 export async function loadProfile(user: User, signal?: AbortSignal): Promise<EchooProfile | null> {
   const { data, error } = await supabase

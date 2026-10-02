@@ -420,6 +420,24 @@
         background: rgba(248, 245, 239, 0.08);
       }
 
+      .provider-btn[data-provider="Apple"] {
+        background: #ffffff;
+        color: #000000;
+        border: 1px solid #ffffff;
+        font-weight: 600;
+      }
+
+      .provider-btn[data-provider="Apple"]:hover {
+        background: #f2f2f2;
+        border-color: #ffffff;
+        color: #000000;
+        box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15);
+      }
+
+      .provider-btn[data-provider="Apple"] svg {
+        fill: #000000;
+      }
+
       .signup-only {
         display: none;
       }
@@ -2265,6 +2283,8 @@
           }
           state.userName =
             data.user?.user_metadata?.display_name ||
+            data.user?.user_metadata?.full_name ||
+            data.user?.user_metadata?.name ||
             username ||
             email.split("@")[0] ||
             "User";
@@ -2424,7 +2444,10 @@
           });
           if (error) throw error;
           state.userName =
-            data.user?.user_metadata?.display_name || displayName;
+            data.user?.user_metadata?.display_name ||
+            data.user?.user_metadata?.full_name ||
+            data.user?.user_metadata?.name ||
+            displayName;
           state.userEmail = data.user?.email || email;
           setStatus("Account verified. Let’s personalize Echoo for you.");
           startOnboarding("");
@@ -2557,11 +2580,15 @@
           }
           const provider = btn.dataset.provider.toLowerCase();
           setStatus(`Opening ${btn.dataset.provider} sign in…`);
+          const options = {
+            redirectTo: authRedirectForProvider(),
+          };
+          if (provider === "apple") {
+            options.scopes = "name email";
+          }
           const { error } = await window.EchooAuth.client.auth.signInWithOAuth({
             provider,
-            options: {
-              redirectTo: authRedirectForProvider(),
-            },
+            options,
           });
           if (error) setStatus(error.message, true);
         });
@@ -3319,6 +3346,18 @@
           usernameInput.value = profileState.preferences.username;
         }
 
+        const oauthError =
+          authParams.get("error_description") || authParams.get("error");
+        if (oauthError) {
+          const isCancelled = /cancel|access_denied/i.test(oauthError);
+          setStatus(
+            isCancelled
+              ? "Apple sign-in was cancelled. You can try again or use another sign-in method."
+              : oauthError,
+            !isCancelled,
+          );
+        }
+
         if (!profileState.session?.user) {
           if (authParams.get("type") === "recovery") {
             setMode("recovery");
@@ -3334,15 +3373,22 @@
           return;
         }
 
+        const metaName =
+          profileState.session.user.user_metadata?.display_name ||
+          profileState.session.user.user_metadata?.full_name ||
+          profileState.session.user.user_metadata?.name;
         state.userName =
           profileState.preferences?.name ||
-          profileState.session.user.user_metadata?.display_name ||
+          metaName ||
           profileState.session.user.email?.split("@")[0] ||
           "User";
+        const emailVal = profileState.session.user.email || "";
+        const isPrivateRelay = emailVal.endsWith("@privaterelay.appleid.com");
         state.username =
           profileState.preferences?.username ||
           profileState.profile?.username ||
           usernameInput.value.trim() ||
+          (metaName ? window.EchooAuth.normalizeUsername(metaName) : isPrivateRelay ? "" : emailVal.split("@")[0]) ||
           "";
         state.userEmail =
           profileState.preferences?.email ||

@@ -102,34 +102,42 @@ function AppNavigator() {
     </>} />;
   }
 
-  if ((memberRoute && (!user || !profile?.completedAt || !subscription.ready || !subscription.access?.active)) || (rootSegment === 'onboarding' && !user)) {
-    return <View style={styles.loading}><ScreenLoading label="Opening Echoo." /></View>;
-  }
+  const isProtectedUnauthenticated = !user && (memberRoute || ['onboarding', 'subscription', 'account'].includes(rootSegment));
+  const isAwaitingSubscription = Boolean(user && profile?.completedAt && memberRoute && (!subscription.ready || !subscription.access?.active));
+  const isAwaitingOnboarding = Boolean(user && !profile?.completedAt && !profileError && memberRoute);
+  const shouldCover = isProtectedUnauthenticated || isAwaitingSubscription || isAwaitingOnboarding;
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade',
-        contentStyle: { backgroundColor: Colors.background },
-      }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="auth" />
-      <Stack.Screen name="onboarding" />
-      <Stack.Screen name="subscription" options={{ gestureEnabled: false }} />
-      <Stack.Screen name="legal" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="account" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="place/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="planner" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="planning-memory" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="notifications" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="plan-map" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="weekend" />
-      <Stack.Screen name="tickets" options={{ presentation: 'card', animation: 'slide_from_right' }} />
-      <Stack.Screen name="cinema" options={{ presentation: 'card', animation: 'slide_from_right' }} />
-    </Stack>
+    <View style={styles.root}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+          contentStyle: { backgroundColor: Colors.background },
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="auth" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="subscription" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="legal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="account" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="place/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="planner" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="planning-memory" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="notifications" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="plan-map" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="weekend" />
+        <Stack.Screen name="tickets" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="cinema" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+      </Stack>
+      {shouldCover ? (
+        <View pointerEvents="auto" style={[StyleSheet.absoluteFill, styles.loading]}>
+          <ScreenLoading label="Opening Echoo." />
+        </View>
+      ) : null}
+    </View>
   );
 }
 
