@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, Style
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check } from 'lucide-react-native';
+import { ArrowLeft, Check } from 'lucide-react-native';
 import type { PurchasesPackage } from 'react-native-purchases';
 import { LegalLinks } from '@/src/components/legal-links';
 import { useAuth } from '@/src/providers/auth-provider';
@@ -18,7 +18,7 @@ const plans = [
 
 export default function SubscriptionScreen() {
   const router = useRouter(), insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { access, refresh } = useSubscription();
   const [packages, setPackages] = useState<Partial<Record<SubscriptionPlan, PurchasesPackage>>>({});
   const [loading, setLoading] = useState(false), [busy, setBusy] = useState<string | null>(null), [message, setMessage] = useState('');
@@ -68,8 +68,46 @@ export default function SubscriptionScreen() {
     } finally { locked.current = false; setBusy(null); }
   }
 
+  async function handleBack() {
+    if (locked.current || busy) return;
+    if (access?.active) {
+      if (router.canGoBack()) router.back();
+      else router.replace('/(tabs)');
+      return;
+    }
+    locked.current = true;
+    setBusy('back');
+    setMessage('');
+    try {
+      if (user) {
+        await signOut();
+      }
+    } catch (error) {
+      console.warn('Sign out on back failed:', error);
+    } finally {
+      locked.current = false;
+      setBusy(null);
+      router.replace({ pathname: '/', params: { auth: 'open' } });
+    }
+  }
+
   return <View style={styles.root}><ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 24 }]}>
-    <View style={styles.top}><Pressable accessibilityRole="button" disabled={!!busy} onPress={() => { void run('restore'); }} style={styles.link}><Text style={styles.restore}>Restore Purchases</Text></Pressable></View>
+    <View style={styles.top}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Back to homescreen and sign in"
+        disabled={!!busy}
+        onPress={() => handleBack()}
+        style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed, !!busy && styles.disabled]}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <ArrowLeft size={18} color={busy === 'back' ? '#8e8c85' : '#f8f5ef'} strokeWidth={2.2} />
+        <Text style={[styles.backText, busy === 'back' && styles.disabledText]}>Back</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" disabled={!!busy} onPress={() => { void run('restore'); }} style={styles.link}>
+        <Text style={styles.restore}>Restore Purchases</Text>
+      </Pressable>
+    </View>
     <View style={styles.brand} accessibilityRole="image" accessibilityLabel="Echoocity">
       <Image source={require('@/assets/echoo-brand-symbol.png')} style={styles.symbol} resizeMode="contain" fadeDuration={0} />
       <Text adjustsFontSizeToFit numberOfLines={1} style={styles.wordmark}>echoocity</Text>
@@ -99,12 +137,30 @@ export default function SubscriptionScreen() {
     <Text style={styles.footer}>Auto-renewable monthly subscription. Payment is charged to your store account at confirmation. Renews unless cancelled at least 24 hours before the current period ends. Manage or cancel in {store} settings.</Text>
     <Text style={styles.notice}>Route generation and edits use your route allowance. Allowances reset on the first of each calendar month (UTC); unused allowances do not roll over. Tickets and bookings are sold separately.</Text>
     <LegalLinks />
-    <View style={styles.bottom}><Pressable accessibilityRole="button" disabled={!!busy} style={styles.link} onPress={() => { void run('refresh'); }}><Text style={styles.footerLink}>Check access again</Text></Pressable><Pressable accessibilityRole="button" style={styles.link} onPress={() => router.push('/account')}><Text style={styles.footerLink}>Account & help</Text></Pressable></View>
+    <View style={styles.bottom}>
+      <Pressable accessibilityRole="button" disabled={!!busy} style={styles.link} onPress={() => { void run('refresh'); }}><Text style={styles.footerLink}>Check access again</Text></Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Back to homescreen and sign in (footer)"
+        disabled={!!busy}
+        style={styles.link}
+        onPress={() => handleBack()}
+      >
+        <Text style={styles.footerLink}>Back to homescreen & sign in</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" style={styles.link} onPress={() => router.push('/account')}><Text style={styles.footerLink}>Account & help</Text></Pressable>
+    </View>
   </ScrollView></View>;
 }
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#030403' }, content: { paddingHorizontal: 24, alignSelf: 'center', width: '100%', maxWidth: 600, gap: 24 },
-  top: { alignItems: 'flex-end' }, link: { minHeight: 44, justifyContent: 'center' }, restore: { color: '#aaa9a3', fontFamily: Fonts.ui, fontSize: 15, textDecorationLine: 'underline' },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingVertical: 8, paddingRight: 12 },
+  backButtonPressed: { opacity: 0.7 },
+  backText: { color: '#f8f5ef', fontFamily: Fonts.uiSemiBold, fontSize: 15 },
+  disabled: { opacity: 0.6 },
+  disabledText: { color: '#8e8c85' },
+  link: { minHeight: 44, justifyContent: 'center' }, restore: { color: '#aaa9a3', fontFamily: Fonts.ui, fontSize: 15, textDecorationLine: 'underline' },
   brand: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginVertical: 4 }, symbol: { width: 85, height: 88 }, wordmark: { color: '#f8f5ef', fontFamily: Fonts.ui, fontSize: 52, flexShrink: 1, letterSpacing: -2 },
   intro: { color: '#b0aea5', fontFamily: Fonts.ui, fontSize: 17, textAlign: 'center', lineHeight: 24 },
   card: { borderRadius: 25, borderWidth: 1, borderColor: '#42443f', marginTop: 4 }, premium: { borderWidth: 2, borderColor: '#efc99e', marginTop: 12, boxShadow: '0 0 28px rgba(247, 194, 133, 0.20)' },
