@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { appleSignInAvailable, signInWithApple } from '@/src/services/apple-auth';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { PrimaryButton } from '@/src/components/primary-button';
@@ -12,6 +12,7 @@ import { isValidUsername, normalizeUsername, resolveLoginEmail } from '@/src/ser
 import { supabase } from '@/src/services/supabase';
 import { googleSetupLimitation, signInWithGoogle } from '@/src/services/google-auth';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
+import { triggerHaptic } from '@/src/utils/haptics';
 
 type Mode = 'signin' | 'signup';
 
@@ -215,6 +216,20 @@ function AppleLogo({ size = 19, color = '#000000' }: { size?: number; color?: st
   );
 }
 
+function GoogleBrandMark() {
+  return (
+    <View style={styles.googleMarkCrop}>
+      {/* Crop the G from Google's official @3x light-theme button asset. */}
+      <Image
+        accessible={false}
+        resizeMode="stretch"
+        source={require('../../assets/google-signin-light-source.png')}
+        style={styles.googleMarkSource}
+      />
+    </View>
+  );
+}
+
   return (
     <View style={styles.content}>
       {appleAvailable ? (
@@ -262,14 +277,36 @@ function AppleLogo({ size = 19, color = '#000000' }: { size?: number; color?: st
           )}
         </Pressable>
       )}
-      <PrimaryButton
-        label={googleBusy ? 'Connecting to Google...' : 'Continue with Google'}
-        onPress={googleSignIn}
-        variant="secondary"
-        size="lg"
-        loading={googleBusy}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={googleBusy ? 'Connecting to Google' : 'Continue with Google'}
+        accessibilityState={{
+          disabled: busy || Boolean(googleSetupLimitation),
+          busy: googleBusy,
+        }}
+        onPress={() => {
+          void triggerHaptic.light();
+          void googleSignIn();
+        }}
+        style={({ pressed }) => [
+          styles.googleButton,
+          (busy || Boolean(googleSetupLimitation)) && styles.buttonDisabled,
+          pressed && !busy && !googleSetupLimitation && styles.actionPressed,
+        ]}
         disabled={busy || Boolean(googleSetupLimitation)}
-      />
+      >
+        {googleBusy ? (
+          <View style={styles.googleButtonInner}>
+            <ActivityIndicator size="small" color="#1F1F1F" />
+            <Text style={styles.googleButtonText}>Connecting to Google...</Text>
+          </View>
+        ) : (
+          <View style={styles.googleButtonInner}>
+            <GoogleBrandMark />
+            <Text style={styles.googleButtonText}>Continue with Google</Text>
+          </View>
+        )}
+      </Pressable>
       {!open ? (
         <PrimaryButton label="Sign in with email" onPress={onOpen} variant="quiet" disabled={busy} />
       ) : <>
@@ -539,6 +576,40 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     letterSpacing: -0.3,
+  },
+  googleButton: {
+    width: '100%',
+    minHeight: 56,
+    borderWidth: 1,
+    borderColor: '#747775',
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  googleButtonText: {
+    color: '#1F1F1F',
+    fontFamily: Fonts.uiMedium,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  googleMarkCrop: {
+    width: 20,
+    height: 20,
+    overflow: 'hidden',
+  },
+  googleMarkSource: {
+    position: 'absolute',
+    left: -16,
+    top: -12,
+    width: 188,
+    height: 44,
   },
   actionPressed: {
     opacity: 0.85,
