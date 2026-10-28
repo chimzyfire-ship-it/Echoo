@@ -237,16 +237,12 @@ export default function TicketsScreen() {
                   </View>
                   <View style={styles.saleCopy}>
                     <View style={styles.ticketMetaRow}>
-                      <View style={styles.statusBadge}>
-                        <View style={styles.statusDot} />
-                        <Text style={styles.statusBadgeText}>{(item.statusLabel || 'Selling now').toUpperCase()}</Text>
-                      </View>
+                      <Text style={styles.saleCategory}>{item.category || 'Live Event'}</Text>
                       {item.priceLabel && item.priceLabel.toLowerCase() !== 'see tickets' ? (
                         <View style={styles.priceBadge}>
                           <Text style={styles.priceBadgeText}>{item.priceLabel}</Text>
                         </View>
                       ) : null}
-                      <Text style={styles.saleCategory}>{item.category || 'Live Event'}</Text>
                     </View>
                     <Text style={styles.saleTitle} numberOfLines={2}>
                       {item.title}

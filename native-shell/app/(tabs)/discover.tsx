@@ -47,6 +47,30 @@ import { unsupportedLocationMessage } from '@/src/services/location';
 import { Colors, Fonts, Spacing } from '@/src/theme/tokens';
 import { triggerHaptic } from '@/src/utils/haptics';
 
+function formatEventSchedule(startsAt: string | null, fallback: string) {
+  if (!startsAt) return fallback || 'Date to be announced';
+  const hasTime = /T\d{2}:\d{2}/.test(startsAt);
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(startsAt);
+  const date = hasTime
+    ? new Date(startsAt)
+    : dateOnly
+      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+      : new Date(startsAt);
+  if (!Number.isFinite(date.getTime())) return fallback || 'Date to be announced';
+
+  const day = new Intl.DateTimeFormat(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+  if (!hasTime) return day;
+
+  const time = new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+  return `${day} · ${time}`;
+}
 
 export default function DiscoverScreen() {
   const router = useRouter();
@@ -293,10 +317,9 @@ export default function DiscoverScreen() {
                       </View>
                       <View style={styles.ticketDropCopy}>
                         <View style={styles.ticketDropMetaRow}>
-                          <View style={styles.ticketDropStatusPill}>
-                            <View style={styles.ticketDropStatusDot} />
-                            <Text style={styles.ticketDropStatusText}>{(ticket.statusLabel || 'Selling now').toUpperCase()}</Text>
-                          </View>
+                          <Text style={styles.ticketDropSchedule} numberOfLines={1}>
+                            {formatEventSchedule(ticket.startsAt, ticket.statusLabel)}
+                          </Text>
                           {ticket.priceLabel && ticket.priceLabel.toLowerCase() !== 'see tickets' ? (
                             <Text style={styles.ticketDropPriceText}>{ticket.priceLabel}</Text>
                           ) : null}
@@ -609,29 +632,12 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 2,
   },
-  ticketDropStatusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(247, 213, 178, 0.10)',
-    borderWidth: 1,
-    borderColor: 'rgba(247, 213, 178, 0.25)',
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  ticketDropStatusDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.peach,
-  },
-  ticketDropStatusText: {
-    color: Colors.peachLight,
-    fontFamily: Fonts.uiSemiBold,
-    fontSize: 9,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+  ticketDropSchedule: {
+    flex: 1,
+    minWidth: 0,
+    color: 'rgba(248, 245, 239, 0.66)',
+    fontFamily: Fonts.uiMedium,
+    fontSize: 10,
   },
   ticketDropPriceText: {
     color: Colors.ink,
