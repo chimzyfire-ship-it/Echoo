@@ -5,10 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   ChevronRight,
-  Film,
   MapPin,
-  Sparkles,
-  Ticket as TicketIcon,
 } from 'lucide-react-native';
 import type { ImageSourcePropType } from 'react-native';
 import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -166,8 +163,8 @@ export default function HomeScreen() {
         style={styles.gradientOverlay}
       >
         <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 44) + 6 }]}
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + 8 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Top Brand & Greeting Area matching Inspi */}
@@ -218,7 +215,6 @@ export default function HomeScreen() {
               }}
               style={({ pressed }) => [styles.quickAccessCard, pressed && styles.pressed]}
             >
-              <TicketIcon size={15} color={Colors.peach} />
               <Text style={styles.quickAccessCardText}>Tickets & Passes</Text>
             </Pressable>
             <Pressable
@@ -229,7 +225,6 @@ export default function HomeScreen() {
               }}
               style={({ pressed }) => [styles.quickAccessCard, pressed && styles.pressed]}
             >
-              <Film size={15} color={Colors.peach} />
               <Text style={styles.quickAccessCardText}>Cinema Room</Text>
             </Pressable>
           </View>
@@ -429,7 +424,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
     minHeight: 46,
     borderRadius: 16,
     backgroundColor: 'rgba(248, 245, 239, 0.04)',
